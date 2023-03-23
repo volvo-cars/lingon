@@ -1,4 +1,4 @@
-# lingon - libraries for building platforms in Go
+# Lingon 🍒 - Libraries for building platforms with Go
 
 ## What is this?
 
