@@ -1,0 +1,30 @@
+&v1.Service{
+	ObjectMeta: v11.ObjectMeta{
+		Labels: map[string]string{
+			"app.kubernetes.io/instance":   "grafana",
+			"app.kubernetes.io/managed-by": "Helm",
+			"app.kubernetes.io/name":       "grafana",
+			"app.kubernetes.io/version":    "9.3.6",
+			"helm.sh/chart":                "grafana-6.50.7",
+		},
+		Name:      "grafana",
+		Namespace: "monitoring",
+	},
+	Spec: v1.ServiceSpec{
+		Ports: []v1.ServicePort{v1.ServicePort{
+			Name:       "service",
+			Port:       int32(80),
+			Protocol:   v1.Protocol("TCP"),
+			TargetPort: intstr.IntOrString{IntVal: int32(3000)},
+		}},
+		Selector: map[string]string{
+			"app.kubernetes.io/instance": "grafana",
+			"app.kubernetes.io/name":     "grafana",
+		},
+		Type: v1.ServiceType("ClusterIP"),
+	},
+	TypeMeta: v11.TypeMeta{
+		APIVersion: "v1",
+		Kind:       "Service",
+	},
+}

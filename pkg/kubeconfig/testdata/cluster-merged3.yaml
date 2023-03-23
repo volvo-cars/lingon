@@ -1,0 +1,46 @@
+clusters:
+  - cluster:
+      certificate-authority-data: LS0tLS1CRUdJTi
+      server: https://another-cluster:6443
+    name: cluster3
+  - cluster:
+      certificate-authority-data: LS0tLS1CRUdJTi
+      server: https://valid-cluster:6443
+    name: valid-cluster
+  - cluster:
+      certificate-authority-data: LS0tLS1CRUdJTi
+      server: https://valid-cluster:6443
+    name: default
+current-context: cluster3
+contexts:
+  - context:
+      cluster: cluster3
+      user: cluster3user
+    name: cluster3-cluster3user
+  - context:
+      cluster: default
+      user: default
+    name: default
+  - context:
+      cluster: valid-cluster
+      user: valid-cluster-user
+    name: valid-cluster-context
+users:
+  - name: cluster3user
+    user:
+      auth-provider:
+        config:
+          client-id: client-id
+          client-secret: blabla*f
+          id-token: eyJhbGciOiJ
+          idp-issuer-url: https://dex.example.com
+          refresh-token: Chl5ZG95d
+        name: oidc
+  - name: default
+    user:
+      client-certificate-data: LS0tLS1CRUdJTi
+      client-key-data: LS0tLS1CRUdJTi
+  - name: valid-cluster-user
+    user:
+      client-certificate-data: LS0tLS1CRUdJTi
+      client-key-data: LS0tLS1CRUdJTi

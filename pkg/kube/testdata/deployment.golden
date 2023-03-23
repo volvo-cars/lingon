@@ -1,0 +1,31 @@
+&v1.Deployment{
+	ObjectMeta: v11.ObjectMeta{
+		Labels: map[string]string{"app": "webapp"},
+		Name:   "webapp",
+	},
+	Spec: v1.DeploymentSpec{
+		Replicas: P(int32(1)),
+		Selector: &v11.LabelSelector{MatchLabels: map[string]string{"app": "webapp"}},
+		Template: v12.PodTemplateSpec{
+			ObjectMeta: v11.ObjectMeta{Labels: map[string]string{"app": "webapp"}},
+			Spec: v12.PodSpec{Containers: []v12.Container{v12.Container{
+				Image: "nginx",
+				Name:  "nginx",
+				Resources: v12.ResourceRequirements{
+					Limits: map[v12.ResourceName]resource.Quantity{
+						v12.ResourceName("cpu"):    resource.MustParse("500m"),
+						v12.ResourceName("memory"): resource.MustParse("1Gi"),
+					},
+					Requests: map[v12.ResourceName]resource.Quantity{
+						v12.ResourceName("cpu"):    resource.MustParse("250m"),
+						v12.ResourceName("memory"): resource.MustParse("128Mi"),
+					},
+				},
+			}}},
+		},
+	},
+	TypeMeta: v11.TypeMeta{
+		APIVersion: "apps/v1",
+		Kind:       "Deployment",
+	},
+}

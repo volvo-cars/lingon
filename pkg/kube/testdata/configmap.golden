@@ -1,0 +1,8 @@
+&v1.ConfigMap{
+	Data:       map[string]string{},
+	ObjectMeta: v11.ObjectMeta{Name: "webapp-config"},
+	TypeMeta: v11.TypeMeta{
+		APIVersion: "v1",
+		Kind:       "ConfigMap",
+	},
+}

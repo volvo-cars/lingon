@@ -1,0 +1,23 @@
+# Local .terraform directories
+**/.terraform/*
+
+# Local .terriyaki directories (generated code)
+**/.terriyaki/*
+
+# Terraform state files
+*.tfstate
+*.tfstate.*
+
+# Terraform plan files
+**/tfplan
+
+# Generated Go files from Terraform schemas
+gen/
+
+bin/
+vendor/
+
+# GoLand files
+.idea/
+**/out
+.vscode/

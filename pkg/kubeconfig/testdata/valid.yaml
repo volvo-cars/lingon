@@ -1,0 +1,8 @@
+hello: world
+labels:
+  foo: bar
+  baz: qux
+blob:
+  - foo
+  - bar
+  - baz

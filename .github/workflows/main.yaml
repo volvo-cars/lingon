@@ -1,0 +1,39 @@
+name: main
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    paths:
+      - '**.go'
+      - 'go.mod'
+      - '.github/workflows/main.yml'
+
+concurrency:
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions:  # added using https://github.com/step-security/secure-workflows
+  contents: read
+
+jobs:
+  test:
+    permissions:
+      contents: read  # for actions/checkout to fetch code
+      pull-requests: read  # for golangci/golangci-lint-action to fetch pull requests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568 # v3.5.0
+        with:
+          go-version: '1.20'
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+      #        with:
+      #          fetch-depth: 1
+      - name: go test
+        # issue: pattern ./...: directory prefix . does not contain main module or its selected dependencies
+        # see https://github.com/golangci/golangci-lint/issues/2654
+        # or, maybe, just maybe, I simply forgot to add actions/checkout like a dummy
+        run: go test -v ./... # -coverprofile=coverage.txt -covermode=atomic
+
+

@@ -1,0 +1,23 @@
+clusters:
+  - cluster:
+      certificate-authority-data: LS0tLS1CRUdJTi
+      server: https://another-cluster:6443
+    name: cluster3
+contexts:
+  - context:
+      cluster: cluster3
+      user: cluster3user
+    name: cluster3-cluster3user
+current-context: cluster3
+preferences: {}
+users:
+  - name: cluster3user
+    user:
+      auth-provider:
+        config:
+          client-id: client-id
+          client-secret: blabla*f
+          id-token: eyJhbGciOiJ
+          idp-issuer-url: https://dex.example.com
+          refresh-token: Chl5ZG95d
+        name: oidc

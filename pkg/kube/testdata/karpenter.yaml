@@ -1,0 +1,673 @@
+---
+# Source: karpenter/templates/poddisruptionbudget.yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: karpenter
+  namespace: karpenter
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: karpenter
+      app.kubernetes.io/instance: karpenter
+---
+# Source: karpenter/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: karpenter
+  namespace: karpenter
+  labels:
+    helm.sh/chart: karpenter-v0.24.0
+    app.kubernetes.io/name: karpenter
+    app.kubernetes.io/instance: karpenter
+    app.kubernetes.io/version: "0.24.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    eks.amazonaws.com/role-arn: KARPENTER_IAM_ROLE_ARN
+---
+# Source: karpenter/templates/secret-webhook-cert.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: karpenter-cert
+  namespace: karpenter
+  labels:
+    helm.sh/chart: karpenter-v0.24.0
+    app.kubernetes.io/name: karpenter
+    app.kubernetes.io/instance: karpenter
+    app.kubernetes.io/version: "0.24.0"
+    app.kubernetes.io/managed-by: Helm
+data: {} # Injected by karpenter-webhook
+---
+# Source: karpenter/templates/configmap-logging.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-logging
+  namespace: karpenter
+  labels:
+    helm.sh/chart: karpenter-v0.24.0
+    app.kubernetes.io/name: karpenter
+    app.kubernetes.io/instance: karpenter
+    app.kubernetes.io/version: "0.24.0"
+    app.kubernetes.io/managed-by: Helm
+data:
+  # https://github.com/uber-go/zap/blob/aa3e73ec0896f8b066ddf668597a02f89628ee50/config.go
+  zap-logger-config: |
+    {
+      "level": "debug",
+      "development": false,
+      "disableStacktrace": true,
+      "disableCaller": true,
+      "sampling": {
+        "initial": 100,
+        "thereafter": 100
+      },
+      "outputPaths": ["stdout"],
+      "errorOutputPaths": ["stderr"],
+      "encoding": "console",
+      "encoderConfig": {
+        "timeKey": "time",
+        "levelKey": "level",
+        "nameKey": "logger",
+        "callerKey": "caller",
+        "messageKey": "message",
+        "stacktraceKey": "stacktrace",
+        "levelEncoder": "capital",
+        "timeEncoder": "iso8601"
+      }
+    }
+  loglevel.webhook: "error"
+---
+# Source: karpenter/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: karpenter-global-settings
+  namespace: karpenter
+  labels:
+    helm.sh/chart: karpenter-v0.24.0
+    app.kubernetes.io/name: karpenter
+    app.kubernetes.io/instance: karpenter
+    app.kubernetes.io/version: "0.24.0"
+    app.kubernetes.io/managed-by: Helm
+data:  
+    "aws.clusterEndpoint": "CLUSTER_ENDPOINT"
+    "aws.clusterName": "CLUSTER_NAME"
+    "aws.defaultInstanceProfile": "KarpenterNodeInstanceProfile-CLUSTER_NAME"
+    "aws.enableENILimitedPodDensity": "true"
+    "aws.enablePodENI": "false"
+    "aws.interruptionQueueName": "CLUSTER_NAME"
+    "aws.isolatedVPC": "false"
+    "aws.nodeNameConvention": "ip-name"
+    "aws.vmMemoryOverheadPercent": "0.075"
+    "batchIdleDuration": "1s"
+    "batchMaxDuration": "10s"
+---
+# Source: karpenter/templates/aggregate-clusterrole.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: karpenter-admin
+  labels:
+    rbac.authorization.k8s.io/aggregate-to-admin: "true"
+    helm.sh/chart: karpenter-v0.24.0
+    app.kubernetes.io/name: karpenter
+    app.kubernetes.io/instance: karpenter
+    app.kubernetes.io/version: "0.24.0"
+    app.kubernetes.io/managed-by: Helm
+rules:
+  - apiGroups: ["karpenter.sh"]
+    resources: ["provisioners", "provisioners/status"]
+    verbs: ["get", "list", "watch", "create", "delete", "patch"]
+  - apiGroups: ["karpenter.k8s.aws"]
+    resources: ["awsnodetemplates"]
+    verbs: ["get", "list", "watch", "create", "delete", "patch"]
+---
+# Source: karpenter/templates/clusterrole-core.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: karpenter-core
+  labels:
+    helm.sh/chart: karpenter-v0.24.0
+    app.kubernetes.io/name: karpenter
+    app.kubernetes.io/instance: karpenter
+    app.kubernetes.io/version: "0.24.0"
+    app.kubernetes.io/managed-by: Helm
+rules:
+  # Read
+  - apiGroups: ["karpenter.sh"]
+    resources: ["provisioners", "provisioners/status", "machines", "machines/status"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods", "nodes", "persistentvolumes", "persistentvolumeclaims", "replicationcontrollers", "namespaces"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["storageclasses", "csinodes"]
+    verbs: ["get", "watch", "list"]
+  - apiGroups: ["apps"]
+    resources: ["daemonsets", "deployments", "replicasets", "statefulsets"]
+    verbs: ["list", "watch"]
+  - apiGroups: ["admissionregistration.k8s.io"]
+    resources: ["validatingwebhookconfigurations", "mutatingwebhookconfigurations"]
+    verbs: ["get", "watch", "list"]
+  - apiGroups: [ "policy" ]
+    resources: [ "poddisruptionbudgets" ]
+    verbs: [ "get", "list", "watch" ]
+  # Write
+  - apiGroups: ["karpenter.sh"]
+    resources: ["provisioners/status", "machines", "machines/status"]
+    verbs: ["create", "delete", "patch"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["create", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["pods/eviction"]
+    verbs: ["create"]
+  - apiGroups: ["admissionregistration.k8s.io"]
+    resources: ["validatingwebhookconfigurations"]
+    verbs: ["update"]
+    resourceNames: ["validation.webhook.karpenter.sh", "validation.webhook.config.karpenter.sh"]
+  - apiGroups: ["admissionregistration.k8s.io"]
+    resources: ["mutatingwebhookconfigurations"]
+    verbs: ["update"]
+    resourceNames: ["defaulting.webhook.karpenter.sh"]
+---
+# Source: karpenter/templates/clusterrole.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: karpenter
+  labels:
+    helm.sh/chart: karpenter-v0.24.0
+    app.kubernetes.io/name: karpenter
+    app.kubernetes.io/instance: karpenter
+    app.kubernetes.io/version: "0.24.0"
+    app.kubernetes.io/managed-by: Helm
+rules:
+  # Read
+  - apiGroups: ["karpenter.k8s.aws"]
+    resources: ["awsnodetemplates"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["admissionregistration.k8s.io"]
+    resources: ["validatingwebhookconfigurations"]
+    verbs: ["update"]
+    resourceNames: ["validation.webhook.karpenter.k8s.aws"]
+  - apiGroups: ["admissionregistration.k8s.io"]
+    resources: ["mutatingwebhookconfigurations"]
+    verbs: ["update"]
+    resourceNames: ["defaulting.webhook.karpenter.k8s.aws"]
+  # Write
+  - apiGroups: ["karpenter.k8s.aws"]
+    resources: ["awsnodetemplates/status"]
+    verbs: ["patch", "update"]
+---
+# Source: karpenter/templates/clusterrole-core.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: karpenter-core
+  labels:
+    helm.sh/chart: karpenter-v0.24.0
+    app.kubernetes.io/name: karpenter
+    app.kubernetes.io/instance: karpenter
+    app.kubernetes.io/version: "0.24.0"
+    app.kubernetes.io/managed-by: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: karpenter-core
+subjects:
+  - kind: ServiceAccount
+    name: karpenter
+    namespace: karpenter
+---
+# Source: karpenter/templates/clusterrole.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: karpenter
+  labels:
+    helm.sh/chart: karpenter-v0.24.0
+    app.kubernetes.io/name: karpenter
+    app.kubernetes.io/instance: karpenter
+    app.kubernetes.io/version: "0.24.0"
+    app.kubernetes.io/managed-by: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: karpenter
+subjects:
+  - kind: ServiceAccount
+    name: karpenter
+    namespace: karpenter
+---
+# Source: karpenter/templates/role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: karpenter
+  namespace: karpenter
+  labels:
+    helm.sh/chart: karpenter-v0.24.0
+    app.kubernetes.io/name: karpenter
+    app.kubernetes.io/instance: karpenter
+    app.kubernetes.io/version: "0.24.0"
+    app.kubernetes.io/managed-by: Helm
+rules:
+  # Read
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "watch"]
+  - apiGroups: [""]
+    resources: ["configmaps", "namespaces", "secrets"]
+    verbs: ["get", "list", "watch"]
+  # Write
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["update"]
+    resourceNames: ["karpenter-cert"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["update", "patch", "delete"]
+    resourceNames:
+      - karpenter-global-settings
+      - config-logging
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["patch", "update"]
+    resourceNames:
+      - "karpenter-leader-election"
+      - "webhook.configmapwebhook.00-of-01"
+      - "webhook.defaultingwebhook.00-of-01"
+      - "webhook.validationwebhook.00-of-01"
+      - "webhook.webhookcertificates.00-of-01"
+  # Cannot specify resourceNames on create
+  # https://kubernetes.io/docs/reference/access-authn-authz/rbac/#referring-to-resources
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["create"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["create"]
+---
+# Source: karpenter/templates/role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: karpenter-dns
+  namespace: kube-system
+  labels:
+    helm.sh/chart: karpenter-v0.24.0
+    app.kubernetes.io/name: karpenter
+    app.kubernetes.io/instance: karpenter
+    app.kubernetes.io/version: "0.24.0"
+    app.kubernetes.io/managed-by: Helm
+rules:
+  # Read
+  - apiGroups: [""]
+    resources: ["services"]
+    resourceNames: ["kube-dns"]
+    verbs: ["get"]
+---
+# Source: karpenter/templates/rolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: karpenter
+  namespace: karpenter
+  labels:
+    helm.sh/chart: karpenter-v0.24.0
+    app.kubernetes.io/name: karpenter
+    app.kubernetes.io/instance: karpenter
+    app.kubernetes.io/version: "0.24.0"
+    app.kubernetes.io/managed-by: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: karpenter
+subjects:
+  - kind: ServiceAccount
+    name: karpenter
+    namespace: karpenter
+---
+# Source: karpenter/templates/rolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: karpenter-dns
+  namespace: kube-system
+  labels:
+    helm.sh/chart: karpenter-v0.24.0
+    app.kubernetes.io/name: karpenter
+    app.kubernetes.io/instance: karpenter
+    app.kubernetes.io/version: "0.24.0"
+    app.kubernetes.io/managed-by: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: karpenter-dns
+subjects:
+  - kind: ServiceAccount
+    name: karpenter
+    namespace: karpenter
+---
+# Source: karpenter/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: karpenter
+  namespace: karpenter
+  labels:
+    helm.sh/chart: karpenter-v0.24.0
+    app.kubernetes.io/name: karpenter
+    app.kubernetes.io/instance: karpenter
+    app.kubernetes.io/version: "0.24.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - name: http-metrics
+      port: 8080
+      targetPort: http-metrics
+      protocol: TCP
+    - name: https-webhook
+      port: 443
+      targetPort: https-webhook
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: karpenter
+    app.kubernetes.io/instance: karpenter
+---
+# Source: karpenter/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: karpenter
+  namespace: karpenter
+  labels:
+    helm.sh/chart: karpenter-v0.24.0
+    app.kubernetes.io/name: karpenter
+    app.kubernetes.io/instance: karpenter
+    app.kubernetes.io/version: "0.24.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 2
+  revisionHistoryLimit: 10
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: karpenter
+      app.kubernetes.io/instance: karpenter
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: karpenter
+        app.kubernetes.io/instance: karpenter
+      annotations:
+        checksum/settings: 2f12e017e74649875e78e4cdc8b06340ed07891a7002b5a3486cdc02f2705eaa
+    spec:
+      serviceAccountName: karpenter
+      securityContext:
+        fsGroup: 1000
+      priorityClassName: "system-cluster-critical"
+      dnsPolicy: Default
+      containers:
+        - name: controller
+          image: public.ecr.aws/karpenter/controller:v0.24.0@sha256:83e7a21200efd4e17314c931aa715c9c73b27fcbf08673d263c007029ad754da
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: KUBERNETES_MIN_VERSION
+              value: "1.19.0-0"
+            - name: KARPENTER_SERVICE
+              value: karpenter
+            - name: WEBHOOK_PORT
+              value: "8443"
+            - name: METRICS_PORT
+              value: "8080"
+            - name: HEALTH_PROBE_PORT
+              value: "8081"
+            - name: SYSTEM_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: MEMORY_LIMIT
+              valueFrom:
+                resourceFieldRef:
+                  containerName: controller
+                  divisor: "0"
+                  resource: limits.memory
+          ports:
+            - name: http-metrics
+              containerPort: 8080
+              protocol: TCP
+            - name: http
+              containerPort: 8081
+              protocol: TCP
+            - name: https-webhook
+              containerPort: 8443
+              protocol: TCP
+          livenessProbe:
+            initialDelaySeconds: 30
+            timeoutSeconds: 30
+            httpGet:
+              path: /healthz
+              port: http
+          readinessProbe:
+            timeoutSeconds: 30
+            httpGet:
+              path: /readyz
+              port: http
+          resources:
+            limits:
+              cpu: 1
+              memory: 1Gi
+            requests:
+              cpu: 1
+              memory: 1Gi
+      nodeSelector:
+        kubernetes.io/os: linux
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: karpenter.sh/provisioner-name
+                operator: DoesNotExist
+      tolerations:
+        - key: CriticalAddonsOnly
+          operator: Exists
+      topologySpreadConstraints:
+        -
+          maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: karpenter
+              app.kubernetes.io/instance: karpenter
+---
+# Source: karpenter/templates/webhooks-core.yaml
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: defaulting.webhook.karpenter.sh
+  labels:
+    helm.sh/chart: karpenter-v0.24.0
+    app.kubernetes.io/name: karpenter
+    app.kubernetes.io/instance: karpenter
+    app.kubernetes.io/version: "0.24.0"
+    app.kubernetes.io/managed-by: Helm
+webhooks:
+  - name: defaulting.webhook.karpenter.sh
+    admissionReviewVersions: ["v1"]
+    clientConfig:
+      service:
+        name: karpenter
+        namespace: karpenter
+    failurePolicy: Fail
+    sideEffects: None
+    rules:
+      - apiGroups:
+          - karpenter.sh
+        apiVersions:
+          - v1alpha5
+        resources:
+          - provisioners
+          - provisioners/status
+        operations:
+          - CREATE
+          - UPDATE
+---
+# Source: karpenter/templates/webhooks.yaml
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: defaulting.webhook.karpenter.k8s.aws
+  labels:
+    helm.sh/chart: karpenter-v0.24.0
+    app.kubernetes.io/name: karpenter
+    app.kubernetes.io/instance: karpenter
+    app.kubernetes.io/version: "0.24.0"
+    app.kubernetes.io/managed-by: Helm
+webhooks:
+  - name: defaulting.webhook.karpenter.k8s.aws
+    admissionReviewVersions: ["v1"]
+    clientConfig:
+      service:
+        name: karpenter
+        namespace: karpenter
+    failurePolicy: Fail
+    sideEffects: None
+    rules:
+      - apiGroups:
+          - karpenter.k8s.aws
+        apiVersions:
+          - v1alpha1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - awsnodetemplates
+          - awsnodetemplates/status
+        scope: '*'
+      - apiGroups:
+          - karpenter.sh
+        apiVersions:
+          - v1alpha5
+        resources:
+          - provisioners
+          - provisioners/status
+        operations:
+          - CREATE
+          - UPDATE
+---
+# Source: karpenter/templates/webhooks-core.yaml
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: validation.webhook.karpenter.sh
+  labels:
+    helm.sh/chart: karpenter-v0.24.0
+    app.kubernetes.io/name: karpenter
+    app.kubernetes.io/instance: karpenter
+    app.kubernetes.io/version: "0.24.0"
+    app.kubernetes.io/managed-by: Helm
+webhooks:
+  - name: validation.webhook.karpenter.sh
+    admissionReviewVersions: ["v1"]
+    clientConfig:
+      service:
+        name: karpenter
+        namespace: karpenter
+    failurePolicy: Fail
+    sideEffects: None
+    rules:
+      - apiGroups:
+          - karpenter.sh
+        apiVersions:
+          - v1alpha5
+        resources:
+          - provisioners
+          - provisioners/status
+        operations:
+          - CREATE
+          - UPDATE
+          - DELETE
+---
+# Source: karpenter/templates/webhooks-core.yaml
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: validation.webhook.config.karpenter.sh
+  labels:
+    helm.sh/chart: karpenter-v0.24.0
+    app.kubernetes.io/name: karpenter
+    app.kubernetes.io/instance: karpenter
+    app.kubernetes.io/version: "0.24.0"
+    app.kubernetes.io/managed-by: Helm
+webhooks:
+  - name: validation.webhook.config.karpenter.sh
+    admissionReviewVersions: ["v1"]
+    clientConfig:
+      service:
+        name: karpenter
+        namespace: karpenter
+    failurePolicy: Fail
+    sideEffects: None
+    objectSelector:
+      matchLabels:
+        app.kubernetes.io/part-of: karpenter
+---
+# Source: karpenter/templates/webhooks.yaml
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: validation.webhook.karpenter.k8s.aws
+  labels:
+    helm.sh/chart: karpenter-v0.24.0
+    app.kubernetes.io/name: karpenter
+    app.kubernetes.io/instance: karpenter
+    app.kubernetes.io/version: "0.24.0"
+    app.kubernetes.io/managed-by: Helm
+webhooks:
+  - name: validation.webhook.karpenter.k8s.aws
+    admissionReviewVersions: ["v1"]
+    clientConfig:
+      service:
+        name: karpenter
+        namespace: karpenter
+    failurePolicy: Fail
+    sideEffects: None
+    rules:
+      - apiGroups:
+          - karpenter.k8s.aws
+        apiVersions:
+          - v1alpha1
+        operations:
+          - CREATE
+          - UPDATE
+          - DELETE
+        resources:
+          - awsnodetemplates
+          - awsnodetemplates/status
+        scope: '*'
+      - apiGroups:
+          - karpenter.sh
+        apiVersions:
+          - v1alpha5
+        resources:
+          - provisioners
+          - provisioners/status
+        operations:
+          - CREATE
+          - UPDATE
+          - DELETE
