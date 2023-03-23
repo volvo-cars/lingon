@@ -1,6 +1,4 @@
-# Kart 🏎️
-
-⚠️⚠️ WIP ⚠️⚠️
+# Kubernetes manifests in Go
 
 ## What is this?
 
@@ -11,20 +9,14 @@ This is a collection of libraries and helpers functions that helps to work with 
 1. Get a kubernetes manifest
    - example: `wget https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml`
 2. Convert it to Go structs
-   - without CRDs: by running `go run cmd/kygo/ -in=<file> -out=<out dir> -app=myapp`
-   - with CRDs: by creating a simple Go program using the `kube` package.
-      - Check the `examples/convert2go/main.go` for an example.
+   - example `go run cmd/kygo/ -in=<file> -out=<output dir> -app=myapp`
+   
 3. Deploy:
 
 ```go
-// manifests found in "outDir"
-myApp := myapp.New() // function lives in "[outDir]/app.go"
-if err := kube.Export(myApp, outDir); err != nil {
-   return err
-}
-// OR
-// directly kubectl apply, will automatically convert the Go structs
-if err := kube.Apply(ctx, myapp); err != nil {
+// manifests found in "output folder"
+myApp := myapp.New() // function lives in "[output folder]/app.go"
+if err := kube.Export(myApp, output); err != nil {
    return err
 }
 ```
@@ -76,7 +68,7 @@ Manipulate kubeconfig files **without** any dependencies on `go-client`.
 
 ### KubeUtil
 
-Reusable functions used to create manifests in Go.
+Reusable functions used to create kubernetes objects in Go.
 
 ### Meta
 
@@ -84,7 +76,7 @@ Reusable functions to manipulate kubernetes objects MetaObject.
 
 ### Testutils
 
-Reusable test functions helpers.
+Reusable test functions.
 
 ## Why Go
 
