@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/volvo-cars/go-terriyaki/pkg/kube"
+	"github.com/volvo-cars/lingon/pkg/kube"
 	"golang.org/x/exp/slog"
 )
 

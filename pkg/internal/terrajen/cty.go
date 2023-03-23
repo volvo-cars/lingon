@@ -3,7 +3,7 @@ package terrajen
 import (
 	"fmt"
 
-	"github.com/volvo-cars/go-terriyaki/pkg/internal/str"
+	"github.com/volvo-cars/lingon/pkg/internal/str"
 
 	"github.com/dave/jennifer/jen"
 	"github.com/zclconf/go-cty/cty"

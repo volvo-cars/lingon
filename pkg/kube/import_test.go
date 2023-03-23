@@ -11,9 +11,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/volvo-cars/go-terriyaki/pkg/kube"
-	"github.com/volvo-cars/go-terriyaki/pkg/meta"
-	tu "github.com/volvo-cars/go-terriyaki/pkg/testutil"
+	"github.com/volvo-cars/lingon/pkg/kube"
+	"github.com/volvo-cars/lingon/pkg/meta"
+	tu "github.com/volvo-cars/lingon/pkg/testutil"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"

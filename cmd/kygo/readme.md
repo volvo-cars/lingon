@@ -3,7 +3,7 @@
 Convert kubernetes YAML manifests to Go structs.
 
 Why? Because we found it easier to manipulate manifests and automate with Go code than YAML.
-Also, it interacts nicely with our other tool that manages our (multi) cloud infrastructure: [go-terriyaki](https://github.com/volvo-cars/go-terriyaki)
+Also, it interacts nicely with our other tool that manages our (multi) cloud infrastructure: [lingon](https://github.com/volvo-cars/lingon)
 
 Why Go? Smarter people have a better to explain it: <https://github.com/bwplotka/mimic/blob/main/README.md#but-why-go>
 
@@ -66,8 +66,8 @@ import (
  "path/filepath"
 
  "github.com/XXX/YYY/myapp"
- "github.com/volvo-cars/go-terriyaki/pkg/cmdexec"
- "github.com/volvo-cars/go-terriyaki/pkg/kube"
+ "github.com/volvo-cars/lingon/pkg/cmdexec"
+ "github.com/volvo-cars/lingon/pkg/kube"
 )
 
 func main() {

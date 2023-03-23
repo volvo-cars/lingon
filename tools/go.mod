@@ -1,4 +1,4 @@
-module github.com/volvo-cars/go-terriyaki/tools
+module github.com/volvo-cars/lingon/tools
 
 go 1.20
 

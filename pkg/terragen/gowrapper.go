@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/volvo-cars/go-terriyaki/pkg/internal/terrajen"
+	"github.com/volvo-cars/lingon/pkg/internal/terrajen"
 
 	tfjson "github.com/hashicorp/terraform-json"
 	"golang.org/x/exp/slog"

@@ -4,7 +4,7 @@ To view the godoc, run :
 
 ```shell
 godoc -http=:6060
-# and open http://localhost:6060/pkg/github.com/volvo-cars/go-terriyaki/pkg/kube/
+# and open http://localhost:6060/pkg/github.com/volvo-cars/lingon/pkg/kube/
 ```
 
 ## Run tests

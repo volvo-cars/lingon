@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/volvo-cars/go-terriyaki/pkg/internal/hcl"
+	"github.com/volvo-cars/lingon/pkg/internal/hcl"
 
 	"github.com/hashicorp/terraform-exec/tfexec"
 	tfjson "github.com/hashicorp/terraform-json"

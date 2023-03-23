@@ -9,13 +9,13 @@ import (
 	"time"
 
 	"github.com/dave/jennifer/jen"
-	"github.com/volvo-cars/go-terriyaki/pkg/kube"
-	tu "github.com/volvo-cars/go-terriyaki/pkg/testutil"
+	"github.com/volvo-cars/lingon/pkg/kube"
+	tu "github.com/volvo-cars/lingon/pkg/testutil"
 	// "github.com/volvo-cars/platypus/pkg/platform/tekton"
 )
 
 const (
-	kubeAppPkgPath = "github.com/volvo-cars/go-terriyaki/pkg/kube"
+	kubeAppPkgPath = "github.com/volvo-cars/lingon/pkg/kube"
 )
 
 var diffOutputDir = filepath.Join(defOutDir, "diff")

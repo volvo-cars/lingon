@@ -14,7 +14,7 @@ import (
 	"github.com/rogpeppe/go-internal/txtar"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/volvo-cars/go-terriyaki/pkg/terragen"
+	"github.com/volvo-cars/lingon/pkg/terragen"
 )
 
 type TxtarConfig struct {
@@ -80,10 +80,10 @@ func RunTest(wd string, ar *txtar.Archive) error {
 		return fmt.Errorf("reading root go.mod file: %w", err)
 	}
 	goModStr := strings.Replace(
-		string(goMod), "module github.com/volvo-cars/go-terriyaki",
+		string(goMod), "module github.com/volvo-cars/lingon",
 		"module test", 1,
 	)
-	goModStr += "\nreplace github.com/volvo-cars/go-terriyaki => ../../../../../\n"
+	goModStr += "\nreplace github.com/volvo-cars/lingon => ../../../../../\n"
 	if err := os.WriteFile(
 		filepath.Join(wd, "go.mod"),
 		[]byte(goModStr),

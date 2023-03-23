@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/volvo-cars/go-terriyaki/pkg/meta"
+	"github.com/volvo-cars/lingon/pkg/meta"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 )

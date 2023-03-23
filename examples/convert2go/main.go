@@ -8,7 +8,7 @@ import (
 
 	karpentercore "github.com/aws/karpenter-core/pkg/apis"
 	karpenter "github.com/aws/karpenter/pkg/apis"
-	"github.com/volvo-cars/go-terriyaki/pkg/kube"
+	"github.com/volvo-cars/lingon/pkg/kube"
 	"golang.org/x/exp/slog"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/client-go/kubernetes/scheme"

@@ -1,7 +1,7 @@
 package kubeutil
 
 import (
-	"github.com/volvo-cars/go-terriyaki/pkg/meta"
+	"github.com/volvo-cars/lingon/pkg/meta"
 	corev1 "k8s.io/api/core/v1"
 )
 

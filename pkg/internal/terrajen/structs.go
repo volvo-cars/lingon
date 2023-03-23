@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/dave/jennifer/jen"
-	"github.com/volvo-cars/go-terriyaki/pkg/internal/str"
+	"github.com/volvo-cars/lingon/pkg/internal/str"
 )
 
 // argsStruct takes a schema and generates the Args struct that is used by the user to specify the arguments

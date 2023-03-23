@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/veggiemonk/strcase"
-	"github.com/volvo-cars/go-terriyaki/pkg/meta"
+	"github.com/volvo-cars/lingon/pkg/meta"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 

@@ -2,7 +2,7 @@ package terra
 
 import (
 	"github.com/hashicorp/hcl/v2/hclwrite"
-	tkihcl "github.com/volvo-cars/go-terriyaki/pkg/internal/hcl"
+	tkihcl "github.com/volvo-cars/lingon/pkg/internal/hcl"
 )
 
 // Dependency represents a Terraform dependency using the depends_on meta-argument

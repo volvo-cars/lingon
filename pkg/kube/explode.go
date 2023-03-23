@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/volvo-cars/go-terriyaki/pkg/meta"
+	"github.com/volvo-cars/lingon/pkg/meta"
 )
 
 func Explode(r io.Reader, outDir string) error {

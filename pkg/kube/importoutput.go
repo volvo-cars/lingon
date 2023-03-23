@@ -8,12 +8,12 @@ import (
 
 	"github.com/dave/jennifer/jen"
 	"github.com/veggiemonk/strcase"
-	"github.com/volvo-cars/go-terriyaki/pkg/meta"
+	"github.com/volvo-cars/lingon/pkg/meta"
 )
 
 const (
 	embeddedStructName = "App"
-	kubeAppPkgPath     = "github.com/volvo-cars/go-terriyaki/pkg/kube"
+	kubeAppPkgPath     = "github.com/volvo-cars/lingon/pkg/kube"
 )
 
 func (j *jamel) render() error {

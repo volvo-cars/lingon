@@ -3,7 +3,7 @@ package terra
 import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclwrite"
-	tkihcl "github.com/volvo-cars/go-terriyaki/pkg/internal/hcl"
+	tkihcl "github.com/volvo-cars/lingon/pkg/internal/hcl"
 )
 
 // Value represents the most generic value in terra's minimal type system.
