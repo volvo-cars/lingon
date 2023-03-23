@@ -38,9 +38,8 @@ func Reference(steps ...string) ReferenceValue {
 // ReferenceValue represents a reference to some value in a Terraform configuration.
 // The reference might include things like indices (i.e. [0]), nested objects or even the splat
 // operator (i.e. [*])
-type ReferenceValue[T any] struct {
-	tr    hcl.Traversal
-	value T
+type ReferenceValue struct {
+	tr hcl.Traversal
 }
 
 func (r ReferenceValue) InternalTokens() hclwrite.Tokens {
