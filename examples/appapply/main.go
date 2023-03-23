@@ -1,13 +1,14 @@
 package main
 
-//go:generate go run github.com/volvo-cars/go-terriyaki/cmd/kygo -in ../../pkg/kube/testdata/grafana.yaml -out out/grafana -app grafana -group=false -clean-name=false
-//go:generate go run github.com/volvo-cars/go-terriyaki/cmd/explode -in ../../pkg/kube/testdata/grafana.yaml -out out/explode
+//go:generate go run github.com/volvo-cars/lingon/cmd/kygo -in ../../pkg/kube/testdata/grafana.yaml -out out/grafana -app grafana -group=false -clean-name=false
+//go:generate go run github.com/volvo-cars/lingon/cmd/explode -in ../../pkg/kube/testdata/grafana.yaml -out out/explode
 
 import (
-	"appapply/out/grafana"
 	"fmt"
 
-	"github.com/volvo-cars/go-terriyaki/pkg/kube"
+	"appapply/out/grafana"
+
+	"github.com/volvo-cars/lingon/pkg/kube"
 )
 
 func main() {

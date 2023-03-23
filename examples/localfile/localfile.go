@@ -1,10 +1,10 @@
 package localfile
 
-//go:generate go run -mod=readonly github.com/volvo-cars/go-terriyaki/cmd/terragen -out . -pkg github.com/volvo-cars/go-terriyaki/examples/localfile -force -provider local=hashicorp/local:2.4.0
+//go:generate go run -mod=readonly github.com/volvo-cars/lingon/cmd/terragen -out . -pkg github.com/volvo-cars/lingon/examples/localfile -force -provider local=hashicorp/local:2.4.0
 
 import (
-	"github.com/volvo-cars/go-terriyaki/examples/localfile/providers/local"
-	"github.com/volvo-cars/go-terriyaki/pkg/terra"
+	"github.com/volvo-cars/lingon/examples/localfile/providers/local"
+	"github.com/volvo-cars/lingon/pkg/terra"
 )
 
 // NewLocalFileStack returns a new LocalFileStack which implements the terra.Exporter interface

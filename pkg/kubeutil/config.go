@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/volvo-cars/go-terriyaki/pkg/meta"
+	"github.com/volvo-cars/lingon/pkg/meta"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

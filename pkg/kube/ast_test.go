@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	tu "github.com/volvo-cars/go-terriyaki/pkg/testutil"
+	tu "github.com/volvo-cars/lingon/pkg/testutil"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 )

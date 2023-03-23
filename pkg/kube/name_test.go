@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/volvo-cars/go-terriyaki/pkg/kube"
-	"github.com/volvo-cars/go-terriyaki/pkg/meta"
-	tu "github.com/volvo-cars/go-terriyaki/pkg/testutil"
+	"github.com/volvo-cars/lingon/pkg/kube"
+	"github.com/volvo-cars/lingon/pkg/meta"
+	tu "github.com/volvo-cars/lingon/pkg/testutil"
 )
 
 func TestBasicName(t *testing.T) {

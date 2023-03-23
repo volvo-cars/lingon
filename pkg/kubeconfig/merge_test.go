@@ -4,8 +4,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	k "github.com/volvo-cars/go-terriyaki/pkg/kubeconfig"
-	tu "github.com/volvo-cars/go-terriyaki/pkg/testutil"
+	k "github.com/volvo-cars/lingon/pkg/kubeconfig"
+	tu "github.com/volvo-cars/lingon/pkg/testutil"
 )
 
 const (

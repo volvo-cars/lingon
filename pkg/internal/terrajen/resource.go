@@ -2,7 +2,7 @@ package terrajen
 
 import (
 	"github.com/dave/jennifer/jen"
-	"github.com/volvo-cars/go-terriyaki/pkg/internal/str"
+	"github.com/volvo-cars/lingon/pkg/internal/str"
 )
 
 // ResourceFile generates a Go file for a Terraform resource configuration based on the given Schema

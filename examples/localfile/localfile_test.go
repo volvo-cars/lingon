@@ -3,7 +3,8 @@ package localfile
 import (
 	"bytes"
 	"fmt"
-	"github.com/volvo-cars/go-terriyaki/pkg/terra"
+
+	"github.com/volvo-cars/lingon/pkg/terra"
 )
 
 func ExampleStack() {

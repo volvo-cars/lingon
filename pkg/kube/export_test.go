@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/volvo-cars/go-terriyaki/pkg/kube"
-	"github.com/volvo-cars/go-terriyaki/pkg/kubeutil"
-	tu "github.com/volvo-cars/go-terriyaki/pkg/testutil"
+	"github.com/volvo-cars/lingon/pkg/kube"
+	"github.com/volvo-cars/lingon/pkg/kubeutil"
+	tu "github.com/volvo-cars/lingon/pkg/testutil"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"

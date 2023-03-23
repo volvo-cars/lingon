@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/volvo-cars/go-terriyaki/pkg/terragen"
+	"github.com/volvo-cars/lingon/pkg/terragen"
 	"golang.org/x/exp/slog"
 )
 

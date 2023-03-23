@@ -2,12 +2,12 @@ module convert2go
 
 go 1.19
 
-replace github.com/volvo-cars/go-terriyaki => ../../
+replace github.com/volvo-cars/lingon => ../../
 
 require (
 	github.com/aws/karpenter v0.24.0
 	github.com/aws/karpenter-core v0.24.0
-	github.com/volvo-cars/go-terriyaki v0.0.0-00010101000000-000000000000
+	github.com/volvo-cars/lingon v0.0.0-00010101000000-000000000000
 	golang.org/x/exp v0.0.0-20230213192124-5e25df0256eb
 	k8s.io/apiextensions-apiserver v0.26.1
 	k8s.io/client-go v0.26.1

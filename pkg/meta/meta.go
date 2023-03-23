@@ -1,7 +1,7 @@
 package meta
 
 // it needs a kubernetes cluster to extract all the metadata.
-//go:generate go run -mod=readonly github.com/volvo-cars/go-terriyaki/cmd/tools/apisources -out apiresources_gen.go
+//go:generate go run -mod=readonly github.com/volvo-cars/lingon/cmd/tools/apisources -out apiresources_gen.go
 
 import (
 	"errors"

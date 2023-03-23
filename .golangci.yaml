@@ -64,7 +64,7 @@ linters-settings:
       - exitAfterDefer
   gofumpt:
     # Module path which contains the source code being formatted.
-    module-path: github.com/volvo-cars/go-terriyaki
+    module-path: github.com/volvo-cars/lingon
     # Choose whether to use the extra rules.
     # Default: false
     extra-rules: true

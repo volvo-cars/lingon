@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/volvo-cars/go-terriyaki/pkg/kube"
-	tu "github.com/volvo-cars/go-terriyaki/pkg/testutil"
+	"github.com/volvo-cars/lingon/pkg/kube"
+	tu "github.com/volvo-cars/lingon/pkg/testutil"
 )
 
 func TestExplode(t *testing.T) {
