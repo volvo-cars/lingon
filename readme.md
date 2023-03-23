@@ -1,50 +1,66 @@
-# terriyaki - ⚠️🚧 WIP 🚧⚠️
+# lingon - libraries for building platforms in Go
 
-Terriyaki combines the power of Terraform with the Developer Experience of Go.
+## What is this?
 
-## TODO: Documentation
+Lingon is a collection of libraries and tools for building platforms using Go.
 
-1. Overview & diagram of components of terriyaki
-2. How to create a RootModule
-   3. Create your struct
-   4. Embed `tki.RootModule`
-   5. Create your backend struct (implement the `tki.Backend` interface)
-   6. Add your provider(s) to your root module
-   7. Add/embed your resources:
-      8. Embedding a struct of resources is akin to calling a Terraform module, in a way...
-   9. Nothing prevents you from defining your own approach. But nested structs are not supported.
-8. 
-2. Type system: `StringValue`, `List[StringValue]`, etc. Actual value (cty.Value) vs reference. Traversals. 
-3. Missing functionality: provider aliases, `for_each`, terraform functions
+The following technologies are supported:
 
-## TODO: bugs
+1. Terraform
+2. Kubernetes
 
-1. [SOLVED] `aws_route_table` in-line `route{}` block is empty in generated code... Uses attributes-as-block: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table#route
+## Who is this for?
 
-## IDEAS:
+Lingon is aimed at people managing cloud infrastructure who have suffered the pain of configuration languages and complexity of gluing tools together with more tools.
 
-### Error Handling
+## Getting started
 
-Create an error type for HCL encoding, that has source location.
+TODO: link to docs for each tool
 
-### GOJEN
+## Motivation
 
-1. Make resource/data interface a struct
-```go
-type IamRole struct {
-	Name  string `validate:"required"`
-	Args  IamRoleArgs // TODO: how to hcl encode this??
-	state *IamRoleOut
-}
-//...
-func (i *IamRole) State() (*IamRoleState, bool) {
-return i.state, i.state != nil
-}
+Lingon was developed to achieve the following goals:
 
-```
+### Reduce cognitive load
 
-### tki exported things
+Building a platform within a single context (i.e. Go) will reduce cognitive load by decreasing the number of tools and context switching in the process.
 
-Move everything that doesn't need to be in `tki` to `core`.
-Update code generation also.
-Rename `Terriyaki*` functions to `Tki*` or `Internal*`
+### Type safety
+
+Detect misconfigurations in your text editor by using type-safe Go structs to exchange values across tool boundaries.
+This "shifts left" the majority of errors that occur to the earliest possible point in time.
+
+### Error handling
+
+Go's error handling enables propagating meaningful errors to the user.
+This significantly reduces the effort in finding the root cause of errors and provides a better developer experience.
+
+### Limitless automation
+
+TODO: something about less glue means more possibilities... Maybe mention "test first" approach?
+
+## Why Go?
+
+- [But Why Go](https://github.com/bwplotka/mimic#but-why-go) from [Mimic](https://github.com/bwplotka/mimic)
+- [Go for Cloud](https://rakyll.org/go-cloud/) by [rakyll](https://rakyll.org)
+- [The yaml document from hell](https://ruudvanasseldonk.com/2023/01/11/the-yaml-document-from-hell) by [ruudvanasseldonk](https://ruudvanasseldonk.com)
+
+## Similar projects
+
+TODO: write about similar projects and differences.
+Primarily about being Go idiomatic and using structs to be "declarative".
+Type-safety all the way down.
+Don't involve nodejs/jsii.
+
+- Pulumi: https://www.pulumi.com/
+- CDK for AWS: https://aws.amazon.com/cdk/
+- CDK for Terraform (cdktf): https://developer.hashicorp.com/terraform/cdktf
+- CKD for Kubernetes (cdkk8s): https://cdk8s.io/
+
+## Project status
+
+TODO: something about the project status
+
+## License
+
+This code is released under the [Apache-2.0 License](./LICENSE).
