@@ -68,7 +68,6 @@ func Encode(wr io.Writer, args EncodeArgs) error {
 	if err := encodeBackend(tfBody, args); err != nil {
 		return fmt.Errorf("encoding backend: %w", err)
 	}
-	tfBody.AppendNewline()
 
 	encodeRequiredProviders(tfBody, args)
 	fileBody.AppendNewline()

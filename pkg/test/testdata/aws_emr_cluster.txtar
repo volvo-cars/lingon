@@ -92,7 +92,6 @@ type testStack struct {
 
 -- main.tf --
 terraform {
-
   required_providers {
     aws = {
       source  = "hashicorp/aws"

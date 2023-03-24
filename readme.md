@@ -42,7 +42,7 @@ See [FAQ](./docs/faq.md) for more details.
 
 ## Getting started
 
-- Terraform
+- [Terraform](./docs/terraform/)
 - [Kubernetes](./docs/kubernetes/)
 
 See [Examples](./example) for more details.

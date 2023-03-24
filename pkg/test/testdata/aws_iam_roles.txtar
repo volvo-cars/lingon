@@ -68,7 +68,6 @@ func (b testBackend) BackendType() string {
 terraform {
   backend "test" {
   }
-
   required_providers {
     aws = {
       source  = "hashicorp/aws"

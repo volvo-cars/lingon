@@ -1,6 +1,29 @@
 // Copyright 2023 Volvo Car Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+/*
+Terragen generates Go code for Terraform providers.
+It accepts one Terraform provider and generates Go structs and
+helper functions for the provider configuration,
+resources and data sources for each provider.
+
+Usage:
+
+	gofmt [flags]
+
+The flags are:
+
+	-force
+		override any existing generated Go files (required)
+	-out string
+		directory to generate Go files in (required)
+	-pkg string
+		Go pkg for the generated Go files (required)
+	-provider value
+		provider to generate Go files for (required), e.g. aws=hashicorp/aws:4.49.0
+	-tfout string
+		directory to generate Terraform providers schema (default ".lingon/schemas")
+*/
 package main
 
 import (

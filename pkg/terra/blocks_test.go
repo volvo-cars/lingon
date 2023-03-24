@@ -93,6 +93,18 @@ func newDummyBaseStack() DummyBaseStack {
 	}
 }
 
+func TestExtractBlocks_IgnoredField(t *testing.T) {
+	type simpleStack struct {
+		DummyBaseStack
+		UnknownString string `lingon:"-"`
+	}
+	st := simpleStack{
+		DummyBaseStack: newDummyBaseStack(),
+	}
+	_, err := objectsFromStack(&st)
+	require.NoError(t, err)
+}
+
 type DummyBaseStack struct {
 	Stack
 	Backend  *dummyBackend

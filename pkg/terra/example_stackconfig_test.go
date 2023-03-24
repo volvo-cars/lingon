@@ -68,7 +68,6 @@ func Example_stackConfig() {
 	//     bucket = "my-s3-bucket"
 	//     key    = "some/path/to/state"
 	//   }
-	//
 	//   required_providers {
 	//     mock = {
 	//       source  = "mock/mock"

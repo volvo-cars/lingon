@@ -24,7 +24,6 @@ func ExampleStack() {
 	//   backend "local" {
 	//     path = "terraform.tfstate"
 	//   }
-	//
 	//   required_providers {
 	//     local = {
 	//       source  = "hashicorp/local"

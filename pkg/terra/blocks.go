@@ -62,7 +62,7 @@ type stackObjects struct {
 }
 
 const (
-	tagTerriyaki = "tki"
+	tagLingon = "lingon"
 )
 
 var (
@@ -160,7 +160,7 @@ func parseStackStructFields(rv reflect.Value, sb *stackObjects) error {
 		}
 
 		// Check if field has a terriyaki struct tag
-		if tkiTag, ok := sf.Tag.Lookup(tagTerriyaki); ok {
+		if tkiTag, ok := sf.Tag.Lookup(tagLingon); ok {
 			// Ignore fields with the "-" value
 			if tkiTag == "-" {
 				continue
