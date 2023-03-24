@@ -8,7 +8,7 @@ The following is a set of guidelines for contributing to this open source projec
 
 ## Issues
 
-Issues can be created [here](https://github.com/volvo-cars/open-source-software-template/issues/new).
+Issues can be created [here](https://github.com/volvo-cars/lingon/issues/new).
 
 _Provide details on how users can create or report issues for this project here._
 
