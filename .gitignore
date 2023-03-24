@@ -1,7 +1,8 @@
 # Local .terraform directories
 **/.terraform/*
 
-# Local .terriyaki directories (generated code)
+# Local .lingon directories (generated code)
+**/.lingon/*
 **/.terriyaki/*
 
 # Terraform state files

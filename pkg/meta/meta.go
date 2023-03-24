@@ -1,3 +1,6 @@
+// Copyright (c) Volvo Car AB
+// SPDX-License-Identifier: Apache-2.0
+
 package meta
 
 // it needs a kubernetes cluster to extract all the metadata.

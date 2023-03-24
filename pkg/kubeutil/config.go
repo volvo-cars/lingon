@@ -1,3 +1,6 @@
+// Copyright (c) Volvo Car AB
+// SPDX-License-Identifier: Apache-2.0
+
 package kubeutil
 
 // adapted from: https://github.com/bwplotka/mimic/blob/prometheus-kubernetes-example/abstractions/kubernetes/volumes/volumes.go
