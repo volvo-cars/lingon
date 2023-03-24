@@ -40,6 +40,7 @@ func encodeRequiredProviders(body *hclwrite.Body, args EncodeArgs) {
 	if len(args.Providers) == 0 {
 		return
 	}
+	body.AppendNewline()
 	reqProvBody := body.AppendNewBlock(
 		"required_providers",
 		nil,

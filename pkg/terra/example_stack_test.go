@@ -36,6 +36,5 @@ func Example() {
 
 	// Output:
 	// terraform {
-	//
 	// }
 }

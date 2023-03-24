@@ -1,6 +1,29 @@
 // Copyright (c) Volvo Car AB
 // SPDX-License-Identifier: Apache-2.0
 
+/*
+Terragen generates Go code for Terraform providers.
+It accepts one or more Terraform providers and generates Go structs and
+helper functions for the provider configuration,
+resources and data sources for each provider.
+
+Usage:
+
+	gofmt [flags]
+
+The flags are:
+
+	-force
+		override any existing generated Go files (required)
+	-out string
+		directory to generate Go files in (required)
+	-pkg string
+		Go pkg for the generated Go files (required)
+	-provider value
+		providers to generate Go files for (required), e.g. aws=hashicorp/aws:4.49.0
+	-tfout string
+		directory to generate Terraform providers schema (default ".lingon/schemas")
+*/
 package main
 
 import (
@@ -30,12 +53,22 @@ func main() {
 		filepath.Join(".lingon", "schemas"),
 		"directory to generate Terraform providers schema",
 	)
-	flag.StringVar(&outDir, "out", "", "directory to generate Go files in")
-	flag.StringVar(&pkgPath, "pkg", "", "Go pkg for the generated Go files")
+	flag.StringVar(
+		&outDir,
+		"out",
+		"",
+		"directory to generate Go files in (required)",
+	)
+	flag.StringVar(
+		&pkgPath,
+		"pkg",
+		"",
+		"Go pkg for the generated Go files (required)",
+	)
 	flag.Var(
 		&providers,
 		"provider",
-		"providers to generate Go files for, e.g. aws=hashicorp/aws:4.49.0",
+		"providers to generate Go files for (required), e.g. aws=hashicorp/aws:4.49.0",
 	)
 	flag.BoolVar(
 		&force,
