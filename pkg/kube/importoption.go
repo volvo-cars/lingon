@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/volvo-cars/lingon/pkg/meta"
+	"github.com/volvo-cars/lingon/pkg/kubeutil"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 )
@@ -42,11 +42,11 @@ type Option struct {
 	// ex: scheme.Codecs.UniversalDeserializer()
 	Serializer runtime.Decoder
 	// NameFieldFunc formats the name of the field in the application struct
-	NameFieldFunc func(object meta.Metadata) string
+	NameFieldFunc func(object kubeutil.Metadata) string
 	// NameVarFunc formats the name of the variable containing the kubernetes object
-	NameVarFunc func(object meta.Metadata) string
+	NameVarFunc func(object kubeutil.Metadata) string
 	// NameFileObjFunc formats the name of the file containing the kubernetes object
-	NameFileObjFunc func(object meta.Metadata) string
+	NameFileObjFunc func(object kubeutil.Metadata) string
 	// RemoveAppName removes the app name from the object name
 	RemoveAppName bool
 	// GroupByKind groups the objects by kind
@@ -159,19 +159,19 @@ func WithSerializer(s runtime.Decoder) ImportOption {
 	}
 }
 
-func WithNameFieldFunc(f func(object meta.Metadata) string) ImportOption {
+func WithNameFieldFunc(f func(object kubeutil.Metadata) string) ImportOption {
 	return func(j *jamel) {
 		j.o.NameFieldFunc = f
 	}
 }
 
-func WithNameVarFunc(f func(object meta.Metadata) string) ImportOption {
+func WithNameVarFunc(f func(object kubeutil.Metadata) string) ImportOption {
 	return func(j *jamel) {
 		j.o.NameVarFunc = f
 	}
 }
 
-func WithNameFileObjFunc(f func(object meta.Metadata) string) ImportOption {
+func WithNameFileObjFunc(f func(object kubeutil.Metadata) string) ImportOption {
 	return func(j *jamel) {
 		j.o.NameFileObjFunc = f
 	}

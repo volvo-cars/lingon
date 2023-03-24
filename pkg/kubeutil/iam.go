@@ -4,7 +4,6 @@
 package kubeutil
 
 import (
-	"github.com/volvo-cars/lingon/pkg/meta"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -12,8 +11,8 @@ import (
 
 func SimpleSA(name, namespace string) *corev1.ServiceAccount {
 	return &corev1.ServiceAccount{
-		TypeMeta:   meta.TypeServiceAccountV1,
-		ObjectMeta: meta.ObjectMeta(name, namespace, nil, nil),
+		TypeMeta:   TypeServiceAccountV1,
+		ObjectMeta: ObjectMeta(name, namespace, nil, nil),
 	}
 }
 
@@ -22,8 +21,8 @@ func ServiceAccount(
 	labels, annotations map[string]string,
 ) *corev1.ServiceAccount {
 	return &corev1.ServiceAccount{
-		TypeMeta:   meta.TypeServiceAccountV1,
-		ObjectMeta: meta.ObjectMeta(name, namespace, labels, nil),
+		TypeMeta:   TypeServiceAccountV1,
+		ObjectMeta: ObjectMeta(name, namespace, labels, nil),
 	}
 }
 
@@ -33,7 +32,7 @@ func Role(
 	rules []rbacv1.PolicyRule,
 ) *rbacv1.Role {
 	return &rbacv1.Role{
-		TypeMeta: meta.TypeRoleV1,
+		TypeMeta: TypeRoleV1,
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
@@ -49,8 +48,8 @@ func ClusterRole(
 	rules []rbacv1.PolicyRule,
 ) *rbacv1.ClusterRole {
 	return &rbacv1.ClusterRole{
-		TypeMeta:   meta.TypeClusterRoleV1,
-		ObjectMeta: meta.ObjectMeta(name, "", labels, nil),
+		TypeMeta:   TypeClusterRoleV1,
+		ObjectMeta: ObjectMeta(name, "", labels, nil),
 		Rules:      rules,
 	}
 }

@@ -53,10 +53,9 @@ func export(km Exporter, destDir string, addKustomization bool) error {
 	if err != nil {
 		return err
 	}
-	nn := make([]string, 0)
 
 	for name, m := range manifests {
-		if err := os.MkdirAll(destDir, 0o755); err != nil {
+		if err = os.MkdirAll(destDir, 0o755); err != nil {
 			return fmt.Errorf("mkdir %s: %w", destDir, err)
 		}
 
@@ -67,16 +66,20 @@ func export(km Exporter, destDir string, addKustomization bool) error {
 			return fmt.Errorf("create file %s: %w", name, err)
 		}
 
-		nn = append(nn, n)
-
 		s := cleanManifest(m)
 		if _, err = f.WriteString(s); err != nil {
 			return fmt.Errorf("write file %s: %w", name, err)
 		}
-		err = errors.Join(f.Close(), err)
+		if err = f.Close(); err != nil {
+			return fmt.Errorf("close file %s: %w", name, err)
+		}
 	}
 
 	if addKustomization {
+		nn := make([]string, 0)
+		for name := range manifests {
+			nn = append(nn, name+".yaml")
+		}
 		if err := kustomization(destDir, nn...); err != nil {
 			return fmt.Errorf("writing kustomize.yaml: %w", err)
 		}

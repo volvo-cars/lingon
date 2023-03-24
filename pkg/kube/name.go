@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/veggiemonk/strcase"
+	"github.com/volvo-cars/lingon/pkg/kubeutil"
 	"github.com/volvo-cars/lingon/pkg/meta"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -27,7 +28,7 @@ import (
 
 // NameVarFunc returns the name of the variable containing the imported kubernetes object
 // TIP: ALWAYS put the kind somewhere in the name to avoid collisions
-func NameVarFunc(m meta.Metadata) string {
+func NameVarFunc(m kubeutil.Metadata) string {
 	bn := BasicName(m.Meta.Name, m.Kind)
 	b, a, found := strings.Cut(bn, "_")
 	if found {
@@ -40,7 +41,7 @@ func NameVarFunc(m meta.Metadata) string {
 }
 
 // NameFieldFunc returns the name of the field in the App struct
-func NameFieldFunc(m meta.Metadata) string {
+func NameFieldFunc(m kubeutil.Metadata) string {
 	bn := BasicName(m.Meta.Name, m.Kind)
 	b, a, found := strings.Cut(bn, "_")
 	if found {
@@ -52,7 +53,7 @@ func NameFieldFunc(m meta.Metadata) string {
 	return strcase.Pascal(bn)
 }
 
-func NameFileObjFunc(m meta.Metadata) string {
+func NameFileObjFunc(m kubeutil.Metadata) string {
 	return BasicName(m.Meta.Name, m.Kind) + ".go"
 }
 

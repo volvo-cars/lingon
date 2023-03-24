@@ -11,9 +11,11 @@ import (
 
 	"github.com/volvo-cars/lingon/pkg/kube"
 	"golang.org/x/exp/slog"
+
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	apiextensionsbeta "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/kubernetes/scheme"
+	kubescheme "k8s.io/client-go/kubernetes/scheme"
 )
 
 func main() {
@@ -59,6 +61,10 @@ func main() {
 
 	flag.Parse()
 
+	if pkgName == "" {
+		pkgName = appName
+	}
+
 	slog.Info(
 		"flags",
 		slog.String("in", in),
@@ -68,7 +74,14 @@ func main() {
 		slog.Bool("clean-name", removeAppName),
 	)
 
-	if err := run(in, out, appName, groupByKind, removeAppName); err != nil {
+	if err := run(
+		in,
+		out,
+		appName,
+		pkgName,
+		groupByKind,
+		removeAppName,
+	); err != nil {
 		slog.Error("run", err)
 		os.Exit(1)
 	}
@@ -76,20 +89,22 @@ func main() {
 	slog.Info("done")
 }
 
-func run(in, out, appName string, groupByKind, removeAppName bool) error {
-	var serializer runtime.Decoder
-
-	_ = apiextensions.AddToScheme(scheme.Scheme)
-	slog.Info("CRD", slog.String("group name", apiextensions.GroupName))
+func defaultSerializer() runtime.Decoder {
 	// ADD MORE CRDS HERE
+	_ = apiextensions.AddToScheme(kubescheme.Scheme)
+	_ = apiextensionsbeta.AddToScheme(kubescheme.Scheme)
+	return kubescheme.Codecs.UniversalDeserializer()
+}
 
-	serializer = scheme.Codecs.UniversalDeserializer()
-
+func run(
+	in, out, appName, pkgName string,
+	groupByKind, removeAppName bool,
+) error {
 	opts := []kube.ImportOption{
 		kube.WithAppName(appName),
-		kube.WithPackageName(appName),
+		kube.WithPackageName(pkgName),
 		kube.WithOutputDirectory(out),
-		kube.WithSerializer(serializer),
+		kube.WithSerializer(defaultSerializer()),
 	}
 	if groupByKind {
 		opts = append(opts, kube.WithGroupByKind(true))

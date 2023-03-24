@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/volvo-cars/lingon/pkg/kube"
-	"github.com/volvo-cars/lingon/pkg/meta"
+	"github.com/volvo-cars/lingon/pkg/kubeutil"
 	tu "github.com/volvo-cars/lingon/pkg/testutil"
 )
 
@@ -178,7 +178,7 @@ metadata:
 	}
 
 	for _, tc := range tt {
-		m, err := meta.ExtractMetadata([]byte(tc.in))
+		m, err := kubeutil.ExtractMetadata([]byte(tc.in))
 		if err != nil {
 			t.Error("ExtractMetadata", tu.Callers(), err)
 		}
@@ -218,27 +218,27 @@ metadata:
 }
 
 func ExampleNameVarFunc_addKind() {
-	m := meta.Metadata{
+	m := kubeutil.Metadata{
 		Kind: "Deployment",
-		Meta: meta.Meta{Name: "super-duper-app"},
+		Meta: kubeutil.Meta{Name: "super-duper-app"},
 	}
 	fmt.Println(kube.NameVarFunc(m))
 	// Output: SuperDuperAppDeploy
 }
 
 func ExampleNameVarFunc_kindSuffix() {
-	m := meta.Metadata{
+	m := kubeutil.Metadata{
 		Kind: "Deployment",
-		Meta: meta.Meta{Name: "super-duper-deployment"},
+		Meta: kubeutil.Meta{Name: "super-duper-deployment"},
 	}
 	fmt.Println(kube.NameVarFunc(m))
 	// Output: SuperDuperDeploy
 }
 
 func ExampleNameVarFunc_kindWithDash() {
-	m := meta.Metadata{
+	m := kubeutil.Metadata{
 		Kind: "ClusterRole",
-		Meta: meta.Meta{Name: "argo-cluster-role"},
+		Meta: kubeutil.Meta{Name: "argo-cluster-role"},
 	}
 	fmt.Println(kube.NameVarFunc(m))
 	// Output: ArgoCR

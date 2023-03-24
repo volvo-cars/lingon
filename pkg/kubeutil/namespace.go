@@ -4,7 +4,6 @@
 package kubeutil
 
 import (
-	"github.com/volvo-cars/lingon/pkg/meta"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -30,7 +29,7 @@ func Namespace(
 	labels, annotations map[string]string,
 ) *corev1.Namespace {
 	return &corev1.Namespace{
-		TypeMeta:   meta.TypeNamespaceV1,
-		ObjectMeta: meta.ObjectMeta(name, "", labels, annotations),
+		TypeMeta:   TypeNamespaceV1,
+		ObjectMeta: ObjectMeta(name, "", labels, annotations),
 	}
 }

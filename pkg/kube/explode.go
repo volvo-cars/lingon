@@ -9,7 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/volvo-cars/lingon/pkg/meta"
+	"github.com/volvo-cars/lingon/pkg/kubeutil"
 )
 
 func Explode(r io.Reader, outDir string) error {
@@ -28,7 +28,7 @@ func Explode(r io.Reader, outDir string) error {
 		}
 
 		// get name of the object in metadata
-		m, err := meta.ExtractMetadata([]byte(obj))
+		m, err := kubeutil.ExtractMetadata([]byte(obj))
 		if err != nil {
 			return fmt.Errorf("extract metadata: %w", err)
 		}

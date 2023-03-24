@@ -11,7 +11,7 @@ import (
 
 	"github.com/dave/jennifer/jen"
 	"github.com/veggiemonk/strcase"
-	"github.com/volvo-cars/lingon/pkg/meta"
+	"github.com/volvo-cars/lingon/pkg/internal/api"
 )
 
 const (
@@ -232,7 +232,7 @@ func stmtKubeObjectFile(
 ) *jen.File {
 	f := jen.NewFile(pkgName)
 	f.HeaderComment(headerComment)
-	meta.ImportKubernetesPkgAlias(f)
+	api.ImportKubernetesPkgAlias(f)
 	f.Line()
 	f.Var().Id(nameVarObj).Op("=").Add(stmt)
 	return f
@@ -241,7 +241,7 @@ func stmtKubeObjectFile(
 func (j *jamel) appFile() *jen.File {
 	appFile := jen.NewFile(j.o.OutputPkgName)
 	appFile.HeaderComment(headerComment)
-	meta.ImportKubernetesPkgAlias(appFile)
+	api.ImportKubernetesPkgAlias(appFile)
 	appFile.Line()
 
 	nameStruct := strcase.Pascal(j.o.AppName)

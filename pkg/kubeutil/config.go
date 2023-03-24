@@ -11,7 +11,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/volvo-cars/lingon/pkg/meta"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -21,7 +20,7 @@ func DataConfigMap(
 	labels, annotations, data map[string]string,
 ) *corev1.ConfigMap {
 	return &corev1.ConfigMap{
-		TypeMeta: meta.TypeConfigMapV1,
+		TypeMeta: TypeConfigMapV1,
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        name,
 			Namespace:   namespace,
@@ -41,7 +40,7 @@ type ConfigAndMount struct {
 
 func (m ConfigAndMount) ConfigMap() corev1.ConfigMap {
 	return corev1.ConfigMap{
-		TypeMeta:   meta.TypeConfigMapV1,
+		TypeMeta:   TypeConfigMapV1,
 		ObjectMeta: m.ObjectMeta,
 		Data:       m.Data,
 	}

@@ -15,9 +15,10 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/volvo-cars/lingon/pkg/kube"
-	"github.com/volvo-cars/lingon/pkg/meta"
+	"github.com/volvo-cars/lingon/pkg/kubeutil"
 	tu "github.com/volvo-cars/lingon/pkg/testutil"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	apiextensionsbeta "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 )
@@ -28,6 +29,7 @@ func defaultSerializer() runtime.Decoder {
 	// NEEDED FOR CRDS
 	//
 	_ = apiextensions.AddToScheme(scheme.Scheme)
+	_ = apiextensionsbeta.AddToScheme(scheme.Scheme)
 	return scheme.Codecs.UniversalDeserializer()
 }
 
@@ -226,7 +228,7 @@ func TestJamel_SaveFromReader(t *testing.T) {
 		kube.WithNameFieldFunc(kube.NameFieldFunc),
 		kube.WithNameVarFunc(kube.NameVarFunc),
 		kube.WithNameFileObjFunc(
-			func(m meta.Metadata) string {
+			func(m kubeutil.Metadata) string {
 				return fmt.Sprintf(
 					"%s-%s.go",
 					strings.ToLower(m.Kind),

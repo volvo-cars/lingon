@@ -4,7 +4,6 @@
 package kubeutil
 
 import (
-	"github.com/volvo-cars/lingon/pkg/meta"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -18,8 +17,8 @@ func SimpleDeployment(
 	image string,
 ) *appsv1.Deployment {
 	return &appsv1.Deployment{
-		TypeMeta:   meta.TypeDeploymentV1,
-		ObjectMeta: meta.ObjectMeta(name, namespace, labels, nil),
+		TypeMeta:   TypeDeploymentV1,
+		ObjectMeta: ObjectMeta(name, namespace, labels, nil),
 		Spec: appsv1.DeploymentSpec{
 			Replicas: P(replicas),
 			Selector: &metav1.LabelSelector{MatchLabels: labels},

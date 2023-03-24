@@ -4,7 +4,6 @@
 package kubeutil
 
 import (
-	"github.com/volvo-cars/lingon/pkg/meta"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -16,7 +15,7 @@ func SimpleCRB(
 	cr *rbacv1.ClusterRole,
 ) *rbacv1.ClusterRoleBinding {
 	return &rbacv1.ClusterRoleBinding{
-		TypeMeta:   meta.TypeClusterRoleBindingV1,
+		TypeMeta:   TypeClusterRoleBindingV1,
 		ObjectMeta: metav1.ObjectMeta{Name: sa.Name},
 		Subjects:   RoleSubject(sa.Name, sa.Namespace),
 		RoleRef:    ClusterRoleRef(cr.Name),
@@ -34,7 +33,7 @@ func BindClusterRole(
 		name = sa.Name + "-" + cr.Name
 	}
 	return &rbacv1.ClusterRoleBinding{
-		TypeMeta:   meta.TypeClusterRoleBindingV1,
+		TypeMeta:   TypeClusterRoleBindingV1,
 		ObjectMeta: metav1.ObjectMeta{Name: name, Labels: labels},
 		Subjects:   RoleSubject(sa.Name, sa.Namespace),
 		RoleRef:    ClusterRoleRef(cr.Name),
@@ -52,7 +51,7 @@ func BindRole(
 		name = sa.Name + "-" + r.Name
 	}
 	return &rbacv1.RoleBinding{
-		TypeMeta: meta.TypeRoleBindingV1,
+		TypeMeta: TypeRoleBindingV1,
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: r.Namespace, // A RoleBinding may reference any Role in the same namespace
@@ -65,16 +64,16 @@ func BindRole(
 
 func ClusterRoleRef(name string) rbacv1.RoleRef {
 	return rbacv1.RoleRef{
-		APIGroup: meta.TypeClusterRoleV1.GroupVersionKind().Group,
-		Kind:     meta.TypeClusterRoleV1.GroupVersionKind().Kind,
+		APIGroup: TypeClusterRoleV1.GroupVersionKind().Group,
+		Kind:     TypeClusterRoleV1.GroupVersionKind().Kind,
 		Name:     name,
 	}
 }
 
 func RoleRef(name string) rbacv1.RoleRef {
 	return rbacv1.RoleRef{
-		APIGroup: meta.TypeRoleV1.GroupVersionKind().Group,
-		Kind:     meta.TypeRoleV1.GroupVersionKind().Kind,
+		APIGroup: TypeRoleV1.GroupVersionKind().Group,
+		Kind:     TypeRoleV1.GroupVersionKind().Kind,
 		Name:     name,
 	}
 }
@@ -82,7 +81,7 @@ func RoleRef(name string) rbacv1.RoleRef {
 func RoleSubject(name, namespace string) []rbacv1.Subject {
 	return []rbacv1.Subject{
 		{
-			Kind:      meta.TypeServiceAccountV1.GroupVersionKind().Kind,
+			Kind:      TypeServiceAccountV1.GroupVersionKind().Kind,
 			Name:      name,
 			Namespace: namespace,
 		},

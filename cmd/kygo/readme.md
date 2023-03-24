@@ -3,7 +3,6 @@
 Convert kubernetes YAML manifests to Go structs.
 
 Why? Because we found it easier to manipulate manifests and automate with Go code than YAML.
-Also, it interacts nicely with our other tool that manages our (multi) cloud infrastructure: [lingon](https://github.com/volvo-cars/lingon)
 
 Why Go? Smarter people have a better to explain it: <https://github.com/bwplotka/mimic/blob/main/README.md#but-why-go>
 
@@ -52,10 +51,10 @@ out/argocd
 
 Either:
 
-* Use the `go-kart` library to generate the yaml from Go.
+* Use the `lingon` library to generate the yaml from Go.
 * Use the `k8s.io/client-go` library to directly apply to kubernetes.
 
-### Using go-kart
+### Using lingon
 
 ```go
 package main

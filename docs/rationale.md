@@ -65,6 +65,18 @@ Basically :
 
 > We need to automate the glue between the tools and the infrastructure.
 
+![kubernetes landscape](assets/kubernetes-landscape.png)
+
+### References
+
+* [noyaml website](https://noyaml.com/)
+* [The yaml document from hell](https://ruudvanasseldonk.com/2023/01/11/the-yaml-document-from-hell) by [ruudvanasseldonk](https://ruudvanasseldonk.com)
+* [Nightmares On Cloud Street 29/10/20 - Joe Beda 🎥](https://youtu.be/8PpgqEqkQWA)
+* [YAML Considered Harmful - Philipp Krenn 🎥](https://youtu.be/WQurEEfSf8M)
+* [You Broke Reddit: The Pi-Day Outage](https://www.reddit.com/r/RedditEng/comments/11xx5o0/you_broke_reddit_the_piday_outage/)
+* [Collection of post-mortems](https://github.com/danluu/post-mortems#config-errors)
+* [Kubernetes failure stories](https://k8s.af/)
+
 ## Solution
 
 When it comes to manipulating data, **general programming languages** such as Python, Go, Java, Rust, C#, ...
