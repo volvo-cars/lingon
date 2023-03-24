@@ -65,7 +65,7 @@ Basically :
 
 > We need to automate the glue between the tools and the infrastructure.
 
-![kubernetes landscape](assets/kubernetes-landscape.png)
+![kubernetes landscape](assets/kubernetes-landscape.gif)
 
 ### References
 

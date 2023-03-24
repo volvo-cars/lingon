@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/veggiemonk/strcase"
+	"github.com/volvo-cars/lingon/pkg/internal/api"
 	"github.com/volvo-cars/lingon/pkg/kubeutil"
-	"github.com/volvo-cars/lingon/pkg/meta"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -120,7 +120,7 @@ func BasicName(name, kind string) string {
 }
 
 func ShortKind(s string) string {
-	o, ok := meta.KAPI.ByKind(s)
+	o, ok := api.KAPI.ByKind(s)
 	if !ok || o.ShortName == "" {
 		return s
 	}
@@ -170,7 +170,7 @@ const (
 )
 
 func DirectoryName(out, ns, kind string) string {
-	ko, ok := meta.KAPI.ByKind(kind)
+	ko, ok := api.KAPI.ByKind(kind)
 	if !ok || ko.Namespaced {
 		if ns == "" {
 			ns = notNamespaced

@@ -4,14 +4,13 @@
 package kubeutil
 
 import (
-	"github.com/volvo-cars/lingon/pkg/meta"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func Secret(name, namespace string, data map[string][]byte) *v1.Secret {
 	return &v1.Secret{
-		TypeMeta: meta.TypeMeta("Secret"),
+		TypeMeta: TypeSecretV1,
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
