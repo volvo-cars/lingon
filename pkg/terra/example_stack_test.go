@@ -6,9 +6,10 @@ package terra_test
 import (
 	"bytes"
 	"fmt"
+	"os"
+
 	"github.com/volvo-cars/lingon/pkg/terra"
 	"golang.org/x/exp/slog"
-	"os"
 )
 
 // EmptyStack shows how to create a Terraform stack.
@@ -31,7 +32,7 @@ func Example() {
 		slog.Error("exporting stack", "err", err.Error())
 		os.Exit(1)
 	}
-	fmt.Println(string(b.Bytes()))
+	fmt.Println(b.String())
 
 	// Output:
 	// terraform {

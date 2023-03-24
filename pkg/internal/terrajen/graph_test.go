@@ -5,11 +5,12 @@ package terrajen
 
 import (
 	"fmt"
+	"testing"
+
 	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/zclconf/go-cty/cty"
-	"testing"
 )
 
 type schemaAttribute struct {
@@ -47,9 +48,9 @@ func TestGraph_AttributeString(t *testing.T) {
 }
 
 func TestGraph_Attributes(t *testing.T) {
-	len := 10
-	attrs := make(map[string]*tfjson.SchemaAttribute, len)
-	for i := 0; i < len; i++ {
+	count := 10
+	attrs := make(map[string]*tfjson.SchemaAttribute, count)
+	for i := 0; i < count; i++ {
 		attrs[fmt.Sprintf("%d", i)] = &tfjson.SchemaAttribute{
 			AttributeType: cty.String,
 			Description:   "string",
@@ -107,5 +108,4 @@ func TestGraph_Blocks(t *testing.T) {
 	assert.True(t, exAttr.AttributeType.Equals(acc.ctyType))
 	assert.True(t, acc.isArg)
 	assert.True(t, acc.isRequired)
-
 }
