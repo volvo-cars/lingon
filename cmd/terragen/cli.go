@@ -1,3 +1,6 @@
+// Copyright (c) Volvo Car AB
+// SPDX-License-Identifier: Apache-2.0
+
 package main
 
 import (
@@ -24,7 +27,7 @@ func main() {
 	flag.StringVar(
 		&tfOutDir,
 		"tfout",
-		filepath.Join(".terriyaki", "schemas"),
+		filepath.Join(".lingon", "schemas"),
 		"directory to generate Terraform providers schema",
 	)
 	flag.StringVar(&outDir, "out", "", "directory to generate Go files in")

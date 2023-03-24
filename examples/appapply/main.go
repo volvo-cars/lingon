@@ -1,3 +1,6 @@
+// Copyright (c) Volvo Car AB
+// SPDX-License-Identifier: Apache-2.0
+
 package main
 
 //go:generate go run github.com/volvo-cars/lingon/cmd/kygo -in ../../pkg/kube/testdata/grafana.yaml -out out/grafana -app grafana -group=false -clean-name=false

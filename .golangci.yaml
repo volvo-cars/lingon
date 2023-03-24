@@ -1,3 +1,6 @@
+# Copyright (c) Volvo Car AB
+# SPDX-License-Identifier: Apache-2.0
+
 service:
   golangci-lint-version: 1.51.x # use the fixed version to not introduce new linters unexpectedly
 

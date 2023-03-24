@@ -1,9 +1,12 @@
+// Copyright (c) Volvo Car AB
+// SPDX-License-Identifier: Apache-2.0
+
 package localfile
 
-//go:generate go run -mod=readonly github.com/volvo-cars/lingon/cmd/terragen -out . -pkg github.com/volvo-cars/lingon/examples/localfile -force -provider local=hashicorp/local:2.4.0
+//go:generate go run -mod=readonly github.com/volvo-cars/lingon/cmd/terragen -out ./out -pkg github.com/volvo-cars/lingon/examples/localfile/out -force -provider local=hashicorp/local:2.4.0
 
 import (
-	"github.com/volvo-cars/lingon/examples/localfile/providers/local"
+	"github.com/volvo-cars/lingon/examples/localfile/out/providers/local"
 	"github.com/volvo-cars/lingon/pkg/terra"
 )
 

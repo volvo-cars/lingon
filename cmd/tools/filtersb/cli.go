@@ -1,3 +1,6 @@
+// Copyright (c) Volvo Car AB
+// SPDX-License-Identifier: Apache-2.0
+
 package main
 
 import (
@@ -21,7 +24,7 @@ func main() {
 		includeDataSources filterMap = map[string]struct{}{}
 	)
 
-	tfOutDir := filepath.Join(".terriyaki", "testdata")
+	tfOutDir := filepath.Join(".lingon", "testdata")
 	flag.StringVar(&outDir, "out", "", "directory to generate Go files in")
 	flag.Var(&includeResources, "include-resources", "resources to include")
 	flag.Var(

@@ -2,7 +2,7 @@
 
 package local
 
-import "github.com/volvo-cars/lingon/pkg/terra"
+import terra "github.com/volvo-cars/lingon/pkg/terra"
 
 func NewDataFile(name string, args DataFileArgs) *DataFile {
 	return &DataFile{
@@ -47,66 +47,31 @@ func (f dataFileAttributes) Content() terra.StringValue {
 }
 
 func (f dataFileAttributes) ContentBase64() terra.StringValue {
-	return terra.Reference(
-		"data",
-		"local_file",
-		f.name,
-		"content_base64",
-	).AsString()
+	return terra.Reference("data", "local_file", f.name, "content_base64").AsString()
 }
 
 func (f dataFileAttributes) ContentBase64Sha256() terra.StringValue {
-	return terra.Reference(
-		"data",
-		"local_file",
-		f.name,
-		"content_base64sha256",
-	).AsString()
+	return terra.Reference("data", "local_file", f.name, "content_base64sha256").AsString()
 }
 
 func (f dataFileAttributes) ContentBase64Sha512() terra.StringValue {
-	return terra.Reference(
-		"data",
-		"local_file",
-		f.name,
-		"content_base64sha512",
-	).AsString()
+	return terra.Reference("data", "local_file", f.name, "content_base64sha512").AsString()
 }
 
 func (f dataFileAttributes) ContentMd5() terra.StringValue {
-	return terra.Reference(
-		"data",
-		"local_file",
-		f.name,
-		"content_md5",
-	).AsString()
+	return terra.Reference("data", "local_file", f.name, "content_md5").AsString()
 }
 
 func (f dataFileAttributes) ContentSha1() terra.StringValue {
-	return terra.Reference(
-		"data",
-		"local_file",
-		f.name,
-		"content_sha1",
-	).AsString()
+	return terra.Reference("data", "local_file", f.name, "content_sha1").AsString()
 }
 
 func (f dataFileAttributes) ContentSha256() terra.StringValue {
-	return terra.Reference(
-		"data",
-		"local_file",
-		f.name,
-		"content_sha256",
-	).AsString()
+	return terra.Reference("data", "local_file", f.name, "content_sha256").AsString()
 }
 
 func (f dataFileAttributes) ContentSha512() terra.StringValue {
-	return terra.Reference(
-		"data",
-		"local_file",
-		f.name,
-		"content_sha512",
-	).AsString()
+	return terra.Reference("data", "local_file", f.name, "content_sha512").AsString()
 }
 
 func (f dataFileAttributes) Filename() terra.StringValue {

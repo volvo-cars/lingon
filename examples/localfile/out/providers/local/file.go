@@ -5,9 +5,8 @@ package local
 import (
 	"encoding/json"
 	"fmt"
+	terra "github.com/volvo-cars/lingon/pkg/terra"
 	"io"
-
-	"github.com/volvo-cars/lingon/pkg/terra"
 )
 
 func NewFile(name string, args FileArgs) *File {
@@ -44,12 +43,7 @@ func (f *File) Attributes() fileAttributes {
 func (f *File) ImportState(av io.Reader) error {
 	f.state = &fileState{}
 	if err := json.NewDecoder(av).Decode(f.state); err != nil {
-		return fmt.Errorf(
-			"decoding state into resource %s.%s: %w",
-			f.Type(),
-			f.LocalName(),
-			err,
-		)
+		return fmt.Errorf("decoding state into resource %s.%s: %w", f.Type(), f.LocalName(), err)
 	}
 	return nil
 }
@@ -60,13 +54,7 @@ func (f *File) State() (*fileState, bool) {
 
 func (f *File) StateMust() *fileState {
 	if f.state == nil {
-		panic(
-			fmt.Sprintf(
-				"state is nil for resource %s.%s",
-				f.Type(),
-				f.LocalName(),
-			),
-		)
+		panic(fmt.Sprintf("state is nil for resource %s.%s", f.Type(), f.LocalName()))
 	}
 	return f.state
 }
@@ -106,19 +94,11 @@ func (f fileAttributes) ContentBase64() terra.StringValue {
 }
 
 func (f fileAttributes) ContentBase64Sha256() terra.StringValue {
-	return terra.Reference(
-		"local_file",
-		f.name,
-		"content_base64sha256",
-	).AsString()
+	return terra.Reference("local_file", f.name, "content_base64sha256").AsString()
 }
 
 func (f fileAttributes) ContentBase64Sha512() terra.StringValue {
-	return terra.Reference(
-		"local_file",
-		f.name,
-		"content_base64sha512",
-	).AsString()
+	return terra.Reference("local_file", f.name, "content_base64sha512").AsString()
 }
 
 func (f fileAttributes) ContentMd5() terra.StringValue {
@@ -138,11 +118,7 @@ func (f fileAttributes) ContentSha512() terra.StringValue {
 }
 
 func (f fileAttributes) DirectoryPermission() terra.StringValue {
-	return terra.Reference(
-		"local_file",
-		f.name,
-		"directory_permission",
-	).AsString()
+	return terra.Reference("local_file", f.name, "directory_permission").AsString()
 }
 
 func (f fileAttributes) FilePermission() terra.StringValue {

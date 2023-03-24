@@ -1,3 +1,6 @@
+// Copyright (c) Volvo Car AB
+// SPDX-License-Identifier: Apache-2.0
+
 package terragen
 
 import (
@@ -44,7 +47,7 @@ func GenerateProvidersSchema(
 			},
 		},
 	}
-	workingDir := filepath.Join(".terriyaki", "schemas")
+	workingDir := filepath.Join(".lingon", "schemas")
 	if err := os.MkdirAll(workingDir, os.ModePerm); err != nil {
 		return nil, fmt.Errorf(
 			"creating schemas working directory: %s: %w",

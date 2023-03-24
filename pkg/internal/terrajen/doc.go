@@ -1,3 +1,6 @@
+// Copyright (c) Volvo Car AB
+// SPDX-License-Identifier: Apache-2.0
+
 // Package terrajen implements a Go code generator for terraform.
 //
 // A Terraform Provider Schemas object is needed to generate code. This can be obtained using the
