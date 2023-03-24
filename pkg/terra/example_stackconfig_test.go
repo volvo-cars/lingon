@@ -6,10 +6,11 @@ package terra_test
 import (
 	"bytes"
 	"fmt"
-	"github.com/volvo-cars/lingon/pkg/terra"
-	"golang.org/x/exp/slog"
 	"io"
 	"os"
+
+	"github.com/volvo-cars/lingon/pkg/terra"
+	"golang.org/x/exp/slog"
 )
 
 // StackConfig defines a reusable stack configuration containing things like
@@ -60,7 +61,7 @@ func Example_stackConfig() {
 		slog.Error("exporting stack", "err", err.Error())
 		os.Exit(1)
 	}
-	fmt.Println(string(b.Bytes()))
+	fmt.Println(b.String())
 	// Output:
 	// terraform {
 	//   backend "s3" {
@@ -87,8 +88,7 @@ func Example_stackConfig() {
 
 var _ terra.Provider = (*MockProvider)(nil)
 
-type MockProvider struct {
-}
+type MockProvider struct{}
 
 func (m MockProvider) LocalName() string {
 	return "mock"
@@ -111,8 +111,7 @@ var _ terra.Resource = (*MockResource)(nil)
 // MockResource implements a dummy resource.
 // Users do not need to write resources themselves,
 // they should be generated using terragen.
-type MockResource struct {
-}
+type MockResource struct{}
 
 func (m MockResource) Type() string {
 	return "mock_resource"
