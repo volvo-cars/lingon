@@ -62,7 +62,7 @@ func main() {
 	flag.Parse()
 
 	if pkgName == "" {
-		pkgName = appName
+		pkgName = strings.ReplaceAll(appName, "-", "")
 	}
 
 	slog.Info(
