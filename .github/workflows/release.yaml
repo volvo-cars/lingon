@@ -1,0 +1,36 @@
+name: goreleaser
+
+on:
+  push:
+    tags:
+      - '202*' # ex: 2023-01-22-6a52eb0
+
+permissions:  # added using https://github.com/step-security/
+  contents: read
+
+jobs:
+  goreleaser:
+    permissions:
+      contents: write  # for goreleaser/goreleaser-action to create a GitHub release
+      packages: write  # for goreleaser/goreleaser-action to push a container image
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
+        with:
+          go-version: '1.20'
+          # cache: true
+      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
+        with:
+          fetch-depth: 0 # this is important, otherwise it won't checkout the full tree (i.e. no previous tags)
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@f82d6c1c344bcacabba2c841718984797f664a6b # v4.2.0
+        with:
+          distribution: goreleaser # either 'goreleaser' (default) or 'goreleaser-pro'
+          version: latest
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Your GoReleaser Pro key, if you are using the 'goreleaser-pro' distribution
+          # GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}%
