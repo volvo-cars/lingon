@@ -39,10 +39,6 @@ func DiffLatest(
 	km Exporter,
 	manifests []string,
 ) (string, error) {
-	// if err := os.RemoveAll(outDir); err != nil {
-	// 	return err
-	// }
-	// output, err := filepath.Abs(outDir)
 	if err := upsertFolder(outDir); err != nil {
 		return "", err
 	}
