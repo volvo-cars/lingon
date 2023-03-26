@@ -3,7 +3,10 @@
 
 package testutil
 
-import "testing"
+import (
+	"errors"
+	"testing"
+)
 
 func AssertEqual[C comparable](t *testing.T, expected, actual C) {
 	if diff := Diff(actual, expected); diff != "" {
@@ -99,5 +102,12 @@ func False(t *testing.T, condition bool, msg string) {
 	t.Helper()
 	if condition {
 		t.Fatalf("expected false, got true: %s", msg)
+	}
+}
+
+func ErrorIs(t *testing.T, err, expected error) {
+	t.Helper()
+	if errors.Is(err, expected) {
+		t.Fatalf("expected error %v, got %v", expected, err)
 	}
 }
