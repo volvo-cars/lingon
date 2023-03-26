@@ -14,22 +14,10 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-//
-// func outputFileNameYAML(outDir string, m meta.Metadata) string {
-// 	return filepath.Join(
-// 		DirectoryName(outDir, m.Meta.Namespace, m.Kind),
-// 		fmt.Sprintf(
-// 			"%d_%s.yaml",
-// 			rankOfKind(m.Kind),
-// 			BasicName(m.Meta.Name, m.Kind),
-// 		),
-// 	)
-// }
-
 // NameVarFunc returns the name of the variable containing the imported kubernetes object
 // TIP: ALWAYS put the kind somewhere in the name to avoid collisions
 func NameVarFunc(m kubeutil.Metadata) string {
-	bn := BasicName(m.Meta.Name, m.Kind)
+	bn := basicName(m.Meta.Name, m.Kind)
 	b, a, found := strings.Cut(bn, "_")
 	if found {
 		if len(a) <= 4 && strings.ToLower(a) != "role" {
@@ -42,7 +30,7 @@ func NameVarFunc(m kubeutil.Metadata) string {
 
 // NameFieldFunc returns the name of the field in the App struct
 func NameFieldFunc(m kubeutil.Metadata) string {
-	bn := BasicName(m.Meta.Name, m.Kind)
+	bn := basicName(m.Meta.Name, m.Kind)
 	b, a, found := strings.Cut(bn, "_")
 	if found {
 		if len(a) <= 4 && strings.ToLower(a) != "role" {
@@ -53,17 +41,15 @@ func NameFieldFunc(m kubeutil.Metadata) string {
 	return strcase.Pascal(bn)
 }
 
+// NameFileObjFunc returns the name of the file containing the kubernetes object
 func NameFileObjFunc(m kubeutil.Metadata) string {
-	return BasicName(m.Meta.Name, m.Kind) + ".go"
+	return basicName(m.Meta.Name, m.Kind) + ".go"
 }
 
-func isRuneAlphaNumeric(r rune) bool {
-	return (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9')
-}
-
+// RemoveAppName removes the app name from the name
 func RemoveAppName(name, appName string) string {
 	res := strings.ReplaceAll(name, appName, "")
-
+	// if the first character is uppercase, try to replace the PascalCase version
 	first := string(name[0])
 	if strings.ToUpper(first) == first {
 		res = strings.ReplaceAll(res, strcase.Pascal(appName), "")
@@ -80,8 +66,12 @@ func RemoveAppName(name, appName string) string {
 	return name
 }
 
-func BasicName(name, kind string) string {
-	sk := ShortKind(kind)
+func isRuneAlphaNumeric(r rune) bool {
+	return (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9')
+}
+
+func basicName(name, kind string) string {
+	sk := shortKind(kind)
 
 	// when the short kind is already the suffix: i.e. for podsecuritypolicy: webapp_psp
 	if strings.HasSuffix(strings.ToLower(name), strings.ToLower(sk)) {
@@ -97,12 +87,6 @@ func BasicName(name, kind string) string {
 		nn := name[:li] + name[li+1:] // remove the dash
 		if strings.HasSuffix(strings.ToLower(nn), strings.ToLower(kind)) {
 			n := nn[:len(nn)-len(kind)-1] // remove the kind
-			// fmt.Printf(
-			// 	"removing kind %q from name %q to get %q\n",
-			// 	kind,
-			// 	name,
-			// 	n,
-			// )
 			return n + "_" + sk
 		}
 		return name + "_" + sk
@@ -119,7 +103,7 @@ func BasicName(name, kind string) string {
 	return name + "_" + sk
 }
 
-func ShortKind(s string) string {
+func shortKind(s string) string {
 	o, ok := api.KAPI.ByKind(s)
 	if !ok || o.ShortName == "" {
 		return s
@@ -127,6 +111,8 @@ func ShortKind(s string) string {
 	return o.ShortName
 }
 
+// rank returns an int denoting the priority (or rank) of the given object
+// see rankOfKind for more details.
 func rank(o runtime.Object) string {
 	if o == nil || o.GetObjectKind() == nil {
 		return ""
@@ -169,6 +155,7 @@ const (
 	dirST              = "storage"
 )
 
+// DirectoryName returns the directory name for the given namespace and kind
 func DirectoryName(out, ns, kind string) string {
 	ko, ok := api.KAPI.ByKind(kind)
 	if !ok || ko.Namespaced {

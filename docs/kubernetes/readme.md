@@ -11,7 +11,7 @@ This is a collection of libraries and helpers functions that helps to work with 
 2. Convert it to Go structs
    - example `go run cmd/kygo/ -in=<file> -out=<output dir> -app=myapp`
    
-3. Deploy:
+3. Export:
 
 ```go
 // manifests found in "output folder"
@@ -19,6 +19,12 @@ myApp := myapp.New() // function lives in "[output folder]/app.go"
 if err := kube.Export(myApp, output); err != nil {
    return err
 }
+```
+
+4. Apply:
+
+```shell
+kubectl apply -f <output folder>
 ```
 
 done.

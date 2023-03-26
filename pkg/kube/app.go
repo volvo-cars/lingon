@@ -8,11 +8,12 @@ type Exporter interface {
 	Klamydia()
 }
 
+// _ is a dummy variable to make sure that App implements Exporter
 var _ Exporter = (*App)(nil)
 
 // App struct is meant to be embedded in other structs
 // to specify that they are a set of kubernetes manifests
 type App struct{}
 
-// IamGroot is a dummy method to make sure that App implements Exporter
+// Klamydia is a dummy method to make sure that App implements Exporter
 func (a *App) Klamydia() {}

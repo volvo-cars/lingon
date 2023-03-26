@@ -4,6 +4,7 @@
 package kube_test
 
 import (
+	"bytes"
 	"fmt"
 	"go/parser"
 	"go/token"
@@ -14,6 +15,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/rogpeppe/go-internal/txtar"
 	"github.com/volvo-cars/lingon/pkg/kube"
 	"github.com/volvo-cars/lingon/pkg/kubeutil"
 	tu "github.com/volvo-cars/lingon/pkg/testutil"
@@ -110,7 +112,6 @@ func TestImport(t *testing.T) {
 				kube.WithManifestFiles([]string{"testdata/karpenter.yaml"}),
 				kube.WithSerializer(defaultSerializer()),
 				kube.WithRemoveAppName(true),
-				// kube.WithGroupByKind(),
 			},
 			OutFiles: []string{
 				"out/jamel/karpenter/admin_cr.go",
@@ -196,7 +197,7 @@ func TestImport(t *testing.T) {
 	for _, tt := range TT {
 		t.Run(
 			tt.Name, func(t *testing.T) {
-				_ = os.RemoveAll(tt.OutDir)
+				tu.AssertNoError(t, os.RemoveAll(tt.OutDir), "rm out dir")
 				err := kube.Import(tt.Opts...)
 				tu.AssertNoError(t, err, "failed to import")
 				got, err := kube.ListGoFiles(tt.OutDir)
@@ -217,8 +218,8 @@ func TestJamel_SaveFromReader(t *testing.T) {
 	file, err := os.Open(filename)
 	tu.AssertNoError(t, err, fmt.Sprintf("failed to open file: %s", filename))
 	out := filepath.Join(defOutDir, "reader")
-	tu.AssertNoError(t, os.RemoveAll(out), "failed to remove out dir")
-	defer os.RemoveAll(out)
+	tu.AssertNoError(t, os.RemoveAll(out), "rm out dir")
+	defer tu.AssertNoError(t, os.RemoveAll(out), "rm out dir")
 
 	err = kube.Import(
 		kube.WithAppName("grafana"),
@@ -227,7 +228,7 @@ func TestJamel_SaveFromReader(t *testing.T) {
 		kube.WithReader(file),
 		kube.WithNameFieldFunc(kube.NameFieldFunc),
 		kube.WithNameVarFunc(kube.NameVarFunc),
-		kube.WithNameFileObjFunc(
+		kube.WithNameFileFunc(
 			func(m kubeutil.Metadata) string {
 				return fmt.Sprintf(
 					"%s-%s.go",
@@ -268,10 +269,63 @@ func TestJamel_SaveFromReader(t *testing.T) {
 	}
 }
 
+func TestJamel_ReaderWriter(t *testing.T) {
+	filename := "testdata/grafana.yaml"
+	file, err := os.Open(filename)
+	tu.AssertNoError(t, err, fmt.Sprintf("failed to open file: %s", filename))
+
+	var bufout bytes.Buffer
+
+	err = kube.Import(
+		kube.WithAppName("grafana"),
+		kube.WithPackageName("grafana"),
+		kube.WithOutputDirectory("manifests/"),
+		kube.WithReader(file),
+		kube.WithWriter(&bufout),
+		kube.WithNameFileFunc(
+			func(m kubeutil.Metadata) string {
+				return fmt.Sprintf(
+					"%s-%s.go",
+					strings.ToLower(m.Kind),
+					m.Meta.Name,
+				)
+			},
+		),
+	)
+	tu.AssertNoError(t, err, "failed to import")
+
+	want := []string{
+		"manifests/app.go",
+		"manifests/clusterrole-grafana-clusterrole.go",
+		"manifests/clusterrolebinding-grafana-clusterrolebinding.go",
+		"manifests/configmap-grafana-dashboards-default.go",
+		"manifests/configmap-grafana-test.go",
+		"manifests/configmap-grafana.go",
+		"manifests/deployment-grafana.go",
+		"manifests/pod-grafana-test.go",
+		"manifests/role-grafana.go",
+		"manifests/rolebinding-grafana.go",
+		"manifests/secret-grafana.go",
+		"manifests/service-grafana.go",
+		"manifests/serviceaccount-grafana-test.go",
+		"manifests/serviceaccount-grafana.go",
+	}
+
+	ar := txtar.Parse(bufout.Bytes())
+	got := make([]string, len(ar.Files))
+	for i, f := range ar.Files {
+		got[i] = f.Name
+	}
+	sort.Strings(got)
+	if !cmp.Equal(want, got) {
+		t.Error(tu.Diff(want, got))
+	}
+}
+
 func TestJamel_ConfigMapComments(t *testing.T) {
 	out := filepath.Join(defOutDir, "tekton")
-	tu.AssertNoError(t, os.RemoveAll(out), "failed to remove out dir")
-	// defer os.RemoveAll(out)
+	tu.AssertNoError(t, os.RemoveAll(out), "rm out dir")
+	defer tu.AssertNoError(t, os.RemoveAll(out), "rm out dir")
 
 	err := kube.Import(
 		kube.WithAppName("tekton"),
@@ -339,14 +393,8 @@ func TestJamel_ConfigMapComments(t *testing.T) {
 		},
 	)
 	for i, comment := range comments {
-		if diff := tu.Diff(
-			cleanStr(comment),
-			cleanStr(cc[i]),
-		); diff != "" {
-			t.Errorf(
-				"diff: %s",
-				diff,
-			)
+		if diff := tu.Diff(cleanStr(comment), cleanStr(cc[i])); diff != "" {
+			t.Errorf("diff: %s", diff)
 		}
 	}
 }

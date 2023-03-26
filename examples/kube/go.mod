@@ -1,15 +1,10 @@
-module appapply
+module kube
 
-go 1.20
+go 1.19
 
 replace github.com/volvo-cars/lingon => ../../
 
-require (
-	github.com/volvo-cars/lingon v0.0.0-00010101000000-000000000000
-	k8s.io/api v0.26.3
-	k8s.io/apiextensions-apiserver v0.26.3
-	k8s.io/apimachinery v0.26.3
-)
+require github.com/volvo-cars/lingon v0.0.0-00010101000000-000000000000
 
 require (
 	github.com/dave/jennifer v1.6.0 // indirect
@@ -21,7 +16,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/rogpeppe/go-internal v1.9.0 // indirect
-	github.com/veggiemonk/strcase v0.0.0-20230324010324-a2c143ca8e67 // indirect
+	github.com/veggiemonk/strcase v0.0.0-20230316165246-6c2ffca948d7 // indirect
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29 // indirect
 	golang.org/x/mod v0.9.0 // indirect
 	golang.org/x/net v0.8.0 // indirect
@@ -30,6 +25,9 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	k8s.io/api v0.26.3 // indirect
+	k8s.io/apiextensions-apiserver v0.26.3 // indirect
+	k8s.io/apimachinery v0.26.3 // indirect
 	k8s.io/client-go v0.26.3 // indirect
 	k8s.io/klog/v2 v2.90.1 // indirect
 	k8s.io/utils v0.0.0-20230313181309-38a27ef9d749 // indirect

@@ -23,24 +23,24 @@ func TestKube2GoJen(t *testing.T) {
 	tests := []TT{
 		{
 			name:     "deployment",
-			manifest: "testdata/deployment.yaml",
-			golden:   "testdata/deployment.golden",
+			manifest: "testdata/golden/deployment.yaml",
+			golden:   "testdata/golden/deployment.golden",
 		},
 		{
 			name:     "service",
-			manifest: "testdata/service.yaml",
-			golden:   "testdata/service.golden",
+			manifest: "testdata/golden/service.yaml",
+			golden:   "testdata/golden/service.golden",
 		},
 		{
 			name:     "secret",
-			manifest: "testdata/secret.yaml",
-			golden:   "testdata/secret.golden",
+			manifest: "testdata/golden/secret.yaml",
+			golden:   "testdata/golden/secret.golden",
 			redact:   true,
 		},
 		{
 			name:     "empty configmap",
-			manifest: "testdata/configmap.yaml",
-			golden:   "testdata/configmap.golden",
+			manifest: "testdata/golden/configmap.yaml",
+			golden:   "testdata/golden/configmap.golden",
 		},
 	}
 	for _, tt := range tests {
@@ -61,13 +61,12 @@ func readGolden(t *testing.T, path string) string {
 	t.Helper()
 	golden, err := os.ReadFile(path)
 	tu.AssertNoError(t, err, "read golden file")
-	want := string(golden)
-	return want
+	return string(golden)
 }
 
 func convert(t *testing.T, obj runtime.Object, redact bool) string {
 	t.Helper()
-	j := jamel{o: Option{RedactSecrets: redact}}
+	j := jamel{o: option{RedactSecrets: redact}}
 	code := j.kube2GoJen(obj)
 	var b strings.Builder
 	err := code.Render(&b)

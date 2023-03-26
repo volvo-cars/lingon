@@ -31,8 +31,18 @@ import (
 //    * Services and Ingresses -> ports
 //    * RBAC roles and bindings permissions
 
-// DiffLatest is meant to be used to know the difference between a kubernetes manifest
-// in go and the latest version of the same manifest in yaml.
+// DiffLatest is meant to be used to show the difference between a kubernetes manifest
+// in Go and the latest version of the same manifest in yaml.
+//
+//	out := filepath.Join(defOutDir, "update")
+//	diff, err := kube.DiffLatest(
+//		"tekton",
+//		"tekton",
+//		out,
+//		nil,
+//		tekton.New(),
+//		[]string{"testdata/tekton-updated.yaml"},
+//	)
 func DiffLatest(
 	appName, pkgName, outDir string,
 	serializer runtime.Decoder,

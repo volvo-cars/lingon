@@ -13,7 +13,7 @@ import (
 )
 
 func Explode(r io.Reader, outDir string) error {
-	content, err := SplitManifest(r)
+	content, err := splitManifest(r)
 	if err != nil {
 		return fmt.Errorf("explode: %w", err)
 	}
@@ -39,7 +39,7 @@ func Explode(r io.Reader, outDir string) error {
 		fn := fmt.Sprintf(
 			"%d_%s.yaml",
 			rankOfKind(m.Kind),
-			BasicName(m.Meta.Name, m.Kind),
+			basicName(m.Meta.Name, m.Kind),
 		)
 		outName := filepath.Join(dir, fn)
 		if err := write(obj, outName); err != nil {

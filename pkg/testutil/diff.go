@@ -9,7 +9,6 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
-	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -64,10 +63,4 @@ func Callers() string {
 	}
 
 	return "\n" + b.String() + ":"
-}
-
-func AssertEqual[C comparable](t *testing.T, got, want C) {
-	if diff := Diff(got, want); diff != "" {
-		t.Error(Callers(), diff)
-	}
 }

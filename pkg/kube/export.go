@@ -22,12 +22,27 @@ func ExportWithKustomization(km Exporter, outDir string) error {
 	return export(km, outDir, true)
 }
 
-// Export exports Exporter containing kubernetes object to yaml files.
+// Export exports Exporter (struct containing kube.App) containing kubernetes object to YAML files.
+// The YAML files are written to output directory.
+//
+// Example:
+//
+//	import (
+//		"path/to/kubeapp/tekton"
+//		"github.com/volvo-cars/lingon/pkg/kube"
+//	)
+//
+//	func main() {
+//		g := tekton.New()
+//		if err := kube.Export(g, "out/export"); err != nil {
+//			panic(err)
+//		}
+//	}
 func Export(km Exporter, outDir string) error {
 	return export(km, outDir, false)
 }
 
-// ExportWriter writes kubernetes object in YAML to io.Writer w.
+// ExportWriter writes kubernetes object in YAML to io.Writer.
 func ExportWriter(km Exporter, w io.Writer) error {
 	manifests, err := encodeApp(km)
 	if err != nil {

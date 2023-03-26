@@ -1,13 +1,11 @@
 // Copyright (c) Volvo Car AB
 // SPDX-License-Identifier: Apache-2.0
 
-package kube_test
+package kube
 
 import (
-	"fmt"
 	"testing"
 
-	"github.com/volvo-cars/lingon/pkg/kube"
 	"github.com/volvo-cars/lingon/pkg/kubeutil"
 	tu "github.com/volvo-cars/lingon/pkg/testutil"
 )
@@ -66,7 +64,7 @@ func TestBasicName(t *testing.T) {
 	}
 
 	assert := func(t *testing.T, tt TT) {
-		got := kube.BasicName(tt.in, tt.kind)
+		got := basicName(tt.in, tt.kind)
 		if diff := tu.Diff(got, tt.want); diff != "" {
 			t.Error(tu.Callers(), diff)
 		}
@@ -185,8 +183,8 @@ metadata:
 		// Name of the variable
 		t.Run(
 			tc.tname+"-var", func(t *testing.T) {
-				nameVar := kube.NameVarFunc(*m)
-				got := kube.RemoveAppName(nameVar, tc.app)
+				nameVar := NameVarFunc(*m)
+				got := RemoveAppName(nameVar, tc.app)
 				if diff := tu.Diff(got, tc.wantVar); diff != "" {
 					t.Error("NameVarFunc", tu.Callers(), diff)
 				}
@@ -196,8 +194,8 @@ metadata:
 		// Name of the field
 		t.Run(
 			tc.tname+"-field", func(t *testing.T) {
-				nameField := kube.NameFieldFunc(*m)
-				got := kube.RemoveAppName(nameField, tc.app)
+				nameField := NameFieldFunc(*m)
+				got := RemoveAppName(nameField, tc.app)
 				if diff := tu.Diff(got, tc.wantField); diff != "" {
 					t.Error("NameFieldFunc", tu.Callers(), diff)
 				}
@@ -207,39 +205,12 @@ metadata:
 		// Name of the go file
 		t.Run(
 			tc.tname+"-file", func(t *testing.T) {
-				nameFile := kube.NameFileObjFunc(*m)
-				got := kube.RemoveAppName(nameFile, tc.app)
+				nameFile := NameFileObjFunc(*m)
+				got := RemoveAppName(nameFile, tc.app)
 				if diff := tu.Diff(got, tc.wantFile); diff != "" {
 					t.Error("NameFileObjFunc", tu.Callers(), diff)
 				}
 			},
 		)
 	}
-}
-
-func ExampleNameVarFunc_addKind() {
-	m := kubeutil.Metadata{
-		Kind: "Deployment",
-		Meta: kubeutil.Meta{Name: "super-duper-app"},
-	}
-	fmt.Println(kube.NameVarFunc(m))
-	// Output: SuperDuperAppDeploy
-}
-
-func ExampleNameVarFunc_kindSuffix() {
-	m := kubeutil.Metadata{
-		Kind: "Deployment",
-		Meta: kubeutil.Meta{Name: "super-duper-deployment"},
-	}
-	fmt.Println(kube.NameVarFunc(m))
-	// Output: SuperDuperDeploy
-}
-
-func ExampleNameVarFunc_kindWithDash() {
-	m := kubeutil.Metadata{
-		Kind: "ClusterRole",
-		Meta: kubeutil.Meta{Name: "argo-cluster-role"},
-	}
-	fmt.Println(kube.NameVarFunc(m))
-	// Output: ArgoCR
 }

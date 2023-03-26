@@ -7,9 +7,8 @@ import (
 	"fmt"
 	"reflect"
 
-	iyaml "sigs.k8s.io/yaml"
-	// iyaml "github.com/invopop/yaml"
 	"k8s.io/apimachinery/pkg/runtime"
+	kyaml "sigs.k8s.io/yaml"
 )
 
 // encodeApp encodes kube.App to a map of YAML manifests.
@@ -65,7 +64,8 @@ func encodeStruct(
 			}
 			r := rank(v)
 
-			b, err := encodeYAML(v)
+			// It works by first marshalling to JSON, so no `yaml` tag necessary
+			b, err := kyaml.Marshal(v)
 			if err != nil {
 				return fmt.Errorf(
 					"error marshaling field %s: %w",
@@ -87,16 +87,4 @@ func encodeStruct(
 		}
 	}
 	return nil
-}
-
-// encodeYAML encodes runtime.Object to encodeYAML format.
-// It works by first marshalling to JSON, so no `yaml` directive will work (it accepts `json` though).
-//
-// it is using `github.com/invopop/yaml` instead of `gopkg.in/yaml.v3` because
-// the latter does not support `json` tags.
-//
-// At first, it was using github.com/ghodss/yaml, but the project seems unmaintained.
-// See https://github.com/ghodss/yaml/issues/81 for more information.
-func encodeYAML(in runtime.Object) ([]byte, error) {
-	return iyaml.Marshal(in)
 }

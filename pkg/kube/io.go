@@ -14,18 +14,17 @@ import (
 	"strings"
 )
 
+// ListGoFiles returns a list of all go files in the root directory
 func ListGoFiles(root string) ([]string, error) {
 	return listFiles(root, []string{".go"})
 }
 
+// ListYAMLFiles returns a list of all yaml files in the root directory
 func ListYAMLFiles(root string) ([]string, error) {
 	return listFiles(root, []string{".yaml", ".yml"})
 }
 
-func listFiles(root string, extensions []string) (
-	[]string,
-	error,
-) {
+func listFiles(root string, extensions []string) ([]string, error) {
 	var files []string
 
 	fi, err := os.Stat(root)
@@ -66,6 +65,7 @@ func contains(e string, s []string) bool {
 	return false
 }
 
+// ReadManifest reads a yaml file and splits it into a list of yaml documents
 func ReadManifest(filePath string) ([]string, error) {
 	e := filepath.Ext(filePath)
 	if e != ".yaml" && e != ".yml" {
@@ -75,14 +75,15 @@ func ReadManifest(filePath string) ([]string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("read manifest %s: %w", filePath, err)
 	}
-	splitYaml, err := SplitManifest(bytes.NewReader(yf))
+	splitYaml, err := splitManifest(bytes.NewReader(yf))
 	if err != nil {
 		return nil, fmt.Errorf("splitting manifest: %s: %w", filePath, err)
 	}
 	return splitYaml, nil
 }
 
-func SplitManifest(r io.Reader) ([]string, error) {
+// splitManifest splits a yaml file into a list of yaml documents
+func splitManifest(r io.Reader) ([]string, error) {
 	scanner := bufio.NewScanner(r)
 	var content []string
 	var buf bytes.Buffer
@@ -105,7 +106,7 @@ func SplitManifest(r io.Reader) ([]string, error) {
 	}
 
 	s := buf.String()
-	if len(s) > 0 { // if a manifest ends with '---'
+	if len(s) > 0 { // if a manifest ends with '---', don't add it
 		content = append(content, s)
 	}
 	if err := scanner.Err(); err != nil {
@@ -123,13 +124,12 @@ func write(s, filename string) error {
 		}
 		return err
 	}
-	defer fp.Close() //nolint:errcheck
+	defer func() {
+		err = errors.Join(fp.Close(), err)
+	}()
 
 	_, err = fp.WriteString(s)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func fileExists(filename string) bool {

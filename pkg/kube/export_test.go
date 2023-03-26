@@ -24,7 +24,7 @@ const defaultExportOutputDir = "out/export/"
 func TestExport(t *testing.T) {
 	ebd := newEmbeddedStruct()
 	out := filepath.Join(defaultExportOutputDir, "embeddedstruct")
-	tu.AssertNoError(t, os.RemoveAll(out), "failed to remove out dir")
+	tu.AssertNoError(t, os.RemoveAll(out), "rm out dir")
 	defer os.RemoveAll(out)
 	err := kube.Export(ebd, out)
 	tu.AssertNoError(t, err, "failed to import")
@@ -50,8 +50,8 @@ func TestExportWithKustomization(t *testing.T) {
 	ebd := newEmbeddedStruct()
 
 	out := filepath.Join(defaultExportOutputDir, "embeddedstruct2")
-	tu.AssertNoError(t, os.RemoveAll(out), "failed to remove out dir")
-	defer os.RemoveAll(out)
+	tu.AssertNoError(t, os.RemoveAll(out), "rm out dir")
+	defer tu.AssertNoError(t, os.RemoveAll(out), "rm out dir")
 	err := kube.ExportWithKustomization(ebd, out)
 	tu.AssertNoError(t, err, "failed to import")
 

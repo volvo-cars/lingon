@@ -11,7 +11,6 @@ import (
 
 	"github.com/volvo-cars/lingon/pkg/kube"
 	"golang.org/x/exp/slog"
-
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiextensionsbeta "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -82,7 +81,7 @@ func main() {
 		groupByKind,
 		removeAppName,
 	); err != nil {
-		slog.Error("run", err)
+		slog.Error("run", slog.Any("error", err))
 		os.Exit(1)
 	}
 

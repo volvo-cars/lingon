@@ -15,10 +15,3 @@ go test -v ./...
 go test -v -coverprofile=coverage.out ./...
 ```
 
-## build everything
-
-see [build.go](../hack/build.go)
-
-```shell
-go generate ./...
-```

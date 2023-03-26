@@ -5,35 +5,48 @@ package testutil
 
 import "testing"
 
+func AssertEqual[C comparable](t *testing.T, expected, actual C) {
+	if diff := Diff(actual, expected); diff != "" {
+		t.Error(Callers(), diff)
+	}
+}
+
 func AssertNoError(t *testing.T, err error, msg string) {
 	t.Helper()
 	if err != nil {
-		t.Fatalf("%s: %v", msg, err)
+		t.Error(Callers(), msg, err)
 	}
 }
 
-func equal[T comparable](a, b T) bool {
+func equal[C comparable](a, b C) bool {
 	return a == b
 }
 
-func Equal[T comparable](t *testing.T, expected, actual T) {
+func Equal[C comparable](t *testing.T, expected, actual C) {
 	t.Helper()
 	if !equal(expected, actual) {
-		t.Fatalf("Expected %v, got %v", expected, actual)
+		t.Fatalf("expected %v, got %v", expected, actual)
 	}
 }
 
-func NotEqual[T comparable](t *testing.T, expected, actual T) {
+func NotEqual[C comparable](t *testing.T, expected, actual C) {
 	t.Helper()
 	if equal(expected, actual) {
-		t.Fatalf("Expected %v, got %v", expected, actual)
+		t.Fatalf("expected %v, got %v", expected, actual)
 	}
 }
 
 func Nil(t *testing.T, obj any) {
 	t.Helper()
-	if obj != nil {
-		t.Fatalf("Expected nil, got %v", obj)
+	switch obj.(type) {
+	case string:
+		if obj != "" {
+			t.Fatalf("expected empty string, got %q", obj)
+		}
+	default:
+		if obj != nil {
+			t.Fatalf("expected nil, got %v", obj)
+		}
 	}
 }
 
@@ -42,16 +55,16 @@ func NotNil(t *testing.T, obj any) {
 	switch obj.(type) {
 	case string:
 		if obj == "" {
-			t.Fatalf("Expected not nil, got empty string")
+			t.Fatalf("expected not nil, got empty string")
 		}
 	default:
 		if obj == nil {
-			t.Fatalf("Expected not nil, got nil")
+			t.Fatalf("expected not nil, got nil")
 		}
 	}
 }
 
-func contains[T comparable](haystack []T, needle T) bool {
+func contains[C comparable](haystack []C, needle C) bool {
 	for _, item := range haystack {
 		if item == needle {
 			return true
@@ -61,30 +74,30 @@ func contains[T comparable](haystack []T, needle T) bool {
 	return false
 }
 
-func Contains[T comparable](t *testing.T, haystack []T, needle T) {
+func Contains[C comparable](t *testing.T, haystack []C, needle C) {
 	t.Helper()
 	if !contains(haystack, needle) {
-		t.Fatalf("Expected %v to contain %v", haystack, needle)
+		t.Fatalf("expected %v to contain %v", haystack, needle)
 	}
 }
 
-func NotContains[T comparable](t *testing.T, haystack []T, needle T) {
+func NotContains[C comparable](t *testing.T, haystack []C, needle C) {
 	t.Helper()
 	if contains(haystack, needle) {
-		t.Fatalf("Expected %v to not contain %v", haystack, needle)
+		t.Fatalf("expected %v to not contain %v", haystack, needle)
 	}
 }
 
 func True(t *testing.T, condition bool, msg string) {
 	t.Helper()
 	if !condition {
-		t.Fatalf("Expected true, got false: %s", msg)
+		t.Fatalf("expected true, got false: %s", msg)
 	}
 }
 
 func False(t *testing.T, condition bool, msg string) {
 	t.Helper()
 	if condition {
-		t.Fatalf("Expected false, got true: %s", msg)
+		t.Fatalf("expected false, got true: %s", msg)
 	}
 }

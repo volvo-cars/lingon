@@ -309,12 +309,13 @@ func (j *jamel) convertConfigMap(
 	vf := jen.DictFunc(
 		func(d jen.Dict) {
 			for i := 0; i < v.NumField(); i++ {
-				if v.Type().Field(i).Name == "Data" {
+				switch v.Type().Field(i).Name {
+				case "Data":
 					d[jen.Id(v.Type().Field(i).Name)] = j.convertConfigMapData(
 						v.Field(i),
 						comment,
 					)
-				} else {
+				default:
 					d[jen.Id(v.Type().Field(i).Name)] = j.convertValue(v.Field(i))
 				}
 			}
@@ -398,10 +399,11 @@ func (j *jamel) convertSecret(v reflect.Value) *jen.Statement {
 	vf := jen.DictFunc(
 		func(d jen.Dict) {
 			for i := 0; i < v.NumField(); i++ {
-				// TODO: TLS cert ?
-				if v.Type().Field(i).Name == "Data" {
+				switch v.Type().Field(i).Name {
+				case "Data":
 					d[jen.Id(v.Type().Field(i).Name)] = j.replaceSecretData(v.Field(i))
-				} else {
+				// TODO: TLS cert ?
+				default:
 					d[jen.Id(v.Type().Field(i).Name)] = j.convertValue(v.Field(i))
 				}
 			}

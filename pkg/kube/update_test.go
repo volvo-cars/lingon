@@ -14,7 +14,6 @@ import (
 	"github.com/dave/jennifer/jen"
 	"github.com/volvo-cars/lingon/pkg/kube"
 	tu "github.com/volvo-cars/lingon/pkg/testutil"
-	// "github.com/volvo-cars/platypus/pkg/platform/tekton"
 )
 
 const (
@@ -23,48 +22,33 @@ const (
 
 var diffOutputDir = filepath.Join(defOutDir, "diff")
 
-// func TestUpdate(t *testing.T) {
-// 	out := filepath.Join(defOutDir, "update")
-// 	tu.AssertNoError(t, os.RemoveAll(out), "remove output dir")
-// 	diff, err := kube.DiffLatest(
-// 		"tekton",
-// 		"tekton",
-// 		out,
-// 		nil,
-// 		tekton.New(),
-// 		[]string{"testdata/tekton-updated.yaml"},
-// 	)
-// 	tu.AssertNoError(t, err, "update tekton app")
-// 	tu.NotNil(t, diff)
-// }
-
 func TestDiff2YAML(t *testing.T) {
 	tu.AssertNoError(t, os.RemoveAll(diffOutputDir), "remove output dir")
 	defer tu.AssertNoError(t, os.RemoveAll(diffOutputDir), "remove output dir")
 
 	appName := "tekton"
-	oldPkgName := "old"
-	newPkgName := "new"
-	oldPkgDir := filepath.Join(diffOutputDir, oldPkgName)
-	newPkgDir := filepath.Join(diffOutputDir, newPkgName)
+	currentPkgName := "old"
+	updatePkgName := "update"
+	currentPkgDir := filepath.Join(diffOutputDir, currentPkgName)
+	updatePkgDir := filepath.Join(diffOutputDir, updatePkgName)
 
 	// export the tekton app we modified from Go to YAML files
 	// then import it back to Go
 	importGo(
 		t,
-		oldPkgDir,
+		currentPkgDir,
 		appName,
-		oldPkgName,
+		currentPkgName,
 		[]string{"testdata/tekton.yaml"},
 	)
 	importGo(
 		t,
-		newPkgDir,
+		updatePkgDir,
 		appName,
-		newPkgName,
+		updatePkgName,
 		[]string{"testdata/tekton-updated.yaml"},
 	)
-	generateMain(t, oldPkgName, newPkgName)
+	generateMain(t, currentPkgName, updatePkgName)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
