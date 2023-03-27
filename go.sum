@@ -39,8 +39,8 @@ github.com/hashicorp/terraform-exec v0.18.1 h1:LAbfDvNQU1l0NOQlTuudjczVhHj061fNX
 github.com/hashicorp/terraform-exec v0.18.1/go.mod h1:58wg4IeuAJ6LVsLUeD2DWZZoc/bYi6dzhLHzxM41980=
 github.com/hashicorp/terraform-json v0.16.0 h1:UKkeWRWb23do5LNAFlh/K3N0ymn1qTOO8c+85Albo3s=
 github.com/hashicorp/terraform-json v0.16.0/go.mod h1:v0Ufk9jJnk6tcIZvScHvetlKfiNTC+WS21mnXIlc0B0=
-github.com/imdario/mergo v0.3.14 h1:fOqeC1+nCuuk6PKQdg9YmosXX7Y7mHX6R/0ZldI9iHo=
-github.com/imdario/mergo v0.3.14/go.mod h1:WBLT9ZmE3lPoWsEzCh9LPo3TiwVN+ZKEjmz+hD27ysY=
+github.com/imdario/mergo v0.3.15 h1:M8XP7IuFNsqUx6VPK2P9OSmsYsI/YFaGil0uD21V3dM=
+github.com/imdario/mergo v0.3.15/go.mod h1:WBLT9ZmE3lPoWsEzCh9LPo3TiwVN+ZKEjmz+hD27ysY=
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 h1:BQSFePA1RWJOlocH6Fxy8MmwDt+yVQYULKfN0RoTN8A=
 github.com/jlarfors/hcl/v2 v2.16.0-patch-1 h1:IhyzCFZets9vKPfs8cFfLTSCkR2NNDT/mbqPwR/lGtI=
 github.com/jlarfors/hcl/v2 v2.16.0-patch-1/go.mod h1:JRmR89jycNkrrqnMmvPDMd56n1rQJ2Q6KocSLCMCXng=
@@ -80,8 +80,8 @@ github.com/stretchr/testify v1.8.2 h1:+h33VjcLVPDHtOdpUCuF+7gSuG3yGIftsP1YvFihtJ
 github.com/stretchr/testify v1.8.2/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
 github.com/veggiemonk/jennifer v0.0.0-20230131124350-60c16b6e1cb9 h1:nQsiiFoMNaqzE1RGq7Q/VFhbLQP4cb8oqFAvuckEH40=
 github.com/veggiemonk/jennifer v0.0.0-20230131124350-60c16b6e1cb9/go.mod h1:AxTG893FiZKqxy3FP1kL80VMshSMuz2G+EgvszgGRnk=
-github.com/veggiemonk/strcase v0.0.0-20230316165246-6c2ffca948d7 h1:6OUfeg28JPsHOmrBeayPLCmShDchj1oJKcv5NlU5fbQ=
-github.com/veggiemonk/strcase v0.0.0-20230316165246-6c2ffca948d7/go.mod h1:FhMPOXYKshhGzQYJHiD5+zsWaVMP2NGpi/HfPu14QPA=
+github.com/veggiemonk/strcase v0.0.0-20230325182039-9fa4e7cee676 h1:k54zdDawXH2Srm91m4G37R2TZzZ9oEhvX70cbXRfn4c=
+github.com/veggiemonk/strcase v0.0.0-20230325182039-9fa4e7cee676/go.mod h1:FhMPOXYKshhGzQYJHiD5+zsWaVMP2NGpi/HfPu14QPA=
 github.com/xanzy/ssh-agent v0.3.0 h1:wUMzuKtKilRgBAD1sUb8gOwwRr2FGoBVumcjoOACClI=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
