@@ -5,7 +5,7 @@ package kube
 
 // Exporter interfaces for kubernetes objects defined in a Go structs
 type Exporter interface {
-	Klamydia()
+	Dummy()
 }
 
 // _ is a dummy variable to make sure that App implements Exporter
@@ -15,5 +15,5 @@ var _ Exporter = (*App)(nil)
 // to specify that they are a set of kubernetes manifests
 type App struct{}
 
-// Klamydia is a dummy method to make sure that App implements Exporter
-func (a *App) Klamydia() {}
+// dummy is a dummy method to make sure that App implements Exporter
+func (a *App) Dummy() {}
