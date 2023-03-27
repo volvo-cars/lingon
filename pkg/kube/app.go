@@ -5,7 +5,7 @@ package kube
 
 // Exporter interfaces for kubernetes objects defined in a Go structs
 type Exporter interface {
-	Dummy()
+	Lingon()
 }
 
 // _ is a dummy variable to make sure that App implements Exporter
@@ -16,4 +16,4 @@ var _ Exporter = (*App)(nil)
 type App struct{}
 
 // dummy is a dummy method to make sure that App implements Exporter
-func (a *App) Dummy() {}
+func (a *App) Lingon() {}
