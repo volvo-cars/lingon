@@ -90,15 +90,21 @@ func export(km Exporter, destDir string, addKustomization bool) error {
 	return err
 }
 
+var clm = strings.NewReplacer(
+	"creationTimestamp: null", "",
+	"status: {}", "",
+	`status:
+  loadBalancer: {}`, "",
+	`status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: null
+  storedVersions: null`, "",
+)
+
 func cleanManifest(m []byte) string {
-	s := strings.Replace(
-		strings.ReplaceAll(
-			string(m),
-			"creationTimestamp: null",
-			"",
-		), "status: {}", "", 1,
-	)
-	return s
+	return strings.TrimSpace(clm.Replace(string(m)))
 }
 
 func kustomization(out string, files ...string) error {

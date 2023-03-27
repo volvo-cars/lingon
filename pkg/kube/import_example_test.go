@@ -19,6 +19,7 @@ import (
 func ExampleImport() {
 	out := filepath.Join("out", "tekton")
 	_ = os.RemoveAll(out)
+	defer os.RemoveAll(out)
 	err := kube.Import(
 		kube.WithAppName("tekton"),
 		kube.WithPackageName("tekton"),

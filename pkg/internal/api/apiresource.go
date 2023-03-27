@@ -9,22 +9,22 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type APIResource struct {
+type Resource struct {
 	Name       string
 	ShortName  string
 	APIVersion string
 	Namespaced bool
 	Kind       string
 }
-type APIResources []APIResource
+type Resources []Resource
 
-func (k APIResources) ByKind(kind string) (APIResource, bool) {
+func (k Resources) ByKind(kind string) (Resource, bool) {
 	for _, v := range k {
 		if v.Kind == kind {
 			return v, true
 		}
 	}
-	return APIResource{}, false
+	return Resource{}, false
 }
 
 func TypeMeta(kind string) metav1.TypeMeta {
@@ -38,7 +38,7 @@ func TypeMeta(kind string) metav1.TypeMeta {
 	}
 }
 
-var KAPI APIResources = APIResources{
+var KAPI = Resources{
 	{
 		APIVersion: "v1",
 		Kind:       "Binding",

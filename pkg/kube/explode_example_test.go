@@ -15,6 +15,9 @@ import (
 func ExampleExplode() {
 	out := "./out/explode"
 	_ = os.RemoveAll(out)
+	defer func() {
+		_ = os.RemoveAll(out)
+	}()
 	fp, err := os.Open("./testdata/karpenter.yaml")
 	if err != nil {
 		panic(fmt.Errorf("open file: %w", err))
@@ -66,6 +69,9 @@ func ExampleExplode() {
 func ExampleExplode_reader() {
 	out := "./out/explodereader"
 	_ = os.RemoveAll(out)
+	defer func() {
+		_ = os.RemoveAll(out)
+	}()
 	manifest, err := kube.ReadManifest("./testdata/golden/reader.yaml")
 	if err != nil {
 		panic(fmt.Errorf("read manifest files: %w", err))

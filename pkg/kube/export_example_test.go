@@ -43,9 +43,7 @@ func New() *MyK8sApp {
 }
 
 func ExampleExportWriter() {
-	// fmt.Println("running main.go")
 	tk := New()
-	// out := filepath.Join("out", "export")
 
 	var buf bytes.Buffer
 	_ = kube.ExportWriter(tk, &buf)

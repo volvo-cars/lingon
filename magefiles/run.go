@@ -6,7 +6,11 @@
 package main
 
 import (
+	"bytes"
+	"fmt"
+	"os"
 	"os/exec"
+	"strings"
 	"sync"
 
 	"github.com/magefile/mage/mg"
@@ -80,7 +84,8 @@ func (Run) Scan() error {
 		Run.Syft,
 		Run.GoVulnCheck,
 		Run.OSVScanner,
-		Run.GoLicenses,
+		Run.GoLicensesCheck,
+		Run.CopyWriteCheck,
 	)
 	return nil
 }
@@ -88,7 +93,6 @@ func (Run) Scan() error {
 // OSVScanner is the OSV Scanner to find vulnerabilities
 func (Run) OSVScanner() error {
 	slog.Info("Running OSV Scanner")
-	mg.Deps(Run.Syft)
 	return goRun(
 		osvScannerRepo+osvScannerVersion,
 		"-r", ".",
@@ -142,12 +146,65 @@ func (Run) GoLicenses() error {
 		goLicensesRepo+goLicensesVersion,
 		"save",
 		"./...",
-		"--save_path=./bin/licenses.csv",
+		"--save_path=./bin/licenses",
 		"--force",
 	)
 }
 
-// GoLicenses is used to export all licenses
+// GoLicensesCSV is used to export all licenses as CSV
+func (Run) GoLicensesCSV() error {
+	slog.Info("Running go-licenses - exporting licenses")
+	var buf, buferr bytes.Buffer
+	cmd := exec.Command(
+		"go",
+		"run",
+		goLicensesRepo+goLicensesVersion,
+		"report",
+		"./...",
+	)
+	cmd.Stdout = &buf
+	cmd.Stderr = &buferr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("go-licenses: %w, output: %s", err, buferr.String())
+	}
+	if err := os.MkdirAll("bin", 0o755); err != nil {
+		return fmt.Errorf("go-licenses: %w, output: %s", err, buf.String())
+	}
+	if err := os.WriteFile("bin/licenses.csv", buf.Bytes(), 0o644); err != nil {
+		return fmt.Errorf("go-licenses: %w, output: %s", err, buf.String())
+	}
+	return nil
+}
+
+func (Run) Notice() error {
+	slog.Info("Running notice - generating NOTICE")
+	mg.Deps(Run.GoLicensesCSV)
+	lcsv, err := os.ReadFile("bin/licenses.csv")
+	if err != nil {
+		return err
+	}
+	output := strings.Builder{}
+	output.WriteString(
+		`Copyright 2023 Volvo Car Corporation
+
+[lingon : 0.0.1]
+
+Components:
+
+`,
+	)
+	output.Write(lcsv)
+	if err := os.WriteFile(
+		"NOTICE",
+		[]byte(output.String()),
+		0o644,
+	); err != nil {
+		return err
+	}
+	return nil
+}
+
+// GoLicenses is used to check all licenses
 func (Run) GoLicensesCheck() error {
 	slog.Info("Running go-licenses - exporting licenses")
 	return goRun(

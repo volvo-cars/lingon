@@ -16,7 +16,7 @@ func ImportKubernetesPkgAlias(file *jen.File) {
 }
 
 func PkgPathFromAPIVersion(apiVersion string) (string, error) {
-	alias, ok := APIVersionToPkgAlias[apiVersion]
+	alias, ok := VersionToPkgAlias[apiVersion]
 	if !ok {
 		return "", fmt.Errorf("unknown api version: %s", apiVersion)
 	}
@@ -108,7 +108,7 @@ var PkgAliasToImport = map[string]string{
 	"storagev1":                    "k8s.io/api/storage/v1",
 }
 
-var APIVersionToPkgAlias = map[string]string{
+var VersionToPkgAlias = map[string]string{
 	"admissionregistration.k8s.io/v1":       "admissionregistrationv1",
 	"admissionregistration.k8s.io/v1alpha1": "admissionregistrationv1alpha1",
 	"admissionregistration.k8s.io/v1beta1":  "admissionregistrationv1beta1",

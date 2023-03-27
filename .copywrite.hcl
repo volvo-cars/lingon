@@ -8,6 +8,7 @@ project {
   header_ignore = [
     # Ignore all testdata and generated files
     ".idea/**",
+    ".vscode/**",
     "bin/**",
     "**/.lingon/**",
     "**/testdata/**",

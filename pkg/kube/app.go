@@ -15,5 +15,5 @@ var _ Exporter = (*App)(nil)
 // to specify that they are a set of kubernetes manifests
 type App struct{}
 
-// dummy is a dummy method to make sure that App implements Exporter
+// Lingon is a dummy method to make sure that App implements Exporter
 func (a *App) Lingon() {}

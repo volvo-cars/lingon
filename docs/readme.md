@@ -4,7 +4,7 @@ To view the godoc, run :
 
 ```shell
 godoc -http=:6060
-# and open http://localhost:6060/pkg/github.com/volvo-cars/lingon/pkg/kube/
+# and open http://localhost:6060/pkg/github.com/volvo-cars/lingon/
 ```
 
 ## Run tests
@@ -15,3 +15,11 @@ go test -v ./...
 go test -v -coverprofile=coverage.out ./...
 ```
 
+## Using mage
+
+see [mage](https://magefile.org/)
+
+```shell
+# list all available targets
+mage -l
+```
