@@ -46,8 +46,8 @@ type option struct {
 	NameFieldFunc func(object kubeutil.Metadata) string
 	// NameVarFunc formats the name of the variable containing the kubernetes object
 	NameVarFunc func(object kubeutil.Metadata) string
-	// NameFileObjFunc formats the name of the file containing the kubernetes object
-	NameFileObjFunc func(object kubeutil.Metadata) string
+	// NameFileFunc formats the name of the file containing the kubernetes object
+	NameFileFunc func(object kubeutil.Metadata) string
 	// RemoveAppName flag removes the app name from the object name
 	RemoveAppName bool
 	// GroupByKind flag groups the objects by kind
@@ -59,20 +59,20 @@ type option struct {
 }
 
 var defaultOpts = option{
-	AppName:         "",
-	OutputPkgName:   "",
-	ManifestFiles:   make([]string, 0),
-	ManifestReader:  os.Stdin,
-	GoCodeWriter:    os.Stdout,
-	OutputDir:       "out",
-	Serializer:      scheme.Codecs.UniversalDeserializer(), // no CRDs by default
-	NameFieldFunc:   NameFieldFunc,
-	NameVarFunc:     NameVarFunc,
-	NameFileObjFunc: NameFileObjFunc,
-	RemoveAppName:   false,
-	GroupByKind:     false, // TODO: should default to true ?
-	AddMethods:      true,
-	RedactSecrets:   false,
+	AppName:        "",
+	OutputPkgName:  "",
+	ManifestFiles:  make([]string, 0),
+	ManifestReader: os.Stdin,
+	GoCodeWriter:   os.Stdout,
+	OutputDir:      "out",
+	Serializer:     scheme.Codecs.UniversalDeserializer(), // no CRDs by default
+	NameFieldFunc:  NameFieldFunc,
+	NameVarFunc:    NameVarFunc,
+	NameFileFunc:   NameFileFunc,
+	RemoveAppName:  false,
+	GroupByKind:    false, // FIXME: should default to true ?
+	AddMethods:     true,
+	RedactSecrets:  false,
 }
 
 // WithSerializer sets the serializer to decode the kubernetes objects
@@ -94,9 +94,9 @@ func WithSerializer(s runtime.Decoder) ImportOption {
 	}
 }
 
-// ***********************
+//
 // NAMES (field, var, file)
-// ***********************
+//
 
 // WithAppName sets the application name for the generated code.
 // This is used to name the generated struct.
@@ -174,7 +174,7 @@ func WithNameVarFunc(f func(object kubeutil.Metadata) string) ImportOption {
 
 // WithNameFileFunc sets the function to format the name of the file
 // containing the kubernetes object
-// default: NameFileObjFunc
+// default: NameFileFunc
 //
 // Usage:
 //
@@ -183,13 +183,13 @@ func WithNameVarFunc(f func(object kubeutil.Metadata) string) ImportOption {
 //	})
 func WithNameFileFunc(f func(object kubeutil.Metadata) string) ImportOption {
 	return func(j *jamel) {
-		j.o.NameFileObjFunc = f
+		j.o.NameFileFunc = f
 	}
 }
 
-// **********************
+//
 //  INPUT (files, reader)
-// **********************
+//
 
 // WithManifestFiles sets the manifest files to read the kubernetes objects from
 func WithManifestFiles(files []string) ImportOption {
@@ -226,14 +226,14 @@ func WithReader(r io.Reader) ImportOption {
 	}
 }
 
-// **********************
+//
 //   OUTPUT
 //   - writer
 //   - directory
 //   - group files by kind
 //   - redact secrets
 //   - methods
-// **********************
+//
 
 // WithGroupByKind groups the kubernetes objects by kind in the same file
 //

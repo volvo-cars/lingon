@@ -11,22 +11,24 @@ Why Go? Smarter people have a better to explain it: <https://github.com/bwplotka
 ```
 Usage of kygo:
   -app string
-        specify the app name. This will be used as the package name and the prefix for the generated files. (default "myapp")
+    	specify the app name. This will be used as the package name if none is specified. (default "myapp")
   -clean-name
-        specify if the app name should be removed from the variable, struct and file name. (default true)
+    	specify if the app name should be removed from the variable, struct and file name. (default true)
   -group
-        specify if the output should be grouped by kind (default) or split by name. (default true)
+    	specify if the output should be grouped by kind (default) or split by name. (default false)
   -in string
-        specify the input directory of the yaml manifests, '-' for stdin (default "-")
+    	specify the input directory of the yaml manifests, '-' for stdin (default "-")
   -out string
-        specify the output directory for manifests. (default "out")
+    	specify the output directory for manifests. (default "out")
+  -pkg string
+    	specify the Go package name. Cannot contain a dash. If none is specified the app name will be used.
 ```
 
 ## Example
 
 ```shell
 go build -o ./bin/kygo ./cmd/kygo
-./bin/kygo -in=./pkg/kube/testdata/argocd.yaml -out=./out -app=argocd
+./bin/kygo -in=./pkg/kube/testdata/argocd.yaml -out=./out -app=argocd -group
 ls -Rl1 out/
 ```
 
@@ -60,29 +62,32 @@ Either:
 package main
 
 import (
- "context"
- "os"
- "path/filepath"
+    "context"
+    "path/filepath"
 
- "github.com/XXX/YYY/myapp"
- "github.com/volvo-cars/lingon/pkg/cmdexec"
- "github.com/volvo-cars/lingon/pkg/kube"
+    "github.com/XXX/YYY/myapp"
+    "github.com/volvo-cars/lingon/pkg/kube"
 )
 
-func main() {
- app := myapp.New()
- manifestOut := filepath.Join(".k8s", "myapp")
- // create the output directory if it does not exist
- // and generate the yaml manifests in the .k8s/myapp/ directory
- if err := kube.Export(app, manifestOut); err != nil {
+func main() {   
+	app := myapp.New()
+    manifestOut := filepath.Join("manifests", "myapp")
+	
+	// it will create the output directory if it does not exist
+	// and generate the YAML manifests in the directory manifests/myapp/
+	if err := kube.Export(app, manifestOut); err != nil {
   panic(err)
  }
- 
- // deploy the manifests to kubernetes, but it needs *kubectl* to be installed.
- ctx := context.Background()
- if err := cmdexec.KubectlOut(ctx, os.Stdout, os.Stderr, "apply", "-f", manifestOut); err != nil {
-  panic(err)
- }
+    
+    // OR 
+	// apply the manifests to kubernetes directly to the cluster
+	// it will pass the manifest output to  `kubectl apply -f -`
+	if err := app.Apply(context.Background()); err != nil {
+        panic(err)
+    }
+	
+	// check if the manifests are applied correctly
+	// ...
 }
 ```
 

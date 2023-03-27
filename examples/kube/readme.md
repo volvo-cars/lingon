@@ -8,5 +8,26 @@ This example shows you how to convert a YAML manifest to Go structs and then exp
 ```shell
 go mod tidy
 go generate ./...
-ls out/
+ls -l1 out/
+```
+
+The output should look like this:
+
+```shell
+$ ls -l1 out/tekton
+app.go
+cluster-role-binding.go
+cluster-role.go
+config-map.go
+custom-resource-definition.go
+deployment.go
+horizontal-pod-autoscaler.go
+mutating-webhook-configuration.go
+namespace.go
+role-binding.go
+role.go
+secret.go
+service-account.go
+service.go
+validating-webhook-configuration.go
 ```

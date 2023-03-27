@@ -60,12 +60,12 @@ func ExampleNameFieldFunc_kindWithDash() {
 	// Output: ArgoCR
 }
 
-func ExampleNameFileObjFunc() {
+func ExampleNameFileFunc() {
 	m := kubeutil.Metadata{
 		Kind: "Deployment",
 		Meta: kubeutil.Meta{Name: "super-duper-app"},
 	}
-	fmt.Println(NameFileObjFunc(m))
+	fmt.Println(NameFileFunc(m))
 	// Output: super-duper-app_deploy.go
 }
 

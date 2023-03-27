@@ -205,10 +205,10 @@ metadata:
 		// Name of the go file
 		t.Run(
 			tc.tname+"-file", func(t *testing.T) {
-				nameFile := NameFileObjFunc(*m)
+				nameFile := NameFileFunc(*m)
 				got := RemoveAppName(nameFile, tc.app)
 				if diff := tu.Diff(got, tc.wantFile); diff != "" {
-					t.Error("NameFileObjFunc", tu.Callers(), diff)
+					t.Error("NameFileFunc", tu.Callers(), diff)
 				}
 			},
 		)

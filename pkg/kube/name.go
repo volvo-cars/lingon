@@ -41,8 +41,8 @@ func NameFieldFunc(m kubeutil.Metadata) string {
 	return strcase.Pascal(bn)
 }
 
-// NameFileObjFunc returns the name of the file containing the kubernetes object
-func NameFileObjFunc(m kubeutil.Metadata) string {
+// NameFileFunc returns the name of the file containing the kubernetes object
+func NameFileFunc(m kubeutil.Metadata) string {
 	return basicName(m.Meta.Name, m.Kind) + ".go"
 }
 

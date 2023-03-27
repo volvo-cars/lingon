@@ -97,7 +97,7 @@ func (j *jamel) renderFileByName() error {
 		file := stmtKubeObjectFile(j.o.OutputPkgName, nameVarObj, stmt)
 
 		// rename the file
-		filename := j.o.NameFileObjFunc(objMeta)
+		filename := j.o.NameFileFunc(objMeta)
 		if j.o.RemoveAppName {
 			filename = RemoveAppName(filename, j.o.AppName)
 		}
