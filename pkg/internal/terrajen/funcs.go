@@ -1,4 +1,4 @@
-// Copyright (c) Volvo Car AB
+// Copyright (c) Volvo Car Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 package terrajen
@@ -139,7 +139,10 @@ func funcResourceImportState(s *Schema) *jen.Statement {
 			// Initialise the state
 			jen.Id(s.Receiver).Dot(idFieldState).Op("=").Op("&").Id(s.StateStructName).Block(),
 			jen.If(
-				jen.Id("err").Op(":=").Qual("encoding/json", "NewDecoder").Call(jen.Id("av")).Dot(
+				jen.Id("err").Op(":=").Qual(
+					"encoding/json",
+					"NewDecoder",
+				).Call(jen.Id("av")).Dot(
 					"Decode",
 				).Call(jen.Id(s.Receiver).Dot(idFieldState)).Op(";").Id("err").Op("!=").Nil().Block(
 					jen.Return(

@@ -1,3 +1,6 @@
+// Copyright (c) Volvo Car Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 package kube_test
 
 import (

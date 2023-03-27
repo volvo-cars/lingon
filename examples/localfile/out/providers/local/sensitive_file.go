@@ -5,8 +5,9 @@ package local
 import (
 	"encoding/json"
 	"fmt"
-	terra "github.com/volvo-cars/lingon/pkg/terra"
 	"io"
+
+	terra "github.com/volvo-cars/lingon/pkg/terra"
 )
 
 func NewSensitiveFile(name string, args SensitiveFileArgs) *SensitiveFile {
