@@ -38,7 +38,7 @@ func main() {
 	manifests := strings.Split(buf.String(), "---")
 
 	fmt.Printf("\nexported %d manifests\n\n", len(manifests))
-	fmt.Println("first manifest:")
+	fmt.Println(">>> first manifest <<<")
 	if len(manifests) > 0 {
 		fmt.Printf("%s\n", manifests[0])
 	}

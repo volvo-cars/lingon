@@ -3,6 +3,8 @@
 
 This example shows you how to convert a YAML manifest to Go structs and then export it back to YAML.
 
+> Note that the secrets will be redacted.
+
 ## Usage
 
 ```shell

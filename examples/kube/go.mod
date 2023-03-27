@@ -1,6 +1,6 @@
 module kube
 
-go 1.19
+go 1.20
 
 replace github.com/volvo-cars/lingon => ../../
 
@@ -21,7 +21,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/rogpeppe/go-internal v1.9.0 // indirect
-	github.com/veggiemonk/strcase v0.0.0-20230316165246-6c2ffca948d7 // indirect
+	github.com/veggiemonk/strcase v0.0.0-20230325182039-9fa4e7cee676 // indirect
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29 // indirect
 	golang.org/x/mod v0.9.0 // indirect
 	golang.org/x/net v0.8.0 // indirect

@@ -95,8 +95,4 @@ Reusable functions used to create kubernetes objects in Go.
 
 Reusable test functions.
 
-## Why Go
 
-- [But Why Go](https://github.com/bwplotka/mimic#but-why-go) from [Mimic](https://github.com/bwplotka/mimic)
-- [Go for Cloud](https://rakyll.org/go-cloud/) by [rakyll](https://rakyll.org)
-- [The yaml document from hell](https://ruudvanasseldonk.com/2023/01/11/the-yaml-document-from-hell) by [ruudvanasseldonk](https://ruudvanasseldonk.com)

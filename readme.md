@@ -4,14 +4,15 @@
 
 Lingon is a collection of libraries and tools for building platforms using Go.
 
-The following technologies are supported:
+The following technologies are currently supported:
 
 1. Terraform
 2. Kubernetes
 
 ## Who is this for?
 
-Lingon is aimed at people managing cloud infrastructure who have suffered the pain of configuration languages and complexity of gluing tools together with more tools.
+Lingon is aimed at people who need to automate the lifecycle of their cloud infrastructure 
+and have suffered the pain of configuration languages and complexity of gluing tools together with more tools.
 
 ## Getting started
 
@@ -19,11 +20,14 @@ TODO: link to docs for each tool
 
 ## Motivation
 
+See [Rationale](./docs/rationale.md) for more details.
+
 Lingon was developed to achieve the following goals:
 
 ### Reduce cognitive load
 
 Building a platform within a single context (i.e. Go) will reduce cognitive load by decreasing the number of tools and context switching in the process.
+It provides a better developer experience with out-of-the-box IDE support and a single language to learn with smooth learning curve.
 
 ### Type safety
 
@@ -37,25 +41,31 @@ This significantly reduces the effort in finding the root cause of errors and pr
 
 ### Limitless automation
 
-TODO: something about less glue means more possibilities... Maybe mention "test first" approach?
+We are only limited by what a programming language can do.
+Configuration languages are limited by the features they provide.
+Gluing tools together with more tools and configuration to manage more tools and configuration is not a sustainable approach.
+We do use a limited set of tools that we learn well and can extend, but we automate them and test them together using Go.
+
+Note that we are in a particular situation where we need custom automation of the lifecycle of our cloud infrastructure.
+
+TODO: Maybe mention "test first" approach?
 
 ## Why Go?
 
+Because most outage are caused by a configuration error.
+
+- [Why Go](./docs/go.md) from us, inspired by 👇
 - [But Why Go](https://github.com/bwplotka/mimic#but-why-go) from [Mimic](https://github.com/bwplotka/mimic)
+- [Not Another Markup Language](https://github.com/krisnova/naml) from [NAML](https://github.com/krisnova/naml)
 - [Go for Cloud](https://rakyll.org/go-cloud/) by [rakyll](https://rakyll.org)
 - [The yaml document from hell](https://ruudvanasseldonk.com/2023/01/11/the-yaml-document-from-hell) by [ruudvanasseldonk](https://ruudvanasseldonk.com)
+- [noyaml website](https://noyaml.com)
+- [YAML Considered Harmful - Philipp Krenn 🎥](https://youtu.be/WQurEEfSf8M)
+- [Nightmares On Cloud Street 29/10/20 - Joe Beda 🎥](https://youtu.be/8PpgqEqkQWA)
 
 ## Similar projects
 
-TODO: write about similar projects and differences.
-Primarily about being Go idiomatic and using structs to be "declarative".
-Type-safety all the way down.
-Don't involve nodejs/jsii.
-
-- Pulumi: https://www.pulumi.com/
-- CDK for AWS: https://aws.amazon.com/cdk/
-- CDK for Terraform (cdktf): https://developer.hashicorp.com/terraform/cdktf
-- CKD for Kubernetes (cdkk8s): https://cdk8s.io/
+See [Comparison](./docs/comparison.md) for more details.
 
 ## Project status
 
