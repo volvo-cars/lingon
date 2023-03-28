@@ -1,7 +1,7 @@
 # Documentation
 
 - [Rationale](./rationale.md)
-- [FAQ](./FAQ.md)
+- [FAQ](./faq.md)
 - [Go](./go.md)
 - [Kubernetes](./kubernetes/)
 - [Licenses](./licenses.md)

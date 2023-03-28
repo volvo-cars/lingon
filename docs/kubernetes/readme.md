@@ -42,7 +42,7 @@ kubectl apply -f <output folder>
 
 done.
 
-Have a look at the [tests for more examples](../../pkg/kube/].
+Have a look at the [tests for more examples](../../pkg/kube/).
 
 ### Best practices
 
@@ -70,7 +70,7 @@ A CLI was written to make it easier to use in the terminal instead of just a lib
 Converts kubernetes manifests to Go structs.
 A CLI was written to make it easier to use in the terminal instead of just a library.
 It does support CustomResourceDefinitions but not the custom resources themselves, although it is easy to add them manually.
-An example of how to do it can be found in the [examples](../../examples/).
+An example of how to do it can be found in the [example](../../example/kube/).
 
 ## Packages
 
