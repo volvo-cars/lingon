@@ -52,7 +52,7 @@ TODO: Maybe mention "test first" approach?
 
 ## Why Go?
 
-Because most outage are caused by a configuration error.
+Because most outages are caused by a configuration error.
 
 - [Why Go](./docs/go.md) from us, inspired by 👇
 - [But Why Go](https://github.com/bwplotka/mimic#but-why-go) from [Mimic](https://github.com/bwplotka/mimic)
