@@ -10,10 +10,10 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
 	"sync"
 
 	"github.com/magefile/mage/mg"
+	"github.com/volvo-cars/lingon/magefiles/notice"
 	"golang.org/x/exp/slog"
 )
 
@@ -24,27 +24,27 @@ const (
 
 	// vuln is the GoVulnCheck to find vulnarabilities
 	vulnRepo    = "golang.org/x/vuln/cmd/govulncheck"
-	vulnVersion = "@latest" // TODO: check version in go.mod
+	vulnVersion = "@v0.0.0-20230323195654-ae615d898076"
 
 	// syft is the Syft to generate SBOM
 	syftRepo    = "github.com/anchore/syft/cmd/syft"
-	syftVersion = "@latest" // TODO: check version in go.mod
+	syftVersion = "@v0.75.0"
 
 	// goLicenses is Google's go-licenses to export all licenses
 	goLicensesRepo    = "github.com/google/go-licenses"
-	goLicensesVersion = "@latest" // TODO: check version in go.mod
+	goLicensesVersion = "@v1.6.0"
 
 	// goCILint is golangci/golangci-lint to lint code
 	goCILintRepo    = "github.com/golangci/golangci-lint/cmd/golangci-lint"
-	goCILintVersion = "@latest" // TODO: check version in go.mod
+	goCILintVersion = "@v1.52.1"
 
 	// copyWriteCheck is hashicorp/copywrite to check license headers
 	copyWriteRepo    = "github.com/hashicorp/copywrite"
-	copyWriteVersion = "@latest" // TODO: check version in go.mod
+	copyWriteVersion = "@v0.16.3"
 
 	// goFumpt is mvdan.cc/gofumpt to format code
 	goFumptRepo    = "mvdan.cc/gofumpt"
-	goFumptVersion = "@latest"
+	goFumptVersion = "@v0.4.0"
 )
 
 // Run is the namespace for running all checks
@@ -59,7 +59,7 @@ func (Run) AllParallel() error {
 		Run.Syft,
 		Run.OSVScanner,
 		Run.GoFumpt,
-		Run.GoLicenses,
+		Run.Notice,
 		Run.CopyWriteCheck,
 		Run.GoCILint,
 	)
@@ -84,6 +84,7 @@ func (Run) Scan() error {
 		Run.Syft,
 		Run.GoVulnCheck,
 		Run.OSVScanner,
+		Run.Notice,
 		Run.GoLicensesCheck,
 		Run.CopyWriteCheck,
 	)
@@ -139,72 +140,43 @@ func (Run) GoFumpt() error {
 	return goRun(goFumptRepo+goFumptVersion, "-w", "-extra", ".")
 }
 
-// GoLicenses is used to export all licenses
-func (Run) GoLicenses() error {
-	slog.Info("Running go-licenses - exporting licenses")
-	return goRun(
-		goLicensesRepo+goLicensesVersion,
-		"save",
-		"./...",
-		"--save_path=./bin/licenses",
-		"--force",
-	)
-}
-
-// GoLicensesCSV is used to export all licenses as CSV
-func (Run) GoLicensesCSV() error {
-	slog.Info("Running go-licenses - exporting licenses")
-	var buf, buferr bytes.Buffer
+// Notice is used to generate a NOTICE file
+func (Run) Notice() error {
+	slog.Info("Running go-licenses - generating report")
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
 	cmd := exec.Command(
-		"go",
-		"run",
+		"go", "run",
 		goLicensesRepo+goLicensesVersion,
 		"report",
 		"./...",
+		"--template=./magefiles/notice/licenses.tpl",
+		"--ignore=github.com/volvo-cars/lingon",
 	)
-	cmd.Stdout = &buf
-	cmd.Stderr = &buferr
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	slog.Info("exec", slog.String("cmd", cmd.String()))
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("go-licenses: %w, output: %s", err, buferr.String())
+		return fmt.Errorf(
+			"running go-licenses: %w:\n\n%s", err,
+			stderr.String(),
+		)
 	}
-	if err := os.MkdirAll("bin", 0o755); err != nil {
-		return fmt.Errorf("go-licenses: %w, output: %s", err, buf.String())
-	}
-	if err := os.WriteFile("bin/licenses.csv", buf.Bytes(), 0o644); err != nil {
-		return fmt.Errorf("go-licenses: %w, output: %s", err, buf.String())
-	}
-	return nil
-}
 
-func (Run) Notice() error {
-	slog.Info("Running notice - generating NOTICE")
-	mg.Deps(Run.GoLicensesCSV)
-	lcsv, err := os.ReadFile("bin/licenses.csv")
+	slog.Info("Generating NOTICE")
+	noticeFile, err := os.Create("NOTICE")
 	if err != nil {
-		return err
+		return fmt.Errorf("creating NOTICE file: %w", err)
 	}
-	output := strings.Builder{}
-	output.WriteString(
-		`Copyright 2023 Volvo Car Corporation
 
-[lingon : 0.0.1]
-
-Components:
-
-`,
-	)
-	output.Write(lcsv)
-	if err := os.WriteFile(
-		"NOTICE",
-		[]byte(output.String()),
-		0o644,
-	); err != nil {
-		return err
+	if err := notice.GenerateNotice(noticeFile, &stdout); err != nil {
+		return fmt.Errorf("generating NOTICE file: %w", err)
 	}
 	return nil
 }
 
-// GoLicenses is used to check all licenses
+// GoLicensesCheck is used to export all licenses
 func (Run) GoLicensesCheck() error {
 	slog.Info("Running go-licenses - exporting licenses")
 	return goRun(
