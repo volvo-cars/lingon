@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
 	"sync"
 
 	"github.com/magefile/mage/mg"
@@ -60,7 +59,7 @@ func (Run) AllParallel() error {
 		Run.Syft,
 		Run.OSVScanner,
 		Run.GoFumpt,
-		Run.CreateNotice,
+		Run.Notice,
 		Run.CopyWriteCheck,
 		Run.GoCILint,
 	)
@@ -85,7 +84,7 @@ func (Run) Scan() error {
 		Run.Syft,
 		Run.GoVulnCheck,
 		Run.OSVScanner,
-		Run.CreateNotice,
+		Run.Notice,
 		Run.GoLicensesCheck,
 		Run.CopyWriteCheck,
 	)
@@ -141,8 +140,8 @@ func (Run) GoFumpt() error {
 	return goRun(goFumptRepo+goFumptVersion, "-w", "-extra", ".")
 }
 
-// CreateNotice is used to generate a NOTICE file
-func (Run) CreateNotice() error {
+// Notice is used to generate a NOTICE file
+func (Run) Notice() error {
 	slog.Info("Running go-licenses - generating report")
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
