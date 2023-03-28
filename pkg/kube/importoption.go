@@ -32,7 +32,7 @@ type option struct {
 	// ex: []string{"./manifests/webapp1.yaml", "./manifests/webapp2.yaml"}
 	ManifestFiles []string
 	// ManifestReader is used to read the kubernetes objects from, exclusive of ManifestFiles
-	// ex: os.Stdin
+	// ex: os.Stdout, bytes.Buffer
 	ManifestReader io.Reader
 	// GoCodeWriter is used to write the generated Go code in txtar format
 	// for more info on txtar format see: https://pkg.go.dev/golang.org/x/tools/txtar

@@ -52,6 +52,7 @@ func newImporter(
 	j := &jamel{
 		useReader:         false,
 		useWriter:         false,
+		buf:               bytes.Buffer{},
 		objectsCode:       make(map[string]*jen.Statement),
 		kubeAppStructCode: make(map[string]*jen.Statement),
 		objectsMeta:       make(map[string]kubeutil.Metadata),

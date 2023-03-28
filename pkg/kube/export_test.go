@@ -21,6 +21,18 @@ import (
 
 const defaultExportOutputDir = "out/export/"
 
+func TestExportt(t *testing.T) {
+	ebd := newEmbeddedStruct()
+	out := filepath.Join(defaultExportOutputDir, "embeddedstruct")
+	tu.AssertNoError(t, os.RemoveAll(out), "rm out dir")
+	t.Cleanup(
+		func() {
+			tu.AssertNoError(t, os.RemoveAll(out), "rm out dir")
+		},
+	)
+	kube.Exportt(ebd)
+}
+
 func TestExport(t *testing.T) {
 	ebd := newEmbeddedStruct()
 	out := filepath.Join(defaultExportOutputDir, "embeddedstruct")

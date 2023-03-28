@@ -16,6 +16,33 @@ import (
 
 var ErrFieldMissing = errors.New("missing")
 
+type goky struct {
+	buf           io.Writer
+	o             exportOption
+	removeSecrets bool
+	explode       bool
+	useWriter     bool
+}
+
+func Exportt(km Exporter, opts ...ExportOption) error {
+	g := goky{
+		buf:           os.Stdout,
+		o:             exportDefaultOpts,
+		explode:       false,
+		useWriter:     false,
+		removeSecrets: false,
+	}
+	for _, o := range opts {
+		o(&g)
+	}
+
+	return g.export(km)
+}
+
+func (g *goky) export(km Exporter) error {
+	return export(km, g.o.outputDir, g.o.kustomize)
+}
+
 // ExportWithKustomization exports Exporter
 // containing kubernetes object to yaml files with kustomization.yaml.
 func ExportWithKustomization(km Exporter, outDir string) error {
