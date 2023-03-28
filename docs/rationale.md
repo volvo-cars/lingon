@@ -2,6 +2,9 @@
 
 Because we had no other choice.
 
+We didn't want to build yet another abstraction that try to cover everyone's use cases (see https://xkcd.com/927/).
+So we decided to build a library to facilitate the creation of **your** abstraction for your platform, regardless of the target infrastructure and services.
+
 ## Problem definition
 
 Building a platform to cater to a specific community of people with various skills and interests is challenging 
