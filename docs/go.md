@@ -1,6 +1,5 @@
 
-## Go (Golang)
-
+# Go (Golang)  <!-- omit in toc -->
 
 ## Why Go
 
@@ -30,16 +29,16 @@
 
 ### References
 
-- [But Why Go](https://github.com/bwplotka/mimic#but-why-go) from [Mimic](https://github.com/bwplotka/mimic)
-- [Go for Cloud](https://rakyll.org/go-cloud/) by [rakyll](https://rakyll.org)
-- [The yaml document from hell](https://ruudvanasseldonk.com/2023/01/11/the-yaml-document-from-hell) by [ruudvanasseldonk](https://ruudvanasseldonk.com)
-- [noyaml](https://noyaml.com)
+* [But Why Go](https://github.com/bwplotka/mimic#but-why-go) from [Mimic](https://github.com/bwplotka/mimic)
+* [Go for Cloud](https://rakyll.org/go-cloud/) by [rakyll](https://rakyll.org)
+* [The yaml document from hell](https://ruudvanasseldonk.com/2023/01/11/the-yaml-document-from-hell) by [ruudvanasseldonk](https://ruudvanasseldonk.com)
+* [noyaml](https://noyaml.com)
 
 ## Go resources
 
-- [Effective Go](https://go.dev/doc/effective_go)
-- [Go by Example](https://gobyexample.com/)
-- [Google Style guide](https://google.github.io/styleguide/go/guide)
-- [Google best practices](https://google.github.io/styleguide/go/best-practices)
-- [Context about decisions](https://google.github.io/styleguide/go/decisions)
+* [Effective Go](https://go.dev/doc/effective_go)
+* [Go by Example](https://gobyexample.com/)
+* [Google Style guide](https://google.github.io/styleguide/go/guide)
+* [Google best practices](https://google.github.io/styleguide/go/best-practices)
+* [Context about decisions](https://google.github.io/styleguide/go/decisions)
 

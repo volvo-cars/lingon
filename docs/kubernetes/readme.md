@@ -25,20 +25,20 @@ With this library you can:
 
 4. Export:
 
-```go
-// import "github.com/xxx/yyy/output/myapp
-// manifests found in `output/` folder
-myApp := myapp.New() // function lives in "output/app.go"
-if err := kube.Export(myApp, output); err != nil {
-   return err
-}
-```
+   ```go
+   // import "github.com/xxx/yyy/output/myapp
+   // manifests found in `output/` folder
+   myApp := myapp.New() // function lives in "output/app.go"
+   if err := kube.Export(myApp, output); err != nil {
+      return err
+   }
+   ```
 
 5. Apply:
 
-```shell
-kubectl apply -f <output folder>
-```
+   ```shell
+   kubectl apply -f <output folder>
+   ```
 
 done.
 
@@ -94,5 +94,3 @@ Reusable functions used to create kubernetes objects in Go.
 ### Testutils
 
 Reusable test functions.
-
-

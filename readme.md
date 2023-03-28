@@ -1,4 +1,17 @@
-# Lingon 🍒 - Libraries for building platforms with Go
+# Lingon 🍒 - Libraries for building platforms with Go  <!-- omit in toc -->
+
+- [What is this?](#what-is-this)
+- [Who is this for?](#who-is-this-for)
+- [Project status](#project-status)
+- [Getting started](#getting-started)
+- [Motivation](#motivation)
+  - [Reduce cognitive load](#reduce-cognitive-load)
+  - [Type safety](#type-safety)
+  - [Error handling](#error-handling)
+  - [Limitless automation](#limitless-automation)
+- [Why Go?](#why-go)
+- [Similar projects](#similar-projects)
+- [License](#license)
 
 ## What is this?
 
@@ -6,17 +19,33 @@ Lingon is a collection of libraries and tools for building platforms using Go.
 
 The following technologies are currently supported:
 
-1. Terraform
-2. Kubernetes
+- Terraform
+- [Kubernetes](./docs/kubernetes/)
+
+The only dependencies you need are:
+
+- Go
+- Terraform CLI
+- kubectl
 
 ## Who is this for?
 
-Lingon is aimed at people who need to automate the lifecycle of their cloud infrastructure 
+Lingon is aimed at people who need to automate the lifecycle of their cloud infrastructure
 and have suffered the pain of configuration languages and complexity of gluing tools together with more tools.
+
+## Project status
+
+This project is in beta.
+The APIs are stable but we do not promise backward compatibility at this point.
+
+See [FAQ](./docs/faq.md) for more details.
 
 ## Getting started
 
-TODO: link to docs for each tool
+- Terraform
+- [Kubernetes](./docs/kubernetes/)
+
+See [Examples](./example) for more details.
 
 ## Motivation
 
@@ -48,8 +77,6 @@ We do use a limited set of tools that we learn well and can extend, but we autom
 
 Note that we are in a particular situation where we need custom automation of the lifecycle of our cloud infrastructure.
 
-TODO: Maybe mention "test first" approach?
-
 ## Why Go?
 
 Because most outages are caused by a configuration error.
@@ -66,10 +93,6 @@ Because most outages are caused by a configuration error.
 ## Similar projects
 
 See [Comparison](./docs/comparison.md) for more details.
-
-## Project status
-
-TODO: something about the project status
 
 ## License
 
