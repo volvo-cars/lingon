@@ -25,27 +25,27 @@ const (
 
 	// vuln is the GoVulnCheck to find vulnarabilities
 	vulnRepo    = "golang.org/x/vuln/cmd/govulncheck"
-	vulnVersion = "@latest" // TODO: check version in go.mod
+	vulnVersion = "@v0.0.0-20230323195654-ae615d898076"
 
 	// syft is the Syft to generate SBOM
 	syftRepo    = "github.com/anchore/syft/cmd/syft"
-	syftVersion = "@latest" // TODO: check version in go.mod
+	syftVersion = "@v0.75.0"
 
 	// goLicenses is Google's go-licenses to export all licenses
 	goLicensesRepo    = "github.com/google/go-licenses"
-	goLicensesVersion = "@latest" // TODO: check version in go.mod
+	goLicensesVersion = "@v1.6.0"
 
 	// goCILint is golangci/golangci-lint to lint code
 	goCILintRepo    = "github.com/golangci/golangci-lint/cmd/golangci-lint"
-	goCILintVersion = "@latest" // TODO: check version in go.mod
+	goCILintVersion = "@v1.52.1"
 
 	// copyWriteCheck is hashicorp/copywrite to check license headers
 	copyWriteRepo    = "github.com/hashicorp/copywrite"
-	copyWriteVersion = "@latest" // TODO: check version in go.mod
+	copyWriteVersion = "@v0.16.3"
 
 	// goFumpt is mvdan.cc/gofumpt to format code
 	goFumptRepo    = "mvdan.cc/gofumpt"
-	goFumptVersion = "@latest"
+	goFumptVersion = "@v0.4.0"
 )
 
 // Run is the namespace for running all checks
