@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"io"
 
-	terra "github.com/volvo-cars/lingon/pkg/terra"
+	"github.com/volvo-cars/lingon/pkg/terra"
 )
 
 func NewFile(name string, args FileArgs) *File {
@@ -60,8 +60,8 @@ func (f *File) StateMust() *fileState {
 	return f.state
 }
 
-func (f *File) DependOn() terra.Value[terra.ReferenceValue] {
-	return terra.Reference("local_file", f.Name)
+func (f *File) DependOn() terra.Value[terra.Reference] {
+	return terra.ReferenceAttribute("local_file", f.Name)
 }
 
 type FileArgs struct {
@@ -87,59 +87,59 @@ type fileAttributes struct {
 }
 
 func (f fileAttributes) Content() terra.StringValue {
-	return terra.Reference("local_file", f.name, "content").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("local_file", f.name, "content"))
 }
 
 func (f fileAttributes) ContentBase64() terra.StringValue {
-	return terra.Reference("local_file", f.name, "content_base64").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("local_file", f.name, "content_base64"))
 }
 
 func (f fileAttributes) ContentBase64Sha256() terra.StringValue {
-	return terra.Reference("local_file", f.name, "content_base64sha256").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("local_file", f.name, "content_base64sha256"))
 }
 
 func (f fileAttributes) ContentBase64Sha512() terra.StringValue {
-	return terra.Reference("local_file", f.name, "content_base64sha512").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("local_file", f.name, "content_base64sha512"))
 }
 
 func (f fileAttributes) ContentMd5() terra.StringValue {
-	return terra.Reference("local_file", f.name, "content_md5").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("local_file", f.name, "content_md5"))
 }
 
 func (f fileAttributes) ContentSha1() terra.StringValue {
-	return terra.Reference("local_file", f.name, "content_sha1").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("local_file", f.name, "content_sha1"))
 }
 
 func (f fileAttributes) ContentSha256() terra.StringValue {
-	return terra.Reference("local_file", f.name, "content_sha256").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("local_file", f.name, "content_sha256"))
 }
 
 func (f fileAttributes) ContentSha512() terra.StringValue {
-	return terra.Reference("local_file", f.name, "content_sha512").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("local_file", f.name, "content_sha512"))
 }
 
 func (f fileAttributes) DirectoryPermission() terra.StringValue {
-	return terra.Reference("local_file", f.name, "directory_permission").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("local_file", f.name, "directory_permission"))
 }
 
 func (f fileAttributes) FilePermission() terra.StringValue {
-	return terra.Reference("local_file", f.name, "file_permission").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("local_file", f.name, "file_permission"))
 }
 
 func (f fileAttributes) Filename() terra.StringValue {
-	return terra.Reference("local_file", f.name, "filename").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("local_file", f.name, "filename"))
 }
 
 func (f fileAttributes) Id() terra.StringValue {
-	return terra.Reference("local_file", f.name, "id").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("local_file", f.name, "id"))
 }
 
 func (f fileAttributes) SensitiveContent() terra.StringValue {
-	return terra.Reference("local_file", f.name, "sensitive_content").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("local_file", f.name, "sensitive_content"))
 }
 
 func (f fileAttributes) Source() terra.StringValue {
-	return terra.Reference("local_file", f.name, "source").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("local_file", f.name, "source"))
 }
 
 type fileState struct {

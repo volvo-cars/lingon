@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"io"
 
-	terra "github.com/volvo-cars/lingon/pkg/terra"
+	"github.com/volvo-cars/lingon/pkg/terra"
 )
 
 func NewSensitiveFile(name string, args SensitiveFileArgs) *SensitiveFile {
@@ -60,8 +60,8 @@ func (sf *SensitiveFile) StateMust() *sensitiveFileState {
 	return sf.state
 }
 
-func (sf *SensitiveFile) DependOn() terra.Value[terra.ReferenceValue] {
-	return terra.Reference("local_sensitive_file", sf.Name)
+func (sf *SensitiveFile) DependOn() terra.Value[terra.Reference] {
+	return terra.ReferenceAttribute("local_sensitive_file", sf.Name)
 }
 
 type SensitiveFileArgs struct {
@@ -85,55 +85,55 @@ type sensitiveFileAttributes struct {
 }
 
 func (sf sensitiveFileAttributes) Content() terra.StringValue {
-	return terra.Reference("local_sensitive_file", sf.name, "content").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("local_sensitive_file", sf.name, "content"))
 }
 
 func (sf sensitiveFileAttributes) ContentBase64() terra.StringValue {
-	return terra.Reference("local_sensitive_file", sf.name, "content_base64").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("local_sensitive_file", sf.name, "content_base64"))
 }
 
 func (sf sensitiveFileAttributes) ContentBase64Sha256() terra.StringValue {
-	return terra.Reference("local_sensitive_file", sf.name, "content_base64sha256").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("local_sensitive_file", sf.name, "content_base64sha256"))
 }
 
 func (sf sensitiveFileAttributes) ContentBase64Sha512() terra.StringValue {
-	return terra.Reference("local_sensitive_file", sf.name, "content_base64sha512").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("local_sensitive_file", sf.name, "content_base64sha512"))
 }
 
 func (sf sensitiveFileAttributes) ContentMd5() terra.StringValue {
-	return terra.Reference("local_sensitive_file", sf.name, "content_md5").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("local_sensitive_file", sf.name, "content_md5"))
 }
 
 func (sf sensitiveFileAttributes) ContentSha1() terra.StringValue {
-	return terra.Reference("local_sensitive_file", sf.name, "content_sha1").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("local_sensitive_file", sf.name, "content_sha1"))
 }
 
 func (sf sensitiveFileAttributes) ContentSha256() terra.StringValue {
-	return terra.Reference("local_sensitive_file", sf.name, "content_sha256").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("local_sensitive_file", sf.name, "content_sha256"))
 }
 
 func (sf sensitiveFileAttributes) ContentSha512() terra.StringValue {
-	return terra.Reference("local_sensitive_file", sf.name, "content_sha512").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("local_sensitive_file", sf.name, "content_sha512"))
 }
 
 func (sf sensitiveFileAttributes) DirectoryPermission() terra.StringValue {
-	return terra.Reference("local_sensitive_file", sf.name, "directory_permission").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("local_sensitive_file", sf.name, "directory_permission"))
 }
 
 func (sf sensitiveFileAttributes) FilePermission() terra.StringValue {
-	return terra.Reference("local_sensitive_file", sf.name, "file_permission").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("local_sensitive_file", sf.name, "file_permission"))
 }
 
 func (sf sensitiveFileAttributes) Filename() terra.StringValue {
-	return terra.Reference("local_sensitive_file", sf.name, "filename").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("local_sensitive_file", sf.name, "filename"))
 }
 
 func (sf sensitiveFileAttributes) Id() terra.StringValue {
-	return terra.Reference("local_sensitive_file", sf.name, "id").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("local_sensitive_file", sf.name, "id"))
 }
 
 func (sf sensitiveFileAttributes) Source() terra.StringValue {
-	return terra.Reference("local_sensitive_file", sf.name, "source").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("local_sensitive_file", sf.name, "source"))
 }
 
 type sensitiveFileState struct {

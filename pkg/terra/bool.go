@@ -4,7 +4,6 @@
 package terra
 
 import (
-	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/convert"
@@ -43,7 +42,7 @@ func (v boolValue) AsString() StringValue {
 	}
 }
 
-func (v boolValue) InternalTraverse(hcl.Traverser) BoolValue {
+func (v boolValue) InternalWithRef(Reference) BoolValue {
 	panic("cannot traverse a boolean")
 }
 
@@ -53,17 +52,24 @@ func (v boolValue) InternalTokens() hclwrite.Tokens {
 
 var _ BoolValue = (*boolRef)(nil)
 
+// ReferenceBool creates a number reference
+func ReferenceBool(ref Reference) BoolValue {
+	return boolRef{
+		ref: ref.copy(),
+	}
+}
+
 type boolRef struct {
-	ref ReferenceValue
+	ref Reference
 }
 
 func (r boolRef) InternalTokens() hclwrite.Tokens {
 	return r.ref.InternalTokens()
 }
 
-func (r boolRef) InternalTraverse(step hcl.Traverser) BoolValue {
+func (r boolRef) InternalWithRef(ref Reference) BoolValue {
 	return boolRef{
-		ref: r.ref.InternalTraverse(step),
+		ref: ref.copy(),
 	}
 }
 

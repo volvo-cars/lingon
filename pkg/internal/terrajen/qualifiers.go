@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	idStructReferenceValue = "ReferenceValue"
-	idFuncReference        = "Reference"
+	idStructReference        = "Reference"
+	idFuncReferenceAttribute = "ReferenceAttribute"
 )
 
 var (
@@ -20,13 +20,17 @@ var (
 	qualListValue      = jen.Qual(pkgTerra, "ListValue").Clone
 	qualSetValue       = jen.Qual(pkgTerra, "SetValue").Clone
 	qualMapValue       = jen.Qual(pkgTerra, "MapValue").Clone
-	qualReferenceValue = jen.Qual(pkgTerra, idStructReferenceValue).Clone
+	qualReferenceValue = jen.Qual(pkgTerra, idStructReference).Clone
 
-	qualInternalRootRef = jen.Qual(pkgTerra, idFuncReference).Clone
+	qualReferenceAttribute = jen.Qual(pkgTerra, idFuncReferenceAttribute).Clone
 
-	qualAsMapRefFunc  = jen.Qual(pkgTerra, "AsMapRef").Clone
-	qualAsSetRefFunc  = jen.Qual(pkgTerra, "AsSetRef").Clone
-	qualAsListRefFunc = jen.Qual(pkgTerra, "AsListRef").Clone
+	qualReferenceString = jen.Qual(pkgTerra, "ReferenceString").Clone
+	qualReferenceNumber = jen.Qual(pkgTerra, "ReferenceNumber").Clone
+	qualReferenceBool   = jen.Qual(pkgTerra, "ReferenceBool").Clone
+	qualReferenceSingle = jen.Qual(pkgTerra, "ReferenceSingle").Clone
+	qualReferenceMap    = jen.Qual(pkgTerra, "ReferenceMap").Clone
+	qualReferenceSet    = jen.Qual(pkgTerra, "ReferenceSet").Clone
+	qualReferenceList   = jen.Qual(pkgTerra, "ReferenceList").Clone
 
-	qualHCLTraverseAttr = jen.Qual(pkgHCL, "TraverseAttr").Clone
+	qualHCLWriteTokens = jen.Qual(pkgHCLWrite, "Tokens").Clone
 )

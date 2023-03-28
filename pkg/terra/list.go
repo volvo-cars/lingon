@@ -4,9 +4,7 @@
 package terra
 
 import (
-	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclwrite"
-	"github.com/zclconf/go-cty/cty"
 )
 
 // ListString returns a list value containing the given string values
@@ -27,13 +25,6 @@ func List[T Value[T]](values ...T) ListValue[T] {
 	}
 }
 
-// AsListRef converts the given value to a list reference
-func AsListRef[T Value[T]](value T) ListValue[T] {
-	return listRef[T]{
-		value: value,
-	}
-}
-
 type ListValue[T Value[T]] interface {
 	Value[ListValue[T]]
 	Index(int) T
@@ -50,7 +41,7 @@ func (v listValue[T]) InternalCanTraverse() bool {
 	return false
 }
 
-func (v listValue[T]) InternalTraverse(hcl.Traverser) ListValue[T] {
+func (v listValue[T]) InternalWithRef(Reference) ListValue[T] {
 	panic("cannot traverse a list")
 }
 
@@ -73,24 +64,33 @@ func (v listValue[T]) Splat() T {
 
 var _ ListValue[StringValue] = (*listRef[StringValue])(nil)
 
-type listRef[T Value[T]] struct {
-	value T
+// ReferenceList creates a list reference
+func ReferenceList[T Value[T]](ref Reference) ListValue[T] {
+	return listRef[T]{
+		ref: ref,
+	}
 }
 
-func (r listRef[T]) InternalTraverse(tr hcl.Traverser) ListValue[T] {
+type listRef[T Value[T]] struct {
+	ref Reference
+}
+
+func (r listRef[T]) InternalWithRef(ref Reference) ListValue[T] {
 	return listRef[T]{
-		value: r.value.InternalTraverse(tr),
+		ref: ref.copy(),
 	}
 }
 
 func (r listRef[T]) InternalTokens() hclwrite.Tokens {
-	return r.value.InternalTokens()
+	return r.ref.InternalTokens()
 }
 
 func (r listRef[T]) Index(i int) T {
-	return r.value.InternalTraverse(hcl.TraverseIndex{Key: cty.NumberIntVal(int64(i))})
+	var v T
+	return v.InternalWithRef(r.ref.index(i))
 }
 
 func (r listRef[T]) Splat() T {
-	return r.value.InternalTraverse(hcl.TraverseSplat{})
+	var v T
+	return v.InternalWithRef(r.ref.splat())
 }

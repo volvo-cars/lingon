@@ -2,7 +2,7 @@
 
 package local
 
-import terra "github.com/volvo-cars/lingon/pkg/terra"
+import "github.com/volvo-cars/lingon/pkg/terra"
 
 func NewDataSensitiveFile(name string, args DataSensitiveFileArgs) *DataSensitiveFile {
 	return &DataSensitiveFile{
@@ -43,41 +43,41 @@ type dataSensitiveFileAttributes struct {
 }
 
 func (sf dataSensitiveFileAttributes) Content() terra.StringValue {
-	return terra.Reference("data", "local_sensitive_file", sf.name, "content").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("data", "local_sensitive_file", sf.name, "content"))
 }
 
 func (sf dataSensitiveFileAttributes) ContentBase64() terra.StringValue {
-	return terra.Reference("data", "local_sensitive_file", sf.name, "content_base64").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("data", "local_sensitive_file", sf.name, "content_base64"))
 }
 
 func (sf dataSensitiveFileAttributes) ContentBase64Sha256() terra.StringValue {
-	return terra.Reference("data", "local_sensitive_file", sf.name, "content_base64sha256").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("data", "local_sensitive_file", sf.name, "content_base64sha256"))
 }
 
 func (sf dataSensitiveFileAttributes) ContentBase64Sha512() terra.StringValue {
-	return terra.Reference("data", "local_sensitive_file", sf.name, "content_base64sha512").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("data", "local_sensitive_file", sf.name, "content_base64sha512"))
 }
 
 func (sf dataSensitiveFileAttributes) ContentMd5() terra.StringValue {
-	return terra.Reference("data", "local_sensitive_file", sf.name, "content_md5").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("data", "local_sensitive_file", sf.name, "content_md5"))
 }
 
 func (sf dataSensitiveFileAttributes) ContentSha1() terra.StringValue {
-	return terra.Reference("data", "local_sensitive_file", sf.name, "content_sha1").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("data", "local_sensitive_file", sf.name, "content_sha1"))
 }
 
 func (sf dataSensitiveFileAttributes) ContentSha256() terra.StringValue {
-	return terra.Reference("data", "local_sensitive_file", sf.name, "content_sha256").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("data", "local_sensitive_file", sf.name, "content_sha256"))
 }
 
 func (sf dataSensitiveFileAttributes) ContentSha512() terra.StringValue {
-	return terra.Reference("data", "local_sensitive_file", sf.name, "content_sha512").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("data", "local_sensitive_file", sf.name, "content_sha512"))
 }
 
 func (sf dataSensitiveFileAttributes) Filename() terra.StringValue {
-	return terra.Reference("data", "local_sensitive_file", sf.name, "filename").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("data", "local_sensitive_file", sf.name, "filename"))
 }
 
 func (sf dataSensitiveFileAttributes) Id() terra.StringValue {
-	return terra.Reference("data", "local_sensitive_file", sf.name, "id").AsString()
+	return terra.ReferenceString(terra.ReferenceAttribute("data", "local_sensitive_file", sf.name, "id"))
 }

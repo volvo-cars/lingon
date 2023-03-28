@@ -145,9 +145,10 @@ func (n *node) comment() string {
 type nodeNestingMode int
 
 const (
-	nodeNestingModeList nodeNestingMode = 1
-	nodeNestingModeSet  nodeNestingMode = 2
-	nodeNestingModeMap  nodeNestingMode = 3
+	nodeNestingModeSingle nodeNestingMode = 0
+	nodeNestingModeList   nodeNestingMode = 1
+	nodeNestingModeSet    nodeNestingMode = 2
+	nodeNestingModeMap    nodeNestingMode = 3
 )
 
 type attribute struct {
@@ -324,14 +325,14 @@ func ctyTypeElementObject(ct cty.Type) (cty.Type, bool) {
 func blockNodeNestingMode(block *tfjson.SchemaBlockType) []nodeNestingMode {
 	switch block.NestingMode {
 	case tfjson.SchemaNestingModeSingle, tfjson.SchemaNestingModeGroup:
-		return nil
+		return []nodeNestingMode{nodeNestingModeSingle}
 	case tfjson.SchemaNestingModeList, tfjson.SchemaNestingModeMap:
 		// Unintuitively, tfjson.SchemaNestingModeMap is not actually a map, just a list,
 		// but they get keyed by the block labels into a Map.
 		// For our use case, we therefore treat it like a list.
-		return []nodeNestingMode{nodeNestingModeList}
+		return []nodeNestingMode{nodeNestingModeList, nodeNestingModeSingle}
 	case tfjson.SchemaNestingModeSet:
-		return []nodeNestingMode{nodeNestingModeSet}
+		return []nodeNestingMode{nodeNestingModeSet, nodeNestingModeSingle}
 	default:
 		panic(
 			fmt.Sprintf(
@@ -342,12 +343,14 @@ func blockNodeNestingMode(block *tfjson.SchemaBlockType) []nodeNestingMode {
 	}
 }
 
-// ctyNodeNestingMode calculates the nesting mode from a parent to a child node
-// when the child node is an attribute with a cty.Type of Object.
+// ctyNodeNestingMode calculates the nesting mode for a given cty.Type that is
+// known to contain a cty.Object.
+// The nesting path is from parent to the child cty.Object,
+// which may contain lists, sets or maps along the way.
 // I.e. what is the path from parent --> cty.Object (child)
 func ctyNodeNestingMode(ct cty.Type) []nodeNestingMode {
 	if ct.IsObjectType() {
-		return nil
+		return []nodeNestingMode{nodeNestingModeSingle}
 	}
 	switch {
 	case ct.IsListType():
@@ -399,14 +402,26 @@ func isAttributeArg(attr *tfjson.SchemaAttribute) bool {
 	}
 }
 
-// jenNodeReturnType returns the jen statement for the type that
+// returnTypeFromNestingPath returns the jen statement for the type that
 // node represents, e.g.
 //
 //	terra.ListValue[emrcluster.StepRef]
-func jenNodeReturnType(n *node, qual *jen.Statement) *jen.Statement {
-	fullQual := qual.Clone()
-	for _, path := range n.nestingPath {
+func returnTypeFromNestingPath(
+	nestingPath []nodeNestingMode,
+	qual *jen.Statement,
+) *jen.Statement {
+	fmt.Println("NESTINGPATH: ", nestingPath)
+	var fullQual *jen.Statement
+	// Iterate over nestingPath backwards to get the correct order.
+	// E.g. if List-->Set-->Map is the nestingPath, then we can reverse this to
+	// easily construct List[Set[Map[qual]]]
+	for i := len(nestingPath) - 1; i >= 0; i-- {
+		path := nestingPath[i]
+		fmt.Println("i: ", i)
+		fmt.Println("path: ", path)
 		switch path {
+		case nodeNestingModeSingle:
+			fullQual = qual.Clone()
 		case nodeNestingModeList:
 			fullQual = qualListValue().Types(fullQual.Clone())
 		case nodeNestingModeSet:
@@ -414,40 +429,41 @@ func jenNodeReturnType(n *node, qual *jen.Statement) *jen.Statement {
 		case nodeNestingModeMap:
 			fullQual = qualMapValue().Types(fullQual.Clone())
 		default:
-			panic(fmt.Sprintf("unsupport node nesting type: %d", n.nestingPath))
+			panic(fmt.Sprintf("unsupport node nesting type: %d", nestingPath))
 		}
 	}
 	return fullQual
 }
 
-// jenNodeReturnValue returns the jen statement required to create an instance that
+// jenNodeReturnValue returns the jen statement for the return value that
 // node represents, e.g.
 //
-//	terra.ListRef(
-//		emrcluster.StepRef{Reference: terra.Ref(
-//			hcl.TraverseRoot{Name: i.id},
-//			hcl.TraverseAttr{Name: i.name},
-//			hcl.TraverseAttr{Name: "step"},
-//		)},
-//	)
-func jenNodeReturnValue(n *node, structStmt *jen.Statement) *jen.Statement {
-	fullQual := structStmt.Clone()
-	for _, path := range n.nestingPath {
-		switch path {
-		case nodeNestingModeList:
-			fullQual = qualAsListRefFunc().Call(fullQual.Clone())
-		case nodeNestingModeSet:
-			fullQual = qualAsSetRefFunc().Call(fullQual.Clone())
-		case nodeNestingModeMap:
-			fullQual = qualAsMapRefFunc().Call(fullQual.Clone())
-		default:
-			panic(
-				fmt.Sprintf(
-					"unsupported node nesting type: %d",
-					n.nestingPath,
-				),
-			)
-		}
+//	terra.ReferenceList[emrcluster.StepRef](terra.Reference("a","b","c")
+func jenNodeReturnValue(
+	n *node, childQual *jen.Statement,
+) *jen.Statement {
+	var fullQual *jen.Statement
+	first := n.nestingPath[0]
+	remainder := n.nestingPath[1:]
+	subType := childQual
+	fmt.Println("FIRST: ", first)
+	fmt.Println("REMDINER: ", remainder)
+	// If there are steps in the nestingPath remaining, we need to calculate
+	// the return type for the subType
+	if len(remainder) > 0 {
+		subType = returnTypeFromNestingPath(remainder, childQual)
+	}
+	switch first {
+	case nodeNestingModeSingle:
+		fullQual = qualReferenceSingle().Types(subType)
+	case nodeNestingModeList:
+		fullQual = qualReferenceList().Types(subType)
+	case nodeNestingModeSet:
+		fullQual = qualReferenceSet().Types(subType)
+	case nodeNestingModeMap:
+		fullQual = qualReferenceMap().Types(subType)
+	default:
+		panic(fmt.Sprintf("unsupport node nesting type: %d", n.nestingPath))
 	}
 	return fullQual
 }

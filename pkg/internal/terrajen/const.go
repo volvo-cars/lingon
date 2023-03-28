@@ -12,6 +12,7 @@ const (
 	pkgTerra      = "github.com/volvo-cars/lingon/pkg/terra"
 	pkgHCLAlias   = "hcl"
 	pkgHCL        = "github.com/hashicorp/hcl/v2"
+	pkgHCLWrite   = "github.com/hashicorp/hcl/v2/hclwrite"
 )
 
 const (
@@ -27,10 +28,8 @@ const (
 )
 
 const (
-	idFuncInternalTraverse  = "InternalTraverse"
-	idFuncReferenceAsString = "AsString"
-	idFuncReferenceAsBool   = "AsBool"
-	idFuncReferenceAsNumber = "AsNumber"
+	idFuncInternalWithRef = "InternalWithRef"
+	idFuncInternalTokens  = "InternalTokens"
 )
 
 const (

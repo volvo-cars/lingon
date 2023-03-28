@@ -2,7 +2,7 @@
 
 package local
 
-import terra "github.com/volvo-cars/lingon/pkg/terra"
+import "github.com/volvo-cars/lingon/pkg/terra"
 
 func NewProvider(args ProviderArgs) *Provider {
 	return &Provider{Args: args}

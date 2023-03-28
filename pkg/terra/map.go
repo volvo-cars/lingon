@@ -6,22 +6,13 @@ package terra
 import (
 	"sort"
 
-	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclwrite"
-	"github.com/zclconf/go-cty/cty"
 )
 
 // Map returns a map value
 func Map[T Value[T]](value map[string]T) MapValue[T] {
 	return mapValue[T]{
 		values: value,
-	}
-}
-
-// AsMapRef converts the given value to a map reference
-func AsMapRef[T Value[T]](value T) MapValue[T] {
-	return mapRef[T]{
-		value: value,
 	}
 }
 
@@ -36,7 +27,7 @@ type mapValue[T Value[T]] struct {
 	values map[string]T
 }
 
-func (v mapValue[T]) InternalTraverse(hcl.Traverser) MapValue[T] {
+func (v mapValue[T]) InternalWithRef(Reference) MapValue[T] {
 	panic("cannot traverse a map")
 }
 
@@ -60,22 +51,30 @@ func (v mapValue[T]) Key(s string) T {
 
 var _ MapValue[StringValue] = (*mapRef[StringValue])(nil)
 
-type mapRef[T Value[T]] struct {
-	value T
+// ReferenceMap creates a map reference
+func ReferenceMap[T Value[T]](ref Reference) MapValue[T] {
+	return mapRef[T]{
+		ref: ref.copy(),
+	}
 }
 
-func (r mapRef[T]) InternalTraverse(tr hcl.Traverser) MapValue[T] {
+type mapRef[T Value[T]] struct {
+	ref Reference
+}
+
+func (r mapRef[T]) InternalWithRef(ref Reference) MapValue[T] {
 	return mapRef[T]{
-		value: r.value.InternalTraverse(tr),
+		ref: ref.copy(),
 	}
 }
 
 func (r mapRef[T]) InternalTokens() hclwrite.Tokens {
-	return r.value.InternalTokens()
+	return r.ref.InternalTokens()
 }
 
 func (r mapRef[T]) Key(s string) T {
-	return r.value.InternalTraverse(hcl.TraverseIndex{Key: cty.StringVal(s)})
+	var v T
+	return v.InternalWithRef(r.ref.key(s))
 }
 
 func sortMapKeys[T any](m map[string]T) []string {

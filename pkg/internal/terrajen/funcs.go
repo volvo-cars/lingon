@@ -4,10 +4,7 @@
 package terrajen
 
 import (
-	"fmt"
-
 	"github.com/dave/jennifer/jen"
-	"github.com/zclconf/go-cty/cty"
 )
 
 func funcSchemaType(s *Schema, name string) *jen.Statement {
@@ -217,69 +214,9 @@ func funcDependOn(s *Schema) *jen.Statement {
 		// Body
 		Block(
 			jen.Return(
-				jen.Qual(pkgTerra, idFuncReference).Call(
+				qualReferenceAttribute().Call(
 					jen.Lit(s.Type), jen.Id(s.Receiver).Dot(idFieldName),
 				),
 			),
 		)
-}
-
-func hclTraverseAttr(stmt *jen.Statement) *jen.Statement {
-	return qualHCLTraverseAttr().Values(jen.Dict{jen.Id("Name"): stmt})
-}
-
-// funcReferenceFromCtyType takes a cty Type and returns the function call to create
-// a reference of that cty Type
-func funcReferenceFromCtyType(ct cty.Type, stmt *jen.Statement) *jen.Statement {
-	if ct.IsCollectionType() {
-		switch {
-		case ct.IsMapType():
-			return qualAsMapRefFunc().Call(
-				funcReferenceFromCtyType(
-					ct.ElementType(),
-					stmt,
-				),
-			)
-		case ct.IsListType():
-			return qualAsListRefFunc().Call(
-				funcReferenceFromCtyType(
-					ct.ElementType(),
-					stmt,
-				),
-			)
-		case ct.IsSetType():
-			return qualAsSetRefFunc().Call(
-				funcReferenceFromCtyType(
-					ct.ElementType(),
-					stmt,
-				),
-			)
-		default:
-			panic(
-				fmt.Sprintf(
-					"unsupported collection cty type: %s",
-					ct.FriendlyName(),
-				),
-			)
-		}
-	}
-	switch ct {
-	case cty.String:
-		return jen.Qual(
-			pkgTerra,
-			idFuncReference,
-		).Call(stmt).Dot(idFuncReferenceAsString).Call()
-	case cty.Number:
-		return jen.Qual(
-			pkgTerra,
-			idFuncReference,
-		).Call(stmt).Dot(idFuncReferenceAsNumber).Call()
-	case cty.Bool:
-		return jen.Qual(
-			pkgTerra,
-			idFuncReference,
-		).Call(stmt).Dot(idFuncReferenceAsBool).Call()
-	default:
-		panic(fmt.Sprintf("unsupported simple cty type: %s", ct.FriendlyName()))
-	}
 }

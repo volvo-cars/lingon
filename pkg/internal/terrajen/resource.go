@@ -12,7 +12,7 @@ import (
 func ResourceFile(s *Schema) *jen.File {
 	f := jen.NewFile(s.PackageName)
 	f.ImportAlias(pkgHCL, pkgHCLAlias)
-	f.ImportAlias(pkgTerra, pkgTerraAlias)
+	f.ImportName(pkgTerra, pkgTerraAlias)
 	f.HeaderComment(HeaderComment)
 	f.Add(resourceNewFunc(s))
 	f.Add(resourceStructCompileCheck(s))

@@ -4,7 +4,6 @@
 package terra
 
 import (
-	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/convert"
@@ -52,7 +51,7 @@ func (v stringValue) AsNumber() NumberValue {
 	}
 }
 
-func (v stringValue) InternalTraverse(hcl.Traverser) StringValue {
+func (v stringValue) InternalWithRef(Reference) StringValue {
 	panic("cannot traverse a string")
 }
 
@@ -62,17 +61,24 @@ func (v stringValue) InternalTokens() hclwrite.Tokens {
 
 var _ StringValue = (*stringRef)(nil)
 
+// ReferenceString creates a number reference
+func ReferenceString(ref Reference) StringValue {
+	return stringRef{
+		ref: ref.copy(),
+	}
+}
+
 type stringRef struct {
-	ref ReferenceValue
+	ref Reference
 }
 
 func (r stringRef) InternalTokens() hclwrite.Tokens {
 	return r.ref.InternalTokens()
 }
 
-func (r stringRef) InternalTraverse(step hcl.Traverser) StringValue {
+func (r stringRef) InternalWithRef(ref Reference) StringValue {
 	return stringRef{
-		ref: r.ref.InternalTraverse(step),
+		ref: ref.copy(),
 	}
 }
 

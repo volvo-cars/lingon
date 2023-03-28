@@ -10,6 +10,7 @@ import (
 // ProviderFile generates a Go file for a Terraform provider configuration based on the given Schema
 func ProviderFile(s *Schema) *jen.File {
 	f := jen.NewFile(s.ProviderName)
+	f.ImportName(pkgTerra, pkgTerraAlias)
 	f.HeaderComment(HeaderComment)
 	f.Add(providerNewFunc(s))
 	f.Add(providerStructCompileCheck(s))

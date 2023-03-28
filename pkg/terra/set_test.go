@@ -39,8 +39,8 @@ func ExampleSet_bool() {
 
 func ExampleSet_ref() {
 	s := Set(
-		Reference("a").AsString(),
-		Reference("b").AsString(),
+		ReferenceString(ReferenceAttribute("a")),
+		ReferenceString(ReferenceAttribute("b")),
 	)
 
 	fmt.Println(string(s.InternalTokens().Bytes()))
@@ -50,7 +50,7 @@ func ExampleSet_ref() {
 func ExampleSet_mixed() {
 	s := Set(
 		String("a"),
-		Reference("a").AsString(),
+		ReferenceString(ReferenceAttribute("a")),
 	)
 
 	fmt.Println(string(s.InternalTokens().Bytes()))

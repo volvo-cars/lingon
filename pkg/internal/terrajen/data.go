@@ -12,6 +12,7 @@ import (
 func DataSourceFile(s *Schema) *jen.File {
 	f := jen.NewFile(s.PackageName)
 	f.ImportAlias(pkgHCL, "hcl")
+	f.ImportName(pkgTerra, pkgTerraAlias)
 	f.HeaderComment(HeaderComment)
 	f.Add(dataNewFunc(s))
 	f.Add(dataStructCompileCheck(s))

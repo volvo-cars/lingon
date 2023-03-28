@@ -90,70 +90,81 @@ func attributesStruct(s *Schema) *jen.Statement {
 
 	stmt.Add(attrStruct)
 	stmt.Line()
+	stmt.Line()
 
 	//
 	// Methods
 	//
 	for _, attr := range s.graph.attributes {
-		ct := attr.ctyType
-		implFunc := jen.Func().Params(jen.Id(s.Receiver).Id(s.AttributesStructName)).Id(str.PascalCase(attr.name)).Call()
-		implFunc.Add(ctyTypeReturnType(ct))
-
-		refList := []jen.Code{
+		// Create the "address" of this attribute,
+		// e.g. aws_iam_role.name.attribute
+		attrAddress := []jen.Code{
 			jen.Lit(s.Type), jen.Id(s.Receiver).Dot("name"), jen.Lit(attr.name),
 		}
 		// If schema is a data resource we need to prefix the "data" qualifier to the reference
 		if s.SchemaType == SchemaTypeData {
-			refList = append([]jen.Code{jen.Lit("data")}, refList...)
+			attrAddress = append([]jen.Code{jen.Lit("data")}, attrAddress...)
 		}
-		implFunc.Block(
-			jen.Return(
-				funcReferenceFromCtyType(ct, jen.List(refList...)),
-			),
+
+		ct := attr.ctyType
+		stmt.Add(
+			jen.Func().
+				// Receiver
+				Params(jen.Id(s.Receiver).Id(s.AttributesStructName)).
+				// Name
+				Id(str.PascalCase(attr.name)).Call().
+				// Return type
+				Add(ctyTypeReturnType(ct)).
+				Block(
+					jen.Return(
+						funcReferenceByCtyType(ct).
+							Call(
+								qualReferenceAttribute().Call(jen.List(attrAddress...)),
+							),
+					),
+				),
 		)
 		stmt.Line()
-		stmt.Add(implFunc)
 		stmt.Line()
 	}
 
 	for _, child := range s.graph.children {
 		structName := str.PascalCase(child.uniqueName) + suffixAttributes
-		implFunc := jen.Func().
-			// Receiver
-			Params(jen.Id(s.Receiver).Id(s.AttributesStructName)).
-			// Name
-			Id(str.PascalCase(child.uniqueName)).Call().
-			//	Return
-			Add(
-				jenNodeReturnType(
-					child,
-					jen.Qual(s.SubPkgQualPath(), structName),
-				),
-			)
-
-		refList := []jen.Code{
+		qualStruct := jen.Qual(s.SubPkgQualPath(), structName).Clone
+		// Create the "address" of this attribute,
+		// e.g. aws_iam_role.name.attribute
+		attrAddress := []jen.Code{
 			jen.Lit(s.Type),
 			jen.Id(s.Receiver).Dot("name"),
 			jen.Lit(child.name),
 		}
 		// If schema is a data resource we need to prefix the "data" qualifier to the reference
 		if s.SchemaType == SchemaTypeData {
-			refList = append([]jen.Code{jen.Lit("data")}, refList...)
+			attrAddress = append([]jen.Code{jen.Lit("data")}, attrAddress...)
 		}
-		structStmt := jen.Qual(s.SubPkgQualPath(), structName).Values(
-			jen.Dict{
-				jen.Id(idStructReferenceValue): qualInternalRootRef().Call(jen.List(refList...)),
-			},
-		)
+		refAddress := qualReferenceAttribute().Call(jen.List(attrAddress...))
 
-		implFunc.Block(
-			jen.Return(
-				jenNodeReturnValue(child, structStmt),
-			),
+		stmt.Add(
+			jen.Func().
+				// Receiver
+				Params(jen.Id(s.Receiver).Id(s.AttributesStructName)).
+				// Name
+				Id(str.PascalCase(child.uniqueName)).Call().
+				// Return type
+				Add(
+					returnTypeFromNestingPath(
+						child.nestingPath,
+						qualStruct(),
+					),
+				).
+				Block(
+					jen.Return(
+						jenNodeReturnValue(child, qualStruct()).
+							Call(refAddress),
+					),
+				),
 		)
-
 		stmt.Line()
-		stmt.Add(implFunc)
 		stmt.Line()
 	}
 

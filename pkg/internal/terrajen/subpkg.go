@@ -85,43 +85,59 @@ func subPkgArgStruct(n *node) *jen.Statement {
 func subPkgAttributeStruct(n *node) *jen.Statement {
 	structName := n.attributesStructName()
 
+	structFieldRef := "ref"
 	stmt := jen.Type().Id(structName).
 		Struct(
-			qualReferenceValue(),
+			jen.Id(structFieldRef).Add(qualReferenceValue()),
 		)
 	stmt.Line()
 	stmt.Line()
 
 	// Methods
-	// Override InternalTraverse, e.g.
+	// Override InternalWithRef, e.g.
 	//
-	// 	func (i OidcRef) InternalTraverse(step hcl.Traverser) OidcRef {
-	// 		return OidcRef{
-	// 			Reference: i.Reference.InternalTraverse(step),
-	// 		}
+	// 	func (i OidcRef) InternalWithRef(ref terra.ReferenceValue) OidcRef {
+	// 		return terra.ReferenceSingle[OidcRef](ref)
 	// 	}
-	stepArg := "step"
+	refArg := "ref"
 	stmt.Add(
 		jen.Func().
 			// Receiver
 			Params(jen.Id(n.receiver).Id(structName)).
 			// Name
-			Id(idFuncInternalTraverse).Call(
-			jen.Id(stepArg).Qual(
-				pkgHCL,
-				"Traverser",
-			),
+			Id(idFuncInternalWithRef).Call(
+			jen.Id(refArg).Add(qualReferenceValue()),
 		).
 			// Return type
 			Id(structName).
 			// Body
 			Block(
 				jen.Return(
-					jen.Id(structName).Values(
-						jen.Dict{
-							jen.Id(idStructReferenceValue): jen.Id(n.receiver).Dot(idStructReferenceValue).Dot(idFuncInternalTraverse).Call(jen.Id(stepArg)),
-						},
-					),
+					qualReferenceSingle().
+						Types(jen.Id(structName)).
+						Call(jen.Id(refArg)),
+				),
+			),
+	)
+	stmt.Line()
+	stmt.Line()
+	// Override InternalTokens
+	stmt.Add(
+		jen.Func().
+			// Receiver
+			Params(jen.Id(n.receiver).Id(structName)).
+			// Name
+			Id(idFuncInternalTokens).
+			Call().
+			// Return type
+			// Id(structName).
+			Add(qualHCLWriteTokens()).
+			// Body
+			Block(
+				jen.Return(
+					jen.Id(n.receiver).Dot(
+						structFieldRef,
+					).Dot(idFuncInternalTokens).Call(),
 				),
 			),
 	)
@@ -129,7 +145,10 @@ func subPkgAttributeStruct(n *node) *jen.Statement {
 	stmt.Line()
 
 	for _, attr := range n.attributes {
-		// Want: return terra.AsList(InternalStrRef(i.Reference.InternalTraverse(hcl.TraverseAttr{Name: "issuer"})))
+		appendRef := jen.Id(n.receiver).
+			Dot(refArg).
+			Dot("Append").
+			Call(jen.Lit(attr.name))
 		stmt.Add(
 			jen.Func().
 				// Receiver
@@ -140,7 +159,10 @@ func subPkgAttributeStruct(n *node) *jen.Statement {
 				Add(ctyTypeReturnType(attr.ctyType)).
 				// Body
 				Block(
-					jen.Return(ctyTypeReturnValue(n, attr.ctyType, attr.name)),
+					jen.Return(
+						funcReferenceByCtyType(attr.ctyType).
+							Call(appendRef),
+					),
 				),
 		)
 		stmt.Line()
@@ -148,29 +170,32 @@ func subPkgAttributeStruct(n *node) *jen.Statement {
 	}
 
 	for _, child := range n.children {
-		// Want: return terra.AsList(OidcRef(i.InternalTraverse(hcl.TraverseAttr{Name: "oidc"})))
+		// Want: return terra.AsList(OidcRef(i.InternalWithRef(hcl.TraverseAttr{Name: "oidc"})))
 		childStructName := child.attributesStructName()
+		appendRef := jen.Id(n.receiver).
+			Dot(refArg).
+			Dot("Append").
+			Call(jen.Lit(child.name))
 
-		implFunc := jen.Func().
-			// Receiver
-			Params(jen.Id(n.receiver).Id(structName)).
-			// Name
-			Id(str.PascalCase(child.name)).Call().
-			// Return type
-			Add(jenNodeReturnType(child, jen.Id(childStructName)))
-
-		// Want: ChildAttributes(i.InternalTraverse(hcl.TraverseAttr{Name: "child"}))
-		childValue := jen.
-			// Create instance of child struct
-			Id(childStructName).Call(
-			// Call InternalTraverse on self, and pass result to child struct
-			jen.Id(n.receiver).Dot(idFuncInternalTraverse).Call(hclTraverseAttr(jen.Lit(child.name))),
+		stmt.Add(
+			jen.Func().
+				// Receiver
+				Params(jen.Id(n.receiver).Id(structName)).
+				// Name
+				Id(str.PascalCase(child.name)).Call().
+				// Return type
+				Add(
+					returnTypeFromNestingPath(
+						child.nestingPath,
+						jen.Id(childStructName),
+					),
+				).Block(
+				jen.Return(
+					jenNodeReturnValue(child, jen.Id(childStructName)).
+						Call(appendRef),
+				),
+			),
 		)
-		implFunc.Block(
-			jen.Return(jenNodeReturnValue(child, childValue)),
-		)
-
-		stmt.Add(implFunc)
 		stmt.Line()
 		stmt.Line()
 	}

@@ -4,7 +4,6 @@
 package terra
 
 import (
-	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/convert"
@@ -55,7 +54,7 @@ func (v numberValue) AsString() StringValue {
 	}
 }
 
-func (v numberValue) InternalTraverse(hcl.Traverser) NumberValue {
+func (v numberValue) InternalWithRef(Reference) NumberValue {
 	panic("cannot traverse a number")
 }
 
@@ -65,18 +64,25 @@ func (v numberValue) InternalTokens() hclwrite.Tokens {
 
 var _ NumberValue = (*numberRef)(nil)
 
+// ReferenceNumber creates a number reference
+func ReferenceNumber(ref Reference) NumberValue {
+	return numberRef{
+		ref: ref.copy(),
+	}
+}
+
 // numberRef is a reference to a number in a Terraform configuration
 type numberRef struct {
-	ref ReferenceValue
+	ref Reference
 }
 
 func (r numberRef) InternalTokens() hclwrite.Tokens {
 	return r.ref.InternalTokens()
 }
 
-func (r numberRef) InternalTraverse(step hcl.Traverser) NumberValue {
+func (r numberRef) InternalWithRef(ref Reference) NumberValue {
 	return numberRef{
-		ref: r.ref.InternalTraverse(step),
+		ref: ref.copy(),
 	}
 }
 

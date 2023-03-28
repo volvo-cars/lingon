@@ -7,68 +7,102 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	tkihcl "github.com/volvo-cars/lingon/pkg/internal/hcl"
+	"github.com/zclconf/go-cty/cty"
 )
 
-// Value represents the most generic value in terra's minimal type system.
+// Value represents the most generic type in terra's minimal type system.
 // Every other type must implement this type.
 // It is never expected that a user should have to interact with this type directly
 type Value[T any] interface {
 	tkihcl.Tokenizer
-	// InternalTraverse is for internal use
-	InternalTraverse(hcl.Traverser) T
+	// InternalWithRef returns a copy of this type T with the provided
+	// reference. This is used internally to create a reference to attributes
+	// within sets, lists,
+	// maps and custom attributes types in the generated code.
+	InternalWithRef(Reference) T
 }
 
-// Reference takes a list of steps as strings, that represent a reference to an object in
-// a Terraform config (such as a resource or a data resource), and returns a ReferenceValue
-// with those steps.
+// ReferenceAttribute takes an address to a Terraform attribute.
+// The address is represented as a list of strings that are converted into a
+// references.
 //
 // Users are not expected to call this method. It is for the generated code to use when referencing
 // a terraform object attribute
-func Reference(steps ...string) ReferenceValue {
-	tr := make(hcl.Traversal, len(steps))
-	for i, s := range steps {
+func ReferenceAttribute(address ...string) Reference {
+	tr := make(hcl.Traversal, len(address))
+	for i, s := range address {
 		if i == 0 {
 			tr[i] = hcl.TraverseRoot{Name: s}
 		} else {
 			tr[i] = hcl.TraverseAttr{Name: s}
 		}
 	}
-	return ReferenceValue{
+	return Reference{
 		tr: tr,
 	}
 }
 
-// ReferenceValue represents a reference to some value in a Terraform configuration.
-// The reference might include things like indices (i.e. [0]), nested objects or even the splat
-// operator (i.e. [*])
-type ReferenceValue struct {
+// ReferenceSingle creates an instance of T with the given reference.
+// It is a helper method for the generated code to use, to make it consistent
+// with creating maps, sets, etc.
+func ReferenceSingle[T Value[T]](ref Reference) T {
+	var v T
+	return v.InternalWithRef(ref)
+}
+
+// Reference represents a reference to some value in a Terraform configuration.
+// The reference might include things like indices (i.e. [0]),
+// nested objects or even the splat operator (i.e. [*])
+type Reference struct {
 	tr hcl.Traversal
 }
 
-func (r ReferenceValue) InternalTokens() hclwrite.Tokens {
+func (r Reference) InternalTokens() hclwrite.Tokens {
 	return hclwrite.TokensForTraversal(r.tr)
 }
 
-func (r ReferenceValue) AsString() StringValue {
-	return &stringRef{
-		ref: r,
+func (r Reference) InternalWithRef(ref Reference) Reference {
+	return ref.copy()
+}
+
+// Append appends the given string to the reference
+func (r Reference) Append(name string) Reference {
+	cp := r.copy()
+	return Reference{
+		tr: append(cp.tr, hcl.TraverseAttr{Name: name}),
 	}
 }
 
-func (r ReferenceValue) AsNumber() NumberValue {
-	return &numberRef{
-		ref: r,
+// index adds a reference to an index (of a list/set) to the reference
+func (r Reference) index(i int) Reference {
+	cp := r.copy()
+	return Reference{
+		tr: append(cp.tr, hcl.TraverseIndex{Key: cty.NumberIntVal(int64(i))}),
 	}
 }
 
-func (r ReferenceValue) AsBool() BoolValue {
-	return &boolRef{
-		ref: r,
+// key adds a reference to a key (of a map) to the reference
+func (r Reference) key(k string) Reference {
+	cp := r.copy()
+	return Reference{
+		tr: append(cp.tr, hcl.TraverseIndex{Key: cty.StringVal(k)}),
 	}
 }
 
-func (r ReferenceValue) InternalTraverse(step hcl.Traverser) ReferenceValue {
-	return ReferenceValue{
-		tr: append(r.tr, step),
+// splat adds the Terraform splat operator to a reference
+func (r Reference) splat() Reference {
+	cp := r.copy()
+	return Reference{
+		tr: append(cp.tr, hcl.TraverseSplat{}),
+	}
+}
+
+// copy makes a copy of the reference so that any slices can be safely passed
+// around with modifying the original
+func (r Reference) copy() Reference {
+	tr := make(hcl.Traversal, len(r.tr))
+	copy(tr, r.tr)
+	return Reference{
+		tr: tr,
 	}
 }

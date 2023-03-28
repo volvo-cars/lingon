@@ -31,41 +31,23 @@ func ctyTypeReturnType(ct cty.Type) *jen.Statement {
 	}
 }
 
-func ctyTypeReturnValue(n *node, ct cty.Type, name string) *jen.Statement {
-	// E.g.
-	// i.InternalTraverse(hcl.TraverseAttr{Name: "issuer"}).Reference
-	param := jen.Id(n.receiver).Dot(idStructReferenceValue).Dot(idFuncInternalTraverse).Call(hclTraverseAttr(jen.Lit(name)))
+func funcReferenceByCtyType(ct cty.Type) *jen.Statement {
 	switch {
 	case ct == cty.Bool:
-		return param.Dot(idFuncReferenceAsBool).Call()
+		return qualReferenceBool()
 	case ct == cty.String:
-		return param.Dot(idFuncReferenceAsString).Call()
+		return qualReferenceString()
 	case ct == cty.Number:
-		return param.Dot(idFuncReferenceAsNumber).Call()
+		return qualReferenceNumber()
 	case ct.IsMapType():
-		return qualAsMapRefFunc().Call(
-			ctyTypeReturnValue(
-				n,
-				ct.ElementType(),
-				name,
-			),
-		)
+		subType := ctyTypeReturnType(ct.ElementType())
+		return qualReferenceMap().Types(subType)
 	case ct.IsSetType():
-		return qualAsSetRefFunc().Call(
-			ctyTypeReturnValue(
-				n,
-				ct.ElementType(),
-				name,
-			),
-		)
+		subType := ctyTypeReturnType(ct.ElementType())
+		return qualReferenceSet().Types(subType)
 	case ct.IsListType():
-		return qualAsListRefFunc().Call(
-			ctyTypeReturnValue(
-				n,
-				ct.ElementType(),
-				name,
-			),
-		)
+		subType := ctyTypeReturnType(ct.ElementType())
+		return qualReferenceList().Types(subType)
 	default:
 		panic(fmt.Sprintf("unsupported AttributeType: %s", ct.GoString()))
 	}
