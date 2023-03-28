@@ -1,6 +1,6 @@
 # Rationale
 
-Because we had no other choice.
+Because we had no other choice, no tools supported a controlled and reproducible way to upgrade our infrastructure.
 
 We didn't want to build yet another abstraction that tries to cover everyone's use cases (see https://xkcd.com/927/).
 So we decided to build a library to facilitate the creation of **your** abstraction for your platform, regardless of the target infrastructure and services.
