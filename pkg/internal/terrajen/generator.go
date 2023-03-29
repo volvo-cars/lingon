@@ -17,15 +17,15 @@ import (
 // for each resource and data object, and the provider configuration.
 // The schemas are used by the generator to create the Go files and sub packages.
 type ProviderGenerator struct {
-	// GoProvidersPkgPath is the Go pkg path to the generated providers directory.
-	// E.g. github.com/volvo-cars/github.com/volvo-cars/lingon/gen/providers
-	GoProvidersPkgPath string
+	// GoProviderPkgPath is the Go pkg path to the generated provider directory.
+	// E.g. github.com/volvo-cars/github.com/volvo-cars/lingon/gen/aws
+	GoProviderPkgPath string
 	// GeneratedPackageLocation is the directory on the filesystem where the generated
 	// Go files will be created.
-	// The GoProvidersPkgPath path must match the location of the generated files
+	// The GoProviderPkgPath path must match the location of the generated files
 	// so that they can be imported correctly.
 	// E.g. if we are in a Go module called "my-module" and we generate the files in a
-	// "gen" directory within the root of "my-module", then GoProvidersPkgPath is "my-module/gen"
+	// "gen" directory within the root of "my-module", then GoProviderPkgPath is "my-module/gen"
 	// and the GeneratedPackageLocation is "./gen" assuming we are running from the root of
 	// "my-module"
 	GeneratedPackageLocation string
@@ -55,8 +55,8 @@ const (
 func (a *ProviderGenerator) SchemaProvider(sb *tfjson.SchemaBlock) *Schema {
 	return &Schema{
 		SchemaType:               SchemaTypeProvider,
-		GoPackageProviders:       a.GoProvidersPkgPath,       // github.com/volvo-cars/github.com/volvo-cars/lingon/gen/providers
-		GeneratedPackageLocation: a.GeneratedPackageLocation, // gen/providers/aws
+		GoProviderPkgPath:        a.GoProviderPkgPath,        // github.com/volvo-cars/github.com/volvo-cars/lingon/gen/aws
+		GeneratedPackageLocation: a.GeneratedPackageLocation, // gen/aws
 		ProviderName:             a.ProviderName,             // aws
 		ProviderSource:           a.ProviderSource,           // registry.terraform.io/hashicorp/aws
 		ProviderVersion:          a.ProviderVersion,          // 4.49.0
@@ -88,8 +88,8 @@ func (a *ProviderGenerator) SchemaResource(
 	fp := filepath.Join(a.GeneratedPackageLocation, shortName+fileExtension)
 	rs := &Schema{
 		SchemaType:               SchemaTypeResource,
-		GoPackageProviders:       a.GoProvidersPkgPath,       // github.com/volvo-cars/github.com/volvo-cars/lingon/gen/providers
-		GeneratedPackageLocation: a.GeneratedPackageLocation, // gen/aws/providers
+		GoProviderPkgPath:        a.GoProviderPkgPath,        // github.com/volvo-cars/github.com/volvo-cars/lingon/gen/aws
+		GeneratedPackageLocation: a.GeneratedPackageLocation, // gen/aws
 		ProviderName:             a.ProviderName,             // aws
 		ProviderSource:           a.ProviderSource,           // hashicorp/aws
 		ProviderVersion:          a.ProviderVersion,          // 4.49.0
@@ -125,8 +125,8 @@ func (a *ProviderGenerator) SchemaData(
 
 	ds := &Schema{
 		SchemaType:               SchemaTypeData,
-		GoPackageProviders:       a.GoProvidersPkgPath,       // github.com/volvo-cars/github.com/volvo-cars/lingon/gen/providers
-		GeneratedPackageLocation: a.GeneratedPackageLocation, // gen/aws/providers
+		GoProviderPkgPath:        a.GoProviderPkgPath,        // github.com/volvo-cars/github.com/volvo-cars/lingon/gen/aws
+		GeneratedPackageLocation: a.GeneratedPackageLocation, // gen/aws
 		ProviderName:             a.ProviderName,             // aws
 		ProviderSource:           a.ProviderSource,           // hashicorp/aws
 		ProviderVersion:          a.ProviderVersion,          // 4.49.0
@@ -179,7 +179,7 @@ func structReceiverFromName(name string) string {
 // A schema can represent a resource, a data object or the provider configuration.
 type Schema struct {
 	SchemaType               SchemaType // resource / provider / data
-	GoPackageProviders       string     // github.com/volvo-cars/github.com/volvo-cars/lingon/gen/providers
+	GoProviderPkgPath        string     // github.com/volvo-cars/github.com/volvo-cars/lingon/gen/providers
 	GeneratedPackageLocation string     // gen/providers/aws
 	ProviderName             string     // aws
 	ProviderSource           string     // registry.terraform.io/hashicorp/aws
@@ -203,7 +203,7 @@ type Schema struct {
 }
 
 func (s *Schema) SubPkgQualPath() string {
-	return s.GoPackageProviders + "/" + s.PackageName + "/" + s.SubPackageName
+	return s.GoProviderPkgPath + "/" + s.SubPackageName
 }
 
 func (s *Schema) SubPkgPath() string {

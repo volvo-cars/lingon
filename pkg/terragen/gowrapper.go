@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
@@ -24,8 +23,10 @@ var (
 )
 
 type GenerateGoArgs struct {
+	ProviderName    string
+	ProviderSource  string
+	ProviderVersion string
 	// OutDir is the filesystem location where the generated files will be created.
-	// The path will be suffixed with /providers/<local-name-of-provider>.
 	OutDir string
 	// PkgPath is the Go pkg path to the generated files location, specified by OutDir.
 	// E.g. if OutDir is in a module called "my-module" in a directory called "gen",
@@ -39,7 +40,6 @@ type GenerateGoArgs struct {
 // providers and their schemas.
 func GenerateGoCode(
 	args GenerateGoArgs,
-	providers map[string]Provider,
 	schemas *tfjson.ProviderSchemas,
 ) error {
 	if args.OutDir == "" {
@@ -49,47 +49,41 @@ func GenerateGoCode(
 		return errors.New("pkgPath is empty")
 	}
 
-	for providerName, provider := range providers {
-		slog.Info(
-			"Generating Go wrapper",
-			slog.String("provider", providerName),
-			slog.String("source", provider.Source),
-			slog.String("version", provider.Version),
-		)
-		tfArgs := terrajen.ProviderGenerator{
-			GoProvidersPkgPath: path.Join(args.PkgPath, "providers"),
-			GeneratedPackageLocation: filepath.Join(
-				args.OutDir,
-				"providers",
-				providerName,
-			),
-			ProviderName:    providerName,
-			ProviderSource:  provider.Source,
-			ProviderVersion: provider.Version,
-		}
+	slog.Info(
+		"Generating Go wrapper",
+		slog.String("provider", args.ProviderName),
+		slog.String("source", args.ProviderSource),
+		slog.String("version", args.ProviderVersion),
+	)
+	tfArgs := terrajen.ProviderGenerator{
+		GoProviderPkgPath:        args.PkgPath,
+		GeneratedPackageLocation: args.OutDir,
+		ProviderName:             args.ProviderName,
+		ProviderSource:           args.ProviderSource,
+		ProviderVersion:          args.ProviderVersion,
+	}
 
-		pSchema, ok := schemas.Schemas[provider.Source]
+	pSchema, ok := schemas.Schemas[args.ProviderSource]
+	if !ok {
+		// Try adding registry.terraform.io/ prefix if not already added
+		if !strings.HasPrefix(args.ProviderSource, "registry.terraform.io/") {
+			pSchema, ok = schemas.Schemas[fmt.Sprintf(
+				"registry.terraform.io/%s",
+				args.ProviderSource,
+			)]
+		}
+		// If still not ok, indicate an error
 		if !ok {
-			// Try adding registry.terraform.io/ prefix if not already added
-			if !strings.HasPrefix(provider.Source, "registry.terraform.io/") {
-				pSchema, ok = schemas.Schemas[fmt.Sprintf(
-					"registry.terraform.io/%s",
-					provider.Source,
-				)]
-			}
-			// If still not ok, indicate an error
-			if !ok {
-				return fmt.Errorf(
-					"provider source: %s: %w",
-					provider.Source,
-					ErrProviderSchemaNotFound,
-				)
-			}
+			return fmt.Errorf(
+				"provider source: %s: %w",
+				args.ProviderSource,
+				ErrProviderSchemaNotFound,
+			)
 		}
-		err := generateProvider(args, tfArgs, pSchema)
-		if err != nil {
-			return err
-		}
+	}
+	err := generateProvider(args, tfArgs, pSchema)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -244,4 +238,27 @@ func createDirIfNotEmpty(path string, force bool) error {
 	}
 	// Create the directory again now that it's gone
 	return createDirIfNotEmpty(path, false)
+}
+
+// ParseProvider takes a provider as a string and returns a Provider object.
+// An error is returned if the string could not be parsed.
+// Example provider: aws=hashicorp/aws:4.60.0
+func ParseProvider(s string) (Provider, error) {
+	pMap := strings.SplitN(s, "=", 2)
+	if len(pMap) == 1 {
+		return Provider{}, fmt.Errorf("provider format incorrect: missing `=`")
+	}
+	p := Provider{
+		Name: pMap[0],
+	}
+	sourceVersion := strings.SplitN(pMap[1], ":", 2)
+	if len(sourceVersion) == 1 {
+		return Provider{}, fmt.Errorf(
+			"provider format incorrect: missing `:` in `source:version`",
+		)
+	}
+	p.Source = sourceVersion[0]
+	p.Version = sourceVersion[1]
+	// Add the provider to the map
+	return p, nil
 }

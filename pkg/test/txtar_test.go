@@ -104,17 +104,14 @@ func RunTest(wd string, ar *txtar.Archive) error {
 		return fmt.Errorf("decoding schema.json file: %w", err)
 	}
 	genArgs := terragen.GenerateGoArgs{
-		OutDir:  filepath.Join(wd, "out"),
-		PkgPath: "test/out",
-		Force:   true,
+		ProviderName:    cfg.Provider.Name,
+		ProviderSource:  cfg.Provider.Source,
+		ProviderVersion: cfg.Provider.Version,
+		OutDir:          filepath.Join(wd, "out", cfg.Provider.Name),
+		PkgPath:         fmt.Sprintf("test/out/%s", cfg.Provider.Name),
+		Force:           true,
 	}
-	providers := map[string]terragen.Provider{
-		cfg.Provider.Name: {
-			Source:  cfg.Provider.Source,
-			Version: cfg.Provider.Version,
-		},
-	}
-	if err := terragen.GenerateGoCode(genArgs, providers, &ps); err != nil {
+	if err := terragen.GenerateGoCode(genArgs, &ps); err != nil {
 		return fmt.Errorf("generating Go code: %w", err)
 	}
 

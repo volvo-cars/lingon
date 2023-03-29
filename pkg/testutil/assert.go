@@ -21,6 +21,13 @@ func AssertNoError(t *testing.T, err error, msg string) {
 	}
 }
 
+func AssertError(t *testing.T, err error, msg string) {
+	t.Helper()
+	if err == nil {
+		t.Error(Callers(), msg, errors.New("error was expected but is nil"))
+	}
+}
+
 func equal[C comparable](a, b C) bool {
 	return a == b
 }

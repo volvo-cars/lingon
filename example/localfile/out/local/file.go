@@ -5,9 +5,8 @@ package local
 import (
 	"encoding/json"
 	"fmt"
-	"io"
-
 	"github.com/volvo-cars/lingon/pkg/terra"
+	"io"
 )
 
 func NewFile(name string, args FileArgs) *File {

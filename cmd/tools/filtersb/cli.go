@@ -19,7 +19,7 @@ import (
 func main() {
 	var (
 		outDir             string
-		provider           providerFlag
+		providerStr        string
 		includeResources   filterMap = map[string]struct{}{}
 		includeDataSources filterMap = map[string]struct{}{}
 	)
@@ -32,10 +32,11 @@ func main() {
 		"include-data-sources",
 		"data sources to include",
 	)
-	flag.Var(
-		&provider,
+	flag.StringVar(
+		&providerStr,
 		"provider",
-		"providers to generate Go files for, e.g. aws=hashicorp/aws:4.49.0",
+		"",
+		"provider to generate Go files for, e.g. aws=hashicorp/aws:4.49.0",
 	)
 	flag.Parse()
 
@@ -43,25 +44,28 @@ func main() {
 		slog.Error("-out flag required")
 		os.Exit(1)
 	}
+	provider, err := terragen.ParseProvider(providerStr)
+	if err != nil {
+		slog.Error("invalid provider", "err", err)
+		os.Exit(1)
+	}
 
 	ctx := context.Background()
 	slog.Info(
-		"Generating Terraform providers schema",
-		slog.String("provider", provider.String()),
+		"Generating Terraform provider schema",
+		slog.String("provider", providerStr),
 		slog.String("out", tfOutDir),
 	)
-	ps, err := terragen.GenerateProvidersSchema(
-		ctx, map[string]terragen.Provider{
-			provider.LocalName: provider.Provider,
-		},
+	ps, err := terragen.GenerateProviderSchema(
+		ctx, provider,
 	)
 	if err != nil {
-		slog.Error("generating providers schema", "err", err)
+		slog.Error("generating provider schema", "err", err)
 		os.Exit(1)
 	}
 
 	slog.Info(
-		"Filtering providers schema",
+		"Filtering provider schema",
 		slog.Any("resources", includeResources),
 		slog.Any("data_sources", includeDataSources),
 	)
@@ -80,8 +84,8 @@ func main() {
 
 	outFile := filepath.Join(
 		outDir, fmt.Sprintf(
-			"%s_%s.json", provider.LocalName,
-			provider.Provider.Version,
+			"%s_%s.json", provider.Name,
+			provider.Version,
 		),
 	)
 	f, err := os.OpenFile(outFile, os.O_RDWR|os.O_CREATE, 0o755)
@@ -89,7 +93,7 @@ func main() {
 		slog.Error("opening out file", err, slog.String("out", outFile))
 	}
 	if err := json.NewEncoder(f).Encode(ps); err != nil {
-		slog.Error("encoding providers schema", err)
+		slog.Error("encoding provider schema", err)
 		os.Exit(1)
 	}
 }

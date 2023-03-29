@@ -15,7 +15,7 @@ import (
 	"github.com/volvo-cars/lingon/pkg/terra"
 	"golang.org/x/exp/slog"
 	"os"
-	"test/out/providers/aws"
+	"test/out/aws"
 )
 
 func main() {

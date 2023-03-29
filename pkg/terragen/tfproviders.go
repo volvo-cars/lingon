@@ -32,22 +32,31 @@ type RequiredProviders struct {
 
 // Provider represents a single element of a map of required providers
 type Provider struct {
-	Source  string `hcl:"source,attr" cty:"source"`
-	Version string `hcl:"version,attr" cty:"version"`
+	Name    string // Lack of cty tag means it is ignored
+	Source  string `cty:"source"`
+	Version string `cty:"version"`
 }
 
-func GenerateProvidersSchema(
+func GenerateProviderSchema(
 	ctx context.Context,
-	providers map[string]Provider,
+	provider Provider,
 ) (*tfjson.ProviderSchemas, error) {
 	versions := TerraformVersions{
 		TerraformBlock: TerraformBlock{
 			RequiredProviders: RequiredProviders{
-				Providers: providers,
+				Providers: map[string]Provider{
+					provider.Name: {
+						Source:  provider.Source,
+						Version: provider.Version,
+					},
+				},
 			},
 		},
 	}
-	workingDir := filepath.Join(".lingon", "schemas")
+	workingDir := filepath.Join(
+		".lingon", "schemas", provider.Name,
+		provider.Version,
+	)
 	if err := os.MkdirAll(workingDir, os.ModePerm); err != nil {
 		return nil, fmt.Errorf(
 			"creating schemas working directory: %s: %w",

@@ -14,12 +14,12 @@ package main
 import (
 	"os"
 
-	"test/out/providers/aws/emrcluster"
+	"test/out/aws/emrcluster"
 
 	"github.com/volvo-cars/lingon/pkg/terra"
 	"golang.org/x/exp/slog"
 
-	"test/out/providers/aws"
+	"test/out/aws"
 )
 
 func main() {
