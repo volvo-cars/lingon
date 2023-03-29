@@ -46,16 +46,16 @@ func main() {
 	flag.Parse()
 
 	if outDir == "" {
-		slog.Error("-out flag required", nil)
+		slog.Error("-out flag required")
 		os.Exit(1)
 	}
 	if pkgPath == "" {
-		slog.Error("-pkg flag required", nil)
+		slog.Error("-pkg flag required")
 		os.Exit(1)
 	}
 
 	if len(providers) == 0 {
-		slog.Error("-provider flag required", nil)
+		slog.Error("-provider flag required")
 		os.Exit(1)
 	}
 
@@ -67,7 +67,7 @@ func main() {
 	)
 	schemas, err := terragen.GenerateProvidersSchema(ctx, providers)
 	if err != nil {
-		slog.Error("generating providers schema", err)
+		slog.Error("generating providers schema", "err", err)
 		os.Exit(1)
 	}
 
@@ -86,7 +86,7 @@ func main() {
 		providers,
 		schemas,
 	); err != nil {
-		slog.Error("generating Go wrapper", err)
+		slog.Error("generating Go wrapper", "err", err)
 		os.Exit(1)
 	}
 }

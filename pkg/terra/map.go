@@ -16,6 +16,17 @@ func Map[T Value[T]](value map[string]T) MapValue[T] {
 	}
 }
 
+// MapString returns a map value containing the given string values
+func MapString(value map[string]string) MapValue[StringValue] {
+	ms := make(map[string]StringValue, len(value))
+	for key, val := range value {
+		ms[key] = String(val)
+	}
+	return mapValue[StringValue]{
+		values: ms,
+	}
+}
+
 type MapValue[T Value[T]] interface {
 	Value[MapValue[T]]
 	Key(string) T

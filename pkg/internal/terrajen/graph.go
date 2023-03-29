@@ -145,10 +145,9 @@ func (n *node) comment() string {
 type nodeNestingMode int
 
 const (
-	nodeNestingModeSingle nodeNestingMode = 0
-	nodeNestingModeList   nodeNestingMode = 1
-	nodeNestingModeSet    nodeNestingMode = 2
-	nodeNestingModeMap    nodeNestingMode = 3
+	nodeNestingModeList nodeNestingMode = 1
+	nodeNestingModeSet  nodeNestingMode = 2
+	nodeNestingModeMap  nodeNestingMode = 3
 )
 
 type attribute struct {
@@ -325,14 +324,14 @@ func ctyTypeElementObject(ct cty.Type) (cty.Type, bool) {
 func blockNodeNestingMode(block *tfjson.SchemaBlockType) []nodeNestingMode {
 	switch block.NestingMode {
 	case tfjson.SchemaNestingModeSingle, tfjson.SchemaNestingModeGroup:
-		return []nodeNestingMode{nodeNestingModeSingle}
+		return nil
 	case tfjson.SchemaNestingModeList, tfjson.SchemaNestingModeMap:
 		// Unintuitively, tfjson.SchemaNestingModeMap is not actually a map, just a list,
 		// but they get keyed by the block labels into a Map.
 		// For our use case, we therefore treat it like a list.
-		return []nodeNestingMode{nodeNestingModeList, nodeNestingModeSingle}
+		return []nodeNestingMode{nodeNestingModeList}
 	case tfjson.SchemaNestingModeSet:
-		return []nodeNestingMode{nodeNestingModeSet, nodeNestingModeSingle}
+		return []nodeNestingMode{nodeNestingModeSet}
 	default:
 		panic(
 			fmt.Sprintf(
@@ -350,7 +349,7 @@ func blockNodeNestingMode(block *tfjson.SchemaBlockType) []nodeNestingMode {
 // I.e. what is the path from parent --> cty.Object (child)
 func ctyNodeNestingMode(ct cty.Type) []nodeNestingMode {
 	if ct.IsObjectType() {
-		return []nodeNestingMode{nodeNestingModeSingle}
+		return nil
 	}
 	switch {
 	case ct.IsListType():
@@ -410,18 +409,13 @@ func returnTypeFromNestingPath(
 	nestingPath []nodeNestingMode,
 	qual *jen.Statement,
 ) *jen.Statement {
-	fmt.Println("NESTINGPATH: ", nestingPath)
-	var fullQual *jen.Statement
+	fullQual := qual.Clone()
 	// Iterate over nestingPath backwards to get the correct order.
 	// E.g. if List-->Set-->Map is the nestingPath, then we can reverse this to
 	// easily construct List[Set[Map[qual]]]
 	for i := len(nestingPath) - 1; i >= 0; i-- {
 		path := nestingPath[i]
-		fmt.Println("i: ", i)
-		fmt.Println("path: ", path)
 		switch path {
-		case nodeNestingModeSingle:
-			fullQual = qual.Clone()
 		case nodeNestingModeList:
 			fullQual = qualListValue().Types(fullQual.Clone())
 		case nodeNestingModeSet:
@@ -442,20 +436,18 @@ func returnTypeFromNestingPath(
 func jenNodeReturnValue(
 	n *node, childQual *jen.Statement,
 ) *jen.Statement {
-	var fullQual *jen.Statement
+	// If the child is not nested in any lists/sets/maps then simply return
+	// a reference to the single child qualifier
+	if len(n.nestingPath) == 0 {
+		return qualReferenceSingle().Types(childQual)
+	}
+
 	first := n.nestingPath[0]
 	remainder := n.nestingPath[1:]
-	subType := childQual
-	fmt.Println("FIRST: ", first)
-	fmt.Println("REMDINER: ", remainder)
-	// If there are steps in the nestingPath remaining, we need to calculate
-	// the return type for the subType
-	if len(remainder) > 0 {
-		subType = returnTypeFromNestingPath(remainder, childQual)
-	}
+	subType := returnTypeFromNestingPath(remainder, childQual)
+
+	var fullQual *jen.Statement
 	switch first {
-	case nodeNestingModeSingle:
-		fullQual = qualReferenceSingle().Types(subType)
 	case nodeNestingModeList:
 		fullQual = qualReferenceList().Types(subType)
 	case nodeNestingModeSet:

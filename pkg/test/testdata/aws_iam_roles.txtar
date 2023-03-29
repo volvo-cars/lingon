@@ -21,7 +21,7 @@ import (
 func main() {
 	err := terra.Export(stack(), "out")
 	if err != nil {
-		slog.Error("exporting stack", err)
+		slog.Error("exporting stack", "err", err)
 		os.Exit(1)
 	}
 }

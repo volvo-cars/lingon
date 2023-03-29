@@ -40,7 +40,7 @@ func main() {
 	flag.Parse()
 
 	if outDir == "" {
-		slog.Error("-out flag required", nil)
+		slog.Error("-out flag required")
 		os.Exit(1)
 	}
 
@@ -56,7 +56,7 @@ func main() {
 		},
 	)
 	if err != nil {
-		slog.Error("generating providers schema", err)
+		slog.Error("generating providers schema", "err", err)
 		os.Exit(1)
 	}
 

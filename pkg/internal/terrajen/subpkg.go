@@ -4,6 +4,8 @@
 package terrajen
 
 import (
+	"fmt"
+
 	"github.com/dave/jennifer/jen"
 	"github.com/volvo-cars/lingon/pkg/internal/str"
 )
@@ -63,8 +65,19 @@ func subPkgArgStruct(n *node) *jen.Statement {
 				tags[tagValidate] = "required"
 			}
 		} else {
-			for range child.nestingPath {
-				stmt.Index()
+			// For children the nesting type cannot be a map
+			for _, path := range child.nestingPath {
+				switch path {
+				case nodeNestingModeList, nodeNestingModeSet:
+					stmt.Index()
+				default:
+					panic(
+						fmt.Sprintf(
+							"unsupported nesting path %d for child",
+							path,
+						),
+					)
+				}
 			}
 			tags[tagValidate] = nodeBlockListValidateTags(child)
 		}
@@ -113,9 +126,11 @@ func subPkgAttributeStruct(n *node) *jen.Statement {
 			// Body
 			Block(
 				jen.Return(
-					qualReferenceSingle().
-						Types(jen.Id(structName)).
-						Call(jen.Id(refArg)),
+					jen.Id(structName).Values(
+						jen.Dict{
+							jen.Id(structFieldRef): jen.Id(refArg),
+						},
+					),
 				),
 			),
 	)
