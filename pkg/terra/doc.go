@@ -1,4 +1,4 @@
-// Copyright (c) Volvo Car Corporation
+// Copyright 2023 Volvo Car Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 // Package terra provides the core functionality for working with Terraform.
