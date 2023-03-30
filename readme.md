@@ -19,7 +19,7 @@ Lingon is a collection of libraries and tools for building platforms using Go.
 
 The following technologies are currently supported:
 
-- Terraform
+- [Terraform](./docs/terraform/)
 - [Kubernetes](./docs/kubernetes/)
 
 The only dependencies you need are:
