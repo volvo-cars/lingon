@@ -104,6 +104,12 @@ func funcConfiguration(s *Schema) *jen.Statement {
 }
 
 func funcAttributes(s *Schema) *jen.Statement {
+	var createRefFunc *jen.Statement
+	if s.SchemaType == SchemaTypeResource {
+		createRefFunc = qualReferenceResource()
+	} else {
+		createRefFunc = qualReferenceDataResource()
+	}
 	return jen.Func().
 		// Receiver
 		Params(jen.Id(s.Receiver).Op("*").Id(s.StructName)).
@@ -116,7 +122,7 @@ func funcAttributes(s *Schema) *jen.Statement {
 			jen.Return(
 				jen.Id(s.AttributesStructName).Values(
 					jen.Dict{
-						jen.Id("name"): jen.Id(s.Receiver).Dot(idFieldName),
+						jen.Id("ref"): createRefFunc.Call(jen.Id(s.Receiver)),
 					},
 				),
 			),
@@ -210,13 +216,11 @@ func funcDependOn(s *Schema) *jen.Statement {
 		// Name
 		Id("DependOn").Call().
 		// Return type
-		Add(qualValue().Types(qualReferenceValue())).
+		Add(qualReferenceValue()).
 		// Body
 		Block(
 			jen.Return(
-				qualReferenceAttribute().Call(
-					jen.Lit(s.Type), jen.Id(s.Receiver).Dot(idFieldName),
-				),
+				qualReferenceResource().Call(jen.Id(s.Receiver)),
 			),
 		)
 }

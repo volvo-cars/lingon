@@ -13,84 +13,80 @@ func ListString(values ...string) ListValue[StringValue] {
 	for i, s := range values {
 		ss[i] = String(s)
 	}
-	return listValue[StringValue]{
-		values: ss,
-	}
+	return List[StringValue](ss...)
 }
 
 // List returns a list value
 func List[T Value[T]](values ...T) ListValue[T] {
-	return listValue[T]{
+	return ListValue[T]{
+		isInit: true,
+		isRef:  false,
 		values: values,
 	}
 }
 
-type ListValue[T Value[T]] interface {
-	Value[ListValue[T]]
-	Index(int) T
-	Splat() T
+// CastAsList takes a value (as a reference) and wraps it in a ListValue
+func CastAsList[T Value[T]](value T) ListValue[T] {
+	return ReferenceList[T](value.InternalRef())
 }
 
-var _ ListValue[StringValue] = (*listValue[StringValue])(nil)
+// ReferenceList creates a list reference
+func ReferenceList[T Value[T]](ref Reference) ListValue[T] {
+	return ListValue[T]{
+		isInit: true,
+		isRef:  true,
+		ref:    ref.copy(),
+	}
+}
 
-type listValue[T Value[T]] struct {
+var _ Value[ListValue[StringValue]] = (*ListValue[StringValue])(nil)
+
+type ListValue[T Value[T]] struct {
+	isInit bool
+	isRef  bool
+	ref    Reference
+
 	values []T
 }
 
-func (v listValue[T]) InternalCanTraverse() bool {
-	return false
+func (v ListValue[T]) Index(i int) T {
+	if !v.isRef {
+		panic("ListValue: cannot use Index on value")
+	}
+	var t T
+	return t.InternalWithRef(v.ref.index(i))
 }
 
-func (v listValue[T]) InternalWithRef(Reference) ListValue[T] {
-	panic("cannot traverse a list")
+func (v ListValue[T]) Splat() T {
+	if !v.isRef {
+		panic("ListValue: cannot use Splat on value")
+	}
+	var t T
+	return t.InternalWithRef(v.ref.splat())
 }
 
-func (v listValue[T]) InternalTokens() hclwrite.Tokens {
+func (v ListValue[T]) InternalTokens() hclwrite.Tokens {
+	if !v.isInit {
+		return nil
+	}
+	if v.isRef {
+		return v.ref.InternalTokens()
+	}
+
 	elems := make([]hclwrite.Tokens, len(v.values))
-
 	for i, val := range v.values {
 		elems[i] = val.InternalTokens()
 	}
 	return hclwrite.TokensForTuple(elems)
 }
 
-func (v listValue[T]) Index(i int) T {
-	return v.values[i]
-}
-
-func (v listValue[T]) Splat() T {
-	panic("cannot splat list of values")
-}
-
-var _ ListValue[StringValue] = (*listRef[StringValue])(nil)
-
-// ReferenceList creates a list reference
-func ReferenceList[T Value[T]](ref Reference) ListValue[T] {
-	return listRef[T]{
-		ref: ref,
+func (v ListValue[T]) InternalRef() Reference {
+	if !v.isRef {
+		panic("ListValue: cannot get reference from value")
 	}
+	return v.ref
 }
 
-type listRef[T Value[T]] struct {
-	ref Reference
-}
-
-func (r listRef[T]) InternalWithRef(ref Reference) ListValue[T] {
-	return listRef[T]{
-		ref: ref.copy(),
-	}
-}
-
-func (r listRef[T]) InternalTokens() hclwrite.Tokens {
-	return r.ref.InternalTokens()
-}
-
-func (r listRef[T]) Index(i int) T {
-	var v T
-	return v.InternalWithRef(r.ref.index(i))
-}
-
-func (r listRef[T]) Splat() T {
-	var v T
-	return v.InternalWithRef(r.ref.splat())
+func (v ListValue[T]) InternalWithRef(ref Reference) ListValue[T] {
+	return ReferenceList[T](ref)
 }

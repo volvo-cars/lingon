@@ -8,12 +8,13 @@ import (
 )
 
 const (
-	idStructReference        = "Reference"
-	idFuncReferenceAttribute = "ReferenceAttribute"
+	idStructReference           = "Reference"
+	idFuncReferenceAttribute    = "ReferenceAttribute"
+	idFuncReferenceResource     = "ReferenceResource"
+	idFuncReferenceDataResource = "ReferenceDataResource"
 )
 
 var (
-	qualValue          = jen.Qual(pkgTerra, "Value").Clone
 	qualStringValue    = jen.Qual(pkgTerra, "StringValue").Clone
 	qualNumberValue    = jen.Qual(pkgTerra, "NumberValue").Clone
 	qualBoolValue      = jen.Qual(pkgTerra, "BoolValue").Clone
@@ -22,7 +23,14 @@ var (
 	qualMapValue       = jen.Qual(pkgTerra, "MapValue").Clone
 	qualReferenceValue = jen.Qual(pkgTerra, idStructReference).Clone
 
-	qualReferenceAttribute = jen.Qual(pkgTerra, idFuncReferenceAttribute).Clone
+	qualReferenceResource = jen.Qual(
+		pkgTerra,
+		idFuncReferenceResource,
+	).Clone
+	qualReferenceDataResource = jen.Qual(
+		pkgTerra,
+		idFuncReferenceDataResource,
+	).Clone
 
 	qualReferenceString = jen.Qual(pkgTerra, "ReferenceString").Clone
 	qualReferenceNumber = jen.Qual(pkgTerra, "ReferenceNumber").Clone

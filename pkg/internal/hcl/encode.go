@@ -50,6 +50,10 @@ type Resource struct {
 }
 
 type Tokenizer interface {
+	// InternalTokens returns the HCL tokens that are rendered in the Terraform
+	// configuration when a Terraform stack is exported.
+	//
+	// Internal: users should **not** use this!
 	InternalTokens() hclwrite.Tokens
 }
 
@@ -210,7 +214,7 @@ func encodeStruct(
 				// Make sure that tokens is not nil because we don't want to
 				// write empty attributes
 				if tokens != nil {
-					body.SetAttributeRaw(tagName, v.InternalTokens())
+					body.SetAttributeRaw(tagName, tokens)
 				}
 			default:
 				if fv.CanInterface() && fv.Interface() != nil {

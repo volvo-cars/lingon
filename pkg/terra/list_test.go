@@ -43,11 +43,11 @@ func ExampleList_bool() {
 }
 
 func ExampleList_ref() {
-	s := List(
-		ReferenceString(ReferenceAttribute("a")),
-		ReferenceString(ReferenceAttribute("b")),
-	)
+	// Create some dummy references
+	refA := ReferenceString(newRef("a"))
+	refB := ReferenceString(newRef("b"))
 
+	s := List(refA, refB)
 	fmt.Println(string(s.InternalTokens().Bytes()))
 	// Output: [a, b]
 }
@@ -56,11 +56,49 @@ func ExampleList_mixed() {
 	s := List(
 		String("a"),
 		Number(1).AsString(),
-		ReferenceString(ReferenceAttribute("a")),
+		ReferenceString(newRef("a")),
 	)
 
 	fmt.Println(string(s.InternalTokens().Bytes()))
 	// Output: ["a", "1", a]
+}
+
+func ExampleList_index() {
+	// Create a reference list of string and Splat() it
+	l := ReferenceList[StringValue](
+		newRef("a", "b", "c"),
+	)
+	index := l.Index(0)
+	fmt.Println(string(index.InternalTokens().Bytes()))
+	// Output: a.b.c[0]
+}
+
+func ExampleList_splat() {
+	// Create a reference list of string and Splat() it
+	l := ReferenceList[StringValue](
+		newRef("a", "b", "c"),
+	)
+	splat := l.Splat()
+	// Convert "splatted" list back to a List
+	var ls ListValue[StringValue] //nolint:gosimple
+	ls = CastAsList(splat)
+	fmt.Println(string(ls.InternalTokens().Bytes()))
+	// Output: a.b.c[*]
+}
+
+func ExampleList_splatNested() {
+	// Create a reference list of a list of string and Splat() it
+	l := ReferenceList[ListValue[StringValue]](
+		newRef("a", "b", "c"),
+	)
+	splat := l.Splat()
+	// Convert "splatted" list back to a List of List
+	var ls ListValue[ListValue[StringValue]] //nolint:gosimple
+	ls = CastAsList(
+		splat,
+	)
+	fmt.Println(string(ls.InternalTokens().Bytes()))
+	// Output: a.b.c[*]
 }
 
 var _ Value[Attrs] = (*Attrs)(nil)
@@ -75,6 +113,10 @@ func (a Attrs) InternalTokens() hclwrite.Tokens {
 	return a.ref.InternalTokens()
 }
 
+func (a Attrs) InternalRef() Reference {
+	return a.ref.copy()
+}
+
 func (a Attrs) InternalWithRef(ref Reference) Attrs {
 	return Attrs{ref: ref}
 }
@@ -84,7 +126,7 @@ func (a Attrs) Name() StringValue {
 }
 
 func TestCustomTypes(t *testing.T) {
-	l := ReferenceList[Attrs](ReferenceAttribute("bla_type", "name"))
+	l := ReferenceList[Attrs](newRef("bla_type", "name"))
 	index := l.Index(0)
 	name := index.Name()
 	tu.AssertEqual(

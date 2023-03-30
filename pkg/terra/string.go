@@ -4,88 +4,83 @@
 package terra
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/convert"
-	"golang.org/x/exp/slog"
 )
 
 func String(s string) StringValue {
-	return stringValue{
-		value: cty.StringVal(s),
+	return StringValue{
+		isInit: true,
+		isRef:  false,
+		value:  cty.StringVal(s),
 	}
 }
 
-type StringValue interface {
-	Value[StringValue]
-
-	AsNumber() NumberValue
-	AsBool() BoolValue
+func ReferenceString(ref Reference) StringValue {
+	return StringValue{
+		isInit: true,
+		isRef:  true,
+		ref:    ref,
+	}
 }
 
-var _ StringValue = (*stringValue)(nil)
+var _ Value[StringValue] = (*StringValue)(nil)
 
-type stringValue struct {
+type StringValue struct {
+	isInit bool
+	isRef  bool
+	ref    Reference
+
 	value cty.Value
 }
 
-func (v stringValue) AsBool() BoolValue {
+func (v StringValue) AsBool() BoolValue {
+	if v.isRef {
+		return ReferenceBool(v.ref)
+	}
 	val, err := convert.Convert(v.value, cty.Bool)
 	if err != nil {
-		// TODO: handle error
-		slog.Error("converting number to bool", err)
+		panic(fmt.Sprintf("converting string to bool: %s", err.Error()))
 	}
-	return boolValue{
+	return BoolValue{
 		value: val,
 	}
 }
 
-func (v stringValue) AsNumber() NumberValue {
+func (v StringValue) AsNumber() NumberValue {
+	if v.isRef {
+		return ReferenceNumber(v.ref)
+	}
 	val, err := convert.Convert(v.value, cty.Number)
 	if err != nil {
-		// TODO: handle error
-		slog.Error("converting number to bool", err)
+		panic(fmt.Sprintf("converting string to bool: %s", err.Error()))
 	}
-	return numberValue{
-		value: val,
+	return NumberValue{
+		isInit: true,
+		value:  val,
 	}
 }
 
-func (v stringValue) InternalWithRef(Reference) StringValue {
-	panic("cannot traverse a string")
-}
-
-func (v stringValue) InternalTokens() hclwrite.Tokens {
+func (v StringValue) InternalTokens() hclwrite.Tokens {
+	if !v.isInit {
+		return nil
+	}
+	if v.isRef {
+		return v.ref.InternalTokens()
+	}
 	return hclwrite.TokensForValue(v.value)
 }
 
-var _ StringValue = (*stringRef)(nil)
-
-// ReferenceString creates a number reference
-func ReferenceString(ref Reference) StringValue {
-	return stringRef{
-		ref: ref.copy(),
+func (v StringValue) InternalRef() Reference {
+	if !v.isRef {
+		panic("StringValue: cannot use value as reference")
 	}
+	return v.ref
 }
 
-type stringRef struct {
-	ref Reference
-}
-
-func (r stringRef) InternalTokens() hclwrite.Tokens {
-	return r.ref.InternalTokens()
-}
-
-func (r stringRef) InternalWithRef(ref Reference) StringValue {
-	return stringRef{
-		ref: ref.copy(),
-	}
-}
-
-func (r stringRef) AsBool() BoolValue {
-	return boolRef(r)
-}
-
-func (r stringRef) AsNumber() NumberValue {
-	return numberRef(r)
+func (v StringValue) InternalWithRef(ref Reference) StringValue {
+	return ReferenceString(ref)
 }

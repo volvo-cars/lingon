@@ -9,42 +9,65 @@ import (
 	"github.com/hashicorp/hcl/v2/hclwrite"
 )
 
-// Map returns a map value
-func Map[T Value[T]](value map[string]T) MapValue[T] {
-	return mapValue[T]{
-		values: value,
-	}
-}
-
 // MapString returns a map value containing the given string values
 func MapString(value map[string]string) MapValue[StringValue] {
 	ms := make(map[string]StringValue, len(value))
 	for key, val := range value {
 		ms[key] = String(val)
 	}
-	return mapValue[StringValue]{
-		values: ms,
+	return Map(ms)
+}
+
+// Map returns a map value
+func Map[T Value[T]](value map[string]T) MapValue[T] {
+	return MapValue[T]{
+		isInit: true,
+		isRef:  false,
+		values: value,
 	}
 }
 
-type MapValue[T Value[T]] interface {
-	Value[MapValue[T]]
-	Key(string) T
+// CastAsMap takes a value (as a reference) and wraps it in a MapValue
+func CastAsMap[T Value[T]](value T) MapValue[T] {
+	return ReferenceMap[T](value.InternalRef())
 }
 
-var _ MapValue[StringValue] = (*mapValue[StringValue])(nil)
+// ReferenceMap returns a map value
+func ReferenceMap[T Value[T]](ref Reference) MapValue[T] {
+	return MapValue[T]{
+		isInit: true,
+		isRef:  true,
+		ref:    ref.copy(),
+	}
+}
 
-type mapValue[T Value[T]] struct {
+var _ Value[MapValue[StringValue]] = (*MapValue[StringValue])(nil)
+
+type MapValue[T Value[T]] struct {
+	isInit bool
+	isRef  bool
+	ref    Reference
+
 	values map[string]T
 }
 
-func (v mapValue[T]) InternalWithRef(Reference) MapValue[T] {
-	panic("cannot traverse a map")
+func (v MapValue[T]) Key(s string) T {
+	if !v.isRef {
+		panic("MapValue: cannot use Key on value")
+	}
+	var t T
+	return t.InternalWithRef(v.ref.key(s))
 }
 
-func (v mapValue[T]) InternalTokens() hclwrite.Tokens {
-	elems := make([]hclwrite.ObjectAttrTokens, len(v.values))
+func (v MapValue[T]) InternalTokens() hclwrite.Tokens {
+	if !v.isInit {
+		return nil
+	}
+	if v.isRef {
+		return v.ref.InternalTokens()
+	}
 
+	elems := make([]hclwrite.ObjectAttrTokens, len(v.values))
 	i := 0
 	for _, key := range sortMapKeys(v.values) {
 		elems[i] = hclwrite.ObjectAttrTokens{
@@ -56,36 +79,15 @@ func (v mapValue[T]) InternalTokens() hclwrite.Tokens {
 	return hclwrite.TokensForObject(elems)
 }
 
-func (v mapValue[T]) Key(s string) T {
-	return v.values[s]
-}
-
-var _ MapValue[StringValue] = (*mapRef[StringValue])(nil)
-
-// ReferenceMap creates a map reference
-func ReferenceMap[T Value[T]](ref Reference) MapValue[T] {
-	return mapRef[T]{
-		ref: ref.copy(),
+func (v MapValue[T]) InternalRef() Reference {
+	if !v.isRef {
+		panic("MapValue: cannot get reference from value")
 	}
+	return v.ref
 }
 
-type mapRef[T Value[T]] struct {
-	ref Reference
-}
-
-func (r mapRef[T]) InternalWithRef(ref Reference) MapValue[T] {
-	return mapRef[T]{
-		ref: ref.copy(),
-	}
-}
-
-func (r mapRef[T]) InternalTokens() hclwrite.Tokens {
-	return r.ref.InternalTokens()
-}
-
-func (r mapRef[T]) Key(s string) T {
-	var v T
-	return v.InternalWithRef(r.ref.key(s))
+func (v MapValue[T]) InternalWithRef(ref Reference) MapValue[T] {
+	return ReferenceMap[T](ref)
 }
 
 func sortMapKeys[T any](m map[string]T) []string {

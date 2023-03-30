@@ -4,76 +4,84 @@
 package terra
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/convert"
-	"golang.org/x/exp/slog"
 )
 
-// Bool returns a bool value
 func Bool(b bool) BoolValue {
-	return boolValue{
-		value: cty.BoolVal(b),
+	return BoolValue{
+		isInit: true,
+		isRef:  false,
+		value:  cty.BoolVal(b),
 	}
 }
 
-// BoolValue represents a bool value
-type BoolValue interface {
-	Value[BoolValue]
-
-	AsString() StringValue
+func ReferenceBool(ref Reference) BoolValue {
+	return BoolValue{
+		isInit: true,
+		isRef:  true,
+		ref:    ref,
+	}
 }
 
-var _ BoolValue = (*boolValue)(nil)
+var _ Value[BoolValue] = (*BoolValue)(nil)
 
-type boolValue struct {
+type BoolValue struct {
+	isInit bool
+	isRef  bool
+	ref    Reference
+
 	value cty.Value
 }
 
-// AsString tries to convert a BoolValue to a StringValue
-func (v boolValue) AsString() StringValue {
+func (v BoolValue) AsString() StringValue {
+	if v.isRef {
+		return ReferenceString(v.ref)
+	}
 	val, err := convert.Convert(v.value, cty.String)
 	if err != nil {
-		// TODO: handle error
-		slog.Error("converting number to bool", err)
+		panic(fmt.Sprintf("converting bool to string: %s", err.Error()))
 	}
-	return stringValue{
-		value: val,
+	return StringValue{
+		isInit: true,
+		value:  val,
 	}
 }
 
-func (v boolValue) InternalWithRef(Reference) BoolValue {
-	panic("cannot traverse a boolean")
+func (v BoolValue) AsNumber() NumberValue {
+	if v.isRef {
+		return ReferenceNumber(v.ref)
+	}
+	val, err := convert.Convert(v.value, cty.Number)
+	if err != nil {
+		panic(fmt.Sprintf("converting bool to number: %s", err.Error()))
+	}
+	return NumberValue{
+		isInit: true,
+		value:  val,
+	}
 }
 
-func (v boolValue) InternalTokens() hclwrite.Tokens {
+func (v BoolValue) InternalTokens() hclwrite.Tokens {
+	if !v.isInit {
+		return nil
+	}
+	if v.isRef {
+		return v.ref.InternalTokens()
+	}
 	return hclwrite.TokensForValue(v.value)
 }
 
-var _ BoolValue = (*boolRef)(nil)
-
-// ReferenceBool creates a number reference
-func ReferenceBool(ref Reference) BoolValue {
-	return boolRef{
-		ref: ref.copy(),
+func (v BoolValue) InternalRef() Reference {
+	if !v.isRef {
+		panic("BoolValue: cannot use value as reference")
 	}
+	return v.ref
 }
 
-type boolRef struct {
-	ref Reference
-}
-
-func (r boolRef) InternalTokens() hclwrite.Tokens {
-	return r.ref.InternalTokens()
-}
-
-func (r boolRef) InternalWithRef(ref Reference) BoolValue {
-	return boolRef{
-		ref: ref.copy(),
-	}
-}
-
-// AsString converts a reference to a BoolValue to a StringValue reference
-func (r boolRef) AsString() StringValue {
-	return stringRef(r)
+func (v BoolValue) InternalWithRef(ref Reference) BoolValue {
+	return ReferenceBool(ref)
 }

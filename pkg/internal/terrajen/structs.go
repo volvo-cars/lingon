@@ -84,8 +84,13 @@ func argsStruct(s *Schema) *jen.Statement {
 func attributesStruct(s *Schema) *jen.Statement {
 	var stmt jen.Statement
 
+	// Attribute struct will have a field called "ref" containing a
+	// terra.Reference
+	structFieldRefName := "ref"
+	structFieldRef := jen.Id(s.Receiver).Dot(structFieldRefName).Clone
+
 	attrStruct := jen.Type().Id(s.AttributesStructName).Struct(
-		jen.Id("name").String(),
+		jen.Id("ref").Add(qualReferenceValue()),
 	)
 
 	stmt.Add(attrStruct)
@@ -96,16 +101,6 @@ func attributesStruct(s *Schema) *jen.Statement {
 	// Methods
 	//
 	for _, attr := range s.graph.attributes {
-		// Create the "address" of this attribute,
-		// e.g. aws_iam_role.name.attribute
-		attrAddress := []jen.Code{
-			jen.Lit(s.Type), jen.Id(s.Receiver).Dot("name"), jen.Lit(attr.name),
-		}
-		// If schema is a data resource we need to prefix the "data" qualifier to the reference
-		if s.SchemaType == SchemaTypeData {
-			attrAddress = append([]jen.Code{jen.Lit("data")}, attrAddress...)
-		}
-
 		ct := attr.ctyType
 		stmt.Add(
 			jen.Func().
@@ -119,7 +114,9 @@ func attributesStruct(s *Schema) *jen.Statement {
 					jen.Return(
 						funcReferenceByCtyType(ct).
 							Call(
-								qualReferenceAttribute().Call(jen.List(attrAddress...)),
+								structFieldRef().Dot("Append").Call(
+									jen.Lit(attr.name),
+								),
 							),
 					),
 				),
@@ -131,19 +128,6 @@ func attributesStruct(s *Schema) *jen.Statement {
 	for _, child := range s.graph.children {
 		structName := str.PascalCase(child.uniqueName) + suffixAttributes
 		qualStruct := jen.Qual(s.SubPkgQualPath(), structName).Clone
-		// Create the "address" of this attribute,
-		// e.g. aws_iam_role.name.attribute
-		attrAddress := []jen.Code{
-			jen.Lit(s.Type),
-			jen.Id(s.Receiver).Dot("name"),
-			jen.Lit(child.name),
-		}
-		// If schema is a data resource we need to prefix the "data" qualifier to the reference
-		if s.SchemaType == SchemaTypeData {
-			attrAddress = append([]jen.Code{jen.Lit("data")}, attrAddress...)
-		}
-		refAddress := qualReferenceAttribute().Call(jen.List(attrAddress...))
-
 		stmt.Add(
 			jen.Func().
 				// Receiver
@@ -160,7 +144,11 @@ func attributesStruct(s *Schema) *jen.Statement {
 				Block(
 					jen.Return(
 						jenNodeReturnValue(child, qualStruct()).
-							Call(refAddress),
+							Call(
+								structFieldRef().Dot("Append").Call(
+									jen.Lit(child.name),
+								),
+							),
 					),
 				),
 		)

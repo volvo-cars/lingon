@@ -37,7 +37,7 @@ func (sf *SensitiveFile) Configuration() interface{} {
 }
 
 func (sf *SensitiveFile) Attributes() sensitiveFileAttributes {
-	return sensitiveFileAttributes{name: sf.Name}
+	return sensitiveFileAttributes{ref: terra.ReferenceResource(sf)}
 }
 
 func (sf *SensitiveFile) ImportState(av io.Reader) error {
@@ -59,8 +59,8 @@ func (sf *SensitiveFile) StateMust() *sensitiveFileState {
 	return sf.state
 }
 
-func (sf *SensitiveFile) DependOn() terra.Value[terra.Reference] {
-	return terra.ReferenceAttribute("local_sensitive_file", sf.Name)
+func (sf *SensitiveFile) DependOn() terra.Reference {
+	return terra.ReferenceResource(sf)
 }
 
 type SensitiveFileArgs struct {
@@ -80,59 +80,59 @@ type SensitiveFileArgs struct {
 	DependsOn terra.Dependencies `hcl:"depends_on,attr"`
 }
 type sensitiveFileAttributes struct {
-	name string
+	ref terra.Reference
 }
 
 func (sf sensitiveFileAttributes) Content() terra.StringValue {
-	return terra.ReferenceString(terra.ReferenceAttribute("local_sensitive_file", sf.name, "content"))
+	return terra.ReferenceString(sf.ref.Append("content"))
 }
 
 func (sf sensitiveFileAttributes) ContentBase64() terra.StringValue {
-	return terra.ReferenceString(terra.ReferenceAttribute("local_sensitive_file", sf.name, "content_base64"))
+	return terra.ReferenceString(sf.ref.Append("content_base64"))
 }
 
 func (sf sensitiveFileAttributes) ContentBase64Sha256() terra.StringValue {
-	return terra.ReferenceString(terra.ReferenceAttribute("local_sensitive_file", sf.name, "content_base64sha256"))
+	return terra.ReferenceString(sf.ref.Append("content_base64sha256"))
 }
 
 func (sf sensitiveFileAttributes) ContentBase64Sha512() terra.StringValue {
-	return terra.ReferenceString(terra.ReferenceAttribute("local_sensitive_file", sf.name, "content_base64sha512"))
+	return terra.ReferenceString(sf.ref.Append("content_base64sha512"))
 }
 
 func (sf sensitiveFileAttributes) ContentMd5() terra.StringValue {
-	return terra.ReferenceString(terra.ReferenceAttribute("local_sensitive_file", sf.name, "content_md5"))
+	return terra.ReferenceString(sf.ref.Append("content_md5"))
 }
 
 func (sf sensitiveFileAttributes) ContentSha1() terra.StringValue {
-	return terra.ReferenceString(terra.ReferenceAttribute("local_sensitive_file", sf.name, "content_sha1"))
+	return terra.ReferenceString(sf.ref.Append("content_sha1"))
 }
 
 func (sf sensitiveFileAttributes) ContentSha256() terra.StringValue {
-	return terra.ReferenceString(terra.ReferenceAttribute("local_sensitive_file", sf.name, "content_sha256"))
+	return terra.ReferenceString(sf.ref.Append("content_sha256"))
 }
 
 func (sf sensitiveFileAttributes) ContentSha512() terra.StringValue {
-	return terra.ReferenceString(terra.ReferenceAttribute("local_sensitive_file", sf.name, "content_sha512"))
+	return terra.ReferenceString(sf.ref.Append("content_sha512"))
 }
 
 func (sf sensitiveFileAttributes) DirectoryPermission() terra.StringValue {
-	return terra.ReferenceString(terra.ReferenceAttribute("local_sensitive_file", sf.name, "directory_permission"))
+	return terra.ReferenceString(sf.ref.Append("directory_permission"))
 }
 
 func (sf sensitiveFileAttributes) FilePermission() terra.StringValue {
-	return terra.ReferenceString(terra.ReferenceAttribute("local_sensitive_file", sf.name, "file_permission"))
+	return terra.ReferenceString(sf.ref.Append("file_permission"))
 }
 
 func (sf sensitiveFileAttributes) Filename() terra.StringValue {
-	return terra.ReferenceString(terra.ReferenceAttribute("local_sensitive_file", sf.name, "filename"))
+	return terra.ReferenceString(sf.ref.Append("filename"))
 }
 
 func (sf sensitiveFileAttributes) Id() terra.StringValue {
-	return terra.ReferenceString(terra.ReferenceAttribute("local_sensitive_file", sf.name, "id"))
+	return terra.ReferenceString(sf.ref.Append("id"))
 }
 
 func (sf sensitiveFileAttributes) Source() terra.StringValue {
-	return terra.ReferenceString(terra.ReferenceAttribute("local_sensitive_file", sf.name, "source"))
+	return terra.ReferenceString(sf.ref.Append("source"))
 }
 
 type sensitiveFileState struct {

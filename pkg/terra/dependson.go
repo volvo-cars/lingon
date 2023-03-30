@@ -10,7 +10,7 @@ import (
 
 // Dependency represents a Terraform dependency using the depends_on meta-argument
 type Dependency interface {
-	DependOn() Value[Reference]
+	DependOn() Reference
 }
 
 // DependsOn returns a list of dependencies

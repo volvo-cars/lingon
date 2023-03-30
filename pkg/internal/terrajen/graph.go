@@ -432,7 +432,7 @@ func returnTypeFromNestingPath(
 // jenNodeReturnValue returns the jen statement for the return value that
 // node represents, e.g.
 //
-//	terra.ReferenceList[emrcluster.StepRef](terra.Reference("a","b","c")
+//	terra.ReferenceList[emrcluster.StepRef]
 func jenNodeReturnValue(
 	n *node, childQual *jen.Statement,
 ) *jen.Statement {

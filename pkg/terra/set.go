@@ -7,86 +7,89 @@ import (
 	"github.com/hashicorp/hcl/v2/hclwrite"
 )
 
-// SetString returns a set value containing the given string values
+// SetString returns a list value containing the given string values
 func SetString(values ...string) SetValue[StringValue] {
 	ss := make([]StringValue, len(values))
 	for i, s := range values {
 		ss[i] = String(s)
 	}
-	return setValue[StringValue]{
-		values: ss,
-	}
+	return Set[StringValue](ss...)
 }
 
-// Set returns a set value
+// Set returns a list value
 func Set[T Value[T]](values ...T) SetValue[T] {
-	return setValue[T]{
+	return SetValue[T]{
+		isInit: true,
+		isRef:  false,
 		values: values,
 	}
 }
 
-type SetValue[T Value[T]] interface {
-	Value[SetValue[T]]
-	Index(int) T
-	Splat() T
+// CastAsSet takes a value (as a reference) and wraps it in a SetValue
+func CastAsSet[T Value[T]](value T) SetValue[T] {
+	return ReferenceSet[T](value.InternalRef())
 }
 
-var _ SetValue[StringValue] = (*setValue[StringValue])(nil)
+// ReferenceSet creates a list reference
+func ReferenceSet[T Value[T]](ref Reference) SetValue[T] {
+	return SetValue[T]{
+		isInit: true,
+		isRef:  true,
+		ref:    ref.copy(),
+	}
+}
 
-type setValue[T Value[T]] struct {
+var _ Value[SetValue[StringValue]] = (*SetValue[StringValue])(nil)
+
+type SetValue[T Value[T]] struct {
+	isInit bool
+	isRef  bool
+	ref    Reference
+
 	values []T
 }
 
-func (v setValue[T]) InternalWithRef(Reference) SetValue[T] {
-	panic("cannot traverse a set")
+func (v SetValue[T]) Index(i int) T {
+	if !v.isRef {
+		panic("SetValue: cannot use Index on value")
+	}
+	var t T
+	return t.InternalWithRef(v.ref.index(i))
 }
 
-func (v setValue[T]) InternalTokens() hclwrite.Tokens {
-	elems := make([]hclwrite.Tokens, len(v.values))
+func (v SetValue[T]) Splat() T {
+	if !v.isRef {
+		panic("SetValue: cannot use Splat on value")
+	}
+	var t T
+	return t.InternalWithRef(v.ref.splat())
+}
 
+func (v SetValue[T]) InternalTokens() hclwrite.Tokens {
+	if !v.isInit {
+		return nil
+	}
+	if v.isRef {
+		return v.ref.InternalTokens()
+	}
+
+	elems := make([]hclwrite.Tokens, len(v.values))
 	for i, val := range v.values {
 		elems[i] = val.InternalTokens()
+	}
+	if v.values == nil {
+		return nil
 	}
 	return hclwrite.TokensForTuple(elems)
 }
 
-func (v setValue[T]) Index(i int) T {
-	return v.values[i]
-}
-
-func (v setValue[T]) Splat() T {
-	panic("cannot splat set of values")
-}
-
-var _ SetValue[StringValue] = (*setRef[StringValue])(nil)
-
-// ReferenceSet creates a set reference
-func ReferenceSet[T Value[T]](ref Reference) SetValue[T] {
-	return setRef[T]{
-		ref: ref.copy(),
+func (v SetValue[T]) InternalRef() Reference {
+	if !v.isRef {
+		panic("SetValue: cannot get reference from value")
 	}
+	return v.ref
 }
 
-type setRef[T Value[T]] struct {
-	ref Reference
-}
-
-func (r setRef[T]) InternalWithRef(ref Reference) SetValue[T] {
-	return setRef[T]{
-		ref: ref.copy(),
-	}
-}
-
-func (r setRef[T]) InternalTokens() hclwrite.Tokens {
-	return r.ref.InternalTokens()
-}
-
-func (r setRef[T]) Index(i int) T {
-	var v T
-	return v.InternalWithRef(r.ref.index(i))
-}
-
-func (r setRef[T]) Splat() T {
-	var v T
-	return v.InternalWithRef(r.ref.splat())
+func (v SetValue[T]) InternalWithRef(ref Reference) SetValue[T] {
+	return ReferenceSet[T](ref)
 }

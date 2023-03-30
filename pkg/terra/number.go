@@ -4,92 +4,84 @@
 package terra
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/convert"
-	"golang.org/x/exp/slog"
 )
 
-// Number returns a new number value
 func Number(i int) NumberValue {
-	return numberValue{
-		value: cty.NumberIntVal(int64(i)),
+	return NumberValue{
+		isInit: true,
+		isRef:  false,
+		value:  cty.NumberIntVal(int64(i)),
 	}
 }
 
-// NumberValue represents a number value
-type NumberValue interface {
-	Value[NumberValue]
-
-	AsBool() BoolValue
-	AsString() StringValue
+func ReferenceNumber(ref Reference) NumberValue {
+	return NumberValue{
+		isInit: true,
+		isRef:  true,
+		ref:    ref,
+	}
 }
 
-var _ NumberValue = (*numberValue)(nil)
+var _ Value[NumberValue] = (*NumberValue)(nil)
 
-// numberValue is a concrete number, stored as a cty.Value
-type numberValue struct {
+type NumberValue struct {
+	isInit bool
+	isRef  bool
+	ref    Reference
+
 	value cty.Value
 }
 
-func (v numberValue) AsBool() BoolValue {
-	val, err := convert.Convert(v.value, cty.Bool)
-	if err != nil {
-		// TODO: handle error
-		slog.Error("converting number to bool", err)
+func (v NumberValue) AsString() StringValue {
+	if v.isRef {
+		return ReferenceString(v.ref)
 	}
-	return boolValue{
-		value: val,
-	}
-}
-
-func (v numberValue) AsString() StringValue {
 	val, err := convert.Convert(v.value, cty.String)
 	if err != nil {
-		// TODO: handle error
-		slog.Error("converting number to string", err)
+		panic(fmt.Sprintf("converting number to string: %s", err.Error()))
 	}
-	return stringValue{
-		value: val,
+	return StringValue{
+		isInit: true,
+		value:  val,
 	}
 }
 
-func (v numberValue) InternalWithRef(Reference) NumberValue {
-	panic("cannot traverse a number")
+func (v NumberValue) AsBool() BoolValue {
+	if v.isRef {
+		return ReferenceBool(v.ref)
+	}
+	val, err := convert.Convert(v.value, cty.Bool)
+	if err != nil {
+		panic(fmt.Sprintf("converting number to bool: %s", err.Error()))
+	}
+	return BoolValue{
+		isInit: true,
+		value:  val,
+	}
 }
 
-func (v numberValue) InternalTokens() hclwrite.Tokens {
+func (v NumberValue) InternalTokens() hclwrite.Tokens {
+	if !v.isInit {
+		return nil
+	}
+	if v.isRef {
+		return v.ref.InternalTokens()
+	}
 	return hclwrite.TokensForValue(v.value)
 }
 
-var _ NumberValue = (*numberRef)(nil)
-
-// ReferenceNumber creates a number reference
-func ReferenceNumber(ref Reference) NumberValue {
-	return numberRef{
-		ref: ref.copy(),
+func (v NumberValue) InternalRef() Reference {
+	if !v.isRef {
+		panic("NumberValue: cannot use value as reference")
 	}
+	return v.ref
 }
 
-// numberRef is a reference to a number in a Terraform configuration
-type numberRef struct {
-	ref Reference
-}
-
-func (r numberRef) InternalTokens() hclwrite.Tokens {
-	return r.ref.InternalTokens()
-}
-
-func (r numberRef) InternalWithRef(ref Reference) NumberValue {
-	return numberRef{
-		ref: ref.copy(),
-	}
-}
-
-func (r numberRef) AsBool() BoolValue {
-	return boolRef(r)
-}
-
-func (r numberRef) AsString() StringValue {
-	return stringRef(r)
+func (v NumberValue) InternalWithRef(ref Reference) NumberValue {
+	return ReferenceNumber(ref)
 }

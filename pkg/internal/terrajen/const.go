@@ -28,6 +28,7 @@ const (
 )
 
 const (
+	idFuncInternalRef     = "InternalRef"
 	idFuncInternalWithRef = "InternalWithRef"
 	idFuncInternalTokens  = "InternalTokens"
 )

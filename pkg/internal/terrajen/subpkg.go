@@ -99,6 +99,7 @@ func subPkgAttributeStruct(n *node) *jen.Statement {
 	structName := n.attributesStructName()
 
 	structFieldRef := "ref"
+	refArg := "ref"
 	stmt := jen.Type().Id(structName).
 		Struct(
 			jen.Id(structFieldRef).Add(qualReferenceValue()),
@@ -107,12 +108,36 @@ func subPkgAttributeStruct(n *node) *jen.Statement {
 	stmt.Line()
 
 	// Methods
+	// Override InternalRef, e.g.
+	//
+	// 	func (i OidcRef) InternalRef() terra.Reference {
+	// 		return i.ref
+	// 	}
+	stmt.Add(
+		jen.Func().
+			// Receiver
+			Params(jen.Id(n.receiver).Id(structName)).
+			// Name
+			Id(idFuncInternalRef).Call().
+			// Return type
+			Add(qualReferenceValue()).
+			// Body
+			Block(
+				jen.Return(
+					jen.Id(n.receiver).Dot(
+						structFieldRef,
+					),
+				),
+			),
+	)
+	stmt.Line()
+	stmt.Line()
+
 	// Override InternalWithRef, e.g.
 	//
-	// 	func (i OidcRef) InternalWithRef(ref terra.ReferenceValue) OidcRef {
+	// 	func (i OidcRef) InternalWithRef(ref terra.Reference) OidcRef {
 	// 		return terra.ReferenceSingle[OidcRef](ref)
 	// 	}
-	refArg := "ref"
 	stmt.Add(
 		jen.Func().
 			// Receiver
@@ -185,7 +210,6 @@ func subPkgAttributeStruct(n *node) *jen.Statement {
 	}
 
 	for _, child := range n.children {
-		// Want: return terra.AsList(OidcRef(i.InternalWithRef(hcl.TraverseAttr{Name: "oidc"})))
 		childStructName := child.attributesStructName()
 		appendRef := jen.Id(n.receiver).
 			Dot(refArg).

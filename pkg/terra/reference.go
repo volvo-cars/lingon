@@ -12,33 +12,50 @@ import (
 
 // Value represents the most generic type in terra's minimal type system.
 // Every other type must implement this type.
-// It is never expected that a user should have to interact with this type directly
+// It is never expected that a user should have to interact with this type
+// directly.
+//
+// Value exposes some functions prefixed with "Internal". It is not possible
+// to make these methods non-public, as generated code relies on this,
+// but consumers of this package should **not** use these methods, please :)
 type Value[T any] interface {
 	tkihcl.Tokenizer
 	// InternalWithRef returns a copy of this type T with the provided
 	// reference. This is used internally to create a reference to attributes
 	// within sets, lists,
 	// maps and custom attributes types in the generated code.
+	//
+	// Internal: users should **not** use this!
 	InternalWithRef(Reference) T
+	// InternalRef returns the reference stored, if any.
+	// If the Value T is not a reference, this method should panic to avoid
+	// any nasty hidden errors (i.e.
+	// silently converting a value to a reference).
+	//
+	// Internal: users should **not** use this!
+	InternalRef() Reference
 }
 
-// ReferenceAttribute takes an address to a Terraform attribute.
-// The address is represented as a list of strings that are converted into a
-// references.
-//
-// Users are not expected to call this method. It is for the generated code to use when referencing
-// a terraform object attribute
-func ReferenceAttribute(address ...string) Reference {
-	tr := make(hcl.Traversal, len(address))
-	for i, s := range address {
-		if i == 0 {
-			tr[i] = hcl.TraverseRoot{Name: s}
-		} else {
-			tr[i] = hcl.TraverseAttr{Name: s}
-		}
-	}
+// ReferenceResource takes a resource and returns a Reference which is the
+// address to that resource in the Terraform configuration.
+func ReferenceResource(res Resource) Reference {
 	return Reference{
-		tr: tr,
+		tr: hcl.Traversal{
+			hcl.TraverseRoot{Name: res.Type()},
+			hcl.TraverseAttr{Name: res.LocalName()},
+		},
+	}
+}
+
+// ReferenceDataResource takes a data resource and returns a Reference which
+// is the address to that data resource in the Terraform configuration.
+func ReferenceDataResource(data DataResource) Reference {
+	return Reference{
+		tr: hcl.Traversal{
+			hcl.TraverseRoot{Name: "data"},
+			hcl.TraverseAttr{Name: data.DataSource()},
+			hcl.TraverseAttr{Name: data.LocalName()},
+		},
 	}
 }
 
@@ -57,12 +74,10 @@ type Reference struct {
 	tr hcl.Traversal
 }
 
+// InternalTokens returns the tokens to represent this reference in Terraform
+// configurations
 func (r Reference) InternalTokens() hclwrite.Tokens {
 	return hclwrite.TokensForTraversal(r.tr)
-}
-
-func (r Reference) InternalWithRef(ref Reference) Reference {
-	return ref.copy()
 }
 
 // Append appends the given string to the reference
