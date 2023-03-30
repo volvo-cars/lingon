@@ -4,6 +4,7 @@
 package terra
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -16,24 +17,61 @@ const (
 	tfSuffix = ".tf"
 )
 
-func ExportWriter(stack Exporter, w io.Writer) error {
-	if err := encodeStack(stack, w); err != nil {
-		return fmt.Errorf(
-			"encoding stack: %w", err,
-		)
+// ExportOption is used to configure the conversion from Go code to Terraform
+// configurations.
+// Use the helper functions WithExportXXX to configure the export.
+type ExportOption func(*gotf)
+
+// WithExportWriter writes the generated Terraform configuration to [io.Writer].
+func WithExportWriter(w io.Writer) ExportOption {
+	return func(g *gotf) {
+		g.useWriter = true
+		g.w = w
 	}
-	return nil
 }
 
-// Export encodes Exporter to HCL and writes it to the given outDir
-func Export(stack Exporter, outDir string) error {
-	if err := os.MkdirAll(outDir, os.ModePerm); err != nil {
+// WithExportOutputDirectory writes the generated Terraform configuration to
+// the given output directory.
+func WithExportOutputDirectory(dir string) ExportOption {
+	return func(g *gotf) {
+		g.dir = dir
+	}
+}
+
+type gotf struct {
+	useWriter bool
+	w         io.Writer
+
+	dir string
+}
+
+// Export encodes [Exporter] to Terraform configurations
+func Export(stack Exporter, opts ...ExportOption) error {
+	var g gotf
+	for _, o := range opts {
+		o(&g)
+	}
+
+	if g.useWriter {
+		if err := encodeStack(stack, g.w); err != nil {
+			return fmt.Errorf(
+				"encoding stack: %w", err,
+			)
+		}
+		return nil
+	}
+
+	if g.dir == "" {
+		return errors.New("output directory is empty")
+	}
+
+	if err := os.MkdirAll(g.dir, os.ModePerm); err != nil {
 		return err
 	}
 
 	f, err := os.Create(
 		filepath.Join(
-			outDir,
+			g.dir,
 			"main"+tfSuffix,
 		),
 	)

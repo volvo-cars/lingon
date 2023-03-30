@@ -45,7 +45,7 @@ func TestTxtar(t *testing.T) {
 					t.Error(err)
 					return
 				}
-				exp, err := os.ReadFile(filepath.Join(wd, "main.tf"))
+				exp, err := os.ReadFile(filepath.Join(wd, "expected.tf"))
 				require.NoError(t, err)
 				act, err := os.ReadFile(filepath.Join(wd, "out", "main.tf"))
 				require.NoError(t, err)

@@ -36,7 +36,7 @@ func Example_backendLocal() {
 	}
 	// Export the stack to Terraform HCL
 	var b bytes.Buffer
-	if err := terra.ExportWriter(&stack, &b); err != nil {
+	if err := terra.Export(&stack, terra.WithExportWriter(&b)); err != nil {
 		slog.Error("exporting stack", "err", err)
 		return
 	}

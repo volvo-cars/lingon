@@ -13,7 +13,7 @@ import (
 func ExampleStack() {
 	stack := NewLocalFileStack("myfile.txt")
 	var b bytes.Buffer
-	if err := terra.ExportWriter(stack, &b); err != nil {
+	if err := terra.Export(stack, terra.WithExportWriter(&b)); err != nil {
 		fmt.Printf("Error: exporting stack: %s", err)
 		return
 	}

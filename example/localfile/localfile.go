@@ -3,6 +3,7 @@
 
 package localfile
 
+//go:generate echo ">>>> generating hashicorp/local terra provider"
 //go:generate go run -mod=readonly github.com/volvo-cars/lingon/cmd/terragen -out ./out/local -pkg github.com/volvo-cars/lingon/examples/localfile/out/local -force -provider local=hashicorp/local:2.4.0
 
 import (

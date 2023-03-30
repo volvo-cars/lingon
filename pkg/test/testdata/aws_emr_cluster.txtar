@@ -23,7 +23,7 @@ import (
 )
 
 func main() {
-	err := terra.Export(stack(), "out")
+	err := terra.Export(stack(), terra.WithExportOutputDirectory("out"))
 	if err != nil {
 		slog.Error("exporting stack", "err", err)
 		os.Exit(1)
@@ -90,7 +90,7 @@ type testStack struct {
 	Ref        *aws.EmrCluster `validate:"required"`
 }
 
--- main.tf --
+-- expected.tf --
 terraform {
   required_providers {
     aws = {

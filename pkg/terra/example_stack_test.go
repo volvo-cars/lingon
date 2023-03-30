@@ -28,7 +28,7 @@ func Example() {
 	// Typically you would use terra.Export() and write to a file. We will
 	// write to a buffer for test purposes
 	var b bytes.Buffer
-	if err := terra.ExportWriter(&stack, &b); err != nil {
+	if err := terra.Export(&stack, terra.WithExportWriter(&b)); err != nil {
 		slog.Error("exporting stack", "err", err.Error())
 		os.Exit(1)
 	}
