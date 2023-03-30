@@ -36,7 +36,7 @@ var ClustertasksDevCRD = &apiextensionsv1.CustomResourceDefinition{
 			Singular:   "clustertask",
 		},
 		Scope: apiextensionsv1.ResourceScope("Cluster"),
-		Versions: []apiextensionsv1.CustomResourceDefinitionVersion{apiextensionsv1.CustomResourceDefinitionVersion{
+		Versions: []apiextensionsv1.CustomResourceDefinitionVersion{{
 			Name: "v1beta1",
 			Schema: &apiextensionsv1.CustomResourceValidation{OpenAPIV3Schema: &apiextensionsv1.JSONSchemaProps{
 				Type:                   "object",
@@ -72,20 +72,20 @@ var CustomrunsDevCRD = &apiextensionsv1.CustomResourceDefinition{
 			Singular:   "customrun",
 		},
 		Scope: apiextensionsv1.ResourceScope("Namespaced"),
-		Versions: []apiextensionsv1.CustomResourceDefinitionVersion{apiextensionsv1.CustomResourceDefinitionVersion{
-			AdditionalPrinterColumns: []apiextensionsv1.CustomResourceColumnDefinition{apiextensionsv1.CustomResourceColumnDefinition{
+		Versions: []apiextensionsv1.CustomResourceDefinitionVersion{{
+			AdditionalPrinterColumns: []apiextensionsv1.CustomResourceColumnDefinition{{
 				JSONPath: ".status.conditions[?(@.type==\"Succeeded\")].status",
 				Name:     "Succeeded",
 				Type:     "string",
-			}, apiextensionsv1.CustomResourceColumnDefinition{
+			}, {
 				JSONPath: ".status.conditions[?(@.type==\"Succeeded\")].reason",
 				Name:     "Reason",
 				Type:     "string",
-			}, apiextensionsv1.CustomResourceColumnDefinition{
+			}, {
 				JSONPath: ".status.startTime",
 				Name:     "StartTime",
 				Type:     "date",
-			}, apiextensionsv1.CustomResourceColumnDefinition{
+			}, {
 				JSONPath: ".status.completionTime",
 				Name:     "CompletionTime",
 				Type:     "date",
@@ -125,7 +125,7 @@ var PipelineresourcesDevCRD = &apiextensionsv1.CustomResourceDefinition{
 			Singular:   "pipelineresource",
 		},
 		Scope: apiextensionsv1.ResourceScope("Namespaced"),
-		Versions: []apiextensionsv1.CustomResourceDefinitionVersion{apiextensionsv1.CustomResourceDefinitionVersion{
+		Versions: []apiextensionsv1.CustomResourceDefinitionVersion{{
 			Name: "v1alpha1",
 			Schema: &apiextensionsv1.CustomResourceValidation{OpenAPIV3Schema: &apiextensionsv1.JSONSchemaProps{
 				Type:                   "object",
@@ -172,20 +172,20 @@ var PipelinerunsDevCRD = &apiextensionsv1.CustomResourceDefinition{
 			Singular:   "pipelinerun",
 		},
 		Scope: apiextensionsv1.ResourceScope("Namespaced"),
-		Versions: []apiextensionsv1.CustomResourceDefinitionVersion{apiextensionsv1.CustomResourceDefinitionVersion{
-			AdditionalPrinterColumns: []apiextensionsv1.CustomResourceColumnDefinition{apiextensionsv1.CustomResourceColumnDefinition{
+		Versions: []apiextensionsv1.CustomResourceDefinitionVersion{{
+			AdditionalPrinterColumns: []apiextensionsv1.CustomResourceColumnDefinition{{
 				JSONPath: ".status.conditions[?(@.type==\"Succeeded\")].status",
 				Name:     "Succeeded",
 				Type:     "string",
-			}, apiextensionsv1.CustomResourceColumnDefinition{
+			}, {
 				JSONPath: ".status.conditions[?(@.type==\"Succeeded\")].reason",
 				Name:     "Reason",
 				Type:     "string",
-			}, apiextensionsv1.CustomResourceColumnDefinition{
+			}, {
 				JSONPath: ".status.startTime",
 				Name:     "StartTime",
 				Type:     "date",
-			}, apiextensionsv1.CustomResourceColumnDefinition{
+			}, {
 				JSONPath: ".status.completionTime",
 				Name:     "CompletionTime",
 				Type:     "date",
@@ -198,20 +198,20 @@ var PipelinerunsDevCRD = &apiextensionsv1.CustomResourceDefinition{
 			Served:       true,
 			Storage:      true,
 			Subresources: &apiextensionsv1.CustomResourceSubresources{},
-		}, apiextensionsv1.CustomResourceDefinitionVersion{
-			AdditionalPrinterColumns: []apiextensionsv1.CustomResourceColumnDefinition{apiextensionsv1.CustomResourceColumnDefinition{
+		}, {
+			AdditionalPrinterColumns: []apiextensionsv1.CustomResourceColumnDefinition{{
 				JSONPath: ".status.conditions[?(@.type==\"Succeeded\")].status",
 				Name:     "Succeeded",
 				Type:     "string",
-			}, apiextensionsv1.CustomResourceColumnDefinition{
+			}, {
 				JSONPath: ".status.conditions[?(@.type==\"Succeeded\")].reason",
 				Name:     "Reason",
 				Type:     "string",
-			}, apiextensionsv1.CustomResourceColumnDefinition{
+			}, {
 				JSONPath: ".status.startTime",
 				Name:     "StartTime",
 				Type:     "date",
-			}, apiextensionsv1.CustomResourceColumnDefinition{
+			}, {
 				JSONPath: ".status.completionTime",
 				Name:     "CompletionTime",
 				Type:     "date",
@@ -260,7 +260,7 @@ var PipelinesDevCRD = &apiextensionsv1.CustomResourceDefinition{
 			Singular:   "pipeline",
 		},
 		Scope: apiextensionsv1.ResourceScope("Namespaced"),
-		Versions: []apiextensionsv1.CustomResourceDefinitionVersion{apiextensionsv1.CustomResourceDefinitionVersion{
+		Versions: []apiextensionsv1.CustomResourceDefinitionVersion{{
 			Name: "v1beta1",
 			Schema: &apiextensionsv1.CustomResourceValidation{OpenAPIV3Schema: &apiextensionsv1.JSONSchemaProps{
 				Type:                   "object",
@@ -269,7 +269,7 @@ var PipelinesDevCRD = &apiextensionsv1.CustomResourceDefinition{
 			Served:       true,
 			Storage:      true,
 			Subresources: &apiextensionsv1.CustomResourceSubresources{},
-		}, apiextensionsv1.CustomResourceDefinitionVersion{
+		}, {
 			Name: "v1",
 			Schema: &apiextensionsv1.CustomResourceValidation{OpenAPIV3Schema: &apiextensionsv1.JSONSchemaProps{
 				Type:                   "object",
@@ -310,12 +310,12 @@ var ResolutionrequestsResolutionDevCRD = &apiextensionsv1.CustomResourceDefiniti
 			Singular:   "resolutionrequest",
 		},
 		Scope: apiextensionsv1.ResourceScope("Namespaced"),
-		Versions: []apiextensionsv1.CustomResourceDefinitionVersion{apiextensionsv1.CustomResourceDefinitionVersion{
-			AdditionalPrinterColumns: []apiextensionsv1.CustomResourceColumnDefinition{apiextensionsv1.CustomResourceColumnDefinition{
+		Versions: []apiextensionsv1.CustomResourceDefinitionVersion{{
+			AdditionalPrinterColumns: []apiextensionsv1.CustomResourceColumnDefinition{{
 				JSONPath: ".status.conditions[?(@.type=='Succeeded')].status",
 				Name:     "Succeeded",
 				Type:     "string",
-			}, apiextensionsv1.CustomResourceColumnDefinition{
+			}, {
 				JSONPath: ".status.conditions[?(@.type=='Succeeded')].reason",
 				Name:     "Reason",
 				Type:     "string",
@@ -328,28 +328,28 @@ var ResolutionrequestsResolutionDevCRD = &apiextensionsv1.CustomResourceDefiniti
 			}},
 			Served:       true,
 			Subresources: &apiextensionsv1.CustomResourceSubresources{},
-		}, apiextensionsv1.CustomResourceDefinitionVersion{
-			AdditionalPrinterColumns: []apiextensionsv1.CustomResourceColumnDefinition{apiextensionsv1.CustomResourceColumnDefinition{
+		}, {
+			AdditionalPrinterColumns: []apiextensionsv1.CustomResourceColumnDefinition{{
 				JSONPath: ".metadata.ownerReferences[0].kind",
 				Name:     "OwnerKind",
 				Type:     "string",
-			}, apiextensionsv1.CustomResourceColumnDefinition{
+			}, {
 				JSONPath: ".metadata.ownerReferences[0].name",
 				Name:     "Owner",
 				Type:     "string",
-			}, apiextensionsv1.CustomResourceColumnDefinition{
+			}, {
 				JSONPath: ".status.conditions[?(@.type=='Succeeded')].status",
 				Name:     "Succeeded",
 				Type:     "string",
-			}, apiextensionsv1.CustomResourceColumnDefinition{
+			}, {
 				JSONPath: ".status.conditions[?(@.type=='Succeeded')].reason",
 				Name:     "Reason",
 				Type:     "string",
-			}, apiextensionsv1.CustomResourceColumnDefinition{
+			}, {
 				JSONPath: ".metadata.creationTimestamp",
 				Name:     "StartTime",
 				Type:     "string",
-			}, apiextensionsv1.CustomResourceColumnDefinition{
+			}, {
 				JSONPath: ".status.conditions[?(@.type=='Succeeded')].lastTransitionTime",
 				Name:     "EndTime",
 				Type:     "string",
@@ -389,20 +389,20 @@ var RunsDevCRD = &apiextensionsv1.CustomResourceDefinition{
 			Singular:   "run",
 		},
 		Scope: apiextensionsv1.ResourceScope("Namespaced"),
-		Versions: []apiextensionsv1.CustomResourceDefinitionVersion{apiextensionsv1.CustomResourceDefinitionVersion{
-			AdditionalPrinterColumns: []apiextensionsv1.CustomResourceColumnDefinition{apiextensionsv1.CustomResourceColumnDefinition{
+		Versions: []apiextensionsv1.CustomResourceDefinitionVersion{{
+			AdditionalPrinterColumns: []apiextensionsv1.CustomResourceColumnDefinition{{
 				JSONPath: ".status.conditions[?(@.type==\"Succeeded\")].status",
 				Name:     "Succeeded",
 				Type:     "string",
-			}, apiextensionsv1.CustomResourceColumnDefinition{
+			}, {
 				JSONPath: ".status.conditions[?(@.type==\"Succeeded\")].reason",
 				Name:     "Reason",
 				Type:     "string",
-			}, apiextensionsv1.CustomResourceColumnDefinition{
+			}, {
 				JSONPath: ".status.startTime",
 				Name:     "StartTime",
 				Type:     "date",
-			}, apiextensionsv1.CustomResourceColumnDefinition{
+			}, {
 				JSONPath: ".status.completionTime",
 				Name:     "CompletionTime",
 				Type:     "date",
@@ -453,20 +453,20 @@ var TaskrunsDevCRD = &apiextensionsv1.CustomResourceDefinition{
 			Singular:   "taskrun",
 		},
 		Scope: apiextensionsv1.ResourceScope("Namespaced"),
-		Versions: []apiextensionsv1.CustomResourceDefinitionVersion{apiextensionsv1.CustomResourceDefinitionVersion{
-			AdditionalPrinterColumns: []apiextensionsv1.CustomResourceColumnDefinition{apiextensionsv1.CustomResourceColumnDefinition{
+		Versions: []apiextensionsv1.CustomResourceDefinitionVersion{{
+			AdditionalPrinterColumns: []apiextensionsv1.CustomResourceColumnDefinition{{
 				JSONPath: ".status.conditions[?(@.type==\"Succeeded\")].status",
 				Name:     "Succeeded",
 				Type:     "string",
-			}, apiextensionsv1.CustomResourceColumnDefinition{
+			}, {
 				JSONPath: ".status.conditions[?(@.type==\"Succeeded\")].reason",
 				Name:     "Reason",
 				Type:     "string",
-			}, apiextensionsv1.CustomResourceColumnDefinition{
+			}, {
 				JSONPath: ".status.startTime",
 				Name:     "StartTime",
 				Type:     "date",
-			}, apiextensionsv1.CustomResourceColumnDefinition{
+			}, {
 				JSONPath: ".status.completionTime",
 				Name:     "CompletionTime",
 				Type:     "date",
@@ -479,20 +479,20 @@ var TaskrunsDevCRD = &apiextensionsv1.CustomResourceDefinition{
 			Served:       true,
 			Storage:      true,
 			Subresources: &apiextensionsv1.CustomResourceSubresources{},
-		}, apiextensionsv1.CustomResourceDefinitionVersion{
-			AdditionalPrinterColumns: []apiextensionsv1.CustomResourceColumnDefinition{apiextensionsv1.CustomResourceColumnDefinition{
+		}, {
+			AdditionalPrinterColumns: []apiextensionsv1.CustomResourceColumnDefinition{{
 				JSONPath: ".status.conditions[?(@.type==\"Succeeded\")].status",
 				Name:     "Succeeded",
 				Type:     "string",
-			}, apiextensionsv1.CustomResourceColumnDefinition{
+			}, {
 				JSONPath: ".status.conditions[?(@.type==\"Succeeded\")].reason",
 				Name:     "Reason",
 				Type:     "string",
-			}, apiextensionsv1.CustomResourceColumnDefinition{
+			}, {
 				JSONPath: ".status.startTime",
 				Name:     "StartTime",
 				Type:     "date",
-			}, apiextensionsv1.CustomResourceColumnDefinition{
+			}, {
 				JSONPath: ".status.completionTime",
 				Name:     "CompletionTime",
 				Type:     "date",
@@ -541,7 +541,7 @@ var TasksDevCRD = &apiextensionsv1.CustomResourceDefinition{
 			Singular:   "task",
 		},
 		Scope: apiextensionsv1.ResourceScope("Namespaced"),
-		Versions: []apiextensionsv1.CustomResourceDefinitionVersion{apiextensionsv1.CustomResourceDefinitionVersion{
+		Versions: []apiextensionsv1.CustomResourceDefinitionVersion{{
 			Name: "v1beta1",
 			Schema: &apiextensionsv1.CustomResourceValidation{OpenAPIV3Schema: &apiextensionsv1.JSONSchemaProps{
 				Type:                   "object",
@@ -550,7 +550,7 @@ var TasksDevCRD = &apiextensionsv1.CustomResourceDefinition{
 			Served:       true,
 			Storage:      true,
 			Subresources: &apiextensionsv1.CustomResourceSubresources{},
-		}, apiextensionsv1.CustomResourceDefinitionVersion{
+		}, {
 			Name: "v1",
 			Schema: &apiextensionsv1.CustomResourceValidation{OpenAPIV3Schema: &apiextensionsv1.JSONSchemaProps{
 				Type:                   "object",
@@ -585,7 +585,7 @@ var VerificationpoliciesDevCRD = &apiextensionsv1.CustomResourceDefinition{
 			Singular:   "verificationpolicy",
 		},
 		Scope: apiextensionsv1.ResourceScope("Namespaced"),
-		Versions: []apiextensionsv1.CustomResourceDefinitionVersion{apiextensionsv1.CustomResourceDefinitionVersion{
+		Versions: []apiextensionsv1.CustomResourceDefinitionVersion{{
 			Name: "v1alpha1",
 			Schema: &apiextensionsv1.CustomResourceValidation{OpenAPIV3Schema: &apiextensionsv1.JSONSchemaProps{
 				Type:                   "object",

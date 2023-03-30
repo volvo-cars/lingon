@@ -24,7 +24,7 @@ var PipelinesWebhookHPA = &autoscalingv2.HorizontalPodAutoscaler{
 	},
 	Spec: autoscalingv2.HorizontalPodAutoscalerSpec{
 		MaxReplicas: int32(5),
-		Metrics: []autoscalingv2.MetricSpec{autoscalingv2.MetricSpec{
+		Metrics: []autoscalingv2.MetricSpec{{
 			Resource: &autoscalingv2.ResourceMetricSource{
 				Name: corev1.ResourceName("cpu"),
 				Target: autoscalingv2.MetricTarget{

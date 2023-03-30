@@ -12,7 +12,8 @@ var BundleresolverConfigCM = &corev1.ConfigMap{
 		// The default layer kind in the bundle image.
 		"default-kind": "task",
 		// the default service account name to use for bundle requests.
-		"default-service-account": "default"},
+		"default-service-account": "default",
+	},
 	ObjectMeta: metav1.ObjectMeta{
 		Labels: map[string]string{
 			"app.kubernetes.io/component": "resolvers",
@@ -37,7 +38,8 @@ var ClusterResolverConfigCM = &corev1.ConfigMap{
 		// The default kind to fetch.
 		"default-kind": "task",
 		// The default namespace to look for resources in.
-		"default-namespace": ""},
+		"default-namespace": "",
+	},
 	ObjectMeta: metav1.ObjectMeta{
 		Labels: map[string]string{
 			"app.kubernetes.io/component": "resolvers",
@@ -149,7 +151,8 @@ default-max-matrix-combinations-count: "256"
 # overridden by podTemplate.
 default-forbidden-env:
 
-`},
+`,
+	},
 	ObjectMeta: metav1.ObjectMeta{
 		Labels: map[string]string{
 			"app.kubernetes.io/instance": "default",
@@ -196,7 +199,8 @@ retry-period: "10s"
 # that bucket.
 buckets: "1"
 
-`},
+`,
+	},
 	ObjectMeta: metav1.ObjectMeta{
 		Labels: map[string]string{
 			"app.kubernetes.io/instance": "default",
@@ -243,7 +247,8 @@ retry-period: "10s"
 # that bucket.
 buckets: "1"
 
-`},
+`,
+	},
 	ObjectMeta: metav1.ObjectMeta{
 		Labels: map[string]string{
 			"app.kubernetes.io/component": "resolvers",
@@ -290,7 +295,8 @@ var ConfigLoggingCM = &corev1.ConfigMap{
   }
 }
 
-`},
+`,
+	},
 	ObjectMeta: metav1.ObjectMeta{
 		Labels: map[string]string{
 			"app.kubernetes.io/instance": "default",
@@ -336,7 +342,8 @@ var ConfigLoggingCM2 = &corev1.ConfigMap{
   }
 }
 
-`},
+`,
+	},
 	ObjectMeta: metav1.ObjectMeta{
 		Labels: map[string]string{
 			"app.kubernetes.io/component": "resolvers",
@@ -392,7 +399,8 @@ metrics.taskrun.duration-type: "histogram"
 metrics.pipelinerun.level: "pipeline"
 metrics.pipelinerun.duration-type: "histogram"
 
-`},
+`,
+	},
 	ObjectMeta: metav1.ObjectMeta{
 		Labels: map[string]string{
 			"app.kubernetes.io/instance": "default",
@@ -447,7 +455,8 @@ metrics.stackdriver-project-id: "<your stackdriver project id>"
 # If metrics.backend-destination is not Stackdriver, this is ignored.
 metrics.allow-stackdriver-custom-metrics: "false"
 
-`},
+`,
+	},
 	ObjectMeta: metav1.ObjectMeta{
 		Labels: map[string]string{
 			"app.kubernetes.io/component": "resolvers",
@@ -508,7 +517,8 @@ var ConfigSpireCM = &corev1.ConfigMap{
 # spire-node-alias-prefix specifies the SPIRE node alias prefix to use.
 # spire-node-alias-prefix: "/tekton-node/"
 
-`},
+`,
+	},
 	ObjectMeta: metav1.ObjectMeta{
 		Labels: map[string]string{
 			"app.kubernetes.io/instance": "default",
@@ -544,7 +554,8 @@ var ConfigTrustedResourcesCM = &corev1.ConfigMap{
 # publickeys: "/etc/verification-secrets/cosign.pub,
 # gcpkms://projects/tekton/locations/us/keyRings/trusted-resources/cryptoKeys/trusted-resources"
 
-`},
+`,
+	},
 	ObjectMeta: metav1.ObjectMeta{
 		Labels: map[string]string{
 			"app.kubernetes.io/instance": "default",
@@ -657,7 +668,8 @@ var FeatureFlagsCM = &corev1.ConfigMap{
 		   Setting this flag to "true" enables CloudEvents for CustomRuns and Runs, as long as a
 		   CloudEvents sink is configured in the config-defaults config map
 		*/
-		"send-cloudevents-for-runs": "false"},
+		"send-cloudevents-for-runs": "false",
+	},
 	ObjectMeta: metav1.ObjectMeta{
 		Labels: map[string]string{
 			"app.kubernetes.io/instance": "default",
@@ -694,7 +706,8 @@ var GitResolverConfigCM = &corev1.ConfigMap{
 		// The SCM type to use with the authenticated API. Can be github, gitlab, gitea, bitbucketserver, bitbucketcloud
 		"scm-type": "github",
 		// The SCM server URL to use with the authenticated API. Not needed when using github.com, gitlab.com, or BitBucket Cloud
-		"server-url": ""},
+		"server-url": "",
+	},
 	ObjectMeta: metav1.ObjectMeta{
 		Labels: map[string]string{
 			"app.kubernetes.io/component": "resolvers",
@@ -721,7 +734,8 @@ var HubresolverConfigCM = &corev1.ConfigMap{
 		// the default Tekton Hub catalog from where to pull the resource.
 		"default-tekton-hub-catalog": "Tekton",
 		// the default hub source to pull the resource from.
-		"default-type": "artifact"},
+		"default-type": "artifact",
+	},
 	ObjectMeta: metav1.ObjectMeta{
 		Labels: map[string]string{
 			"app.kubernetes.io/component": "resolvers",
@@ -746,7 +760,8 @@ var PipelinesInfoCM = &corev1.ConfigMap{
 		   other resources in the namespace we still can have access to
 		   this ConfigMap.
 		*/
-		"version": "v0.45.0"},
+		"version": "v0.45.0",
+	},
 	ObjectMeta: metav1.ObjectMeta{
 		Labels: map[string]string{
 			"app.kubernetes.io/instance": "default",
@@ -770,7 +785,8 @@ var ResolversFeatureFlagsCM = &corev1.ConfigMap{
 		// Setting this flag to "true" enables remote resolution of tasks and pipelines from Git repositories.
 		"enable-git-resolver": "true",
 		// Setting this flag to "true" enables remote resolution of tasks and pipelines via the Tekton Hub.
-		"enable-hub-resolver": "true"},
+		"enable-hub-resolver": "true",
+	},
 	ObjectMeta: metav1.ObjectMeta{
 		Labels: map[string]string{
 			"app.kubernetes.io/component": "resolvers",

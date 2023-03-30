@@ -24,16 +24,16 @@ var PipelinesControllerSVC = &corev1.Service{
 		Namespace: "tekton-pipelines",
 	},
 	Spec: corev1.ServiceSpec{
-		Ports: []corev1.ServicePort{corev1.ServicePort{
+		Ports: []corev1.ServicePort{{
 			Name:       "http-metrics",
 			Port:       int32(9090),
 			Protocol:   corev1.Protocol("TCP"),
 			TargetPort: intstr.IntOrString{IntVal: int32(9090)},
-		}, corev1.ServicePort{
+		}, {
 			Name:       "http-profiling",
 			Port:       int32(8008),
 			TargetPort: intstr.IntOrString{IntVal: int32(8008)},
-		}, corev1.ServicePort{
+		}, {
 			Name: "probes",
 			Port: int32(8080),
 		}},
@@ -66,22 +66,22 @@ var PipelinesWebhookSVC = &corev1.Service{
 		Namespace: "tekton-pipelines",
 	},
 	Spec: corev1.ServiceSpec{
-		Ports: []corev1.ServicePort{corev1.ServicePort{
+		Ports: []corev1.ServicePort{{
 			Name:       "http-metrics",
 			Port:       int32(9090),
 			TargetPort: intstr.IntOrString{IntVal: int32(9090)},
-		}, corev1.ServicePort{
+		}, {
 			Name:       "http-profiling",
 			Port:       int32(8008),
 			TargetPort: intstr.IntOrString{IntVal: int32(8008)},
-		}, corev1.ServicePort{
+		}, {
 			Name: "https-webhook",
 			Port: int32(443),
 			TargetPort: intstr.IntOrString{
 				StrVal: "https-webhook",
 				Type:   intstr.Type(int64(1)),
 			},
-		}, corev1.ServicePort{
+		}, {
 			Name: "probes",
 			Port: int32(8080),
 		}},

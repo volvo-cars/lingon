@@ -21,7 +21,7 @@ var PipelinesControllerClusterAccessCRB = &rbacv1.ClusterRoleBinding{
 		Kind:     "ClusterRole",
 		Name:     "tekton-pipelines-controller-cluster-access",
 	},
-	Subjects: []rbacv1.Subject{rbacv1.Subject{
+	Subjects: []rbacv1.Subject{{
 		Kind:      "ServiceAccount",
 		Name:      "tekton-pipelines-controller",
 		Namespace: "tekton-pipelines",
@@ -46,7 +46,7 @@ var PipelinesControllerTenantAccessCRB = &rbacv1.ClusterRoleBinding{
 		Kind:     "ClusterRole",
 		Name:     "tekton-pipelines-controller-tenant-access",
 	},
-	Subjects: []rbacv1.Subject{rbacv1.Subject{
+	Subjects: []rbacv1.Subject{{
 		Kind:      "ServiceAccount",
 		Name:      "tekton-pipelines-controller",
 		Namespace: "tekton-pipelines",
@@ -72,7 +72,7 @@ var PipelinesResolversCRB = &rbacv1.ClusterRoleBinding{
 		Kind:     "ClusterRole",
 		Name:     "tekton-pipelines-resolvers-resolution-request-updates",
 	},
-	Subjects: []rbacv1.Subject{rbacv1.Subject{
+	Subjects: []rbacv1.Subject{{
 		Kind:      "ServiceAccount",
 		Name:      "tekton-pipelines-resolvers",
 		Namespace: "tekton-pipelines-resolvers",
@@ -97,7 +97,7 @@ var PipelinesWebhookClusterAccessCRB = &rbacv1.ClusterRoleBinding{
 		Kind:     "ClusterRole",
 		Name:     "tekton-pipelines-webhook-cluster-access",
 	},
-	Subjects: []rbacv1.Subject{rbacv1.Subject{
+	Subjects: []rbacv1.Subject{{
 		Kind:      "ServiceAccount",
 		Name:      "tekton-pipelines-webhook",
 		Namespace: "tekton-pipelines",

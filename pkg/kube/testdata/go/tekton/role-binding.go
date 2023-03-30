@@ -22,7 +22,7 @@ var PipelinesControllerLeaderelectionRB = &rbacv1.RoleBinding{
 		Kind:     "Role",
 		Name:     "tekton-pipelines-leader-election",
 	},
-	Subjects: []rbacv1.Subject{rbacv1.Subject{
+	Subjects: []rbacv1.Subject{{
 		Kind:      "ServiceAccount",
 		Name:      "tekton-pipelines-controller",
 		Namespace: "tekton-pipelines",
@@ -48,7 +48,7 @@ var PipelinesControllerRB = &rbacv1.RoleBinding{
 		Kind:     "Role",
 		Name:     "tekton-pipelines-controller",
 	},
-	Subjects: []rbacv1.Subject{rbacv1.Subject{
+	Subjects: []rbacv1.Subject{{
 		Kind:      "ServiceAccount",
 		Name:      "tekton-pipelines-controller",
 		Namespace: "tekton-pipelines",
@@ -73,7 +73,7 @@ var PipelinesInfoRB = &rbacv1.RoleBinding{
 		Kind:     "Role",
 		Name:     "tekton-pipelines-info",
 	},
-	Subjects: []rbacv1.Subject{rbacv1.Subject{
+	Subjects: []rbacv1.Subject{{
 		APIGroup: "rbac.authorization.k8s.io",
 		Kind:     "Group",
 		Name:     "system:authenticated",
@@ -99,7 +99,7 @@ var PipelinesResolversNamespaceRbacRB = &rbacv1.RoleBinding{
 		Kind:     "Role",
 		Name:     "tekton-pipelines-resolvers-namespace-rbac",
 	},
-	Subjects: []rbacv1.Subject{rbacv1.Subject{
+	Subjects: []rbacv1.Subject{{
 		Kind:      "ServiceAccount",
 		Name:      "tekton-pipelines-resolvers",
 		Namespace: "tekton-pipelines-resolvers",
@@ -125,7 +125,7 @@ var PipelinesWebhookLeaderelectionRB = &rbacv1.RoleBinding{
 		Kind:     "Role",
 		Name:     "tekton-pipelines-leader-election",
 	},
-	Subjects: []rbacv1.Subject{rbacv1.Subject{
+	Subjects: []rbacv1.Subject{{
 		Kind:      "ServiceAccount",
 		Name:      "tekton-pipelines-webhook",
 		Namespace: "tekton-pipelines",
@@ -151,7 +151,7 @@ var PipelinesWebhookRB = &rbacv1.RoleBinding{
 		Kind:     "Role",
 		Name:     "tekton-pipelines-webhook",
 	},
-	Subjects: []rbacv1.Subject{rbacv1.Subject{
+	Subjects: []rbacv1.Subject{{
 		Kind:      "ServiceAccount",
 		Name:      "tekton-pipelines-webhook",
 		Namespace: "tekton-pipelines",

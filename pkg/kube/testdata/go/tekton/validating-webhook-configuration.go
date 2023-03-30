@@ -21,7 +21,7 @@ var ConfigWebhookPipelineDevValidatingwebhookconfigurations = &admissionregistra
 		APIVersion: "admissionregistration.k8s.io/v1",
 		Kind:       "ValidatingWebhookConfiguration",
 	},
-	Webhooks: []admissionregistrationv1.ValidatingWebhook{admissionregistrationv1.ValidatingWebhook{
+	Webhooks: []admissionregistrationv1.ValidatingWebhook{{
 		AdmissionReviewVersions: []string{"v1"},
 		ClientConfig: admissionregistrationv1.WebhookClientConfig{Service: &admissionregistrationv1.ServiceReference{
 			Name:      "tekton-pipelines-webhook",
@@ -48,7 +48,7 @@ var ValidationWebhookPipelineDevValidatingwebhookconfigurations = &admissionregi
 		APIVersion: "admissionregistration.k8s.io/v1",
 		Kind:       "ValidatingWebhookConfiguration",
 	},
-	Webhooks: []admissionregistrationv1.ValidatingWebhook{admissionregistrationv1.ValidatingWebhook{
+	Webhooks: []admissionregistrationv1.ValidatingWebhook{{
 		AdmissionReviewVersions: []string{"v1"},
 		ClientConfig: admissionregistrationv1.WebhookClientConfig{Service: &admissionregistrationv1.ServiceReference{
 			Name:      "tekton-pipelines-webhook",

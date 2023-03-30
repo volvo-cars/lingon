@@ -17,7 +17,7 @@ var AggregateEditCR = &rbacv1.ClusterRole{
 		},
 		Name: "tekton-aggregate-edit",
 	},
-	Rules: []rbacv1.PolicyRule{rbacv1.PolicyRule{
+	Rules: []rbacv1.PolicyRule{{
 		APIGroups: []string{"tekton.dev"},
 		Resources: []string{"tasks", "taskruns", "pipelines", "pipelineruns", "pipelineresources", "runs", "customruns"},
 		Verbs:     []string{"create", "delete", "deletecollection", "get", "list", "patch", "update", "watch"},
@@ -37,7 +37,7 @@ var AggregateViewCR = &rbacv1.ClusterRole{
 		},
 		Name: "tekton-aggregate-view",
 	},
-	Rules: []rbacv1.PolicyRule{rbacv1.PolicyRule{
+	Rules: []rbacv1.PolicyRule{{
 		APIGroups: []string{"tekton.dev"},
 		Resources: []string{"tasks", "taskruns", "pipelines", "pipelineruns", "pipelineresources", "runs", "customruns"},
 		Verbs:     []string{"get", "list", "watch"},
@@ -57,27 +57,27 @@ var PipelinesControllerClusterAccessCR = &rbacv1.ClusterRole{
 		},
 		Name: "tekton-pipelines-controller-cluster-access",
 	},
-	Rules: []rbacv1.PolicyRule{rbacv1.PolicyRule{
+	Rules: []rbacv1.PolicyRule{{
 		APIGroups: []string{},
 		Resources: []string{"pods"},
 		Verbs:     []string{"list", "watch"},
-	}, rbacv1.PolicyRule{
+	}, {
 		APIGroups: []string{"tekton.dev"},
 		Resources: []string{"tasks", "clustertasks", "taskruns", "pipelines", "pipelineruns", "pipelineresources", "runs", "customruns"},
 		Verbs:     []string{"get", "list", "create", "update", "delete", "patch", "watch"},
-	}, rbacv1.PolicyRule{
+	}, {
 		APIGroups: []string{"tekton.dev"},
 		Resources: []string{"verificationpolicies"},
 		Verbs:     []string{"get", "list", "watch"},
-	}, rbacv1.PolicyRule{
+	}, {
 		APIGroups: []string{"tekton.dev"},
 		Resources: []string{"taskruns/finalizers", "pipelineruns/finalizers", "runs/finalizers", "customruns/finalizers"},
 		Verbs:     []string{"get", "list", "create", "update", "delete", "patch", "watch"},
-	}, rbacv1.PolicyRule{
+	}, {
 		APIGroups: []string{"tekton.dev"},
 		Resources: []string{"tasks/status", "clustertasks/status", "taskruns/status", "pipelines/status", "pipelineruns/status", "pipelineresources/status", "runs/status", "customruns/status", "verificationpolicies/status"},
 		Verbs:     []string{"get", "list", "create", "update", "delete", "patch", "watch"},
-	}, rbacv1.PolicyRule{
+	}, {
 		APIGroups: []string{"resolution.tekton.dev"},
 		Resources: []string{"resolutionrequests", "resolutionrequests/status"},
 		Verbs:     []string{"get", "list", "create", "update", "delete", "patch", "watch"},
@@ -97,19 +97,19 @@ var PipelinesControllerTenantAccessCR = &rbacv1.ClusterRole{
 		},
 		Name: "tekton-pipelines-controller-tenant-access",
 	},
-	Rules: []rbacv1.PolicyRule{rbacv1.PolicyRule{
+	Rules: []rbacv1.PolicyRule{{
 		APIGroups: []string{},
 		Resources: []string{"pods", "persistentvolumeclaims"},
 		Verbs:     []string{"get", "list", "create", "update", "delete", "patch", "watch"},
-	}, rbacv1.PolicyRule{
+	}, {
 		APIGroups: []string{},
 		Resources: []string{"events"},
 		Verbs:     []string{"create", "update", "patch"},
-	}, rbacv1.PolicyRule{
+	}, {
 		APIGroups: []string{},
 		Resources: []string{"configmaps", "limitranges", "secrets", "serviceaccounts"},
 		Verbs:     []string{"get", "list", "watch"},
-	}, rbacv1.PolicyRule{
+	}, {
 		APIGroups: []string{"apps"},
 		Resources: []string{"statefulsets"},
 		Verbs:     []string{"get", "list", "create", "update", "delete", "patch", "watch"},
@@ -129,15 +129,15 @@ var PipelinesResolversResolutionRequestUpdatesCR = &rbacv1.ClusterRole{
 		},
 		Name: "tekton-pipelines-resolvers-resolution-request-updates",
 	},
-	Rules: []rbacv1.PolicyRule{rbacv1.PolicyRule{
+	Rules: []rbacv1.PolicyRule{{
 		APIGroups: []string{"resolution.tekton.dev"},
 		Resources: []string{"resolutionrequests", "resolutionrequests/status"},
 		Verbs:     []string{"get", "list", "watch", "update", "patch"},
-	}, rbacv1.PolicyRule{
+	}, {
 		APIGroups: []string{"tekton.dev"},
 		Resources: []string{"tasks", "pipelines"},
 		Verbs:     []string{"get", "list"},
-	}, rbacv1.PolicyRule{
+	}, {
 		APIGroups: []string{},
 		Resources: []string{"secrets"},
 		Verbs:     []string{"get", "list", "watch"},
@@ -157,35 +157,35 @@ var PipelinesWebhookClusterAccessCR = &rbacv1.ClusterRole{
 		},
 		Name: "tekton-pipelines-webhook-cluster-access",
 	},
-	Rules: []rbacv1.PolicyRule{rbacv1.PolicyRule{
+	Rules: []rbacv1.PolicyRule{{
 		APIGroups:     []string{"apiextensions.k8s.io"},
 		ResourceNames: []string{"pipelines.tekton.dev", "pipelineruns.tekton.dev", "runs.tekton.dev", "tasks.tekton.dev", "clustertasks.tekton.dev", "taskruns.tekton.dev", "pipelineresources.tekton.dev", "resolutionrequests.resolution.tekton.dev", "customruns.tekton.dev", "verificationpolicies.tekton.dev"},
 		Resources:     []string{"customresourcedefinitions", "customresourcedefinitions/status"},
 		Verbs:         []string{"get", "update", "patch"},
-	}, rbacv1.PolicyRule{
+	}, {
 		APIGroups: []string{"apiextensions.k8s.io"},
 		Resources: []string{"customresourcedefinitions"},
 		Verbs:     []string{"list", "watch"},
-	}, rbacv1.PolicyRule{
+	}, {
 		APIGroups: []string{"admissionregistration.k8s.io"},
 		Resources: []string{"mutatingwebhookconfigurations", "validatingwebhookconfigurations"},
 		Verbs:     []string{"list", "watch"},
-	}, rbacv1.PolicyRule{
+	}, {
 		APIGroups:     []string{"admissionregistration.k8s.io"},
 		ResourceNames: []string{"webhook.pipeline.tekton.dev"},
 		Resources:     []string{"mutatingwebhookconfigurations"},
 		Verbs:         []string{"get", "update", "delete"},
-	}, rbacv1.PolicyRule{
+	}, {
 		APIGroups:     []string{"admissionregistration.k8s.io"},
 		ResourceNames: []string{"validation.webhook.pipeline.tekton.dev", "config.webhook.pipeline.tekton.dev"},
 		Resources:     []string{"validatingwebhookconfigurations"},
 		Verbs:         []string{"get", "update", "delete"},
-	}, rbacv1.PolicyRule{
+	}, {
 		APIGroups:     []string{},
 		ResourceNames: []string{"tekton-pipelines"},
 		Resources:     []string{"namespaces"},
 		Verbs:         []string{"get"},
-	}, rbacv1.PolicyRule{
+	}, {
 		APIGroups:     []string{},
 		ResourceNames: []string{"tekton-pipelines"},
 		Resources:     []string{"namespaces/finalizers"},

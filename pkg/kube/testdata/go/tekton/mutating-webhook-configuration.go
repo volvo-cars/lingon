@@ -21,7 +21,7 @@ var WebhookPipelineDevMutatingwebhookconfigurations = &admissionregistrationv1.M
 		APIVersion: "admissionregistration.k8s.io/v1",
 		Kind:       "MutatingWebhookConfiguration",
 	},
-	Webhooks: []admissionregistrationv1.MutatingWebhook{admissionregistrationv1.MutatingWebhook{
+	Webhooks: []admissionregistrationv1.MutatingWebhook{{
 		AdmissionReviewVersions: []string{"v1"},
 		ClientConfig: admissionregistrationv1.WebhookClientConfig{Service: &admissionregistrationv1.ServiceReference{
 			Name:      "tekton-pipelines-webhook",

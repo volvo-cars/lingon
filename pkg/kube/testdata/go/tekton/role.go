@@ -17,11 +17,11 @@ var PipelinesControllerRole = &rbacv1.Role{
 		Name:      "tekton-pipelines-controller",
 		Namespace: "tekton-pipelines",
 	},
-	Rules: []rbacv1.PolicyRule{rbacv1.PolicyRule{
+	Rules: []rbacv1.PolicyRule{{
 		APIGroups: []string{},
 		Resources: []string{"configmaps"},
 		Verbs:     []string{"list", "watch"},
-	}, rbacv1.PolicyRule{
+	}, {
 		APIGroups:     []string{},
 		ResourceNames: []string{"config-logging", "config-observability", "config-artifact-bucket", "config-artifact-pvc", "feature-flags", "config-leader-election", "config-registry-cert"},
 		Resources:     []string{"configmaps"},
@@ -42,7 +42,7 @@ var PipelinesInfoRole = &rbacv1.Role{
 		Name:      "tekton-pipelines-info",
 		Namespace: "tekton-pipelines",
 	},
-	Rules: []rbacv1.PolicyRule{rbacv1.PolicyRule{
+	Rules: []rbacv1.PolicyRule{{
 		APIGroups:     []string{},
 		ResourceNames: []string{"pipelines-info"},
 		Resources:     []string{"configmaps"},
@@ -63,7 +63,7 @@ var PipelinesLeaderElectionRole = &rbacv1.Role{
 		Name:      "tekton-pipelines-leader-election",
 		Namespace: "tekton-pipelines",
 	},
-	Rules: []rbacv1.PolicyRule{rbacv1.PolicyRule{
+	Rules: []rbacv1.PolicyRule{{
 		APIGroups: []string{"coordination.k8s.io"},
 		Resources: []string{"leases"},
 		Verbs:     []string{"get", "list", "create", "update", "delete", "patch", "watch"},
@@ -84,11 +84,11 @@ var PipelinesResolversNamespaceRbacRole = &rbacv1.Role{
 		Name:      "tekton-pipelines-resolvers-namespace-rbac",
 		Namespace: "tekton-pipelines-resolvers",
 	},
-	Rules: []rbacv1.PolicyRule{rbacv1.PolicyRule{
+	Rules: []rbacv1.PolicyRule{{
 		APIGroups: []string{},
 		Resources: []string{"configmaps", "secrets"},
 		Verbs:     []string{"get", "list", "update", "watch"},
-	}, rbacv1.PolicyRule{
+	}, {
 		APIGroups: []string{"coordination.k8s.io"},
 		Resources: []string{"leases"},
 		Verbs:     []string{"get", "list", "create", "update", "delete", "patch", "watch"},
@@ -109,20 +109,20 @@ var PipelinesWebhookRole = &rbacv1.Role{
 		Name:      "tekton-pipelines-webhook",
 		Namespace: "tekton-pipelines",
 	},
-	Rules: []rbacv1.PolicyRule{rbacv1.PolicyRule{
+	Rules: []rbacv1.PolicyRule{{
 		APIGroups: []string{},
 		Resources: []string{"configmaps"},
 		Verbs:     []string{"list", "watch"},
-	}, rbacv1.PolicyRule{
+	}, {
 		APIGroups:     []string{},
 		ResourceNames: []string{"config-logging", "config-observability", "config-leader-election", "feature-flags"},
 		Resources:     []string{"configmaps"},
 		Verbs:         []string{"get"},
-	}, rbacv1.PolicyRule{
+	}, {
 		APIGroups: []string{},
 		Resources: []string{"secrets"},
 		Verbs:     []string{"list", "watch"},
-	}, rbacv1.PolicyRule{
+	}, {
 		APIGroups:     []string{},
 		ResourceNames: []string{"webhook-certs"},
 		Resources:     []string{"secrets"},
