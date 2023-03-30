@@ -100,21 +100,21 @@ func run(
 	groupByKind, removeAppName bool,
 ) error {
 	opts := []kube.ImportOption{
-		kube.WithAppName(appName),
-		kube.WithPackageName(pkgName),
-		kube.WithOutputDirectory(out),
-		kube.WithSerializer(defaultSerializer()),
+		kube.WithImportAppName(appName),
+		kube.WithImportPackageName(pkgName),
+		kube.WithImportOutputDirectory(out),
+		kube.WithImportSerializer(defaultSerializer()),
 	}
 	if groupByKind {
-		opts = append(opts, kube.WithGroupByKind(true))
+		opts = append(opts, kube.WithImportGroupByKind(true))
 	}
 	if removeAppName {
-		opts = append(opts, kube.WithRemoveAppName(true))
+		opts = append(opts, kube.WithImportRemoveAppName(true))
 	}
 
 	// stdin
 	if in == "-" {
-		opts = append(opts, kube.WithReadStdIn())
+		opts = append(opts, kube.WithImportReadStdIn())
 		if err := kube.Import(opts...); err != nil {
 			return fmt.Errorf("import: %w", err)
 		}
@@ -127,7 +127,7 @@ func run(
 		return err
 	}
 	if !fi.IsDir() {
-		opts = append(opts, kube.WithManifestFiles([]string{in}))
+		opts = append(opts, kube.WithImportManifestFiles([]string{in}))
 		if err := kube.Import(opts...); err != nil {
 			return fmt.Errorf("import: %w", err)
 		}
@@ -141,7 +141,7 @@ func run(
 	}
 
 	fmt.Printf("files:\n- %s\n", strings.Join(files, "\n- "))
-	opts = append(opts, kube.WithManifestFiles(files))
+	opts = append(opts, kube.WithImportManifestFiles(files))
 	if err := kube.Import(opts...); err != nil {
 		return fmt.Errorf("import: %w", err)
 	}

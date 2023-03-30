@@ -20,7 +20,7 @@ const (
 	kubeAppPkgPath = "github.com/volvo-cars/lingon/pkg/kube"
 )
 
-var diffOutputDir = filepath.Join(defOutDir, "diff")
+var diffOutputDir = filepath.Join(defaultImportOutputDir, "diff")
 
 func TestDiff2YAML(t *testing.T) {
 	t.Skip("skipping test Diff for now.")
@@ -119,13 +119,13 @@ func importGo(
 	// defer os.RemoveAll(out)
 
 	err := kube.Import(
-		kube.WithAppName(appName),
-		kube.WithPackageName(pkgName),
-		kube.WithOutputDirectory(outputDir),
-		kube.WithManifestFiles(files),
-		kube.WithSerializer(defaultSerializer()),
-		kube.WithRemoveAppName(true),
-		kube.WithGroupByKind(true),
+		kube.WithImportAppName(appName),
+		kube.WithImportPackageName(pkgName),
+		kube.WithImportOutputDirectory(outputDir),
+		kube.WithImportManifestFiles(files),
+		kube.WithImportSerializer(defaultSerializer()),
+		kube.WithImportRemoveAppName(true),
+		kube.WithImportGroupByKind(true),
 	)
 	tu.AssertNoError(t, err, "kube import")
 }

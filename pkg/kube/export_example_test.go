@@ -6,8 +6,8 @@ package kube_test
 import (
 	"bytes"
 	"fmt"
-	"strings"
 
+	"github.com/rogpeppe/go-internal/txtar"
 	"github.com/volvo-cars/lingon/pkg/kube"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -42,17 +42,17 @@ func New() *MyK8sApp {
 	}
 }
 
-func ExampleExportWriter() {
+func ExampleExport() {
 	tk := New()
 
 	var buf bytes.Buffer
-	_ = kube.ExportWriter(tk, &buf)
+	_ = kube.Export(tk, kube.WithExportWriter(&buf))
 
-	manifests := strings.Split(buf.String(), "---")
+	ar := txtar.Parse(buf.Bytes())
 
-	if len(manifests) > 0 {
+	if len(ar.Files) > 0 {
 		ns := &corev1.Namespace{}
-		_ = yaml.Unmarshal([]byte(manifests[0]), ns)
+		_ = yaml.Unmarshal(ar.Files[0].Data, ns)
 		// print line by line to avoid trailing whitespace
 		fmt.Println("apiVersion:", ns.APIVersion)
 		fmt.Println("kind:", ns.Kind)

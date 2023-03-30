@@ -20,6 +20,8 @@ import (
 	"mvdan.cc/gofumpt/format"
 )
 
+// WIP
+
 // TODO: bells and whistles
 // 1. have a utility to download the latest manifest releases yaml files
 // --> How did we get the YAML to begin with? what is the starting point ?
@@ -31,10 +33,10 @@ import (
 //    * Services and Ingresses -> ports
 //    * RBAC roles and bindings permissions
 
-// DiffLatest is meant to be used to show the difference between a kubernetes manifest
+// diffLatest is meant to be used to show the difference between a kubernetes manifest
 // in Go and the latest version of the same manifest in yaml.
 //
-//	out := filepath.Join(defOutDir, "update")
+//	out := filepath.Join(defaultImportOutputDir, "update")
 //	diff, err := kube.DiffLatest(
 //		"tekton",
 //		"tekton",
@@ -43,13 +45,13 @@ import (
 //		tekton.New(),
 //		[]string{"testdata/tekton-updated.yaml"},
 //	)
-func DiffLatest(
-	appName, pkgName, outDir string,
+func diffLatest(
+	appName, pkgName, destDir string,
 	serializer runtime.Decoder,
 	km Exporter,
 	manifests []string,
 ) (string, error) {
-	if err := upsertFolder(outDir); err != nil {
+	if err := os.MkdirAll(destDir, 0o755); err != nil {
 		return "", err
 	}
 
@@ -67,7 +69,7 @@ func DiffLatest(
 	}()
 
 	// EXPORT TO YAML
-	err = export(km, tmpdir, false)
+	err = Export(km, WithExportOutputDirectory(tmpdir))
 	if err != nil {
 		return "", fmt.Errorf("export: %w", err)
 	}
@@ -103,17 +105,17 @@ func DiffLatest(
 	d := cmp.Diff(arc, aru, cmpopts.EquateEmpty())
 
 	if err := os.WriteFile(
-		filepath.Join(outDir, "diff.txt"),
+		filepath.Join(destDir, "diff.txt"),
 		[]byte(d),
 		0o644,
 	); err != nil {
 		return "", fmt.Errorf("write diff: %w", err)
 	}
 
-	if err := txtar.Write(arc, outDir); err != nil {
+	if err := txtar.Write(arc, destDir); err != nil {
 		return "", fmt.Errorf("write current: %w", err)
 	}
-	if err := txtar.Write(aru, outDir); err != nil {
+	if err := txtar.Write(aru, destDir); err != nil {
 		return "", fmt.Errorf("write latest: %w", err)
 	}
 	return d, err
@@ -129,14 +131,14 @@ func importArchive(
 	// IMPORT YAML TO GO
 	var buf bytes.Buffer
 	err := Import(
-		WithOutputDirectory(outDir),
-		WithManifestFiles(manifests),
-		WithAppName(appName),
-		WithRemoveAppName(true),
-		WithPackageName(pkgName),
-		WithSerializer(serializer),
-		WithGroupByKind(true),
-		WithWriter(&buf),
+		WithImportOutputDirectory(outDir),
+		WithImportManifestFiles(manifests),
+		WithImportAppName(appName),
+		WithImportRemoveAppName(true),
+		WithImportPackageName(pkgName),
+		WithImportSerializer(serializer),
+		WithImportGroupByKind(true),
+		WithImportWriter(&buf),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("import: %w", err)
@@ -169,15 +171,4 @@ func defaultSerializer() runtime.Decoder {
 	//
 	_ = apiextensions.AddToScheme(scheme.Scheme)
 	return scheme.Codecs.UniversalDeserializer()
-}
-
-func upsertFolder(dir string) error {
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		errmk := os.MkdirAll(dir, 0o755)
-		if errmk != nil {
-			return fmt.Errorf("create folder %s: %w", dir, err)
-		}
-		return nil
-	}
-	return nil
 }

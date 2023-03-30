@@ -25,7 +25,7 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 )
 
-const defOutDir = "out/jamel"
+const defaultImportOutputDir = "out/jamel"
 
 func defaultSerializer() runtime.Decoder {
 	// NEEDED FOR CRDS
@@ -45,14 +45,19 @@ func TestImport(t *testing.T) {
 	TT := []args{
 		{
 			Name:   "convert with CRDs and remove app name and group by kind",
-			OutDir: filepath.Join(defOutDir, "argocd"),
+			OutDir: filepath.Join(defaultImportOutputDir, "argocd"),
 			Opts: []kube.ImportOption{
-				kube.WithAppName("argocd"),
-				kube.WithOutputDirectory(filepath.Join(defOutDir, "argocd")),
-				kube.WithManifestFiles([]string{"testdata/argocd.yaml"}),
-				kube.WithSerializer(defaultSerializer()),
-				kube.WithRemoveAppName(true),
-				kube.WithGroupByKind(true),
+				kube.WithImportAppName("argocd"),
+				kube.WithImportOutputDirectory(
+					filepath.Join(
+						defaultImportOutputDir,
+						"argocd",
+					),
+				),
+				kube.WithImportManifestFiles([]string{"testdata/argocd.yaml"}),
+				kube.WithImportSerializer(defaultSerializer()),
+				kube.WithImportRemoveAppName(true),
+				kube.WithImportGroupByKind(true),
 			},
 			OutFiles: []string{
 				"out/jamel/argocd/app.go",
@@ -72,22 +77,22 @@ func TestImport(t *testing.T) {
 		}, {
 			Name: "convert with CRDs and remove app name containing dash and group by kind",
 			OutDir: filepath.Join(
-				defOutDir,
+				defaultImportOutputDir,
 				"external-secrets",
 			),
 			Opts: []kube.ImportOption{
-				kube.WithAppName("external-secrets"),
-				kube.WithPackageName("externalsecrets"),
-				kube.WithOutputDirectory(
+				kube.WithImportAppName("external-secrets"),
+				kube.WithImportPackageName("externalsecrets"),
+				kube.WithImportOutputDirectory(
 					filepath.Join(
-						defOutDir,
+						defaultImportOutputDir,
 						"external-secrets",
 					),
 				),
-				kube.WithManifestFiles([]string{"testdata/external-secrets.yaml"}),
-				kube.WithSerializer(defaultSerializer()),
-				kube.WithRemoveAppName(true),
-				kube.WithGroupByKind(true),
+				kube.WithImportManifestFiles([]string{"testdata/external-secrets.yaml"}),
+				kube.WithImportSerializer(defaultSerializer()),
+				kube.WithImportRemoveAppName(true),
+				kube.WithImportGroupByKind(true),
 			},
 			OutFiles: []string{
 				"out/jamel/external-secrets/app.go",
@@ -104,14 +109,19 @@ func TestImport(t *testing.T) {
 			},
 		}, {
 			Name:   "convert with CRDs and remove app name and split by name",
-			OutDir: filepath.Join(defOutDir, "karpenter"),
+			OutDir: filepath.Join(defaultImportOutputDir, "karpenter"),
 			Opts: []kube.ImportOption{
-				kube.WithAppName("karpenter"),
-				kube.WithPackageName("karpenter"),
-				kube.WithOutputDirectory(filepath.Join(defOutDir, "karpenter")),
-				kube.WithManifestFiles([]string{"testdata/karpenter.yaml"}),
-				kube.WithSerializer(defaultSerializer()),
-				kube.WithRemoveAppName(true),
+				kube.WithImportAppName("karpenter"),
+				kube.WithImportPackageName("karpenter"),
+				kube.WithImportOutputDirectory(
+					filepath.Join(
+						defaultImportOutputDir,
+						"karpenter",
+					),
+				),
+				kube.WithImportManifestFiles([]string{"testdata/karpenter.yaml"}),
+				kube.WithImportSerializer(defaultSerializer()),
+				kube.WithImportRemoveAppName(true),
 			},
 			OutFiles: []string{
 				"out/jamel/karpenter/admin_cr.go",
@@ -139,14 +149,19 @@ func TestImport(t *testing.T) {
 			},
 		}, {
 			Name:   "convert with vanilla serializer and remove app name and group by kind",
-			OutDir: filepath.Join(defOutDir, "grafana"),
+			OutDir: filepath.Join(defaultImportOutputDir, "grafana"),
 			Opts: []kube.ImportOption{
-				kube.WithAppName("grafana"),
-				kube.WithPackageName("grafana"),
-				kube.WithOutputDirectory(filepath.Join(defOutDir, "grafana")),
-				kube.WithManifestFiles([]string{"testdata/grafana.yaml"}),
-				kube.WithRemoveAppName(true),
-				kube.WithGroupByKind(true),
+				kube.WithImportAppName("grafana"),
+				kube.WithImportPackageName("grafana"),
+				kube.WithImportOutputDirectory(
+					filepath.Join(
+						defaultImportOutputDir,
+						"grafana",
+					),
+				),
+				kube.WithImportManifestFiles([]string{"testdata/grafana.yaml"}),
+				kube.WithImportRemoveAppName(true),
+				kube.WithImportGroupByKind(true),
 			},
 			OutFiles: []string{
 				"out/jamel/grafana/app.go",
@@ -163,20 +178,20 @@ func TestImport(t *testing.T) {
 			},
 		}, {
 			Name:   "convert grafana with vanilla serializer and implement Exporter",
-			OutDir: filepath.Join(defOutDir, "manifester"),
+			OutDir: filepath.Join(defaultImportOutputDir, "manifester"),
 			Opts: []kube.ImportOption{
-				kube.WithAppName("grafana"),
-				kube.WithPackageName("grafana"),
-				kube.WithOutputDirectory(
+				kube.WithImportAppName("grafana"),
+				kube.WithImportPackageName("grafana"),
+				kube.WithImportOutputDirectory(
 					filepath.Join(
-						defOutDir,
+						defaultImportOutputDir,
 						"manifester",
 					),
 				),
-				kube.WithManifestFiles([]string{"testdata/grafana.yaml"}),
-				kube.WithRemoveAppName(true),
-				kube.WithGroupByKind(true),
-				kube.WithMethods(true),
+				kube.WithImportManifestFiles([]string{"testdata/grafana.yaml"}),
+				kube.WithImportRemoveAppName(true),
+				kube.WithImportGroupByKind(true),
+				kube.WithImportAddMethods(true),
 			},
 			OutFiles: []string{
 				"out/jamel/manifester/app.go",
@@ -201,7 +216,10 @@ func TestImport(t *testing.T) {
 				t.Parallel()
 				tu.AssertNoError(t, os.RemoveAll(tc.OutDir), "rm out dir")
 				var buf bytes.Buffer
-				opts := append(tc.Opts, kube.WithWriter(&buf)) //nolint:gocritic
+				opts := append(
+					tc.Opts,
+					kube.WithImportWriter(&buf),
+				) //nolint:gocritic
 				err := kube.Import(opts...)
 				tu.AssertNoError(t, err, "failed to import")
 				ar := txtar.Parse(buf.Bytes())
@@ -223,17 +241,17 @@ func TestJamel_SaveFromReader(t *testing.T) {
 	filename := "testdata/grafana.yaml"
 	file, err := os.Open(filename)
 	tu.AssertNoError(t, err, fmt.Sprintf("failed to open file: %s", filename))
-	out := filepath.Join(defOutDir, "reader")
+	out := filepath.Join(defaultImportOutputDir, "reader")
 	var buf bytes.Buffer
 	err = kube.Import(
-		kube.WithAppName("grafana"),
-		kube.WithPackageName("grafana"),
-		kube.WithOutputDirectory(out),
-		kube.WithWriter(&buf),
-		kube.WithReader(file),
-		kube.WithNameFieldFunc(kube.NameFieldFunc),
-		kube.WithNameVarFunc(kube.NameVarFunc),
-		kube.WithNameFileFunc(
+		kube.WithImportAppName("grafana"),
+		kube.WithImportPackageName("grafana"),
+		kube.WithImportOutputDirectory(out),
+		kube.WithImportWriter(&buf),
+		kube.WithImportReader(file),
+		kube.WithImportNameFieldFunc(kube.NameFieldFunc),
+		kube.WithImportNameVarFunc(kube.NameVarFunc),
+		kube.WithImportNameFileFunc(
 			func(m kubeutil.Metadata) string {
 				return fmt.Sprintf(
 					"%s-%s.go",
@@ -282,12 +300,12 @@ func TestJamel_ReaderWriter(t *testing.T) {
 	var buf bytes.Buffer
 
 	err = kube.Import(
-		kube.WithAppName("grafana"),
-		kube.WithPackageName("grafana"),
-		kube.WithOutputDirectory("manifests/"),
-		kube.WithReader(file),
-		kube.WithWriter(&buf),
-		kube.WithNameFileFunc(
+		kube.WithImportAppName("grafana"),
+		kube.WithImportPackageName("grafana"),
+		kube.WithImportOutputDirectory("manifests/"),
+		kube.WithImportReader(file),
+		kube.WithImportWriter(&buf),
+		kube.WithImportNameFileFunc(
 			func(m kubeutil.Metadata) string {
 				return fmt.Sprintf(
 					"%s-%s.go",
@@ -328,7 +346,7 @@ func TestJamel_ReaderWriter(t *testing.T) {
 }
 
 func TestJamel_ConfigMapComments(t *testing.T) {
-	out := filepath.Join(defOutDir, "tekton")
+	out := filepath.Join(defaultImportOutputDir, "tekton")
 	tu.AssertNoError(t, os.RemoveAll(out), "rm out dir")
 	t.Cleanup(
 		func() {
@@ -337,14 +355,14 @@ func TestJamel_ConfigMapComments(t *testing.T) {
 	)
 
 	err := kube.Import(
-		kube.WithAppName("tekton"),
-		kube.WithPackageName("tekton"),
-		kube.WithOutputDirectory(out),
-		kube.WithManifestFiles([]string{"testdata/tekton.yaml"}),
-		kube.WithSerializer(defaultSerializer()),
-		kube.WithRemoveAppName(true),
-		kube.WithGroupByKind(true),
-		kube.WithMethods(true),
+		kube.WithImportAppName("tekton"),
+		kube.WithImportPackageName("tekton"),
+		kube.WithImportOutputDirectory(out),
+		kube.WithImportManifestFiles([]string{"testdata/tekton.yaml"}),
+		kube.WithImportSerializer(defaultSerializer()),
+		kube.WithImportRemoveAppName(true),
+		kube.WithImportGroupByKind(true),
+		kube.WithImportAddMethods(true),
 	)
 	tu.AssertNoError(t, err, "failed to import")
 

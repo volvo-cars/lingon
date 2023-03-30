@@ -66,7 +66,7 @@ func readGolden(t *testing.T, path string) string {
 
 func convert(t *testing.T, obj runtime.Object, redact bool) string {
 	t.Helper()
-	j := jamel{o: option{RedactSecrets: redact}}
+	j := jamel{o: importOption{RedactSecrets: redact}}
 	code := j.kube2GoJen(obj)
 	var b strings.Builder
 	err := code.Render(&b)

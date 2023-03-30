@@ -65,7 +65,6 @@ func (j *jamel) convertValue(v reflect.Value) *jen.Statement {
 		return returnTypeAlias(v, reflect.Float32.String(), float32(v.Float()))
 	case reflect.Float64:
 		return returnTypeAlias(v, reflect.Float64.String(), v.Float())
-	// ----------------------------------------
 	//
 	// Map types
 	//
@@ -80,7 +79,6 @@ func (j *jamel) convertValue(v reflect.Value) *jen.Statement {
 			},
 		)
 		return pk.Values(vf)
-	// ----------------------------------------
 	//
 	// Array and Slice types
 	//
@@ -99,7 +97,6 @@ func (j *jamel) convertValue(v reflect.Value) *jen.Statement {
 		)
 
 		return vf
-	// ----------------------------------------
 	//
 	// Struct types
 	//
@@ -108,8 +105,6 @@ func (j *jamel) convertValue(v reflect.Value) *jen.Statement {
 		switch name {
 		case "Quantity":
 			return convertQuantity(v)
-		// case "IntOrString":
-		// 	return convertIntOrString(v)
 		case "Secret":
 			return j.convertSecret(v).
 				Comment("TODO: SECRETS SHOULD BE STORED ELSEWHERE THAN IN THE CODE!!!!")
@@ -125,7 +120,6 @@ func (j *jamel) convertValue(v reflect.Value) *jen.Statement {
 		)
 
 		return pk.Values(vf)
-	// ----------------------------------------
 	//
 	// Pointer types
 	//
@@ -436,9 +430,9 @@ func (j *jamel) replaceSecretData(field reflect.Value) jen.Code {
 	)
 }
 
-// convertQuantity converts a Quantity to a jen statement.
+// convertQuantity converts a [resource.Quantity] to a jen statement.
 // A Quantity is a struct with unexported fields.
-// To fill it, we must use the resource.MustParse function.
+// To fill it, we must use the [resource.MustParse] function.
 // Refer to kubernetes code base for more details.
 func convertQuantity(field reflect.Value) *jen.Statement {
 	if field.IsZero() {
@@ -462,7 +456,7 @@ func convertQuantity(field reflect.Value) *jen.Statement {
 
 // prefixKind returns the jen statement for the type of the value.
 // It is used to set the proper import package for the type.
-// For instance, `v1.ServiceAccount`, renamed `corev1.ServiceAccount`
+// For instance, [v1.ServiceAccount], renamed [corev1.ServiceAccount]
 // with `import corev1 "k8s.io/api/core/v1"`
 func prefixKind(v reflect.Value) *jen.Statement {
 	if v.IsZero() {
@@ -497,14 +491,14 @@ func prefixKind(v reflect.Value) *jen.Statement {
 		return jen.Float32()
 	case reflect.Float64:
 		return jen.Float64()
-		// ----------------------------------------
+
 	case reflect.Ptr:
 		if v.IsNil() {
 			return jen.Nil()
 		}
 
 		return jen.Op("&").Add(prefixKind(v.Elem()))
-		// ----------------------------------------
+
 	case reflect.Array, reflect.Slice:
 		pkgPath := v.Type().Elem().PkgPath()
 		name := v.Type().Elem().Name()
@@ -513,7 +507,7 @@ func prefixKind(v reflect.Value) *jen.Statement {
 			return jen.Index().Id(name)
 		}
 		return jen.Index().Qual(pkgPath, name)
-		// ----------------------------------------
+
 	case reflect.Map:
 		// Resolve Key type first
 		kname := v.Type().Key().Name()
@@ -540,12 +534,12 @@ func prefixKind(v reflect.Value) *jen.Statement {
 		}
 
 		return jen.Map(keyName).Add(valueName)
-		// ----------------------------------------
+
 	case reflect.Struct:
 		pkgPath := v.Type().PkgPath()
 		name := v.Type().Name()
 		return jen.Qual(pkgPath, name)
-		// ----------------------------------------
+
 	default:
 		slog.Info(
 			"unknown kind",

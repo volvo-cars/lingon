@@ -73,16 +73,16 @@ func ExampleNameFileFunc() {
 }
 
 func ExampleDirectoryName_defaultNamespace() {
-	fmt.Println(DirectoryName("output", "myapps", "Deployment"))
-	// Output: output/myapps
+	fmt.Println(DirectoryName("myapps", "Deployment"))
+	// Output: myapps
 }
 
 func ExampleDirectoryName_clusterrole() {
-	fmt.Println(DirectoryName("output", "", "ClusterRole"))
-	// Output: output/_cluster/rbac
+	fmt.Println(DirectoryName("", "ClusterRole"))
+	// Output: _cluster/rbac
 }
 
 func ExampleDirectoryName_crd() {
-	fmt.Println(DirectoryName("output", "", "CustomResourceDefinition"))
-	// Output: output/_cluster/crd
+	fmt.Println(DirectoryName("", "CustomResourceDefinition"))
+	// Output: _cluster/crd
 }

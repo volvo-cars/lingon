@@ -21,14 +21,14 @@ func ExampleImport() {
 	_ = os.RemoveAll(out)
 	defer os.RemoveAll(out)
 	err := kube.Import(
-		kube.WithAppName("tekton"),
-		kube.WithPackageName("tekton"),
-		kube.WithOutputDirectory(out),
-		kube.WithManifestFiles([]string{"testdata/tekton.yaml"}),
-		kube.WithSerializer(defaultSerializer()),
-		kube.WithRemoveAppName(true),
-		kube.WithGroupByKind(true),
-		kube.WithMethods(true),
+		kube.WithImportAppName("tekton"),
+		kube.WithImportPackageName("tekton"),
+		kube.WithImportOutputDirectory(out),
+		kube.WithImportManifestFiles([]string{"testdata/tekton.yaml"}),
+		kube.WithImportSerializer(defaultSerializer()),
+		kube.WithImportRemoveAppName(true),
+		kube.WithImportGroupByKind(true),
+		kube.WithImportAddMethods(true),
 	)
 	if err != nil {
 		panic(fmt.Errorf("import: %w", err))
@@ -70,22 +70,22 @@ func ExampleImport_withWriter() {
 	var buf bytes.Buffer
 
 	err := kube.Import(
-		kube.WithAppName("grafana"),
-		kube.WithPackageName("grafana"),
+		kube.WithImportAppName("grafana"),
+		kube.WithImportPackageName("grafana"),
 		// will prefix all files with path "manifests/"
-		kube.WithOutputDirectory("manifests/"),
-		// we could just use kube.WithManifestFiles([]string{filename})
-		// but this is just an example to show how to use WithReader
-		// and WithWriter
-		kube.WithReader(file),
-		kube.WithWriter(&buf),
+		kube.WithImportOutputDirectory("manifests/"),
+		// we could just use kube.WithImportManifestFiles([]string{filename})
+		// but this is just an example to show how to use WithImportReader
+		// and WithImportWriter
+		kube.WithImportReader(file),
+		kube.WithImportWriter(&buf),
 		// We rename the files to avoid name collisions.
 		// Tip: use the Kind and Name of the resource to
-		// create a unique name.
+		// create a unique name and avoid collision.
 		//
-		// Here, we didn't use WithGroupByKind,
+		// Here, we didn't use WithImportGroupByKind,
 		// each file will contain a single resource.
-		kube.WithNameFileFunc(
+		kube.WithImportNameFileFunc(
 			func(m kubeutil.Metadata) string {
 				return fmt.Sprintf(
 					"%s-%s.go",
@@ -99,7 +99,7 @@ func ExampleImport_withWriter() {
 		panic("failed to import")
 	}
 
-	// the output containg in bytes.Buffer is in the txtar format
+	// the output contained in bytes.Buffer is in the txtar format
 	// for more details, see https://pkg.go.dev/golang.org/x/tools/txtar
 	ar := txtar.Parse(buf.Bytes())
 

@@ -14,51 +14,65 @@ import (
 )
 
 // ImportOption is used to configure conversion from kubernetes objects in YAML to Go code
+// Helpers function are provided to those field, see WithExportXXX functions
 type ImportOption func(*jamel)
 
-// option is used to configure the jamel, all fields have sane defaults
-// Helpers function are provided to those field, see WithXXX functions
-type option struct {
+// importOption is used to configure the jamel, all fields have sane defaults
+// Helpers function are provided to those field, see WithImportXXX functions
+type importOption struct {
 	// AppName is the name of the application, used to name the generated struct
 	// ex: "tekton"
 	AppName string
+
 	// OutputPkgName is the name of the package where the generated code will be written (default: same as AppName)
 	// ex: "tekton" but not "github.com/xxx/tekton"
 	OutputPkgName string
+
 	// OutputDir is the directory where the generated code will be written (default: out)
 	// ex: "./tekton"
 	OutputDir string
+
 	// ManifestFiles is used to read the kubernetes objects from files, exclusive of ManifestReader
 	// ex: []string{"./manifests/webapp1.yaml", "./manifests/webapp2.yaml"}
 	ManifestFiles []string
+
 	// ManifestReader is used to read the kubernetes objects from, exclusive of ManifestFiles
 	// ex: os.Stdout, bytes.Buffer
 	ManifestReader io.Reader
+
 	// GoCodeWriter is used to write the generated Go code in txtar format
 	// for more info on txtar format see: https://pkg.go.dev/golang.org/x/tools/txtar
 	// Note that we are using https://github.com/rogpeppe/go-internal/blob/master/txtar/ instead
 	// ex: os.Stdout
 	GoCodeWriter io.Writer
+
 	// Serializer is used to decode the kubernetes objects
 	// ex: scheme.Codecs.UniversalDeserializer()
 	Serializer runtime.Decoder
+
 	// NameFieldFunc formats the name of the field in the application struct
 	NameFieldFunc func(object kubeutil.Metadata) string
+
 	// NameVarFunc formats the name of the variable containing the kubernetes object
 	NameVarFunc func(object kubeutil.Metadata) string
+
 	// NameFileFunc formats the name of the file containing the kubernetes object
 	NameFileFunc func(object kubeutil.Metadata) string
+
 	// RemoveAppName flag removes the app name from the object name
 	RemoveAppName bool
+
 	// GroupByKind flag groups the objects by kind
 	GroupByKind bool
+
 	// AddMethods flag adds convenience methods to the generated code
 	AddMethods bool
+
 	// RedactSecrets flag removes the value, but not the keys, of kubernetes secrets
 	RedactSecrets bool
 }
 
-var defaultOpts = option{
+var importDefaultOpts = importOption{
 	AppName:        "",
 	OutputPkgName:  "",
 	ManifestFiles:  make([]string, 0),
@@ -75,7 +89,7 @@ var defaultOpts = option{
 	RedactSecrets:  false,
 }
 
-// WithSerializer sets the serializer to decode the kubernetes objects
+// WithImportSerializer sets the serializer [runtime.Decoder] to decode the kubernetes objects
 //
 // Usage:
 //
@@ -87,8 +101,8 @@ var defaultOpts = option{
 //		_ = apiextensions.AddToScheme(scheme.Scheme)
 //		return scheme.Codecs.UniversalDeserializer()
 //	}
-//	_, _ := kube.Import(WithSerializer(defaultSerializer()))
-func WithSerializer(s runtime.Decoder) ImportOption {
+//	_, _ := kube.Import(WithImportSerializer(defaultSerializer()))
+func WithImportSerializer(s runtime.Decoder) ImportOption {
 	return func(j *jamel) {
 		j.o.Serializer = s
 	}
@@ -98,26 +112,26 @@ func WithSerializer(s runtime.Decoder) ImportOption {
 // NAMES (field, var, file)
 //
 
-// WithAppName sets the application name for the generated code.
+// WithImportAppName sets the application name for the generated code.
 // This is used to name the generated struct.
 // ex: "tekton"
 //
 // Note: the name can be used to name the package if none is defined,
-// see WithPackageName
-func WithAppName(name string) ImportOption {
+// see WithImportPackageName
+func WithImportAppName(name string) ImportOption {
 	return func(j *jamel) {
 		j.o.AppName = name
 	}
 }
 
-// WithPackageName sets the package name for the generated code
+// WithImportPackageName sets the package name for the generated code
 // Note that the package name cannot contain a dash, it will panic otherwise.
 //
 // ex: "tekton" but not "github.com/xxx/tekton"
 //
 //	package tekton
 //	...
-func WithPackageName(name string) ImportOption {
+func WithImportPackageName(name string) ImportOption {
 	if strings.Contains(name, "-") {
 		panic("package name cannot contain a dash")
 	}
@@ -126,17 +140,17 @@ func WithPackageName(name string) ImportOption {
 	}
 }
 
-// WithRemoveAppName tries to remove the name of the application from the object name
-func WithRemoveAppName(b bool) ImportOption {
+// WithImportRemoveAppName tries to remove the name of the application from the object name.
+func WithImportRemoveAppName(b bool) ImportOption {
 	return func(j *jamel) {
 		j.o.RemoveAppName = b
 	}
 }
 
-// WithNameFieldFunc sets the function to format the name of the field
-// in the application struct (containing kube.App)
+// WithImportNameFieldFunc sets the function to format the name of the field
+// in the application struct (containing [kube.App]).
 //
-// default: NameFieldFunc
+// default: [NameFieldFunc]
 //
 // TIP: ALWAYS put the kind somewhere in the name to avoid collisions
 //
@@ -145,16 +159,16 @@ func WithRemoveAppName(b bool) ImportOption {
 //		// ...
 //		ThisIsTheNameFieldCM  *corev1.ConfigMap
 //	}
-func WithNameFieldFunc(f func(object kubeutil.Metadata) string) ImportOption {
+func WithImportNameFieldFunc(f func(object kubeutil.Metadata) string) ImportOption {
 	return func(j *jamel) {
 		j.o.NameFieldFunc = f
 	}
 }
 
-// WithNameVarFunc sets the function to format the name of the variable
-// containing the kubernetes object
+// WithImportNameVarFunc sets the function to format the name of the variable
+// containing the kubernetes object.
 //
-// default: NameVarFunc
+// default: [NameVarFunc]
 //
 //	var ThisIsTheNameOfTheVar = &appsv1.Deployment{...}
 //
@@ -166,22 +180,23 @@ func WithNameFieldFunc(f func(object kubeutil.Metadata) string) ImportOption {
 //			...
 //		}
 //	}
-func WithNameVarFunc(f func(object kubeutil.Metadata) string) ImportOption {
+func WithImportNameVarFunc(f func(object kubeutil.Metadata) string) ImportOption {
 	return func(j *jamel) {
 		j.o.NameVarFunc = f
 	}
 }
 
-// WithNameFileFunc sets the function to format the name of the file
-// containing the kubernetes object
-// default: NameFileFunc
+// WithImportNameFileFunc sets the function to format the name of the file
+// containing the kubernetes object.
+//
+// default: [NameFileFunc]
 //
 // Usage:
 //
-//	WithNameFileFunc(func(m kubeutil.Metadata) string {
+//	WithImportNameFileFunc(func(m kubeutil.Metadata) string {
 //		return fmt.Sprintf("%s-%s.go", strings.ToLower(m.Kind),	m.Meta.Name)
 //	})
-func WithNameFileFunc(f func(object kubeutil.Metadata) string) ImportOption {
+func WithImportNameFileFunc(f func(object kubeutil.Metadata) string) ImportOption {
 	return func(j *jamel) {
 		j.o.NameFileFunc = f
 	}
@@ -191,8 +206,8 @@ func WithNameFileFunc(f func(object kubeutil.Metadata) string) ImportOption {
 //  INPUT (files, reader)
 //
 
-// WithManifestFiles sets the manifest files to read the kubernetes objects from
-func WithManifestFiles(files []string) ImportOption {
+// WithImportManifestFiles sets the manifest files to read the kubernetes objects from.
+func WithImportManifestFiles(files []string) ImportOption {
 	return func(j *jamel) {
 		j.useReader = false
 		for _, f := range files {
@@ -204,22 +219,19 @@ func WithManifestFiles(files []string) ImportOption {
 	}
 }
 
-// WithReadStdIn reads the kubernetes objects from stdin
-func WithReadStdIn() ImportOption {
+// WithImportReadStdIn reads the kubernetes objects from [os.Stdin].
+func WithImportReadStdIn() ImportOption {
 	return func(j *jamel) {
 		j.useReader = true
 		j.o.ManifestReader = os.Stdin
 	}
 }
 
-// WithReader reads the kubernetes manifest (YAML) from a io.Reader
-// Note that this is exclusive with WithManifestFiles
+// WithImportReader reads the kubernetes manifest (YAML) from a [io.Reader]
+// Note that this is exclusive with [WithImportManifestFiles]
 //
-// If you want to read from stdin use WithReadStdIn
-// or :
-//
-//	_, _ := kube.Import(WithReader(os.Stdin))
-func WithReader(r io.Reader) ImportOption {
+// If you want to read from [os.Stdin] use [WithImportReadStdIn].
+func WithImportReader(r io.Reader) ImportOption {
 	return func(j *jamel) {
 		j.useReader = true
 		j.o.ManifestReader = r
@@ -235,42 +247,42 @@ func WithReader(r io.Reader) ImportOption {
 //   - methods
 //
 
-// WithGroupByKind groups the kubernetes objects by kind in the same file
+// WithImportGroupByKind groups the kubernetes objects by kind in the same file
 //
 // if there are 10 ConfigMaps and 5 Secrets, it will generate 2 files:
 //   - configmaps.go
 //   - secrets.go
 //
 // as opposed to 15 files.
-func WithGroupByKind(b bool) ImportOption {
+func WithImportGroupByKind(b bool) ImportOption {
 	return func(j *jamel) {
 		j.o.GroupByKind = b
 	}
 }
 
-// WithWriter writes the generated Go code to io.Writer
-func WithWriter(w io.Writer) ImportOption {
+// WithImportWriter writes the generated Go code to [io.Writer].
+func WithImportWriter(w io.Writer) ImportOption {
 	return func(j *jamel) {
 		j.useWriter = true
 		j.o.GoCodeWriter = w
 	}
 }
 
-// WithOutputDirectory sets the output directory for the generated code
-func WithOutputDirectory(name string) ImportOption {
+// WithImportOutputDirectory sets the output directory for the generated code.
+func WithImportOutputDirectory(name string) ImportOption {
 	return func(j *jamel) {
 		j.o.OutputDir = name
 	}
 }
 
-// WithRedactSecrets removes the value, but not the keys, of kubernetes secrets
-func WithRedactSecrets(b bool) ImportOption {
+// WithImportRedactSecrets removes the value, but not the keys, of kubernetes secrets.
+func WithImportRedactSecrets(b bool) ImportOption {
 	return func(j *jamel) {
 		j.o.RedactSecrets = b
 	}
 }
 
-// WithMethods adds convenience methods to the generated code
+// WithImportAddMethods adds convenience methods to the generated code
 //
 //	// Apply applies the kubernetes objects to the cluster
 //	func (a *Tekton) Apply(ctx context.Context) error
@@ -278,9 +290,9 @@ func WithRedactSecrets(b bool) ImportOption {
 //	// Export exports the kubernetes objects to YAML files in the given directory
 //	func (a *Tekton) Export(dir string) error
 //
-//	// Apply applies the kubernetes objects contained in Exporter to the cluster
+//	// Apply applies the kubernetes objects contained in [Exporter] to the cluster
 //	func Apply(ctx context.Context, km kube.Exporter) error
-func WithMethods(b bool) ImportOption {
+func WithImportAddMethods(b bool) ImportOption {
 	return func(j *jamel) {
 		j.o.AddMethods = b
 	}

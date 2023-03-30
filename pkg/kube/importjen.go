@@ -112,7 +112,8 @@ func stmtNewApp(
 	)
 }
 
-// addMethods adds the Apply and Export methods to the struct in the app.go file
+// addMethods adds the Apply and Export methods to the struct in the app.go file.
+// it modifies the file in place and also returns it.
 func addMethods(f *jen.File, nameStruct string) *jen.File {
 	// Apply
 	f.Comment("Apply applies the kubernetes objects to the cluster").Line().
@@ -139,7 +140,13 @@ func addMethods(f *jen.File, nameStruct string) *jen.File {
 			func(g *jen.Group) {
 				g.Return(
 					jen.Qual(kubeAppPkgPath, "Export").
-						Call(jen.Id("a"), jen.Id("dir")),
+						Call(
+							jen.Id("a"),
+							jen.Qual(
+								kubeAppPkgPath,
+								"WithExportOutputDirectory",
+							).Call(jen.Id("dir")),
+						),
 				)
 			},
 		)
@@ -181,6 +188,8 @@ func stmtApplyFunc() *jen.Statement {
 		jen.Id("cmd").Dot("Stdout").Op("=").Qual("os", "Stdout"),
 		jen.Id("cmd").Dot("Stderr").Op("=").Qual("os", "Stderr"),
 		jen.Line(),
+
+		// export the manifest to the command StdIn in a goroutine
 		jen.Go().Func().Params().Block(
 			jen.Defer().Func().Params().Block(
 				jen.Err().Op("=").Qual(
@@ -194,10 +203,11 @@ func stmtApplyFunc() *jen.Statement {
 			jen.If(
 				jen.Id("errEW").Op(":=").Qual(
 					kubeAppPkgPath,
-					"ExportWriter",
+					"Export",
 				).Call(
 					jen.Id("km"),
-					jen.Id("stdin"),
+					jen.Qual(kubeAppPkgPath, "WithExportWriter").
+						Call(jen.Id("stdin")),
 				).Op(";").Id("errEW").Op("!=").Nil(),
 			).Block(
 				jen.Err().Op("=").Qual("errors", "Join").Call(
@@ -206,8 +216,13 @@ func stmtApplyFunc() *jen.Statement {
 				),
 			),
 		).Call(),
+
 		jen.Line(),
-		jen.If(jen.Id("errS").Op(":=").Id("cmd").Dot("Start").Call().Op(";").Id("errS").Op("!=").Nil()).Block(
+		jen.If(
+			jen.Id("errS").Op(":=").Id("cmd").
+				Dot("Start").Call().Op(";").Id("errS").
+				Op("!=").Nil(),
+		).Block(
 			jen.Return(
 				jen.Qual("errors", "Join").Call(
 					jen.Err(),

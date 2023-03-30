@@ -108,7 +108,7 @@ func (j *jamel) renderFileByName() error {
 		}
 		_, err := j.buf.Write([]byte("-- " + filename + " --\n"))
 		if err != nil {
-			return err
+			return fmt.Errorf("write: %w", err)
 		}
 
 		err = file.Render(&j.buf)
@@ -172,7 +172,7 @@ func (j *jamel) save() error {
 
 	ar := txtar.Parse(j.buf.Bytes())
 	if len(ar.Files) == 0 {
-		return fmt.Errorf("no files to write")
+		return fmt.Errorf("no file to write")
 	}
 	if err := writeTxtar(ar); err != nil {
 		return fmt.Errorf("write txtar: %w", err)
@@ -204,7 +204,7 @@ func writeTxtar(ar *txtar.Archive) error {
 	// each files path is already prefixed with the output dir, using "." as
 	// all the files will be written in relation to it.
 	if err = txtar.Write(ar, "."); err != nil {
-		return err
+		return fmt.Errorf("write: %w", err)
 	}
 	return nil
 }

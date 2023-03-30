@@ -65,7 +65,7 @@ func contains(e string, s []string) bool {
 	return false
 }
 
-// ReadManifest reads a yaml file and splits it into a list of yaml documents
+// ReadManifest reads a YAML file and splits it into a list of YAML documents
 func ReadManifest(filePath string) ([]string, error) {
 	e := filepath.Ext(filePath)
 	if e != ".yaml" && e != ".yml" {
@@ -82,7 +82,7 @@ func ReadManifest(filePath string) ([]string, error) {
 	return splitYaml, nil
 }
 
-// splitManifest splits a yaml file into a list of yaml documents
+// splitManifest splits a YAML contained in [io.Reader] into a list of string containing YAML documents
 func splitManifest(r io.Reader) ([]string, error) {
 	scanner := bufio.NewScanner(r)
 	var content []string

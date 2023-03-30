@@ -5,36 +5,21 @@ package kube
 
 import (
 	"fmt"
+	"path/filepath"
 	"reflect"
 
+	"github.com/rogpeppe/go-internal/txtar"
+	"github.com/veggiemonk/strcase"
+	"github.com/volvo-cars/lingon/pkg/kubeutil"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	kyaml "sigs.k8s.io/yaml"
 )
 
-// encodeApp encodes kube.App to a map of YAML manifests.
-// The keys are the struct field names.
-func encodeApp(km Exporter) (map[string][]byte, error) {
-	res := make(map[string][]byte)
-	rv := reflect.ValueOf(km)
-
-	if rv.Kind() == reflect.Ptr {
-		rv = rv.Elem()
-	}
-	if rv.Type().Kind() != reflect.Struct {
-		return nil, fmt.Errorf("cannot encode non-struct type: %v", rv)
-	}
-
-	if err := encodeStruct(rv, "", res); err != nil {
-		return nil, err
-	}
-
-	return res, nil
-}
-
-func encodeStruct(
+// encodeStruct encodes [kube.App] struct to a [txtar.Archive].
+func (g *goky) encodeStruct(
 	rv reflect.Value,
 	prefix string, // prefix is used for nested structs
-	res map[string][]byte,
 ) error {
 	if rv.Type().Kind() != reflect.Struct {
 		return fmt.Errorf("cannot encode non-struct type: %v", rv)
@@ -45,16 +30,17 @@ func encodeStruct(
 		fv := rv.Field(i)
 
 		if sf.Anonymous {
-			if err := encodeStruct(fv, sf.Name, res); err != nil {
+			if err := g.encodeStruct(fv, sf.Name); err != nil {
 				return err
 			}
 			continue
 		}
 
 		fieldVal := rv.FieldByName(sf.Name)
-		switch v := fieldVal.Interface().(type) {
+		switch t := fieldVal.Interface().(type) {
 		case runtime.Object:
-			if reflect.ValueOf(v).IsZero() {
+			v := reflect.ValueOf(t)
+			if v.IsZero() || v.IsNil() {
 				return fmt.Errorf(
 					"%w: %q of type %q",
 					ErrFieldMissing,
@@ -62,19 +48,49 @@ func encodeStruct(
 					sf.Type,
 				)
 			}
-			r := rank(v)
 
+			switch sec := t.(type) {
+			case *corev1.Secret:
+				if g.o.SecretHook != nil {
+					if err := g.o.SecretHook(sec); err != nil {
+						return err
+					}
+					// skip the secret if the hook is used
+					continue
+				}
+			default:
+
+			}
 			// It works by first marshalling to JSON, so no `yaml` tag necessary
-			b, err := kyaml.Marshal(v)
+			b, err := kyaml.Marshal(t)
 			if err != nil {
-				return fmt.Errorf(
-					"error marshaling field %s: %w",
-					sf.Name,
-					err,
-				)
+				return fmt.Errorf("error marshaling field %s: %w", sf.Name, err)
 			}
 
-			res[r+"_"+prefix+sf.Name] = b
+			// Extract metadata to get the name of the file
+			m, err := kubeutil.ExtractMetadata(b)
+			if err != nil {
+				return fmt.Errorf("extract metadata: %w", err)
+			}
+
+			name := fmt.Sprintf(
+				"%d_%s.yaml",
+				rankOfKind(m.Kind),
+				strcase.Snake(prefix)+strcase.Snake(sf.Name),
+			)
+
+			if g.o.NameFileFunc != nil {
+				name = g.o.NameFileFunc(m)
+			}
+			if g.o.Explode {
+				dn := DirectoryName(m.Meta.Namespace, m.Kind)
+				name = filepath.Join(dn, name)
+			}
+			if g.o.OutputDir != "" {
+				name = filepath.Join(g.o.OutputDir, name)
+			}
+
+			g.ar.Files = append(g.ar.Files, txtar.File{Name: name, Data: b})
 
 		default:
 			// Not sure if this should be an error, but rather be explicit at this point
@@ -86,5 +102,6 @@ func encodeStruct(
 			)
 		}
 	}
+
 	return nil
 }

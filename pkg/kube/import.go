@@ -29,7 +29,7 @@ type jamel struct {
 	objectsMeta       map[string]kubeutil.Metadata // obj name => obj meta
 	// nameFieldVar maps object name to object variable name
 	nameFieldVar map[string]string
-	o            option       // options
+	o            importOption // options
 	buf          bytes.Buffer // buffer to write the generated code to
 	useReader    bool         // if true, read from io.Reader
 	useWriter    bool         // if true, write to io.Writer
@@ -57,19 +57,19 @@ func newImporter(
 		kubeAppStructCode: make(map[string]*jen.Statement),
 		objectsMeta:       make(map[string]kubeutil.Metadata),
 		nameFieldVar:      make(map[string]string),
-		o:                 defaultOpts,
+		o:                 importDefaultOpts,
 	}
 	// options
 	for _, opt := range opts {
 		opt(j)
 	}
 
-	gatekeeperOptions(&j.o)
+	gatekeeperImportOptions(&j.o)
 
 	return j
 }
 
-func gatekeeperOptions(o *option) {
+func gatekeeperImportOptions(o *importOption) {
 	if len(o.OutputPkgName) == 0 {
 		o.OutputPkgName = strings.ReplaceAll(o.AppName, "-", "")
 	}

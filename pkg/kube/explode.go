@@ -12,14 +12,20 @@ import (
 	"github.com/volvo-cars/lingon/pkg/kubeutil"
 )
 
-func Explode(r io.Reader, outDir string) error {
+// Explode reads a YAML manifests from [io.Reader] and writes the objects to files in dir.
+// Each object is written to a file named after the object's kind and name.
+// The file name is prefixed with a number that indicates the rank of the kind.
+// The rank is used to sort the files in the directory and prioritize the order
+// in which they are applied. For example, a namespace should be applied before
+// any other object in the namespace.
+func Explode(r io.Reader, dir string) error {
 	content, err := splitManifest(r)
 	if err != nil {
 		return fmt.Errorf("explode: %w", err)
 	}
 
-	if outDir == "" {
-		outDir = "out"
+	if dir == "" {
+		dir = "out"
 	}
 
 	for _, obj := range content {
@@ -32,8 +38,9 @@ func Explode(r io.Reader, outDir string) error {
 		if err != nil {
 			return fmt.Errorf("extract metadata: %w", err)
 		}
-		dir := DirectoryName(outDir, m.Meta.Namespace, m.Kind)
-		if err := os.MkdirAll(dir, 0o755); err != nil {
+		dn := DirectoryName(m.Meta.Namespace, m.Kind)
+		out := filepath.Join(dir, dn)
+		if err := os.MkdirAll(out, 0o755); err != nil {
 			return err
 		}
 		fn := fmt.Sprintf(
@@ -41,7 +48,7 @@ func Explode(r io.Reader, outDir string) error {
 			rankOfKind(m.Kind),
 			basicName(m.Meta.Name, m.Kind),
 		)
-		outName := filepath.Join(dir, fn)
+		outName := filepath.Join(out, fn)
 		if err := write(obj, outName); err != nil {
 			return fmt.Errorf("explode: write %s: %w", outName, err)
 		}

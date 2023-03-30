@@ -6,31 +6,27 @@ package kube
 import (
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
+	"reflect"
+	"sort"
 	"strings"
 
-	"github.com/veggiemonk/strcase"
+	"github.com/rogpeppe/go-internal/txtar"
 )
 
 var ErrFieldMissing = errors.New("missing")
 
 type goky struct {
-	buf           io.Writer
-	o             exportOption
-	removeSecrets bool
-	explode       bool
-	useWriter     bool
+	ar        *txtar.Archive
+	o         exportOption
+	useWriter bool
 }
 
-func Exportt(km Exporter, opts ...ExportOption) error {
+func Export(km Exporter, opts ...ExportOption) error {
 	g := goky{
-		buf:           os.Stdout,
-		o:             exportDefaultOpts,
-		explode:       false,
-		useWriter:     false,
-		removeSecrets: false,
+		ar: &txtar.Archive{},
+		o:  exportDefaultOpts,
 	}
 	for _, o := range opts {
 		o(&g)
@@ -40,78 +36,59 @@ func Exportt(km Exporter, opts ...ExportOption) error {
 }
 
 func (g *goky) export(km Exporter) error {
-	return export(km, g.o.outputDir, g.o.kustomize)
-}
+	var err error
+	rv := reflect.ValueOf(km)
 
-// ExportWithKustomization exports Exporter
-// containing kubernetes object to yaml files with kustomization.yaml.
-func ExportWithKustomization(km Exporter, outDir string) error {
-	return export(km, outDir, true)
-}
+	if rv.Kind() == reflect.Ptr {
+		rv = rv.Elem()
+	}
+	if rv.Type().Kind() != reflect.Struct {
+		return fmt.Errorf("cannot encode non-struct type: %v", rv)
+	}
 
-// Export exports Exporter (struct containing kube.App) containing kubernetes object to YAML files.
-// The YAML files are written to output directory.
-// For example, see ExportWriter.
-func Export(km Exporter, outDir string) error {
-	return export(km, outDir, false)
-}
-
-// ExportWriter writes kubernetes object in YAML to io.Writer.
-func ExportWriter(km Exporter, w io.Writer) error {
-	manifests, err := encodeApp(km)
-	if err != nil {
+	if err = g.encodeStruct(rv, ""); err != nil {
 		return err
 	}
 
-	for _, k := range orderedKeys(manifests) {
-		m := manifests[k]
-		s := cleanManifest(m)
-		if _, err = w.Write([]byte(s)); err != nil {
-			return fmt.Errorf("export write: %w", err)
-		}
-		if _, err = w.Write([]byte("\n---\n")); err != nil {
-			return fmt.Errorf("export write: %w", err)
-		}
+	if len(g.ar.Files) == 0 {
+		return fmt.Errorf("no file to write")
 	}
 
-	return nil
-}
+	if g.o.Kustomize {
+		// extract the filenames for kustomization.yaml
+		filenames := []string{}
+		for _, f := range g.ar.Files {
+			filenames = append(filenames, f.Name)
+		}
+		// predictable output
+		sort.Strings(filenames)
 
-func export(km Exporter, destDir string, addKustomization bool) error {
-	manifests, err := encodeApp(km)
-	if err != nil {
-		return err
+		// add the kustomization.yaml file
+		k := filepath.Join(g.o.OutputDir, "kustomization.yaml")
+		s := `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:`
+		for _, name := range filenames {
+			s = s + "\n  - " + name
+		}
+		b := []byte(s + "\n")
+		g.ar.Files = append(g.ar.Files, txtar.File{Name: k, Data: b})
 	}
 
-	for name, m := range manifests {
-		if err = os.MkdirAll(destDir, 0o755); err != nil {
-			return fmt.Errorf("mkdir %s: %w", destDir, err)
+	if g.useWriter {
+		if _, err = g.o.ManifestWriter.Write(txtar.Format(g.ar)); err != nil {
+			return fmt.Errorf("write: %w", err)
 		}
-
-		n := strcase.Snake(name) + ".yaml"
-
-		f, err := os.Create(filepath.Join(destDir, n))
-		if err != nil {
-			return fmt.Errorf("create file %s: %w", name, err)
-		}
-
-		s := cleanManifest(m)
-		if _, err = f.WriteString(s); err != nil {
-			return fmt.Errorf("write file %s: %w", name, err)
-		}
-		if err = f.Close(); err != nil {
-			return fmt.Errorf("close file %s: %w", name, err)
-		}
+		return nil
 	}
 
-	if addKustomization {
-		nn := make([]string, 0)
-		for name := range manifests {
-			nn = append(nn, name+".yaml")
-		}
-		if err := kustomization(destDir, nn...); err != nil {
-			return fmt.Errorf("writing kustomize.yaml: %w", err)
-		}
+	if err = os.MkdirAll(g.o.OutputDir, 0o755); err != nil {
+		return fmt.Errorf("mkdir %s: %w", g.o.OutputDir, err)
+	}
+
+	if err = txtar.Write(g.ar, "."); err != nil {
+		return fmt.Errorf("txtar write: %w", err)
 	}
 
 	return err
@@ -132,26 +109,4 @@ var clm = strings.NewReplacer(
 
 func cleanManifest(m []byte) string {
 	return strings.TrimSpace(clm.Replace(string(m)))
-}
-
-func kustomization(out string, files ...string) error {
-	s := `apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-
-resources:`
-	for _, name := range files {
-		s = s + "\n  - " + name
-	}
-
-	f, err := os.Create(filepath.Join(out, "kustomization.yaml"))
-	if err != nil {
-		return err
-	}
-
-	_, err = f.WriteString(s)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

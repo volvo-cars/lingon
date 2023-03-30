@@ -4,13 +4,16 @@
 package kube_test
 
 import (
-	"os"
+	"bytes"
 	"path/filepath"
 	"sort"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/rogpeppe/go-internal/txtar"
 	"github.com/volvo-cars/lingon/pkg/kube"
+	"github.com/volvo-cars/lingon/pkg/kube/testdata/go/tekton"
 	"github.com/volvo-cars/lingon/pkg/kubeutil"
 	tu "github.com/volvo-cars/lingon/pkg/testutil"
 	appsv1 "k8s.io/api/apps/v1"
@@ -19,77 +22,271 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const defaultExportOutputDir = "out/export/"
-
-func TestExportt(t *testing.T) {
-	ebd := newEmbeddedStruct()
-	out := filepath.Join(defaultExportOutputDir, "embeddedstruct")
-	tu.AssertNoError(t, os.RemoveAll(out), "rm out dir")
-	t.Cleanup(
-		func() {
-			tu.AssertNoError(t, os.RemoveAll(out), "rm out dir")
-		},
-	)
-	kube.Exportt(ebd)
-}
+const defaultExportOutputDir = "out/export"
 
 func TestExport(t *testing.T) {
-	ebd := newEmbeddedStruct()
-	out := filepath.Join(defaultExportOutputDir, "embeddedstruct")
-	tu.AssertNoError(t, os.RemoveAll(out), "rm out dir")
-	t.Cleanup(
-		func() {
-			tu.AssertNoError(t, os.RemoveAll(out), "rm out dir")
+	type args struct {
+		Name     string
+		km       kube.Exporter
+		Opts     []kube.ExportOption
+		OutFiles []string
+	}
+	outEBDS := filepath.Join(defaultExportOutputDir, "embeddedstruct")
+	outTekton := filepath.Join(defaultExportOutputDir, "tekton")
+	TT := []args{
+		{
+			Name: "embedded struct",
+			km:   newEmbeddedStruct(),
+			Opts: []kube.ExportOption{
+				kube.WithExportKustomize(true),
+				kube.WithExportOutputDirectory(outEBDS),
+			},
+			OutFiles: []string{
+				"out/export/embeddedstruct/1_iamcr.yaml",
+				"out/export/embeddedstruct/1_iamsa.yaml",
+				"out/export/embeddedstruct/2_iamcrb.yaml",
+				"out/export/embeddedstruct/3_depl.yaml",
+				"out/export/embeddedstruct/3_iamdepl.yaml",
+				"out/export/embeddedstruct/kustomization.yaml",
+			},
 		},
-	)
-	err := kube.Export(ebd, out)
-	tu.AssertNoError(t, err, "failed to import")
-
-	got, err := kube.ListYAMLFiles(out)
-	tu.AssertNoError(t, err, "failed to list go files")
-	sort.Strings(got)
-
-	want := []string{
-		"out/export/embeddedstruct/1_iamcr.yaml",
-		"out/export/embeddedstruct/1_iamsa.yaml",
-		"out/export/embeddedstruct/2_iamcrb.yaml",
-		"out/export/embeddedstruct/3_depl.yaml",
-		"out/export/embeddedstruct/3_iamdepl.yaml",
-	}
-
-	if !cmp.Equal(want, got) {
-		t.Error(cmp.Diff(want, got))
-	}
-}
-
-func TestExportWithKustomization(t *testing.T) {
-	ebd := newEmbeddedStruct()
-
-	out := filepath.Join(defaultExportOutputDir, "embeddedstruct2")
-	tu.AssertNoError(t, os.RemoveAll(out), "rm out dir")
-	t.Cleanup(
-		func() {
-			tu.AssertNoError(t, os.RemoveAll(out), "rm out dir")
+		{
+			Name: "embedded struct explode",
+			km:   newEmbeddedStruct(),
+			Opts: []kube.ExportOption{
+				kube.WithExportExplodeManifests(true),
+				kube.WithExportOutputDirectory(outEBDS),
+			},
+			OutFiles: []string{
+				"out/export/embeddedstruct/_cluster/rbac/1_iamcr.yaml",
+				"out/export/embeddedstruct/_cluster/rbac/2_iamcrb.yaml",
+				"out/export/embeddedstruct/defaultns/1_iamsa.yaml",
+				"out/export/embeddedstruct/defaultns/3_depl.yaml",
+				"out/export/embeddedstruct/defaultns/3_iamdepl.yaml",
+			},
 		},
-	)
-	err := kube.ExportWithKustomization(ebd, out)
-	tu.AssertNoError(t, err, "failed to import")
-
-	got, err := kube.ListYAMLFiles(out)
-	tu.AssertNoError(t, err, "failed to list go files")
-	sort.Strings(got)
-
-	want := []string{
-		"out/export/embeddedstruct2/1_iamcr.yaml",
-		"out/export/embeddedstruct2/1_iamsa.yaml",
-		"out/export/embeddedstruct2/2_iamcrb.yaml",
-		"out/export/embeddedstruct2/3_depl.yaml",
-		"out/export/embeddedstruct2/3_iamdepl.yaml",
-		"out/export/embeddedstruct2/kustomization.yaml",
+		{
+			Name: "embedded struct with name file func",
+			km:   newEmbeddedStruct(),
+			Opts: []kube.ExportOption{
+				kube.WithExportOutputDirectory(outEBDS),
+				kube.WithExportNameFileFunc(
+					func(name *kubeutil.Metadata) string {
+						return strings.ToLower(name.Kind) + "_" + name.Meta.Name + ".yaml"
+					},
+				),
+			},
+			OutFiles: []string{
+				"out/export/embeddedstruct/clusterrole_imthename.yaml",
+				"out/export/embeddedstruct/clusterrolebinding_imthename.yaml",
+				"out/export/embeddedstruct/deployment_anotherimthename.yaml",
+				"out/export/embeddedstruct/deployment_imthename.yaml",
+				"out/export/embeddedstruct/serviceaccount_imthename.yaml",
+			},
+		},
+		{
+			Name: "embedded struct with explode and name file func",
+			km:   newEmbeddedStruct(),
+			Opts: []kube.ExportOption{
+				kube.WithExportOutputDirectory(outEBDS),
+				kube.WithExportExplodeManifests(true),
+				kube.WithExportNameFileFunc(
+					func(name *kubeutil.Metadata) string {
+						return strings.ToLower(name.Kind) + "_" + name.Meta.Name + ".yaml"
+					},
+				),
+			},
+			OutFiles: []string{
+				"out/export/embeddedstruct/_cluster/rbac/clusterrole_imthename.yaml",
+				"out/export/embeddedstruct/_cluster/rbac/clusterrolebinding_imthename.yaml",
+				"out/export/embeddedstruct/defaultns/deployment_anotherimthename.yaml",
+				"out/export/embeddedstruct/defaultns/deployment_imthename.yaml",
+				"out/export/embeddedstruct/defaultns/serviceaccount_imthename.yaml",
+			},
+		},
+		{
+			Name: "tekton",
+			km:   tekton.New(),
+			Opts: []kube.ExportOption{
+				kube.WithExportOutputDirectory(outTekton),
+			},
+			OutFiles: []string{
+				"out/export/tekton/0_pipelines_ns.yaml",
+				"out/export/tekton/0_pipelines_resolvers_ns.yaml",
+				"out/export/tekton/1_aggregate_edit_cr.yaml",
+				"out/export/tekton/1_aggregate_view_cr.yaml",
+				"out/export/tekton/1_clustertasks_dev_crd.yaml",
+				"out/export/tekton/1_customruns_dev_crd.yaml",
+				"out/export/tekton/1_pipelineresources_dev_crd.yaml",
+				"out/export/tekton/1_pipelineruns_dev_crd.yaml",
+				"out/export/tekton/1_pipelines_controller_cluster_access_cr.yaml",
+				"out/export/tekton/1_pipelines_controller_role.yaml",
+				"out/export/tekton/1_pipelines_controller_sa.yaml",
+				"out/export/tekton/1_pipelines_controller_svc.yaml",
+				"out/export/tekton/1_pipelines_controller_tenant_access_cr.yaml",
+				"out/export/tekton/1_pipelines_dev_crd.yaml",
+				"out/export/tekton/1_pipelines_info_role.yaml",
+				"out/export/tekton/1_pipelines_leader_election_role.yaml",
+				"out/export/tekton/1_pipelines_resolvers_namespace_rbac_role.yaml",
+				"out/export/tekton/1_pipelines_resolvers_resolution_request_updates_cr.yaml",
+				"out/export/tekton/1_pipelines_resolvers_sa.yaml",
+				"out/export/tekton/1_pipelines_webhook_cluster_access_cr.yaml",
+				"out/export/tekton/1_pipelines_webhook_role.yaml",
+				"out/export/tekton/1_pipelines_webhook_sa.yaml",
+				"out/export/tekton/1_pipelines_webhook_svc.yaml",
+				"out/export/tekton/1_resolutionrequests_resolution_dev_crd.yaml",
+				"out/export/tekton/1_runs_dev_crd.yaml",
+				"out/export/tekton/1_taskruns_dev_crd.yaml",
+				"out/export/tekton/1_tasks_dev_crd.yaml",
+				"out/export/tekton/1_verificationpolicies_dev_crd.yaml",
+				"out/export/tekton/2_bundleresolver_config_cm.yaml",
+				"out/export/tekton/2_cluster_resolver_config_cm.yaml",
+				"out/export/tekton/2_config_artifact_bucket_cm.yaml",
+				"out/export/tekton/2_config_artifact_pvc_cm.yaml",
+				"out/export/tekton/2_config_defaults_cm.yaml",
+				"out/export/tekton/2_config_leader_election_cm.yaml",
+				"out/export/tekton/2_config_leader_election_cm1.yaml",
+				"out/export/tekton/2_config_logging_cm.yaml",
+				"out/export/tekton/2_config_logging_cm2.yaml",
+				"out/export/tekton/2_config_observability_cm.yaml",
+				"out/export/tekton/2_config_observability_cm3.yaml",
+				"out/export/tekton/2_config_registry_cert_cm.yaml",
+				"out/export/tekton/2_config_spire_cm.yaml",
+				"out/export/tekton/2_config_trusted_resources_cm.yaml",
+				"out/export/tekton/2_feature_flags_cm.yaml",
+				"out/export/tekton/2_git_resolver_config_cm.yaml",
+				"out/export/tekton/2_hubresolver_config_cm.yaml",
+				"out/export/tekton/2_pipelines_controller_cluster_access_crb.yaml",
+				"out/export/tekton/2_pipelines_controller_leaderelection_rb.yaml",
+				"out/export/tekton/2_pipelines_controller_rb.yaml",
+				"out/export/tekton/2_pipelines_controller_tenant_access_crb.yaml",
+				"out/export/tekton/2_pipelines_info_cm.yaml",
+				"out/export/tekton/2_pipelines_info_rb.yaml",
+				"out/export/tekton/2_pipelines_resolvers_crb.yaml",
+				"out/export/tekton/2_pipelines_resolvers_namespace_rbac_rb.yaml",
+				"out/export/tekton/2_pipelines_webhook_cluster_access_crb.yaml",
+				"out/export/tekton/2_pipelines_webhook_leaderelection_rb.yaml",
+				"out/export/tekton/2_pipelines_webhook_rb.yaml",
+				"out/export/tekton/2_resolvers_feature_flags_cm.yaml",
+				"out/export/tekton/2_webhook_certs_secrets.yaml",
+				"out/export/tekton/3_pipelines_controller_deploy.yaml",
+				"out/export/tekton/3_pipelines_remote_resolvers_deploy.yaml",
+				"out/export/tekton/3_pipelines_webhook_deploy.yaml",
+				"out/export/tekton/4_config_webhook_pipeline_dev_validatingwebhookconfigurations.yaml",
+				"out/export/tekton/4_pipelines_webhook_hpa.yaml",
+				"out/export/tekton/4_validation_webhook_pipeline_dev_validatingwebhookconfigurations.yaml",
+				"out/export/tekton/4_webhook_pipeline_dev_mutatingwebhookconfigurations.yaml",
+			},
+		},
+		{
+			Name: "tekton",
+			km:   tekton.New(),
+			Opts: []kube.ExportOption{
+				kube.WithExportOutputDirectory(outTekton),
+				kube.WithExportKustomize(true),
+				kube.WithExportExplodeManifests(true),
+				kube.WithExportSecretHook(
+					func(s *corev1.Secret) error {
+						return nil
+					},
+				),
+			},
+			OutFiles: []string{
+				// should not have any secrets since we use the secret hook
+				"out/export/tekton/_cluster/crd/1_clustertasks_dev_crd.yaml",
+				"out/export/tekton/_cluster/crd/1_customruns_dev_crd.yaml",
+				"out/export/tekton/_cluster/crd/1_pipelineresources_dev_crd.yaml",
+				"out/export/tekton/_cluster/crd/1_pipelineruns_dev_crd.yaml",
+				"out/export/tekton/_cluster/crd/1_pipelines_dev_crd.yaml",
+				"out/export/tekton/_cluster/crd/1_resolutionrequests_resolution_dev_crd.yaml",
+				"out/export/tekton/_cluster/crd/1_runs_dev_crd.yaml",
+				"out/export/tekton/_cluster/crd/1_taskruns_dev_crd.yaml",
+				"out/export/tekton/_cluster/crd/1_tasks_dev_crd.yaml",
+				"out/export/tekton/_cluster/crd/1_verificationpolicies_dev_crd.yaml",
+				"out/export/tekton/_cluster/namespace/0_pipelines_ns.yaml",
+				"out/export/tekton/_cluster/namespace/0_pipelines_resolvers_ns.yaml",
+				"out/export/tekton/_cluster/rbac/1_aggregate_edit_cr.yaml",
+				"out/export/tekton/_cluster/rbac/1_aggregate_view_cr.yaml",
+				"out/export/tekton/_cluster/rbac/1_pipelines_controller_cluster_access_cr.yaml",
+				"out/export/tekton/_cluster/rbac/1_pipelines_controller_tenant_access_cr.yaml",
+				"out/export/tekton/_cluster/rbac/1_pipelines_resolvers_resolution_request_updates_cr.yaml",
+				"out/export/tekton/_cluster/rbac/1_pipelines_webhook_cluster_access_cr.yaml",
+				"out/export/tekton/_cluster/rbac/2_pipelines_controller_cluster_access_crb.yaml",
+				"out/export/tekton/_cluster/rbac/2_pipelines_controller_tenant_access_crb.yaml",
+				"out/export/tekton/_cluster/rbac/2_pipelines_resolvers_crb.yaml",
+				"out/export/tekton/_cluster/rbac/2_pipelines_webhook_cluster_access_crb.yaml",
+				"out/export/tekton/_cluster/webhook/4_config_webhook_pipeline_dev_validatingwebhookconfigurations.yaml",
+				"out/export/tekton/_cluster/webhook/4_validation_webhook_pipeline_dev_validatingwebhookconfigurations.yaml",
+				"out/export/tekton/_cluster/webhook/4_webhook_pipeline_dev_mutatingwebhookconfigurations.yaml",
+				"out/export/tekton/kustomization.yaml",
+				"out/export/tekton/tekton-pipelines-resolvers/1_pipelines_resolvers_namespace_rbac_role.yaml",
+				"out/export/tekton/tekton-pipelines-resolvers/1_pipelines_resolvers_sa.yaml",
+				"out/export/tekton/tekton-pipelines-resolvers/2_bundleresolver_config_cm.yaml",
+				"out/export/tekton/tekton-pipelines-resolvers/2_cluster_resolver_config_cm.yaml",
+				"out/export/tekton/tekton-pipelines-resolvers/2_config_leader_election_cm1.yaml",
+				"out/export/tekton/tekton-pipelines-resolvers/2_config_logging_cm2.yaml",
+				"out/export/tekton/tekton-pipelines-resolvers/2_config_observability_cm3.yaml",
+				"out/export/tekton/tekton-pipelines-resolvers/2_git_resolver_config_cm.yaml",
+				"out/export/tekton/tekton-pipelines-resolvers/2_hubresolver_config_cm.yaml",
+				"out/export/tekton/tekton-pipelines-resolvers/2_pipelines_resolvers_namespace_rbac_rb.yaml",
+				"out/export/tekton/tekton-pipelines-resolvers/2_resolvers_feature_flags_cm.yaml",
+				"out/export/tekton/tekton-pipelines-resolvers/3_pipelines_remote_resolvers_deploy.yaml",
+				"out/export/tekton/tekton-pipelines/1_pipelines_controller_role.yaml",
+				"out/export/tekton/tekton-pipelines/1_pipelines_controller_sa.yaml",
+				"out/export/tekton/tekton-pipelines/1_pipelines_controller_svc.yaml",
+				"out/export/tekton/tekton-pipelines/1_pipelines_info_role.yaml",
+				"out/export/tekton/tekton-pipelines/1_pipelines_leader_election_role.yaml",
+				"out/export/tekton/tekton-pipelines/1_pipelines_webhook_role.yaml",
+				"out/export/tekton/tekton-pipelines/1_pipelines_webhook_sa.yaml",
+				"out/export/tekton/tekton-pipelines/1_pipelines_webhook_svc.yaml",
+				"out/export/tekton/tekton-pipelines/2_config_artifact_bucket_cm.yaml",
+				"out/export/tekton/tekton-pipelines/2_config_artifact_pvc_cm.yaml",
+				"out/export/tekton/tekton-pipelines/2_config_defaults_cm.yaml",
+				"out/export/tekton/tekton-pipelines/2_config_leader_election_cm.yaml",
+				"out/export/tekton/tekton-pipelines/2_config_logging_cm.yaml",
+				"out/export/tekton/tekton-pipelines/2_config_observability_cm.yaml",
+				"out/export/tekton/tekton-pipelines/2_config_registry_cert_cm.yaml",
+				"out/export/tekton/tekton-pipelines/2_config_spire_cm.yaml",
+				"out/export/tekton/tekton-pipelines/2_config_trusted_resources_cm.yaml",
+				"out/export/tekton/tekton-pipelines/2_feature_flags_cm.yaml",
+				"out/export/tekton/tekton-pipelines/2_pipelines_controller_leaderelection_rb.yaml",
+				"out/export/tekton/tekton-pipelines/2_pipelines_controller_rb.yaml",
+				"out/export/tekton/tekton-pipelines/2_pipelines_info_cm.yaml",
+				"out/export/tekton/tekton-pipelines/2_pipelines_info_rb.yaml",
+				"out/export/tekton/tekton-pipelines/2_pipelines_webhook_leaderelection_rb.yaml",
+				"out/export/tekton/tekton-pipelines/2_pipelines_webhook_rb.yaml",
+				"out/export/tekton/tekton-pipelines/3_pipelines_controller_deploy.yaml",
+				"out/export/tekton/tekton-pipelines/3_pipelines_webhook_deploy.yaml",
+				"out/export/tekton/tekton-pipelines/4_pipelines_webhook_hpa.yaml",
+			},
+		},
 	}
 
-	if !cmp.Equal(want, got) {
-		t.Error(cmp.Diff(want, got))
+	for _, tt := range TT {
+		tc := tt
+		t.Run(
+			tt.Name, func(t *testing.T) {
+				t.Parallel()
+				var buf bytes.Buffer
+				//nolint:gocritic
+				opts := append(
+					tc.Opts,
+					kube.WithExportWriter(&buf),
+				)
+				err := kube.Export(tc.km, opts...)
+				tu.AssertNoError(t, err, "failed to import")
+				ar := txtar.Parse(buf.Bytes())
+				got := make([]string, 0, len(ar.Files))
+				for _, f := range ar.Files {
+					got = append(got, f.Name)
+				}
+				sort.Strings(got)
+				want := tc.OutFiles
+				if !cmp.Equal(want, got) {
+					t.Error(tu.Diff(want, got))
+				}
+			},
+		)
 	}
 }
 
@@ -107,7 +304,7 @@ type EmbedStruct struct {
 	Depl *appsv1.Deployment
 }
 
-var name = "fyaml"
+var name = "imthename"
 
 var labels = map[string]string{
 	"app": name,

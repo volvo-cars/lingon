@@ -14,7 +14,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// NameVarFunc returns the name of the variable containing the imported kubernetes object
+// NameVarFunc returns the name of the variable containing the imported kubernetes object.
+//
 // TIP: ALWAYS put the kind somewhere in the name to avoid collisions
 func NameVarFunc(m kubeutil.Metadata) string {
 	bn := basicName(m.Meta.Name, m.Kind)
@@ -28,7 +29,7 @@ func NameVarFunc(m kubeutil.Metadata) string {
 	return strcase.Pascal(bn)
 }
 
-// NameFieldFunc returns the name of the field in the App struct
+// NameFieldFunc returns the name of the field in the [App] struct
 func NameFieldFunc(m kubeutil.Metadata) string {
 	bn := basicName(m.Meta.Name, m.Kind)
 	b, a, found := strings.Cut(bn, "_")
@@ -111,7 +112,7 @@ func shortKind(s string) string {
 	return o.ShortName
 }
 
-// rank returns an int denoting the priority (or rank) of the given object
+// rank returns a number as a string denoting the priority (or rank) of the given object
 // see rankOfKind for more details.
 func rank(o runtime.Object) string {
 	if o == nil || o.GetObjectKind() == nil {
@@ -156,28 +157,28 @@ const (
 )
 
 // DirectoryName returns the directory name for the given namespace and kind
-func DirectoryName(out, ns, kind string) string {
+func DirectoryName(ns, kind string) string {
 	ko, ok := api.KAPI.ByKind(kind)
 	if !ok || ko.Namespaced {
 		if ns == "" {
 			ns = notNamespaced
 		}
-		return filepath.Join(out, ns)
+		return ns
 	}
 
 	// cluster scoped
 	switch kind {
 	case "Namespace":
-		return filepath.Join(out, clusterResourceDir, dirNS)
+		return filepath.Join(clusterResourceDir, dirNS)
 	case "ClusterRole", "ClusterRoleBinding":
-		return filepath.Join(out, clusterResourceDir, dirRBAC)
+		return filepath.Join(clusterResourceDir, dirRBAC)
 	case "MutatingWebhookConfiguration", "ValidatingWebhookConfiguration":
-		return filepath.Join(out, clusterResourceDir, dirWH)
+		return filepath.Join(clusterResourceDir, dirWH)
 	case "PersistentVolume":
-		return filepath.Join(out, clusterResourceDir, dirST)
+		return filepath.Join(clusterResourceDir, dirST)
 	case "CustomResourceDefinition":
-		return filepath.Join(out, clusterResourceDir, dirCRD)
+		return filepath.Join(clusterResourceDir, dirCRD)
 	default:
-		return filepath.Join(out, clusterResourceDir)
+		return clusterResourceDir
 	}
 }

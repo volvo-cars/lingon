@@ -5,9 +5,13 @@ package kube
 
 import (
 	"errors"
+	"reflect"
+	"sort"
 	"testing"
 
+	"github.com/rogpeppe/go-internal/txtar"
 	"github.com/volvo-cars/lingon/pkg/kubeutil"
+	tu "github.com/volvo-cars/lingon/pkg/testutil"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -15,45 +19,100 @@ import (
 )
 
 func TestEncode_EmptyField(t *testing.T) {
-	i := newEmbedWithEmptyField()
+	ebd := newEmbedWithEmptyField()
 
-	_, err := encodeApp(i)
-	if err != nil {
-		if !errors.Is(err, ErrFieldMissing) {
-			t.Fatal(err)
-		}
+	ar := &txtar.Archive{}
+
+	g := goky{
+		useWriter: false,
+		ar:        ar,
+		o: exportOption{
+			OutputDir:      "out",
+			ManifestWriter: nil,
+			NameFileFunc:   nil,
+			SecretHook:     nil,
+			Kustomize:      false,
+			Explode:        false,
+		},
+	}
+
+	rv := reflect.ValueOf(ebd)
+
+	if rv.Kind() == reflect.Ptr {
+		rv = rv.Elem()
+	}
+	if rv.Type().Kind() != reflect.Struct {
+		t.Errorf("cannot encode non-struct type: %v", rv)
+	}
+	err := g.encodeStruct(rv, "")
+	if !errors.Is(err, ErrFieldMissing) {
+		t.Fatal(err)
+	}
+	filenames := []string{}
+	for _, f := range ar.Files {
+		filenames = append(filenames, f.Name)
+	}
+	sort.Strings(filenames)
+
+	want := []string{
+		"out/1_iamcr.yaml",
+		"out/1_iamsa.yaml",
+		"out/2_iamcrb.yaml",
+		"out/3_iamdepl.yaml",
+	}
+
+	if diff := tu.Diff(want, filenames); diff != "" {
+		t.Error(tu.Callers(), diff)
 	}
 }
 
 func TestEncode_EmbeddedStruct(t *testing.T) {
-	i := newEmbeddedStruct()
-	names := map[string]struct{}{
-		"1_IAMSa":   {},
-		"1_IAMCr":   {},
-		"2_IAMCrb":  {},
-		"3_Depl":    {},
-		"3_IAMDepl": {},
+	ebd := newEmbeddedStruct()
+
+	ar := &txtar.Archive{}
+
+	g := goky{
+		useWriter: false,
+		ar:        ar,
+		o: exportOption{
+			OutputDir:      "out",
+			ManifestWriter: nil,
+			NameFileFunc:   nil,
+			SecretHook:     nil,
+			Kustomize:      false,
+			Explode:        false,
+		},
 	}
 
-	m, err := encodeApp(i)
+	rv := reflect.ValueOf(ebd)
+
+	if rv.Kind() == reflect.Ptr {
+		rv = rv.Elem()
+	}
+	if rv.Type().Kind() != reflect.Struct {
+		t.Errorf("cannot encode non-struct type: %v", rv)
+	}
+	err := g.encodeStruct(rv, "")
 	if err != nil {
-		if !errors.Is(err, ErrFieldMissing) {
-			t.Fatal(err)
-		}
+		t.Fatal(err)
 	}
 
-	// all the fields are present
-	for k := range m {
-		if _, ok := names[k]; !ok {
-			t.Errorf("unexpected key %q", k)
-		}
+	filenames := []string{}
+	for _, f := range ar.Files {
+		filenames = append(filenames, f.Name)
+	}
+	sort.Strings(filenames)
+
+	want := []string{
+		"out/1_iamcr.yaml",
+		"out/1_iamsa.yaml",
+		"out/2_iamcrb.yaml",
+		"out/3_depl.yaml",
+		"out/3_iamdepl.yaml",
 	}
 
-	// only the fields defined are present
-	for k := range names {
-		if _, ok := m[k]; !ok {
-			t.Errorf("missing key %q", k)
-		}
+	if diff := tu.Diff(want, filenames); diff != "" {
+		t.Error(tu.Callers(), diff)
 	}
 }
 
@@ -72,8 +131,8 @@ type EmbedStruct struct {
 
 type EmbedWithEmptyField struct {
 	IAM
-	Depl      *appsv1.Deployment
 	EmptyDepl *appsv1.Deployment
+	ZDepl     *appsv1.Deployment
 }
 
 var name = "fyaml"
@@ -163,7 +222,7 @@ func newEmbedWithEmptyField() *EmbedWithEmptyField {
 	}
 
 	return &EmbedWithEmptyField{
-		Depl: kubeutil.SimpleDeployment(
+		ZDepl: kubeutil.SimpleDeployment(
 			name,
 			sa.Namespace,
 			labels,
