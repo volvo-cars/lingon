@@ -216,10 +216,11 @@ func TestImport(t *testing.T) {
 				t.Parallel()
 				tu.AssertNoError(t, os.RemoveAll(tc.OutDir), "rm out dir")
 				var buf bytes.Buffer
+				//nolint:gocritic
 				opts := append(
 					tc.Opts,
 					kube.WithImportWriter(&buf),
-				) //nolint:gocritic
+				)
 				err := kube.Import(opts...)
 				tu.AssertNoError(t, err, "failed to import")
 				ar := txtar.Parse(buf.Bytes())

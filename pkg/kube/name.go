@@ -5,13 +5,11 @@ package kube
 
 import (
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"github.com/veggiemonk/strcase"
 	"github.com/volvo-cars/lingon/pkg/internal/api"
 	"github.com/volvo-cars/lingon/pkg/kubeutil"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // NameVarFunc returns the name of the variable containing the imported kubernetes object.
@@ -110,16 +108,6 @@ func shortKind(s string) string {
 		return s
 	}
 	return o.ShortName
-}
-
-// rank returns a number as a string denoting the priority (or rank) of the given object
-// see rankOfKind for more details.
-func rank(o runtime.Object) string {
-	if o == nil || o.GetObjectKind() == nil {
-		return ""
-	}
-	kind := o.GetObjectKind().GroupVersionKind().Kind
-	return strconv.Itoa(rankOfKind(kind))
 }
 
 // rankOfKind returns an int denoting the position of the given kind

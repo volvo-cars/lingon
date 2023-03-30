@@ -1,7 +1,7 @@
 // Copyright 2023 Volvo Car Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-package kube
+package kube_test
 
 import (
 	"bytes"
@@ -14,9 +14,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/rogpeppe/go-internal/txtar"
-	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"github.com/volvo-cars/lingon/pkg/kube"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/kubernetes/scheme"
 	"mvdan.cc/gofumpt/format"
 )
 
@@ -48,7 +47,7 @@ import (
 func diffLatest(
 	appName, pkgName, destDir string,
 	serializer runtime.Decoder,
-	km Exporter,
+	km kube.Exporter,
 	manifests []string,
 ) (string, error) {
 	if err := os.MkdirAll(destDir, 0o755); err != nil {
@@ -69,13 +68,13 @@ func diffLatest(
 	}()
 
 	// EXPORT TO YAML
-	err = Export(km, WithExportOutputDirectory(tmpdir))
+	err = kube.Export(km, kube.WithExportOutputDirectory(tmpdir))
 	if err != nil {
 		return "", fmt.Errorf("export: %w", err)
 	}
 
 	// IMPORT BACK TO GO
-	currManifests, err := ListYAMLFiles(tmpdir)
+	currManifests, err := kube.ListYAMLFiles(tmpdir)
 	if err != nil {
 		return "", fmt.Errorf("list yaml files: %w", err)
 	}
@@ -130,15 +129,15 @@ func importArchive(
 ) (*txtar.Archive, error) {
 	// IMPORT YAML TO GO
 	var buf bytes.Buffer
-	err := Import(
-		WithImportOutputDirectory(outDir),
-		WithImportManifestFiles(manifests),
-		WithImportAppName(appName),
-		WithImportRemoveAppName(true),
-		WithImportPackageName(pkgName),
-		WithImportSerializer(serializer),
-		WithImportGroupByKind(true),
-		WithImportWriter(&buf),
+	err := kube.Import(
+		kube.WithImportOutputDirectory(outDir),
+		kube.WithImportManifestFiles(manifests),
+		kube.WithImportAppName(appName),
+		kube.WithImportRemoveAppName(true),
+		kube.WithImportPackageName(pkgName),
+		kube.WithImportSerializer(serializer),
+		kube.WithImportGroupByKind(true),
+		kube.WithImportWriter(&buf),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("import: %w", err)
@@ -164,11 +163,4 @@ func importArchive(
 		},
 	)
 	return ar, nil
-}
-
-func defaultSerializer() runtime.Decoder {
-	// NEEDED FOR CRDS
-	//
-	_ = apiextensions.AddToScheme(scheme.Scheme)
-	return scheme.Codecs.UniversalDeserializer()
 }

@@ -19,6 +19,7 @@ func Example() {
 	fmt.Printf("exporting to %s\n", out)
 
 	_ = os.RemoveAll(out)
+	defer os.RemoveAll(out)
 
 	err := kube.Export(tk, kube.WithExportOutputDirectory(out))
 	if err != nil {

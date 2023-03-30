@@ -114,7 +114,7 @@ func stmtNewApp(
 
 // addMethods adds the Apply and Export methods to the struct in the app.go file.
 // it modifies the file in place and also returns it.
-func addMethods(f *jen.File, nameStruct string) *jen.File {
+func addMethods(f *jen.File, nameStruct string) {
 	// Apply
 	f.Comment("Apply applies the kubernetes objects to the cluster").Line().
 		Func().Params(jen.Id("a").Op("*").Id(nameStruct)).Id("Apply").
@@ -152,7 +152,6 @@ func addMethods(f *jen.File, nameStruct string) *jen.File {
 		)
 
 	f.Line().Line()
-	return f
 }
 
 // stmtApplyFunc generates the statements for the Apply function

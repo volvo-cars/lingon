@@ -13,6 +13,7 @@ import (
 
 	"github.com/dave/jennifer/jen"
 	"github.com/volvo-cars/lingon/pkg/kube"
+	"github.com/volvo-cars/lingon/pkg/kube/testdata/go/tekton"
 	tu "github.com/volvo-cars/lingon/pkg/testutil"
 )
 
@@ -21,6 +22,17 @@ const (
 )
 
 var diffOutputDir = filepath.Join(defaultImportOutputDir, "diff")
+
+func TestDiffUpdate(t *testing.T) {
+	_, _ = diffLatest(
+		"tekton",
+		"tekton",
+		diffOutputDir,
+		nil,
+		tekton.New(),
+		[]string{"testdata/tekton-updated.yaml"},
+	)
+}
 
 func TestDiff2YAML(t *testing.T) {
 	t.Skip("skipping test Diff for now.")

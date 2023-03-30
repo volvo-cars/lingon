@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"reflect"
 	"sort"
-	"strings"
 
 	"github.com/rogpeppe/go-internal/txtar"
 )
@@ -92,21 +91,4 @@ resources:`
 	}
 
 	return err
-}
-
-var clm = strings.NewReplacer(
-	"creationTimestamp: null", "",
-	"status: {}", "",
-	`status:
-  loadBalancer: {}`, "",
-	`status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: null
-  storedVersions: null`, "",
-)
-
-func cleanManifest(m []byte) string {
-	return strings.TrimSpace(clm.Replace(string(m)))
 }
