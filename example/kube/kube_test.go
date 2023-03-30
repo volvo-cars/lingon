@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/rogpeppe/go-internal/txtar"
-	"github.com/volvo-cars/lingon/example/kube/out/tekton"
 	"github.com/volvo-cars/lingon/pkg/kube"
+	"github.com/volvo-cars/lingon/pkg/kube/testdata/go/tekton"
 )
 
 func Example() {
