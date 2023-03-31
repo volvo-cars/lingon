@@ -70,6 +70,9 @@ func newImporter(
 }
 
 func gatekeeperImportOptions(o *importOption) {
+	if len(o.AppName) == 0 {
+		o.AppName = "app"
+	}
 	if len(o.OutputPkgName) == 0 {
 		o.OutputPkgName = strings.ReplaceAll(o.AppName, "-", "")
 	}

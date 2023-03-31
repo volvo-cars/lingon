@@ -73,7 +73,7 @@ type importOption struct {
 }
 
 var importDefaultOpts = importOption{
-	AppName:        "",
+	AppName:        "app",
 	OutputPkgName:  "",
 	ManifestFiles:  make([]string, 0),
 	ManifestReader: os.Stdin,
