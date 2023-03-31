@@ -16,20 +16,22 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
-func returnTypeAlias[X any](
+var commentSecret = "TODO: SECRETS SHOULD BE STORED ELSEWHERE THAN IN THE CODE!!!!" //nolint:gosec
+
+func returnTypeAlias(
 	v reflect.Value,
 	typename string,
-	x X,
+	stmt *jen.Statement,
 ) *jen.Statement {
 	if v.Type().String() != typename {
 		return jen.Qual(
 			v.Type().PkgPath(),
 			v.Type().Name(),
 		).Call(
-			jen.Lit(x),
+			stmt,
 		)
 	}
-	return jen.Lit(x)
+	return stmt
 }
 
 func (j *jamel) convertValue(v reflect.Value) *jen.Statement {
@@ -38,33 +40,78 @@ func (j *jamel) convertValue(v reflect.Value) *jen.Statement {
 	}
 	switch v.Type().Kind() {
 	case reflect.String:
-		return returnTypeAlias(v, reflect.String.String(), v.String())
+		s := v.String()
+		rawString(s)
+		if strings.Contains(s, "\n") {
+			return returnTypeAlias(
+				v, reflect.String.String(), rawString(s),
+			)
+		}
+		return returnTypeAlias(
+			v, reflect.String.String(), jen.Lit(v.String()),
+		)
 	case reflect.Bool:
-		return returnTypeAlias(v, reflect.Bool.String(), v.Bool())
+		return returnTypeAlias(
+			v, reflect.Bool.String(), jen.Lit(v.Bool()),
+		)
 	case reflect.Int:
-		return returnTypeAlias(v, reflect.Int.String(), int(v.Int()))
+		return returnTypeAlias(
+			v, reflect.Int.String(), jen.Lit(int(v.Int())),
+		)
 	case reflect.Int64:
-		return returnTypeAlias(v, reflect.Int64.String(), v.Int())
+		return returnTypeAlias(
+			v, reflect.Int64.String(), jen.Lit(v.Int()),
+		)
 	case reflect.Int32:
-		return returnTypeAlias(v, reflect.Int32.String(), int32(v.Int()))
+		return returnTypeAlias(
+			v,
+			reflect.Int32.String(),
+			jen.Lit(int32(v.Int())),
+		)
 	case reflect.Int16:
-		return returnTypeAlias(v, reflect.Int16.String(), int16(v.Int()))
+		return returnTypeAlias(
+			v,
+			reflect.Int16.String(),
+			jen.Lit(int16(v.Int())),
+		)
 	case reflect.Int8:
-		return returnTypeAlias(v, reflect.Int8.String(), int8(v.Int()))
+		return returnTypeAlias(
+			v, reflect.Int8.String(), jen.Lit(int8(v.Int())),
+		)
 	case reflect.Uint:
-		return returnTypeAlias(v, reflect.Uint.String(), v.Uint())
+		return returnTypeAlias(
+			v, reflect.Uint.String(), jen.Lit(v.Uint()),
+		)
 	case reflect.Uint64:
-		return returnTypeAlias(v, reflect.Uint64.String(), v.Uint())
+		return returnTypeAlias(
+			v, reflect.Uint64.String(), jen.Lit(v.Uint()),
+		)
 	case reflect.Uint32:
-		return returnTypeAlias(v, reflect.Uint32.String(), uint32(v.Uint()))
+		return returnTypeAlias(
+			v,
+			reflect.Uint32.String(),
+			jen.Lit(uint32(v.Uint())),
+		)
 	case reflect.Uint16:
-		return returnTypeAlias(v, reflect.Uint16.String(), uint16(v.Uint()))
+		return returnTypeAlias(
+			v,
+			reflect.Uint16.String(),
+			jen.Lit(uint16(v.Uint())),
+		)
 	case reflect.Uint8:
-		return returnTypeAlias(v, reflect.Uint8.String(), uint8(v.Uint()))
+		return returnTypeAlias(
+			v,
+			reflect.Uint8.String(),
+			jen.Lit(uint8(v.Uint())),
+		)
 	case reflect.Float32:
-		return returnTypeAlias(v, reflect.Float32.String(), float32(v.Float()))
+		return returnTypeAlias(
+			v,
+			reflect.Float32.String(),
+			jen.Lit(float32(v.Float())),
+		)
 	case reflect.Float64:
-		return returnTypeAlias(v, reflect.Float64.String(), v.Float())
+		return returnTypeAlias(v, reflect.Float64.String(), jen.Lit(v.Float()))
 	//
 	// Map types
 	//
@@ -107,14 +154,27 @@ func (j *jamel) convertValue(v reflect.Value) *jen.Statement {
 			return convertQuantity(v)
 		case "Secret":
 			return j.convertSecret(v).
-				Comment("TODO: SECRETS SHOULD BE STORED ELSEWHERE THAN IN THE CODE!!!!")
+				Comment(commentSecret)
 		}
 
 		pk := prefixKind(v)
 		vf := jen.DictFunc(
 			func(d jen.Dict) {
+				// code from [json.Encode](https://go.dev/src/encoding/json/encode.go)
+				// func typeFields(t reflect.Type) structFields
 				for i := 0; i < v.NumField(); i++ {
-					d[jen.Id(v.Type().Field(i).Name)] = j.convertValue(v.Field(i))
+					vtf := v.Type().Field(i)
+					if vtf.Anonymous {
+						if !vtf.IsExported() && v.Type().Kind() != reflect.Struct {
+							// Ignore embedded fields of unexported non-struct types.
+							continue
+						}
+					} else if !vtf.IsExported() {
+						// Ignore unexported fields.
+						continue
+					}
+
+					d[jen.Id(vtf.Name)] = j.convertValue(v.Field(i))
 				}
 			},
 		)
@@ -139,91 +199,99 @@ func (j *jamel) convertValue(v reflect.Value) *jen.Statement {
 			return jen.Id("P").Call(
 				returnTypeAlias(
 					v.Elem(),
-					reflect.Int.String(), v.Elem().Interface().(int),
+					reflect.Int.String(), jen.Lit(v.Elem().Interface().(int)),
 				),
 			)
 		case reflect.Int64:
 			return jen.Id("P").Call(
 				returnTypeAlias(
 					v.Elem(),
-					reflect.Int64.String(), v.Elem().Int(),
+					reflect.Int64.String(), jen.Lit(v.Elem().Int()),
 				),
 			)
 		case reflect.Int32:
 			return jen.Id("P").Call(
 				returnTypeAlias(
 					v.Elem(),
-					reflect.Int32.String(), v.Elem().Interface().(int32),
+					reflect.Int32.String(),
+					jen.Lit(v.Elem().Interface().(int32)),
 				),
 			)
 		case reflect.Int16:
 			return jen.Id("P").Call(
 				returnTypeAlias(
 					v.Elem(),
-					reflect.Int16.String(), v.Elem().Interface().(int16),
+					reflect.Int16.String(),
+					jen.Lit(v.Elem().Interface().(int16)),
 				),
 			)
 		case reflect.Int8:
 			return jen.Id("P").Call(
 				returnTypeAlias(
 					v.Elem(),
-					reflect.Int8.String(), v.Elem().Interface().(int8),
+					reflect.Int8.String(), jen.Lit(v.Elem().Interface().(int8)),
 				),
 			)
 		case reflect.Uint:
 			return jen.Id("P").Call(
 				returnTypeAlias(
 					v.Elem(),
-					reflect.Uint.String(), v.Elem().Interface().(uint),
+					reflect.Uint.String(), jen.Lit(v.Elem().Interface().(uint)),
 				),
 			)
 		case reflect.Uint64:
 			return jen.Id("P").Call(
 				returnTypeAlias(
 					v.Elem(),
-					reflect.Uint64.String(), v.Elem().Interface().(uint64),
+					reflect.Uint64.String(),
+					jen.Lit(v.Elem().Interface().(uint64)),
 				),
 			)
 		case reflect.Uint32:
 			return jen.Id("P").Call(
 				returnTypeAlias(
 					v.Elem(),
-					reflect.Uint32.String(), v.Elem().Interface().(uint32),
+					reflect.Uint32.String(),
+					jen.Lit(v.Elem().Interface().(uint32)),
 				),
 			)
 		case reflect.Uint16:
 			return jen.Id("P").Call(
 				returnTypeAlias(
 					v.Elem(),
-					reflect.Uint16.String(), v.Elem().Interface().(uint16),
+					reflect.Uint16.String(),
+					jen.Lit(v.Elem().Interface().(uint16)),
 				),
 			)
 		case reflect.Uint8:
 			return jen.Id("P").Call(
 				returnTypeAlias(
 					v.Elem(),
-					reflect.Uint8.String(), v.Elem().Interface().(uint8),
+					reflect.Uint8.String(),
+					jen.Lit(v.Elem().Interface().(uint8)),
 				),
 			)
 		case reflect.Float32:
 			return jen.Id("P").Call(
 				returnTypeAlias(
 					v.Elem(),
-					reflect.Float32.String(), v.Elem().Interface().(float32),
+					reflect.Float32.String(),
+					jen.Lit(v.Elem().Interface().(float32)),
 				),
 			)
 		case reflect.Float64:
 			return jen.Id("P").Call(
 				returnTypeAlias(
 					v.Elem(),
-					reflect.Float64.String(), v.Elem().Interface().(float64),
+					reflect.Float64.String(),
+					jen.Lit(v.Elem().Interface().(float64)),
 				),
 			)
 		case reflect.Bool:
 			return jen.Id("P").Call(
 				returnTypeAlias(
 					v.Elem(),
-					reflect.Bool.String(), v.Elem().Bool(),
+					reflect.Bool.String(), jen.Lit(v.Elem().Bool()),
 				),
 			)
 		case reflect.String:
@@ -231,7 +299,7 @@ func (j *jamel) convertValue(v reflect.Value) *jen.Statement {
 				returnTypeAlias(
 					v.Elem(),
 					reflect.String.String(),
-					v.Elem().String(),
+					jen.Lit(v.Elem().String()),
 				),
 			)
 		default:
@@ -239,7 +307,11 @@ func (j *jamel) convertValue(v reflect.Value) *jen.Statement {
 		}
 
 	default:
-		slog.Info("unsupported", slog.String("kind", v.Type().Kind().String()))
+		slog.Info(
+			"unsupported",
+			slog.String("type", v.String()),
+			slog.String("kind", v.Kind().String()),
+		)
 		return jen.Nil()
 	}
 }
@@ -456,7 +528,7 @@ func convertQuantity(field reflect.Value) *jen.Statement {
 
 // prefixKind returns the jen statement for the type of the value.
 // It is used to set the proper import package for the type.
-// For instance, [v1.ServiceAccount], renamed [corev1.ServiceAccount]
+// For instance, `v1.ServiceAccount`, renamed [corev1.ServiceAccount]
 // with `import corev1 "k8s.io/api/core/v1"`
 func prefixKind(v reflect.Value) *jen.Statement {
 	if v.IsZero() {
@@ -500,13 +572,24 @@ func prefixKind(v reflect.Value) *jen.Statement {
 		return jen.Op("&").Add(prefixKind(v.Elem()))
 
 	case reflect.Array, reflect.Slice:
-		pkgPath := v.Type().Elem().PkgPath()
-		name := v.Type().Elem().Name()
-		if pkgPath == "" {
-			// built-in type
-			return jen.Index().Id(name)
+		switch v.Type().Elem().Kind() {
+		case reflect.Ptr:
+			te := v.Type().Elem()
+			return jen.Index().Op("*").Add(
+				jen.Qual(
+					te.Elem().PkgPath(),
+					te.Elem().Name(),
+				),
+			)
+		default:
+			pkgPath := v.Type().Elem().PkgPath()
+			name := v.Type().Elem().Name()
+			if pkgPath == "" {
+				// built-in type
+				return jen.Index().Id(name)
+			}
+			return jen.Index().Qual(pkgPath, name)
 		}
-		return jen.Index().Qual(pkgPath, name)
 
 	case reflect.Map:
 		// Resolve Key type first

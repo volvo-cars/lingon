@@ -116,6 +116,8 @@ func WithImportSerializer(s runtime.Decoder) ImportOption {
 // This is used to name the generated struct.
 // ex: "tekton"
 //
+// Default: "app"
+//
 // Note: the name can be used to name the package if none is defined,
 // see WithImportPackageName
 func WithImportAppName(name string) ImportOption {
@@ -141,6 +143,7 @@ func WithImportPackageName(name string) ImportOption {
 }
 
 // WithImportRemoveAppName tries to remove the name of the application from the object name.
+// Default: false
 func WithImportRemoveAppName(b bool) ImportOption {
 	return func(j *jamel) {
 		j.o.RemoveAppName = b
@@ -254,6 +257,8 @@ func WithImportReader(r io.Reader) ImportOption {
 //   - secrets.go
 //
 // as opposed to 15 files.
+//
+// Default: false
 func WithImportGroupByKind(b bool) ImportOption {
 	return func(j *jamel) {
 		j.o.GroupByKind = b
@@ -284,6 +289,7 @@ func WithImportWriter(w io.Writer) ImportOption {
 }
 
 // WithImportOutputDirectory sets the output directory for the generated code.
+// Default: "./out"
 func WithImportOutputDirectory(name string) ImportOption {
 	return func(j *jamel) {
 		j.o.OutputDir = name
@@ -291,13 +297,16 @@ func WithImportOutputDirectory(name string) ImportOption {
 }
 
 // WithImportRedactSecrets removes the value, but not the keys, of kubernetes secrets.
+// Default: true
 func WithImportRedactSecrets(b bool) ImportOption {
 	return func(j *jamel) {
 		j.o.RedactSecrets = b
 	}
 }
 
-// WithImportAddMethods adds convenience methods to the generated code
+// WithImportAddMethods adds convenience methods to the generated code.
+//
+// Default: true
 //
 //	// Apply applies the kubernetes objects to the cluster
 //	func (a *Tekton) Apply(ctx context.Context) error

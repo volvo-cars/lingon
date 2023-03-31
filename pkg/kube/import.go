@@ -156,7 +156,13 @@ func (j *jamel) convertToGo(splitYaml []string) error {
 
 		pkgPath, err := api.PkgPathFromAPIVersion(m.APIVersion)
 		if err != nil {
-			pkgPath = m.APIVersion
+			// try CRD
+			var ok bool
+			pkgPath, ok = api.CRDsAPIVersionToPkgPath[m.APIVersion]
+			if !ok {
+				// fallback to APIVersion
+				pkgPath = m.APIVersion
+			}
 		}
 
 		structFieldType := jen.Qual(pkgPath, m.Kind)
@@ -183,7 +189,7 @@ func (j *jamel) yaml2GoJen(data []byte, m *kubeutil.Metadata) (
 ) {
 	decoded, _, err := j.o.Serializer.Decode(data, nil, nil)
 	if err != nil {
-		return nil, fmt.Errorf("decoding manifest: %w", err)
+		return nil, fmt.Errorf("decoding manifest for %+v: %w", m, err)
 	}
 
 	var jenCode *jen.Statement
@@ -199,7 +205,11 @@ func (j *jamel) yaml2GoJen(data []byte, m *kubeutil.Metadata) (
 		if err != nil {
 			return nil, fmt.Errorf("configmap comment: %w", err)
 		}
+
 	default:
+		if decoded == nil {
+			return jen.Empty(), nil
+		}
 		jenCode = j.kube2GoJen(decoded)
 	}
 	return jenCode, nil

@@ -95,7 +95,7 @@ var PkgAliasToImport = map[string]string{
 	"eventsv1":                     "k8s.io/api/events/v1",
 	"eventsv1beta1":                "k8s.io/api/events/v1beta1",
 	"extensionsv1beta1":            "k8s.io/api/extensions/v1beta1",
-	"metav1":                       "k8s.io/apimachinery/pkg/apis/metaObject/v1",
+	"metav1":                       "k8s.io/apimachinery/pkg/apis/meta/v1",
 	"networkingv1":                 "k8s.io/api/networking/v1",
 	"networkingv1beta1":            "k8s.io/api/networking/v1beta1",
 	"nodev1":                       "k8s.io/api/node/v1",
@@ -155,4 +155,10 @@ var VersionToPkgAlias = map[string]string{
 	"storage.k8s.io/v1alpha1":               "storagev1alpha1",
 	"storage.k8s.io/v1beta1":                "storagev1beta1",
 	"v1":                                    "corev1",
+}
+
+var CRDsAPIVersionToPkgPath = map[string]string{
+	"secrets-store.csi.x-k8s.io/v1": "sigs.k8s.io/secrets-store-csi-driver/apis/v1",
+	"ricoberger.de/v1alpha1":        "github.com/ricoberger/vault-secrets-operator/api/v1alpha1",
+	"networking.istio.io/v1beta1":   "istio.io/client-go/pkg/apis/networking/v1beta1",
 }
