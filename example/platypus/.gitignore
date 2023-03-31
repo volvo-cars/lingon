@@ -1,0 +1,12 @@
+.terriyaki
+gen/
+out
+
+scripts/*.yaml
+scripts/*.values
+k8s
+
+dump/
+bin/
+
+kubeconfig
