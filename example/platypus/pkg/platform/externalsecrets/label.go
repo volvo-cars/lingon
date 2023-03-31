@@ -8,13 +8,13 @@ var CertControllerLabels = map[string]string{
 	kubeutil.AppLabelName:      certControllerName,
 	kubeutil.AppLabelInstance:  AppName,
 	kubeutil.AppLabelVersion:   "v" + Version,
-	kubeutil.AppLabelManagedBy: "go-kart",
+	kubeutil.AppLabelManagedBy: "lingon",
 	// "helm.sh/chart":                "external-secrets-0.7.2",
 }
 
 var WebhookLabels = map[string]string{
 	kubeutil.AppLabelInstance:  AppName,
-	kubeutil.AppLabelManagedBy: "go-kart",
+	kubeutil.AppLabelManagedBy: "lingon",
 	kubeutil.AppLabelVersion:   "v" + Version,
 	"app.kubernetes.io/name":   "external-secrets-webhook",
 	// "helm.sh/chart":                "external-secrets-0.7.2",
@@ -23,7 +23,7 @@ var WebhookLabels = map[string]string{
 var ESLabels = map[string]string{
 	kubeutil.AppLabelInstance:  AppName,
 	kubeutil.AppLabelName:      AppName,
-	kubeutil.AppLabelManagedBy: "go-kart",
+	kubeutil.AppLabelManagedBy: "lingon",
 	kubeutil.AppLabelVersion:   "v" + Version,
 	// "helm.sh/chart":                "external-secrets-0.7.2",
 }

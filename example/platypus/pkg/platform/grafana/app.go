@@ -63,7 +63,7 @@ func commonLabels(opts AppOpts) map[string]string {
 		kubeutil.AppLabelName:      opts.Name,
 		kubeutil.AppLabelInstance:  opts.Name,
 		kubeutil.AppLabelVersion:   opts.Version,
-		kubeutil.AppLabelManagedBy: "go-kart",
+		kubeutil.AppLabelManagedBy: "lingon",
 	}
 }
 

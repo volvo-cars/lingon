@@ -24,7 +24,7 @@ const (
 
 var commonLabels = map[string]string{
 	kubeutil.AppLabelInstance:  AppName,
-	kubeutil.AppLabelManagedBy: "go-kart",
+	kubeutil.AppLabelManagedBy: "lingon",
 	kubeutil.AppLabelName:      AppName,
 	kubeutil.AppLabelVersion:   Version,
 }
