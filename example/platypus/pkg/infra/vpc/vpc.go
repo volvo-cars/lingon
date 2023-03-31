@@ -3,7 +3,7 @@ package vpc
 import (
 	"fmt"
 
-	"github.com/volvo-cars/lingon/example/platypus/gen/providers/aws"
+	aws "github.com/golingon/terraproviders/aws/4.60.0"
 
 	"github.com/volvo-cars/lingon/pkg/terra"
 )
@@ -98,7 +98,7 @@ func NewAWSVPC(
 
 	natGateways := [3]*aws.NatGateway{}
 	for i := 0; i < 3; i++ {
-		natGateways[i] = aws.NewNatGateway(
+		ng := aws.NewNatGateway(
 			fmt.Sprintf("nat_gateway_%d", i), aws.NatGatewayArgs{
 				SubnetId:     publicSubnets[i].Attributes().Id(),
 				AllocationId: eipNats[i].Attributes().Id(),
@@ -107,9 +107,10 @@ func NewAWSVPC(
 						"Name": S(fmt.Sprintf("ng-%d", i)),
 					},
 				),
-				DependsOn: terra.DependsOn(igw),
 			},
 		)
+		ng.DependsOn = terra.DependsOn(igw)
+		natGateways[i] = ng
 	}
 
 	privateSubnets := [3]*aws.Subnet{}

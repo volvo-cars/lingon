@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/volvo-cars/lingon/example/platypus/gen/providers/aws"
+	aws "github.com/golingon/terraproviders/aws/4.60.0"
 	"github.com/volvo-cars/lingon/example/platypus/pkg/platform/grafana"
 	"github.com/volvo-cars/lingon/example/platypus/pkg/terraclient"
 

@@ -3,8 +3,8 @@ package karpenter
 import (
 	"fmt"
 
-	"github.com/volvo-cars/lingon/example/platypus/gen/providers/aws"
-	"github.com/volvo-cars/lingon/example/platypus/gen/providers/aws/dataiampolicydocument"
+	aws "github.com/golingon/terraproviders/aws/4.60.0"
+	"github.com/golingon/terraproviders/aws/4.60.0/dataiampolicydocument"
 
 	"github.com/volvo-cars/lingon/pkg/terra"
 )

@@ -5,8 +5,8 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/volvo-cars/lingon/example/platypus/gen/providers/aws"
-	"github.com/volvo-cars/lingon/example/platypus/gen/providers/aws/provider"
+	aws "github.com/golingon/terraproviders/aws/4.60.0"
+	"github.com/golingon/terraproviders/aws/4.60.0/provider"
 	"github.com/volvo-cars/lingon/example/platypus/pkg/infra/eks"
 	"github.com/volvo-cars/lingon/example/platypus/pkg/infra/vpc"
 	"github.com/volvo-cars/lingon/example/platypus/pkg/platform/grafana"

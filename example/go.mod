@@ -4,19 +4,23 @@ go 1.20
 
 replace github.com/volvo-cars/lingon => ../
 
+replace github.com/hashicorp/hcl/v2 => github.com/jlarfors/hcl/v2 v2.16.0-patch-1
+
 require (
 	github.com/Masterminds/semver/v3 v3.2.0
 	github.com/aws/karpenter v0.27.1
 	github.com/aws/karpenter-core v0.27.1
+	github.com/go-playground/validator/v10 v10.12.0
+	github.com/golingon/terraproviders/aws/4.60.0 v0.0.0-20230331133707-9ae37d0b1bd3
+	github.com/golingon/terraproviders/tls/4.0.4 v0.0.0-20230331133707-9ae37d0b1bd3
 	github.com/google/go-containerregistry v0.14.0
-	github.com/hashicorp/hcl/v2 v2.16.2
 	github.com/hashicorp/terraform-exec v0.18.1
 	github.com/hashicorp/terraform-json v0.16.0
 	github.com/hexops/valast v1.4.3
 	github.com/invopop/yaml v0.2.0
 	github.com/rogpeppe/go-internal v1.10.0
 	github.com/stretchr/testify v1.8.2
-	github.com/volvo-cars/lingon v0.0.0-20230331053758-7788b77c5ab1
+	github.com/volvo-cars/lingon v0.0.0-20230331132342-46c7f66ade5e
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
 	k8s.io/api v0.26.3
 	k8s.io/apiextensions-apiserver v0.26.3
@@ -36,11 +40,11 @@ require (
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
-	github.com/go-playground/validator/v10 v10.12.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect
+	github.com/hashicorp/hcl/v2 v2.16.2 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.16.0 // indirect

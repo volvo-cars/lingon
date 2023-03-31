@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/volvo-cars/lingon/example/platypus/gen/providers/aws"
-	"github.com/volvo-cars/lingon/example/platypus/gen/providers/aws/securitygroup"
+	aws "github.com/golingon/terraproviders/aws/4.60.0"
+	"github.com/golingon/terraproviders/aws/4.60.0/securitygroup"
 
 	"github.com/volvo-cars/lingon/pkg/terra"
 )

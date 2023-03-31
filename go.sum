@@ -26,10 +26,8 @@ github.com/go-playground/validator/v10 v10.12.0/go.mod h1:hCAPuzYvKdP33pxWa+2+6A
 github.com/go-test/deep v1.0.3 h1:ZrJSEWsXzPOxaZnFteGEfooLba+ju3FYIbOrS+rQd68=
 github.com/gogo/protobuf v1.3.2 h1:Ov1cvc58UF3b5XjBnZv7+opcTcQFZebYjWzi34vdm4Q=
 github.com/gogo/protobuf v1.3.2/go.mod h1:P1XiOD3dCwIKUDQYPy72D8LYyHL2YPYrpS2s69NZV8Q=
-github.com/golingon/terraproviders/aws/4.60.0 v0.0.0-20230330130821-e9fe88c12847 h1:1wjdUlKk0DPXAcO8V6b2S4MzG+0BtsXxukW7Mzeflu0=
-github.com/golingon/terraproviders/aws/4.60.0 v0.0.0-20230330130821-e9fe88c12847/go.mod h1:kZPwt9wNptQ2B37O2F2bC540bKEtZBDtjblaaVzfNcw=
-github.com/golingon/terraproviders/aws/4.60.0 v0.0.0-20230331131635-c44b85b0d229 h1:+jZWIV3kWcrzuw/9z5xi7IKjMfv9n2vzExJCDcuT6Ko=
-github.com/golingon/terraproviders/aws/4.60.0 v0.0.0-20230331131635-c44b85b0d229/go.mod h1:TdARRW81DLn/Qie2ebNVm9tcrSdbIkK0wqxKzRaHndQ=
+github.com/golingon/terraproviders/aws/4.60.0 v0.0.0-20230331133707-9ae37d0b1bd3 h1:atHlvKcEvwEqfWkmHueoMkgn5mV6kZ8UBI0ohDK7f48=
+github.com/golingon/terraproviders/aws/4.60.0 v0.0.0-20230331133707-9ae37d0b1bd3/go.mod h1:TdARRW81DLn/Qie2ebNVm9tcrSdbIkK0wqxKzRaHndQ=
 github.com/google/go-cmp v0.5.9 h1:O2Tfq5qg4qc4AmwVlvv0oLiVAGB7enBSJ2x2DqQFi38=
 github.com/google/go-cmp v0.5.9/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
 github.com/google/gofuzz v1.0.0/go.mod h1:dBl0BpW6vV/+mYPU4Po3pmUjxk6FQPldtuIdl/M65Eg=

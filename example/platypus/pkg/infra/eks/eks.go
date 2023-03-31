@@ -3,10 +3,11 @@ package eks
 import (
 	"fmt"
 
-	"github.com/volvo-cars/lingon/example/platypus/gen/providers/aws"
-	"github.com/volvo-cars/lingon/example/platypus/gen/providers/aws/dataiampolicydocument"
-	"github.com/volvo-cars/lingon/example/platypus/gen/providers/aws/ekscluster"
-	"github.com/volvo-cars/lingon/example/platypus/gen/providers/tls"
+	"github.com/golingon/terraproviders/aws/4.60.0/dataiampolicydocument"
+
+	aws "github.com/golingon/terraproviders/aws/4.60.0"
+	"github.com/golingon/terraproviders/aws/4.60.0/ekscluster"
+	tls "github.com/golingon/terraproviders/tls/4.0.4"
 
 	"github.com/volvo-cars/lingon/pkg/terra"
 )
@@ -136,15 +137,20 @@ func NewEKSCluster(opts ClusterOpts) *Cluster {
 				SubnetIds:        terra.SetString(opts.PrivateSubnetIDs[:]...),
 			},
 			Version: S(opts.Version),
-
-			DependsOn: terra.DependsOn(
-				sg,
-				iamRole,
-				clusterPolicy,
-				vpcController,
-			),
 		},
 	)
+	eksCluster.DependsOn = terra.DependsOn(
+		sg,
+		iamRole,
+		clusterPolicy,
+		vpcController,
+	)
+	// How to add lifecycle to platform_version
+	// eksCluster.Lifecycle = &terra.Lifecycle{
+	// 	IgnoreChanges: terra.IgnoreChanges(
+	// 		eksCluster.Attributes().PlatformVersion(),
+	// 	),
+	// }
 
 	tlsCert := tls.NewDataCertificate(
 		"eks", tls.DataCertificateArgs{

@@ -20,7 +20,7 @@ const (
 	tfSuffix   = ".tf"
 	tfExec     = "terraform"
 	tfPlanFile = "tfplan"
-	tkiWorkDir = ".terriyaki"
+	tfWorkDir  = ".terra"
 )
 
 var (
@@ -314,5 +314,5 @@ func (r *Client) newTerraform(stack Stacker) (*tfexec.Terraform, error) {
 }
 
 func (r *Client) workingDir(stack Stacker) string {
-	return filepath.Join(tkiWorkDir, stack.StackName())
+	return filepath.Join(tfWorkDir, stack.StackName())
 }

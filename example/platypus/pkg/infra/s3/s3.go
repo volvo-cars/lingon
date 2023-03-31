@@ -1,9 +1,9 @@
 package s3
 
 import (
-	"github.com/volvo-cars/lingon/example/platypus/gen/providers/aws"
-	"github.com/volvo-cars/lingon/example/platypus/gen/providers/aws/s3bucketserversideencryptionconfiguration"
-	"github.com/volvo-cars/lingon/example/platypus/gen/providers/aws/s3bucketversioning"
+	aws "github.com/golingon/terraproviders/aws/4.60.0"
+	"github.com/golingon/terraproviders/aws/4.60.0/s3bucketserversideencryptionconfiguration"
+	"github.com/golingon/terraproviders/aws/4.60.0/s3bucketversioning"
 
 	"github.com/volvo-cars/lingon/pkg/terra"
 )

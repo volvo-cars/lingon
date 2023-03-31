@@ -47,10 +47,10 @@ type Stack struct {
 	// Name is the unique name of the Stack.
 	// It is used for the working directory where the Terraform code is
 	// generated and the Terraform CLI is executed.
-	Name      string       `tki:"-" validate:"required"`
-	stateMode StateMode    `tki:"-"`
-	plan      *Plan        `tki:"-" `
-	tfplan    *tfjson.Plan `tki:"-" `
+	Name      string       `lingon:"-" validate:"required"`
+	stateMode StateMode    `lingon:"-"`
+	plan      *Plan        `lingon:"-" `
+	tfplan    *tfjson.Plan `lingon:"-" `
 }
 
 func (*Stack) Terriyaki() {}
