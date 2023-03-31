@@ -27,11 +27,11 @@ func Set[T Value[T]](values ...T) SetValue[T] {
 
 // CastAsSet takes a value (as a reference) and wraps it in a SetValue
 func CastAsSet[T Value[T]](value T) SetValue[T] {
-	return ReferenceSet[T](value.InternalRef())
+	return ReferenceAsSet[T](value.InternalRef())
 }
 
-// ReferenceSet creates a list reference
-func ReferenceSet[T Value[T]](ref Reference) SetValue[T] {
+// ReferenceAsSet creates a list reference
+func ReferenceAsSet[T Value[T]](ref Reference) SetValue[T] {
 	return SetValue[T]{
 		isInit: true,
 		isRef:  true,
@@ -87,9 +87,9 @@ func (v SetValue[T]) InternalRef() Reference {
 	if !v.isRef {
 		panic("SetValue: cannot get reference from value")
 	}
-	return v.ref
+	return v.ref.copy()
 }
 
 func (v SetValue[T]) InternalWithRef(ref Reference) SetValue[T] {
-	return ReferenceSet[T](ref)
+	return ReferenceAsSet[T](ref)
 }

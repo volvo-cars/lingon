@@ -9,7 +9,6 @@ import (
 
 const (
 	idStructReference           = "Reference"
-	idFuncReferenceAttribute    = "ReferenceAttribute"
 	idFuncReferenceResource     = "ReferenceResource"
 	idFuncReferenceDataResource = "ReferenceDataResource"
 )
@@ -32,13 +31,18 @@ var (
 		idFuncReferenceDataResource,
 	).Clone
 
-	qualReferenceString = jen.Qual(pkgTerra, "ReferenceString").Clone
-	qualReferenceNumber = jen.Qual(pkgTerra, "ReferenceNumber").Clone
-	qualReferenceBool   = jen.Qual(pkgTerra, "ReferenceBool").Clone
-	qualReferenceSingle = jen.Qual(pkgTerra, "ReferenceSingle").Clone
-	qualReferenceMap    = jen.Qual(pkgTerra, "ReferenceMap").Clone
-	qualReferenceSet    = jen.Qual(pkgTerra, "ReferenceSet").Clone
-	qualReferenceList   = jen.Qual(pkgTerra, "ReferenceList").Clone
+	qualReferenceAsString = jen.Qual(pkgTerra, "ReferenceAsString").Clone
+	qualReferenceAsNumber = jen.Qual(pkgTerra, "ReferenceAsNumber").Clone
+	qualReferenceAsBool   = jen.Qual(pkgTerra, "ReferenceAsBool").Clone
+	qualReferenceAsSingle = jen.Qual(pkgTerra, "ReferenceAsSingle").Clone
+	qualReferenceAsMap    = jen.Qual(pkgTerra, "ReferenceAsMap").Clone
+	qualReferenceAsSet    = jen.Qual(pkgTerra, "ReferenceAsSet").Clone
+	qualReferenceAsList   = jen.Qual(pkgTerra, "ReferenceAsList").Clone
+
+	qualTypeDependencies = jen.Qual(pkgTerra, "Dependencies").Clone
+	qualStructLifecycle  = jen.Qual(pkgTerra, "Lifecycle").Clone
+	// qualFuncIgnoreChanges      = jen.Qual(pkgTerra, "IgnoreChanges").Clone
+	// qualFuncReplaceTriggeredBy = jen.Qual(pkgTerra, "ReplaceTriggeredBy").Clone
 
 	qualHCLWriteTokens = jen.Qual(pkgHCLWrite, "Tokens").Clone
 )

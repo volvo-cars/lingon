@@ -10,6 +10,7 @@ import (
 	"github.com/volvo-cars/lingon/pkg/terra"
 )
 
+// NewFile creates a new instance of [File].
 func NewFile(name string, args FileArgs) *File {
 	return &File{
 		Args: args,
@@ -19,28 +20,51 @@ func NewFile(name string, args FileArgs) *File {
 
 var _ terra.Resource = (*File)(nil)
 
+// File represents the Terraform resource local_file.
 type File struct {
-	Name  string
-	Args  FileArgs
-	state *fileState
+	Name      string
+	Args      FileArgs
+	state     *fileState
+	DependsOn terra.Dependencies
+	Lifecycle *terra.Lifecycle
 }
 
+// Type returns the Terraform object type for [File].
 func (f *File) Type() string {
 	return "local_file"
 }
 
+// LocalName returns the local name for [File].
 func (f *File) LocalName() string {
 	return f.Name
 }
 
+// Configuration returns the configuration (args) for [File].
 func (f *File) Configuration() interface{} {
 	return f.Args
 }
 
+// DependOn is used for other resources to depend on [File].
+func (f *File) DependOn() terra.Reference {
+	return terra.ReferenceResource(f)
+}
+
+// Dependencies returns the list of resources [File] depends_on.
+func (f *File) Dependencies() terra.Dependencies {
+	return f.DependsOn
+}
+
+// LifecycleManagement returns the lifecycle block for [File].
+func (f *File) LifecycleManagement() *terra.Lifecycle {
+	return f.Lifecycle
+}
+
+// Attributes returns the attributes for [File].
 func (f *File) Attributes() fileAttributes {
 	return fileAttributes{ref: terra.ReferenceResource(f)}
 }
 
+// ImportState imports the given attribute values into [File]'s state.
 func (f *File) ImportState(av io.Reader) error {
 	f.state = &fileState{}
 	if err := json.NewDecoder(av).Decode(f.state); err != nil {
@@ -49,10 +73,12 @@ func (f *File) ImportState(av io.Reader) error {
 	return nil
 }
 
+// State returns the state and a bool indicating if [File] has state.
 func (f *File) State() (*fileState, bool) {
 	return f.state, f.state != nil
 }
 
+// StateMust returns the state for [File]. Panics if the state is nil.
 func (f *File) StateMust() *fileState {
 	if f.state == nil {
 		panic(fmt.Sprintf("state is nil for resource %s.%s", f.Type(), f.LocalName()))
@@ -60,10 +86,7 @@ func (f *File) StateMust() *fileState {
 	return f.state
 }
 
-func (f *File) DependOn() terra.Reference {
-	return terra.ReferenceResource(f)
-}
-
+// FileArgs contains the configurations for local_file.
 type FileArgs struct {
 	// Content: string, optional
 	Content terra.StringValue `hcl:"content,attr"`
@@ -79,67 +102,79 @@ type FileArgs struct {
 	SensitiveContent terra.StringValue `hcl:"sensitive_content,attr"`
 	// Source: string, optional
 	Source terra.StringValue `hcl:"source,attr"`
-	// DependsOn contains resources that File depends on
-	DependsOn terra.Dependencies `hcl:"depends_on,attr"`
 }
 type fileAttributes struct {
 	ref terra.Reference
 }
 
+// Content returns a reference to field content of local_file.
 func (f fileAttributes) Content() terra.StringValue {
-	return terra.ReferenceString(f.ref.Append("content"))
+	return terra.ReferenceAsString(f.ref.Append("content"))
 }
 
+// ContentBase64 returns a reference to field content_base64 of local_file.
 func (f fileAttributes) ContentBase64() terra.StringValue {
-	return terra.ReferenceString(f.ref.Append("content_base64"))
+	return terra.ReferenceAsString(f.ref.Append("content_base64"))
 }
 
+// ContentBase64Sha256 returns a reference to field content_base64sha256 of local_file.
 func (f fileAttributes) ContentBase64Sha256() terra.StringValue {
-	return terra.ReferenceString(f.ref.Append("content_base64sha256"))
+	return terra.ReferenceAsString(f.ref.Append("content_base64sha256"))
 }
 
+// ContentBase64Sha512 returns a reference to field content_base64sha512 of local_file.
 func (f fileAttributes) ContentBase64Sha512() terra.StringValue {
-	return terra.ReferenceString(f.ref.Append("content_base64sha512"))
+	return terra.ReferenceAsString(f.ref.Append("content_base64sha512"))
 }
 
+// ContentMd5 returns a reference to field content_md5 of local_file.
 func (f fileAttributes) ContentMd5() terra.StringValue {
-	return terra.ReferenceString(f.ref.Append("content_md5"))
+	return terra.ReferenceAsString(f.ref.Append("content_md5"))
 }
 
+// ContentSha1 returns a reference to field content_sha1 of local_file.
 func (f fileAttributes) ContentSha1() terra.StringValue {
-	return terra.ReferenceString(f.ref.Append("content_sha1"))
+	return terra.ReferenceAsString(f.ref.Append("content_sha1"))
 }
 
+// ContentSha256 returns a reference to field content_sha256 of local_file.
 func (f fileAttributes) ContentSha256() terra.StringValue {
-	return terra.ReferenceString(f.ref.Append("content_sha256"))
+	return terra.ReferenceAsString(f.ref.Append("content_sha256"))
 }
 
+// ContentSha512 returns a reference to field content_sha512 of local_file.
 func (f fileAttributes) ContentSha512() terra.StringValue {
-	return terra.ReferenceString(f.ref.Append("content_sha512"))
+	return terra.ReferenceAsString(f.ref.Append("content_sha512"))
 }
 
+// DirectoryPermission returns a reference to field directory_permission of local_file.
 func (f fileAttributes) DirectoryPermission() terra.StringValue {
-	return terra.ReferenceString(f.ref.Append("directory_permission"))
+	return terra.ReferenceAsString(f.ref.Append("directory_permission"))
 }
 
+// FilePermission returns a reference to field file_permission of local_file.
 func (f fileAttributes) FilePermission() terra.StringValue {
-	return terra.ReferenceString(f.ref.Append("file_permission"))
+	return terra.ReferenceAsString(f.ref.Append("file_permission"))
 }
 
+// Filename returns a reference to field filename of local_file.
 func (f fileAttributes) Filename() terra.StringValue {
-	return terra.ReferenceString(f.ref.Append("filename"))
+	return terra.ReferenceAsString(f.ref.Append("filename"))
 }
 
+// Id returns a reference to field id of local_file.
 func (f fileAttributes) Id() terra.StringValue {
-	return terra.ReferenceString(f.ref.Append("id"))
+	return terra.ReferenceAsString(f.ref.Append("id"))
 }
 
+// SensitiveContent returns a reference to field sensitive_content of local_file.
 func (f fileAttributes) SensitiveContent() terra.StringValue {
-	return terra.ReferenceString(f.ref.Append("sensitive_content"))
+	return terra.ReferenceAsString(f.ref.Append("sensitive_content"))
 }
 
+// Source returns a reference to field source of local_file.
 func (f fileAttributes) Source() terra.StringValue {
-	return terra.ReferenceString(f.ref.Append("source"))
+	return terra.ReferenceAsString(f.ref.Append("source"))
 }
 
 type fileState struct {

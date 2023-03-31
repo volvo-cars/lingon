@@ -47,6 +47,8 @@ type Resource struct {
 	Type          string
 	LocalName     string
 	Configuration interface{}
+	DependsOn     Tokenizer
+	Lifecycle     interface{}
 }
 
 type Tokenizer interface {
@@ -131,11 +133,19 @@ func Encode(wr io.Writer, args EncodeArgs) error {
 			"resource",
 			[]string{resource.Type, resource.LocalName},
 		)
+		rb := resourceBlock.Body()
+		// Add depends_on
+		if resource.DependsOn != nil && resource.DependsOn.InternalTokens() != nil {
+			rb.SetAttributeRaw(
+				"depends_on",
+				resource.DependsOn.InternalTokens(),
+			)
+		}
 		rv := reflect.ValueOf(resource.Configuration)
 		if err := encodeStruct(
 			rv,
 			resourceBlock,
-			resourceBlock.Body(),
+			rb,
 		); err != nil {
 			return fmt.Errorf(
 				"encoding resource %s.%s: %w",
@@ -143,6 +153,23 @@ func Encode(wr io.Writer, args EncodeArgs) error {
 				resource.LocalName,
 				err,
 			)
+		}
+		// Add lifecycle
+		lc := reflect.ValueOf(resource.Lifecycle)
+		if resource.Lifecycle != nil && !lc.IsNil() {
+			lcBlock := rb.AppendNewBlock("lifecycle", nil)
+			if err := encodeStruct(
+				lc,
+				lcBlock,
+				lcBlock.Body(),
+			); err != nil {
+				return fmt.Errorf(
+					"encoding resource %s.%s: %w",
+					resource.Type,
+					resource.LocalName,
+					err,
+				)
+			}
 		}
 		fileBody.AppendNewline()
 	}

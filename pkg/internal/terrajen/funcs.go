@@ -4,11 +4,21 @@
 package terrajen
 
 import (
+	"fmt"
+
 	"github.com/dave/jennifer/jen"
 )
 
 func funcSchemaType(s *Schema, name string) *jen.Statement {
-	return jen.Func().
+	return jen.Comment(
+		fmt.Sprintf(
+			"%s returns the Terraform object type for [%s].",
+			name,
+			s.StructName,
+		),
+	).
+		Line().
+		Func().
 		// Receiver
 		Params(jen.Id(s.Receiver).Op("*").Id(s.StructName)).
 		// Name
@@ -24,11 +34,19 @@ func funcSchemaType(s *Schema, name string) *jen.Statement {
 }
 
 func funcLocalName(s *Schema) *jen.Statement {
-	return jen.Func().
+	return jen.Comment(
+		fmt.Sprintf(
+			"%s returns the local name for [%s].",
+			idFuncLocalName,
+			s.StructName,
+		),
+	).
+		Line().
+		Func().
 		// Receiver
 		Params(jen.Id(s.Receiver).Op("*").Id(s.StructName)).
 		// Name
-		Id("LocalName").Call().
+		Id(idFuncLocalName).Call().
 		// Return type
 		String().
 		// Body
@@ -40,11 +58,19 @@ func funcLocalName(s *Schema) *jen.Statement {
 }
 
 func funcProviderLocalName(s *Schema) *jen.Statement {
-	return jen.Func().
+	return jen.Comment(
+		fmt.Sprintf(
+			"%s returns the provider local name for [%s].",
+			idFuncLocalName,
+			s.StructName,
+		),
+	).
+		Line().
+		Func().
 		// Receiver
 		Params(jen.Id(s.Receiver).Op("*").Id(s.StructName)).
 		// Name
-		Id("LocalName").Call().
+		Id(idFuncLocalName).Call().
 		// Return type
 		String().
 		// Body
@@ -56,11 +82,19 @@ func funcProviderLocalName(s *Schema) *jen.Statement {
 }
 
 func funcProviderSource(s *Schema) *jen.Statement {
-	return jen.Func().
+	return jen.Comment(
+		fmt.Sprintf(
+			"%s returns the provider source for [%s].",
+			idFuncSource,
+			s.StructName,
+		),
+	).
+		Line().
+		Func().
 		// Receiver
 		Params(jen.Id(s.Receiver).Op("*").Id(s.StructName)).
 		// Name
-		Id("Source").Call().
+		Id(idFuncSource).Call().
 		// Return type
 		String().
 		// Body
@@ -72,11 +106,19 @@ func funcProviderSource(s *Schema) *jen.Statement {
 }
 
 func funcProviderVersion(s *Schema) *jen.Statement {
-	return jen.Func().
+	return jen.Comment(
+		fmt.Sprintf(
+			"%s returns the provider version for [%s].",
+			idFuncVersion,
+			s.StructName,
+		),
+	).
+		Line().
+		Func().
 		// Receiver
 		Params(jen.Id(s.Receiver).Op("*").Id(s.StructName)).
 		// Name
-		Id("Version").Call().
+		Id(idFuncVersion).Call().
 		// Return type
 		String().
 		// Body
@@ -88,11 +130,19 @@ func funcProviderVersion(s *Schema) *jen.Statement {
 }
 
 func funcConfiguration(s *Schema) *jen.Statement {
-	return jen.Func().
+	return jen.Comment(
+		fmt.Sprintf(
+			"%s returns the configuration (args) for [%s].",
+			idFuncConfiguration,
+			s.StructName,
+		),
+	).
+		Line().
+		Func().
 		// Receiver
 		Params(jen.Id(s.Receiver).Op("*").Id(s.StructName)).
 		// Name
-		Id("Configuration").Call().
+		Id(idFuncConfiguration).Call().
 		// Return type
 		Interface().
 		// Body
@@ -110,11 +160,19 @@ func funcAttributes(s *Schema) *jen.Statement {
 	} else {
 		createRefFunc = qualReferenceDataResource()
 	}
-	return jen.Func().
+	return jen.Comment(
+		fmt.Sprintf(
+			"%s returns the attributes for [%s].",
+			idFuncAttributes,
+			s.StructName,
+		),
+	).
+		Line().
+		Func().
 		// Receiver
 		Params(jen.Id(s.Receiver).Op("*").Id(s.StructName)).
 		// Name
-		Id("Attributes").Call().
+		Id(idFuncAttributes).Call().
 		//	Return
 		Id(s.AttributesStructName).
 		// Body
@@ -130,11 +188,20 @@ func funcAttributes(s *Schema) *jen.Statement {
 }
 
 func funcResourceImportState(s *Schema) *jen.Statement {
-	return jen.Func().
+	attributesArgs := jen.Id("av").Clone
+	return jen.Comment(
+		fmt.Sprintf(
+			"%s imports the given attribute values into [%s]'s state.",
+			idFuncImportState,
+			s.StructName,
+		),
+	).
+		Line().
+		Func().
 		// Receiver
 		Params(jen.Id(s.Receiver).Op("*").Id(s.StructName)).
 		// Name
-		Id("ImportState").Call(jen.Id("av").Qual("io", "Reader")).
+		Id(idFuncImportState).Call(attributesArgs().Qual("io", "Reader")).
 		// Return type
 		Error().
 		// Body
@@ -145,7 +212,7 @@ func funcResourceImportState(s *Schema) *jen.Statement {
 				jen.Id("err").Op(":=").Qual(
 					"encoding/json",
 					"NewDecoder",
-				).Call(jen.Id("av")).Dot(
+				).Call(attributesArgs()).Dot(
 					"Decode",
 				).Call(jen.Id(s.Receiver).Dot(idFieldState)).Op(";").Id("err").Op("!=").Nil().Block(
 					jen.Return(
@@ -165,7 +232,15 @@ func funcResourceImportState(s *Schema) *jen.Statement {
 }
 
 func funcResourceState(s *Schema) *jen.Statement {
-	return jen.Func().
+	return jen.Comment(
+		fmt.Sprintf(
+			"%s returns the state and a bool indicating if [%s] has state.",
+			idFuncState,
+			s.StructName,
+		),
+	).
+		Line().
+		Func().
 		// Receiver
 		Params(jen.Id(s.Receiver).Op("*").Id(s.StructName)).
 		// Name
@@ -182,7 +257,15 @@ func funcResourceState(s *Schema) *jen.Statement {
 }
 
 func funcResourceStateMust(s *Schema) *jen.Statement {
-	return jen.Func().
+	return jen.Comment(
+		fmt.Sprintf(
+			"%s returns the state for [%s]. Panics if the state is nil.",
+			idFuncStateMust,
+			s.StructName,
+		),
+	).
+		Line().
+		Func().
 		// Receiver
 		Params(jen.Id(s.Receiver).Op("*").Id(s.StructName)).
 		// Name
@@ -210,17 +293,83 @@ func funcResourceStateMust(s *Schema) *jen.Statement {
 //		return terra.InternalRootRef("aws_iam_role", irr.Name)
 //	}
 func funcDependOn(s *Schema) *jen.Statement {
-	return jen.Func().
+	return jen.Comment(
+		fmt.Sprintf(
+			"%s is used for other resources to depend on [%s].",
+			idFuncDependOn,
+			s.StructName,
+		),
+	).
+		Line().
+		Func().
 		// Receiver
 		Params(jen.Id(s.Receiver).Op("*").Id(s.StructName)).
 		// Name
-		Id("DependOn").Call().
+		Id(idFuncDependOn).Call().
 		// Return type
 		Add(qualReferenceValue()).
 		// Body
 		Block(
 			jen.Return(
 				qualReferenceResource().Call(jen.Id(s.Receiver)),
+			),
+		)
+}
+
+// funcDependencies, e.g.
+//
+//	func (irr *iamRoleResource) Dependencies() terra.Dependencies {
+//		return irr.DependsOn
+//	}
+func funcDependencies(s *Schema) *jen.Statement {
+	return jen.Comment(
+		fmt.Sprintf(
+			"%s returns the list of resources [%s] depends_on.",
+			idFuncDependencies,
+			s.StructName,
+		),
+	).
+		Line().
+		Func().
+		// Receiver
+		Params(jen.Id(s.Receiver).Op("*").Id(s.StructName)).
+		// Name
+		Id(idFuncDependencies).Call().
+		// Return type
+		Add(qualTypeDependencies()).
+		// Body
+		Block(
+			jen.Return(
+				jen.Id(s.Receiver).Dot(idFieldDependsOn),
+			),
+		)
+}
+
+// funcLifecycleManagement, e.g.
+//
+//	func (irr *iamRoleResource) LifecycleManagement() *terra.Lifecycle {
+//		return irr.Lifecycle
+//	}
+func funcLifecycleManagement(s *Schema) *jen.Statement {
+	return jen.Comment(
+		fmt.Sprintf(
+			"%s returns the lifecycle block for [%s].",
+			idFuncLifecycleManagement,
+			s.StructName,
+		),
+	).
+		Line().
+		Func().
+		// Receiver
+		Params(jen.Id(s.Receiver).Op("*").Id(s.StructName)).
+		// Name
+		Id(idFuncLifecycleManagement).Call().
+		// Return type
+		Op("*").Add(qualStructLifecycle()).
+		// Body
+		Block(
+			jen.Return(
+				jen.Id(s.Receiver).Dot(idFieldLifecycle),
 			),
 		)
 }

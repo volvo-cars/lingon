@@ -19,7 +19,7 @@ func Number(i int) NumberValue {
 	}
 }
 
-func ReferenceNumber(ref Reference) NumberValue {
+func ReferenceAsNumber(ref Reference) NumberValue {
 	return NumberValue{
 		isInit: true,
 		isRef:  true,
@@ -39,7 +39,7 @@ type NumberValue struct {
 
 func (v NumberValue) AsString() StringValue {
 	if v.isRef {
-		return ReferenceString(v.ref)
+		return ReferenceAsString(v.ref)
 	}
 	val, err := convert.Convert(v.value, cty.String)
 	if err != nil {
@@ -53,7 +53,7 @@ func (v NumberValue) AsString() StringValue {
 
 func (v NumberValue) AsBool() BoolValue {
 	if v.isRef {
-		return ReferenceBool(v.ref)
+		return ReferenceAsBool(v.ref)
 	}
 	val, err := convert.Convert(v.value, cty.Bool)
 	if err != nil {
@@ -79,9 +79,9 @@ func (v NumberValue) InternalRef() Reference {
 	if !v.isRef {
 		panic("NumberValue: cannot use value as reference")
 	}
-	return v.ref
+	return v.ref.copy()
 }
 
 func (v NumberValue) InternalWithRef(ref Reference) NumberValue {
-	return ReferenceNumber(ref)
+	return ReferenceAsNumber(ref)
 }

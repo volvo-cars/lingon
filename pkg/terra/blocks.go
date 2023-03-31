@@ -25,6 +25,10 @@ type Resource interface {
 	LocalName() string
 	// Configuration returns the arguments for the resource
 	Configuration() interface{}
+	// Dependencies returns the list of resources that this resource depends_on
+	Dependencies() Dependencies
+	// LifecycleManagement returns the lifecycle configuration for this resource
+	LifecycleManagement() *Lifecycle
 	// ImportState takes the given attributes value map (from a Terraform state) and imports it
 	// into this resource
 	ImportState(attributes io.Reader) error

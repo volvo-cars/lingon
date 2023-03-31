@@ -128,6 +128,8 @@ func encodeStack(stack Exporter, w io.Writer) error {
 			Type:          res.Type(),
 			LocalName:     res.LocalName(),
 			Configuration: res.Configuration(),
+			DependsOn:     res.Dependencies(),
+			Lifecycle:     res.LifecycleManagement(),
 		}
 	}
 	if err := hcl.Encode(w, args); err != nil {

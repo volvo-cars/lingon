@@ -10,6 +10,7 @@ import (
 	"github.com/volvo-cars/lingon/pkg/terra"
 )
 
+// NewSensitiveFile creates a new instance of [SensitiveFile].
 func NewSensitiveFile(name string, args SensitiveFileArgs) *SensitiveFile {
 	return &SensitiveFile{
 		Args: args,
@@ -19,28 +20,51 @@ func NewSensitiveFile(name string, args SensitiveFileArgs) *SensitiveFile {
 
 var _ terra.Resource = (*SensitiveFile)(nil)
 
+// SensitiveFile represents the Terraform resource local_sensitive_file.
 type SensitiveFile struct {
-	Name  string
-	Args  SensitiveFileArgs
-	state *sensitiveFileState
+	Name      string
+	Args      SensitiveFileArgs
+	state     *sensitiveFileState
+	DependsOn terra.Dependencies
+	Lifecycle *terra.Lifecycle
 }
 
+// Type returns the Terraform object type for [SensitiveFile].
 func (sf *SensitiveFile) Type() string {
 	return "local_sensitive_file"
 }
 
+// LocalName returns the local name for [SensitiveFile].
 func (sf *SensitiveFile) LocalName() string {
 	return sf.Name
 }
 
+// Configuration returns the configuration (args) for [SensitiveFile].
 func (sf *SensitiveFile) Configuration() interface{} {
 	return sf.Args
 }
 
+// DependOn is used for other resources to depend on [SensitiveFile].
+func (sf *SensitiveFile) DependOn() terra.Reference {
+	return terra.ReferenceResource(sf)
+}
+
+// Dependencies returns the list of resources [SensitiveFile] depends_on.
+func (sf *SensitiveFile) Dependencies() terra.Dependencies {
+	return sf.DependsOn
+}
+
+// LifecycleManagement returns the lifecycle block for [SensitiveFile].
+func (sf *SensitiveFile) LifecycleManagement() *terra.Lifecycle {
+	return sf.Lifecycle
+}
+
+// Attributes returns the attributes for [SensitiveFile].
 func (sf *SensitiveFile) Attributes() sensitiveFileAttributes {
 	return sensitiveFileAttributes{ref: terra.ReferenceResource(sf)}
 }
 
+// ImportState imports the given attribute values into [SensitiveFile]'s state.
 func (sf *SensitiveFile) ImportState(av io.Reader) error {
 	sf.state = &sensitiveFileState{}
 	if err := json.NewDecoder(av).Decode(sf.state); err != nil {
@@ -49,10 +73,12 @@ func (sf *SensitiveFile) ImportState(av io.Reader) error {
 	return nil
 }
 
+// State returns the state and a bool indicating if [SensitiveFile] has state.
 func (sf *SensitiveFile) State() (*sensitiveFileState, bool) {
 	return sf.state, sf.state != nil
 }
 
+// StateMust returns the state for [SensitiveFile]. Panics if the state is nil.
 func (sf *SensitiveFile) StateMust() *sensitiveFileState {
 	if sf.state == nil {
 		panic(fmt.Sprintf("state is nil for resource %s.%s", sf.Type(), sf.LocalName()))
@@ -60,10 +86,7 @@ func (sf *SensitiveFile) StateMust() *sensitiveFileState {
 	return sf.state
 }
 
-func (sf *SensitiveFile) DependOn() terra.Reference {
-	return terra.ReferenceResource(sf)
-}
-
+// SensitiveFileArgs contains the configurations for local_sensitive_file.
 type SensitiveFileArgs struct {
 	// Content: string, optional
 	Content terra.StringValue `hcl:"content,attr"`
@@ -77,63 +100,74 @@ type SensitiveFileArgs struct {
 	Filename terra.StringValue `hcl:"filename,attr" validate:"required"`
 	// Source: string, optional
 	Source terra.StringValue `hcl:"source,attr"`
-	// DependsOn contains resources that SensitiveFile depends on
-	DependsOn terra.Dependencies `hcl:"depends_on,attr"`
 }
 type sensitiveFileAttributes struct {
 	ref terra.Reference
 }
 
+// Content returns a reference to field content of local_sensitive_file.
 func (sf sensitiveFileAttributes) Content() terra.StringValue {
-	return terra.ReferenceString(sf.ref.Append("content"))
+	return terra.ReferenceAsString(sf.ref.Append("content"))
 }
 
+// ContentBase64 returns a reference to field content_base64 of local_sensitive_file.
 func (sf sensitiveFileAttributes) ContentBase64() terra.StringValue {
-	return terra.ReferenceString(sf.ref.Append("content_base64"))
+	return terra.ReferenceAsString(sf.ref.Append("content_base64"))
 }
 
+// ContentBase64Sha256 returns a reference to field content_base64sha256 of local_sensitive_file.
 func (sf sensitiveFileAttributes) ContentBase64Sha256() terra.StringValue {
-	return terra.ReferenceString(sf.ref.Append("content_base64sha256"))
+	return terra.ReferenceAsString(sf.ref.Append("content_base64sha256"))
 }
 
+// ContentBase64Sha512 returns a reference to field content_base64sha512 of local_sensitive_file.
 func (sf sensitiveFileAttributes) ContentBase64Sha512() terra.StringValue {
-	return terra.ReferenceString(sf.ref.Append("content_base64sha512"))
+	return terra.ReferenceAsString(sf.ref.Append("content_base64sha512"))
 }
 
+// ContentMd5 returns a reference to field content_md5 of local_sensitive_file.
 func (sf sensitiveFileAttributes) ContentMd5() terra.StringValue {
-	return terra.ReferenceString(sf.ref.Append("content_md5"))
+	return terra.ReferenceAsString(sf.ref.Append("content_md5"))
 }
 
+// ContentSha1 returns a reference to field content_sha1 of local_sensitive_file.
 func (sf sensitiveFileAttributes) ContentSha1() terra.StringValue {
-	return terra.ReferenceString(sf.ref.Append("content_sha1"))
+	return terra.ReferenceAsString(sf.ref.Append("content_sha1"))
 }
 
+// ContentSha256 returns a reference to field content_sha256 of local_sensitive_file.
 func (sf sensitiveFileAttributes) ContentSha256() terra.StringValue {
-	return terra.ReferenceString(sf.ref.Append("content_sha256"))
+	return terra.ReferenceAsString(sf.ref.Append("content_sha256"))
 }
 
+// ContentSha512 returns a reference to field content_sha512 of local_sensitive_file.
 func (sf sensitiveFileAttributes) ContentSha512() terra.StringValue {
-	return terra.ReferenceString(sf.ref.Append("content_sha512"))
+	return terra.ReferenceAsString(sf.ref.Append("content_sha512"))
 }
 
+// DirectoryPermission returns a reference to field directory_permission of local_sensitive_file.
 func (sf sensitiveFileAttributes) DirectoryPermission() terra.StringValue {
-	return terra.ReferenceString(sf.ref.Append("directory_permission"))
+	return terra.ReferenceAsString(sf.ref.Append("directory_permission"))
 }
 
+// FilePermission returns a reference to field file_permission of local_sensitive_file.
 func (sf sensitiveFileAttributes) FilePermission() terra.StringValue {
-	return terra.ReferenceString(sf.ref.Append("file_permission"))
+	return terra.ReferenceAsString(sf.ref.Append("file_permission"))
 }
 
+// Filename returns a reference to field filename of local_sensitive_file.
 func (sf sensitiveFileAttributes) Filename() terra.StringValue {
-	return terra.ReferenceString(sf.ref.Append("filename"))
+	return terra.ReferenceAsString(sf.ref.Append("filename"))
 }
 
+// Id returns a reference to field id of local_sensitive_file.
 func (sf sensitiveFileAttributes) Id() terra.StringValue {
-	return terra.ReferenceString(sf.ref.Append("id"))
+	return terra.ReferenceAsString(sf.ref.Append("id"))
 }
 
+// Source returns a reference to field source of local_sensitive_file.
 func (sf sensitiveFileAttributes) Source() terra.StringValue {
-	return terra.ReferenceString(sf.ref.Append("source"))
+	return terra.ReferenceAsString(sf.ref.Append("source"))
 }
 
 type sensitiveFileState struct {
