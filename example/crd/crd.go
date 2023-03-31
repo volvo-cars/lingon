@@ -1,7 +1,9 @@
+// Copyright (c) 2023 Volvo Car Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 package main
 
 import (
-	ricobergerdev1alpha1 "github.com/ricoberger/vault-secrets-operator/api/v1alpha1"
 	"github.com/volvo-cars/lingon/pkg/kube"
 	istionetworkingv1beta1 "istio.io/client-go/pkg/apis/networking/v1beta1"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
@@ -32,9 +34,6 @@ func defaultSerializer() runtime.Decoder {
 		panic(err)
 	}
 	if err := secretsstorev1.AddToScheme(scheme.Scheme); err != nil {
-		panic(err)
-	}
-	if err := ricobergerdev1alpha1.AddToScheme(scheme.Scheme); err != nil {
 		panic(err)
 	}
 	if err := istionetworkingv1beta1.AddToScheme(scheme.Scheme); err != nil {

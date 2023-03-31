@@ -1,15 +1,19 @@
+// Copyright (c) 2023 Volvo Car Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 package updater
 
 import (
 	"errors"
 	"fmt"
+	"sort"
+
 	"github.com/Masterminds/semver/v3"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
-	"sort"
 )
 
-func GetLatestVersion(repository string, constraint string) (string, error) {
+func GetLatestVersion(repository, constraint string) (string, error) {
 	c, err := semver.NewConstraint(constraint)
 	if err != nil {
 		return "", fmt.Errorf("parsing constraint: %w", err)

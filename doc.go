@@ -1,3 +1,6 @@
+// Copyright (c) 2023 Volvo Car Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 // Lingon is a collection of libraries and tools for building platforms using Go.
 //
 // The following technologies are currently supported:

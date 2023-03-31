@@ -1,3 +1,6 @@
+// Copyright (c) 2023 Volvo Car Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 package karpenter
 
 import "github.com/volvo-cars/lingon/example/platypus/pkg/platform/awsauth"

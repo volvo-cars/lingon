@@ -1,3 +1,6 @@
+// Copyright (c) 2023 Volvo Car Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 package s3
 
 import (
@@ -88,6 +91,7 @@ func isOnlyLowercaseLettersNumbersDotsOrHyphens(name string) error {
 	}
 	return nil
 }
+
 func isIPAddress(name string) error {
 	if r := net.ParseIP(name); r != nil {
 		return fmt.Errorf("name must not be formatted as an IP address")

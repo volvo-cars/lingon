@@ -1,3 +1,6 @@
+# Copyright (c) 2023 Volvo Car Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 apiVersion: networking.istio.io/v1beta1
 kind: ServiceEntry
 metadata:
@@ -14,15 +17,6 @@ spec:
       number: 443
       protocol: HTTPS
   resolution: DNS
----
-apiVersion: ricoberger.de/v1alpha1
-kind: VaultSecret
-metadata:
-  name: team-dockercfg
-spec:
-  isBinary: true
-  path: team-onboarding-kv/team-dockercfg
-  type: kubernetes.io/dockerconfigjson
 ---
 apiVersion: secrets-store.csi.x-k8s.io/v1
 kind: SecretProviderClass

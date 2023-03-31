@@ -7,7 +7,9 @@ replace github.com/volvo-cars/lingon => ../..
 require (
 	github.com/ricoberger/vault-secrets-operator v1.21.0
 	github.com/volvo-cars/lingon v0.0.0-20230331132342-46c7f66ade5e
+	istio.io/api v0.0.0-20230217221049-9d422bf48675
 	istio.io/client-go v1.17.1
+	k8s.io/api v0.26.3
 	k8s.io/apiextensions-apiserver v0.26.3
 	k8s.io/apimachinery v0.26.3
 	k8s.io/kubectl v0.26.3
@@ -36,8 +38,6 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	istio.io/api v0.0.0-20230217221049-9d422bf48675 // indirect
-	k8s.io/api v0.26.3 // indirect
 	k8s.io/client-go v0.26.3 // indirect
 	k8s.io/klog/v2 v2.90.1 // indirect
 	k8s.io/utils v0.0.0-20230313181309-38a27ef9d749 // indirect
