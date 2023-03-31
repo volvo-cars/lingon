@@ -9,7 +9,7 @@ replace github.com/hashicorp/hcl/v2 => github.com/jlarfors/hcl/v2 v2.16.0-patch-
 require (
 	github.com/dave/jennifer v1.6.0
 	github.com/go-playground/validator/v10 v10.12.0
-	github.com/golingon/terraproviders/aws/4.60.0 v0.0.0-20230330130821-e9fe88c12847
+	github.com/golingon/terraproviders/aws/4.60.0 v0.0.0-20230331131635-c44b85b0d229
 	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/hcl/v2 v2.16.2
 	github.com/hashicorp/terraform-exec v0.18.1
