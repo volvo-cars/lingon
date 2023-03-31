@@ -4,6 +4,8 @@
 package terrajen
 
 import (
+	"fmt"
+
 	"github.com/dave/jennifer/jen"
 	"github.com/volvo-cars/lingon/pkg/internal/str"
 )
@@ -25,7 +27,17 @@ func ResourceFile(s *Schema) *jen.File {
 }
 
 func resourceNewFunc(s *Schema) *jen.Statement {
-	return jen.Func().Id(s.NewFuncName).Params(
+	return jen.Comment(
+		fmt.Sprintf(
+			"%s creates a new instance of [%s].",
+			s.NewFuncName,
+			s.StructName,
+		),
+	).
+		Line().
+		Func().
+		// Name
+		Id(s.NewFuncName).Params(
 		jen.Id("name").String(),
 		jen.Id("args").Id(s.ArgumentStructName),
 	).
@@ -54,10 +66,20 @@ func resourceStructCompileCheck(s *Schema) *jen.Statement {
 }
 
 func resourceStruct(s *Schema) *jen.Statement {
-	stmt := jen.Type().Id(s.StructName).Struct(
+	stmt := jen.Comment(
+		fmt.Sprintf(
+			"%s represents the Terraform resource %s.",
+			s.StructName,
+			s.Type,
+		),
+	).
+		Line().
+		Type().Id(s.StructName).Struct(
 		jen.Id(idFieldName).String(),
 		jen.Id(idFieldArgs).Id(s.ArgumentStructName),
 		jen.Id(idFieldState).Op("*").Id(s.StateStructName),
+		jen.Id(idFieldDependsOn).Add(qualTypeDependencies()),
+		jen.Id(idFieldLifecycle).Op("*").Add(qualStructLifecycle()),
 	)
 	stmt.Line()
 	stmt.Line()
@@ -75,6 +97,18 @@ func resourceStruct(s *Schema) *jen.Statement {
 	stmt.Add(funcConfiguration(s))
 	stmt.Line()
 	stmt.Line()
+	// DependOn
+	stmt.Add(funcDependOn(s))
+	stmt.Line()
+	stmt.Line()
+	// Dependencies
+	stmt.Add(funcDependencies(s))
+	stmt.Line()
+	stmt.Line()
+	// LifecycleManagement
+	stmt.Add(funcLifecycleManagement(s))
+	stmt.Line()
+	stmt.Line()
 	// Attributes
 	stmt.Add(funcAttributes(s))
 	stmt.Line()
@@ -89,10 +123,6 @@ func resourceStruct(s *Schema) *jen.Statement {
 	stmt.Line()
 	// StateMust
 	stmt.Add(funcResourceStateMust(s))
-	stmt.Line()
-	stmt.Line()
-	// DependOn
-	stmt.Add(funcDependOn(s))
 	stmt.Line()
 	stmt.Line()
 

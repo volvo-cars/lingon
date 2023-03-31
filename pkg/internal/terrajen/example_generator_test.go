@@ -93,22 +93,27 @@ func Example() {
 	//	Args ProviderArgs
 	// }
 	//
+	// // LocalName returns the provider local name for [Provider].
 	// func (p *Provider) LocalName() string {
 	//	return "google"
 	// }
 	//
+	// // Source returns the provider source for [Provider].
 	// func (p *Provider) Source() string {
 	//	return "hashicorp/google"
 	// }
 	//
+	// // Version returns the provider version for [Provider].
 	// func (p *Provider) Version() string {
 	//	return "4.58.0"
 	// }
 	//
+	// // Configuration returns the configuration (args) for [Provider].
 	// func (p *Provider) Configuration() interface{} {
 	//	return p.Args
 	// }
 	//
+	// // ProviderArgs contains the configurations for provider.
 	// type ProviderArgs struct {
 	//	// Field: string, required
 	//	Field terra.StringValue `hcl:"field,attr" validate:"required"`

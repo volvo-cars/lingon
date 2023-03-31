@@ -18,7 +18,7 @@ import (
 type StackConfig struct {
 	terra.Stack
 	Backend  *BackendS3
-	Provider *MockProvider
+	Provider *DummyProvider
 }
 
 var _ terra.Backend = (*BackendS3)(nil)
@@ -38,8 +38,8 @@ func (b *BackendS3) BackendType() string {
 type MyStack struct {
 	// Embed our reusable custom StackConfig
 	StackConfig
-	// Add a mock resource
-	Resource *MockResource `validate:"required"`
+	// Add a dummy resource
+	Resource *DummyResource `validate:"required"`
 }
 
 func Example_stackConfig() {
@@ -49,9 +49,9 @@ func Example_stackConfig() {
 				Bucket: "my-s3-bucket",
 				Key:    "some/path/to/state",
 			},
-			Provider: &MockProvider{},
+			Provider: &DummyProvider{},
 		},
-		Resource: &MockResource{},
+		Resource: &DummyResource{},
 	}
 
 	// Typically you would use terra.Export() and write to a file. We will
@@ -69,61 +69,69 @@ func Example_stackConfig() {
 	//     key    = "some/path/to/state"
 	//   }
 	//   required_providers {
-	//     mock = {
-	//       source  = "mock/mock"
+	//     dummy = {
+	//       source  = "dummy/dummy"
 	//       version = "0"
 	//     }
 	//   }
 	// }
 	//
 	// // Provider blocks
-	// provider "mock" {
+	// provider "dummy" {
 	// }
 	//
 	// // Resource blocks
-	// resource "mock_resource" "mock" {
+	// resource "dummy_resource" "dummy" {
 	// }
 }
 
-var _ terra.Provider = (*MockProvider)(nil)
+var _ terra.Provider = (*DummyProvider)(nil)
 
-type MockProvider struct{}
+type DummyProvider struct{}
 
-func (m MockProvider) LocalName() string {
-	return "mock"
+func (m DummyProvider) LocalName() string {
+	return "dummy"
 }
 
-func (m MockProvider) Source() string {
-	return "mock/mock"
+func (m DummyProvider) Source() string {
+	return "dummy/dummy"
 }
 
-func (m MockProvider) Version() string {
+func (m DummyProvider) Version() string {
 	return "0"
 }
 
-func (m MockProvider) Configuration() interface{} {
+func (m DummyProvider) Configuration() interface{} {
 	return struct{}{}
 }
 
-var _ terra.Resource = (*MockResource)(nil)
+var _ terra.Resource = (*DummyResource)(nil)
 
-// MockResource implements a dummy resource.
+// DummyResource implements a dummy resource.
 // Users do not need to write resources themselves,
 // they should be generated using terragen.
-type MockResource struct{}
+type DummyResource struct{}
 
-func (m MockResource) Type() string {
-	return "mock_resource"
+func (m DummyResource) Type() string {
+	return "dummy_resource"
 }
 
-func (m MockResource) LocalName() string {
-	return "mock"
+func (m DummyResource) LocalName() string {
+	return "dummy"
 }
 
-func (m MockResource) Configuration() interface{} {
+func (m DummyResource) Configuration() interface{} {
 	return struct{}{}
 }
 
-func (m MockResource) ImportState(attributes io.Reader) error {
+func (m DummyResource) Dependencies() terra.Dependencies {
+	return nil
+}
+
+func (m DummyResource) LifecycleManagement() *terra.Lifecycle {
+	return nil
+}
+
+func (m DummyResource) ImportState(attributes io.Reader) error {
 	return nil
 }

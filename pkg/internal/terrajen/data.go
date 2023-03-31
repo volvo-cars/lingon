@@ -4,6 +4,8 @@
 package terrajen
 
 import (
+	"fmt"
+
 	"github.com/dave/jennifer/jen"
 )
 
@@ -24,7 +26,15 @@ func DataSourceFile(s *Schema) *jen.File {
 }
 
 func dataNewFunc(s *Schema) *jen.Statement {
-	return jen.Func().Id(s.NewFuncName).Params(
+	return jen.Comment(
+		fmt.Sprintf(
+			"%s creates a new instance of [%s].",
+			s.NewFuncName,
+			s.StructName,
+		),
+	).
+		Line().
+		Func().Id(s.NewFuncName).Params(
 		jen.Id("name").String(),
 		jen.Id("args").Id(s.ArgumentStructName),
 	).
@@ -53,7 +63,15 @@ func dataStructCompileCheck(s *Schema) *jen.Statement {
 }
 
 func dataStruct(s *Schema) *jen.Statement {
-	stmt := jen.Type().Id(s.StructName).Struct(
+	stmt := jen.Comment(
+		fmt.Sprintf(
+			"%s represents the Terraform data resource %s.",
+			s.StructName,
+			s.Type,
+		),
+	).
+		Line().
+		Type().Id(s.StructName).Struct(
 		jen.Id(idFieldName).String(),
 		jen.Id(idFieldArgs).Id(s.ArgumentStructName),
 	)

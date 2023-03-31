@@ -4,6 +4,7 @@ package local
 
 import "github.com/volvo-cars/lingon/pkg/terra"
 
+// NewDataFile creates a new instance of [DataFile].
 func NewDataFile(name string, args DataFileArgs) *DataFile {
 	return &DataFile{
 		Args: args,
@@ -13,27 +14,33 @@ func NewDataFile(name string, args DataFileArgs) *DataFile {
 
 var _ terra.DataResource = (*DataFile)(nil)
 
+// DataFile represents the Terraform data resource local_file.
 type DataFile struct {
 	Name string
 	Args DataFileArgs
 }
 
+// DataSource returns the Terraform object type for [DataFile].
 func (f *DataFile) DataSource() string {
 	return "local_file"
 }
 
+// LocalName returns the local name for [DataFile].
 func (f *DataFile) LocalName() string {
 	return f.Name
 }
 
+// Configuration returns the configuration (args) for [DataFile].
 func (f *DataFile) Configuration() interface{} {
 	return f.Args
 }
 
+// Attributes returns the attributes for [DataFile].
 func (f *DataFile) Attributes() dataFileAttributes {
 	return dataFileAttributes{ref: terra.ReferenceDataResource(f)}
 }
 
+// DataFileArgs contains the configurations for local_file.
 type DataFileArgs struct {
 	// Filename: string, required
 	Filename terra.StringValue `hcl:"filename,attr" validate:"required"`
@@ -42,42 +49,52 @@ type dataFileAttributes struct {
 	ref terra.Reference
 }
 
+// Content returns a reference to field content of local_file.
 func (f dataFileAttributes) Content() terra.StringValue {
-	return terra.ReferenceString(f.ref.Append("content"))
+	return terra.ReferenceAsString(f.ref.Append("content"))
 }
 
+// ContentBase64 returns a reference to field content_base64 of local_file.
 func (f dataFileAttributes) ContentBase64() terra.StringValue {
-	return terra.ReferenceString(f.ref.Append("content_base64"))
+	return terra.ReferenceAsString(f.ref.Append("content_base64"))
 }
 
+// ContentBase64Sha256 returns a reference to field content_base64sha256 of local_file.
 func (f dataFileAttributes) ContentBase64Sha256() terra.StringValue {
-	return terra.ReferenceString(f.ref.Append("content_base64sha256"))
+	return terra.ReferenceAsString(f.ref.Append("content_base64sha256"))
 }
 
+// ContentBase64Sha512 returns a reference to field content_base64sha512 of local_file.
 func (f dataFileAttributes) ContentBase64Sha512() terra.StringValue {
-	return terra.ReferenceString(f.ref.Append("content_base64sha512"))
+	return terra.ReferenceAsString(f.ref.Append("content_base64sha512"))
 }
 
+// ContentMd5 returns a reference to field content_md5 of local_file.
 func (f dataFileAttributes) ContentMd5() terra.StringValue {
-	return terra.ReferenceString(f.ref.Append("content_md5"))
+	return terra.ReferenceAsString(f.ref.Append("content_md5"))
 }
 
+// ContentSha1 returns a reference to field content_sha1 of local_file.
 func (f dataFileAttributes) ContentSha1() terra.StringValue {
-	return terra.ReferenceString(f.ref.Append("content_sha1"))
+	return terra.ReferenceAsString(f.ref.Append("content_sha1"))
 }
 
+// ContentSha256 returns a reference to field content_sha256 of local_file.
 func (f dataFileAttributes) ContentSha256() terra.StringValue {
-	return terra.ReferenceString(f.ref.Append("content_sha256"))
+	return terra.ReferenceAsString(f.ref.Append("content_sha256"))
 }
 
+// ContentSha512 returns a reference to field content_sha512 of local_file.
 func (f dataFileAttributes) ContentSha512() terra.StringValue {
-	return terra.ReferenceString(f.ref.Append("content_sha512"))
+	return terra.ReferenceAsString(f.ref.Append("content_sha512"))
 }
 
+// Filename returns a reference to field filename of local_file.
 func (f dataFileAttributes) Filename() terra.StringValue {
-	return terra.ReferenceString(f.ref.Append("filename"))
+	return terra.ReferenceAsString(f.ref.Append("filename"))
 }
 
+// Id returns a reference to field id of local_file.
 func (f dataFileAttributes) Id() terra.StringValue {
-	return terra.ReferenceString(f.ref.Append("id"))
+	return terra.ReferenceAsString(f.ref.Append("id"))
 }

@@ -44,52 +44,52 @@ func ExampleList_bool() {
 
 func ExampleList_ref() {
 	// Create some dummy references
-	refA := ReferenceString(newRef("a"))
-	refB := ReferenceString(newRef("b"))
+	refA := ReferenceAsString(ReferenceResource(&dummyResource{}))
+	refB := ReferenceAsString(ReferenceDataResource(&dummyDataResource{}))
 
 	s := List(refA, refB)
 	fmt.Println(string(s.InternalTokens().Bytes()))
-	// Output: [a, b]
+	// Output: [dummy.dummy, data.dummy.dummy]
 }
 
 func ExampleList_mixed() {
 	s := List(
 		String("a"),
 		Number(1).AsString(),
-		ReferenceString(newRef("a")),
+		ReferenceAsString(ReferenceResource(&dummyResource{})),
 	)
 
 	fmt.Println(string(s.InternalTokens().Bytes()))
-	// Output: ["a", "1", a]
+	// Output: ["a", "1", dummy.dummy]
 }
 
 func ExampleList_index() {
 	// Create a reference list of string and Splat() it
-	l := ReferenceList[StringValue](
-		newRef("a", "b", "c"),
+	l := ReferenceAsList[StringValue](
+		ReferenceResource(&dummyResource{}),
 	)
 	index := l.Index(0)
 	fmt.Println(string(index.InternalTokens().Bytes()))
-	// Output: a.b.c[0]
+	// Output: dummy.dummy[0]
 }
 
 func ExampleList_splat() {
 	// Create a reference list of string and Splat() it
-	l := ReferenceList[StringValue](
-		newRef("a", "b", "c"),
+	l := ReferenceAsList[StringValue](
+		ReferenceResource(&dummyResource{}),
 	)
 	splat := l.Splat()
 	// Convert "splatted" list back to a List
 	var ls ListValue[StringValue] //nolint:gosimple
 	ls = CastAsList(splat)
 	fmt.Println(string(ls.InternalTokens().Bytes()))
-	// Output: a.b.c[*]
+	// Output: dummy.dummy[*]
 }
 
 func ExampleList_splatNested() {
 	// Create a reference list of a list of string and Splat() it
-	l := ReferenceList[ListValue[StringValue]](
-		newRef("a", "b", "c"),
+	l := ReferenceAsList[ListValue[StringValue]](
+		ReferenceResource(&dummyResource{}),
 	)
 	splat := l.Splat()
 	// Convert "splatted" list back to a List of List
@@ -98,7 +98,7 @@ func ExampleList_splatNested() {
 		splat,
 	)
 	fmt.Println(string(ls.InternalTokens().Bytes()))
-	// Output: a.b.c[*]
+	// Output: dummy.dummy[*]
 }
 
 var _ Value[Attrs] = (*Attrs)(nil)
@@ -122,20 +122,20 @@ func (a Attrs) InternalWithRef(ref Reference) Attrs {
 }
 
 func (a Attrs) Name() StringValue {
-	return ReferenceString(a.ref.Append("name"))
+	return ReferenceAsString(a.ref.Append("name"))
 }
 
 func TestCustomTypes(t *testing.T) {
-	l := ReferenceList[Attrs](newRef("bla_type", "name"))
+	l := ReferenceAsList[Attrs](ReferenceResource(&dummyResource{}))
 	index := l.Index(0)
 	name := index.Name()
 	tu.AssertEqual(
 		t, string(name.InternalTokens().Bytes()),
-		"bla_type.name[0].name",
+		"dummy.dummy[0].name",
 	)
 	// Make sure index was not updated after updating name
 	tu.AssertEqual(
 		t, string(index.InternalTokens().Bytes()),
-		"bla_type.name[0]",
+		"dummy.dummy[0]",
 	)
 }

@@ -43,7 +43,7 @@ func ExampleMap_mixed() {
 	s := Map(
 		map[string]StringValue{
 			"a": String("a"),
-			"b": ReferenceString(newRef("b")),
+			"b": ReferenceAsString(ReferenceResource(&dummyResource{})),
 		},
 	)
 
@@ -51,6 +51,6 @@ func ExampleMap_mixed() {
 	// Output:
 	// {
 	//   "a" = "a"
-	//   "b" = b
+	//   "b" = dummy.dummy
 	// }
 }

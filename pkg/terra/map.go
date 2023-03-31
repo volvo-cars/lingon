@@ -29,11 +29,11 @@ func Map[T Value[T]](value map[string]T) MapValue[T] {
 
 // CastAsMap takes a value (as a reference) and wraps it in a MapValue
 func CastAsMap[T Value[T]](value T) MapValue[T] {
-	return ReferenceMap[T](value.InternalRef())
+	return ReferenceAsMap[T](value.InternalRef())
 }
 
-// ReferenceMap returns a map value
-func ReferenceMap[T Value[T]](ref Reference) MapValue[T] {
+// ReferenceAsMap returns a map value
+func ReferenceAsMap[T Value[T]](ref Reference) MapValue[T] {
 	return MapValue[T]{
 		isInit: true,
 		isRef:  true,
@@ -83,11 +83,11 @@ func (v MapValue[T]) InternalRef() Reference {
 	if !v.isRef {
 		panic("MapValue: cannot get reference from value")
 	}
-	return v.ref
+	return v.ref.copy()
 }
 
 func (v MapValue[T]) InternalWithRef(ref Reference) MapValue[T] {
-	return ReferenceMap[T](ref)
+	return ReferenceAsMap[T](ref)
 }
 
 func sortMapKeys[T any](m map[string]T) []string {

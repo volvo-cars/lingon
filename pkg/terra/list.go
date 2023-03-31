@@ -27,11 +27,11 @@ func List[T Value[T]](values ...T) ListValue[T] {
 
 // CastAsList takes a value (as a reference) and wraps it in a ListValue
 func CastAsList[T Value[T]](value T) ListValue[T] {
-	return ReferenceList[T](value.InternalRef())
+	return ReferenceAsList[T](value.InternalRef())
 }
 
-// ReferenceList creates a list reference
-func ReferenceList[T Value[T]](ref Reference) ListValue[T] {
+// ReferenceAsList creates a list reference
+func ReferenceAsList[T Value[T]](ref Reference) ListValue[T] {
 	return ListValue[T]{
 		isInit: true,
 		isRef:  true,
@@ -84,9 +84,9 @@ func (v ListValue[T]) InternalRef() Reference {
 	if !v.isRef {
 		panic("ListValue: cannot get reference from value")
 	}
-	return v.ref
+	return v.ref.copy()
 }
 
 func (v ListValue[T]) InternalWithRef(ref Reference) ListValue[T] {
-	return ReferenceList[T](ref)
+	return ReferenceAsList[T](ref)
 }

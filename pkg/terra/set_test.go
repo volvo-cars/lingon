@@ -39,51 +39,51 @@ func ExampleSet_bool() {
 
 func ExampleSet_ref() {
 	s := Set(
-		ReferenceString(newRef("a")),
-		ReferenceString(newRef("b")),
+		ReferenceAsString(ReferenceResource(&dummyResource{})),
+		ReferenceAsString(ReferenceDataResource(&dummyDataResource{})),
 	)
 
 	fmt.Println(string(s.InternalTokens().Bytes()))
-	// Output: [a, b]
+	// Output: [dummy.dummy, data.dummy.dummy]
 }
 
 func ExampleSet_mixed() {
 	s := Set(
 		String("a"),
-		ReferenceString(newRef("a")),
+		ReferenceAsString(ReferenceResource(&dummyResource{})),
 	)
 
 	fmt.Println(string(s.InternalTokens().Bytes()))
-	// Output: ["a", a]
+	// Output: ["a", dummy.dummy]
 }
 
 func ExampleSet_index() {
 	// Create a reference set of string and Splat() it
-	l := ReferenceSet[StringValue](
-		newRef("a", "b", "c"),
+	l := ReferenceAsSet[StringValue](
+		ReferenceResource(&dummyResource{}),
 	)
 	index := l.Index(0)
 	fmt.Println(string(index.InternalTokens().Bytes()))
-	// Output: a.b.c[0]
+	// Output: dummy.dummy[0]
 }
 
 func ExampleSet_splat() {
 	// Create a reference set of string and Splat() it
-	l := ReferenceSet[StringValue](
-		newRef("a", "b", "c"),
+	l := ReferenceAsSet[StringValue](
+		ReferenceResource(&dummyResource{}),
 	)
 	splat := l.Splat()
 	// Convert "splatted" set back to a Set
 	var ls SetValue[StringValue] //nolint:gosimple
 	ls = CastAsSet(splat)
 	fmt.Println(string(ls.InternalTokens().Bytes()))
-	// Output: a.b.c[*]
+	// Output: dummy.dummy[*]
 }
 
 func ExampleSet_splatNested() {
 	// Create a reference set of a set of string and Splat() it
-	l := ReferenceSet[SetValue[StringValue]](
-		newRef("a", "b", "c"),
+	l := ReferenceAsSet[SetValue[StringValue]](
+		ReferenceResource(&dummyResource{}),
 	)
 	splat := l.Splat()
 	// Convert "splatted" set back to a Set of Set
@@ -92,5 +92,5 @@ func ExampleSet_splatNested() {
 		splat,
 	)
 	fmt.Println(string(ls.InternalTokens().Bytes()))
-	// Output: a.b.c[*]
+	// Output: dummy.dummy[*]
 }

@@ -34,20 +34,20 @@ func ctyTypeReturnType(ct cty.Type) *jen.Statement {
 func funcReferenceByCtyType(ct cty.Type) *jen.Statement {
 	switch {
 	case ct == cty.Bool:
-		return qualReferenceBool()
+		return qualReferenceAsBool()
 	case ct == cty.String:
-		return qualReferenceString()
+		return qualReferenceAsString()
 	case ct == cty.Number:
-		return qualReferenceNumber()
+		return qualReferenceAsNumber()
 	case ct.IsMapType():
 		subType := ctyTypeReturnType(ct.ElementType())
-		return qualReferenceMap().Types(subType)
+		return qualReferenceAsMap().Types(subType)
 	case ct.IsSetType():
 		subType := ctyTypeReturnType(ct.ElementType())
-		return qualReferenceSet().Types(subType)
+		return qualReferenceAsSet().Types(subType)
 	case ct.IsListType():
 		subType := ctyTypeReturnType(ct.ElementType())
-		return qualReferenceList().Types(subType)
+		return qualReferenceAsList().Types(subType)
 	default:
 		panic(fmt.Sprintf("unsupported AttributeType: %s", ct.GoString()))
 	}

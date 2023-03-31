@@ -439,7 +439,7 @@ func jenNodeReturnValue(
 	// If the child is not nested in any lists/sets/maps then simply return
 	// a reference to the single child qualifier
 	if len(n.nestingPath) == 0 {
-		return qualReferenceSingle().Types(childQual)
+		return qualReferenceAsSingle().Types(childQual)
 	}
 
 	first := n.nestingPath[0]
@@ -449,11 +449,11 @@ func jenNodeReturnValue(
 	var fullQual *jen.Statement
 	switch first {
 	case nodeNestingModeList:
-		fullQual = qualReferenceList().Types(subType)
+		fullQual = qualReferenceAsList().Types(subType)
 	case nodeNestingModeSet:
-		fullQual = qualReferenceSet().Types(subType)
+		fullQual = qualReferenceAsSet().Types(subType)
 	case nodeNestingModeMap:
-		fullQual = qualReferenceMap().Types(subType)
+		fullQual = qualReferenceAsMap().Types(subType)
 	default:
 		panic(fmt.Sprintf("unsupport node nesting type: %d", n.nestingPath))
 	}

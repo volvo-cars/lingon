@@ -13,16 +13,16 @@ import (
 
 func TestExport(t *testing.T) {
 	type simpleStack struct {
-		DummyBaseStack
+		DummyStack
 		DummyRes  *dummyResource     `validate:"required"`
 		DummyData *dummyDataResource `validate:"required"`
 	}
 	dr := &dummyResource{}
 	ddr := &dummyDataResource{}
 	st := simpleStack{
-		DummyBaseStack: newDummyBaseStack(),
-		DummyRes:       dr,
-		DummyData:      ddr,
+		DummyStack: newDummyBaseStack(),
+		DummyRes:   dr,
+		DummyData:  ddr,
 	}
 	var b bytes.Buffer
 	err := encodeStack(&st, &b)

@@ -55,28 +55,17 @@ func argsStruct(s *Schema) *jen.Statement {
 		fields = append(fields, stmt)
 	}
 
-	// Add additional Terraform fields, like depends_on
-	if s.SchemaType == SchemaTypeResource {
-		fields = append(
-			fields,
-			jen.Comment(
-				fmt.Sprintf(
-					"// DependsOn contains resources that %s depends on",
-					s.StructName,
-				),
-			).
-				Line().
-				Id("DependsOn").
-				Qual(pkgTerra, "Dependencies").
-				Tag(
-					map[string]string{
-						tagHCL: "depends_on,attr",
-					},
-				),
-		)
-	}
-
-	return jen.Type().Id(s.ArgumentStructName).Struct(fields...)
+	return jen.Comment(
+		fmt.Sprintf(
+			"%s contains the configurations for %s.",
+			s.ArgumentStructName,
+			s.Type,
+		),
+	).
+		Line().
+		Type().
+		Id(s.ArgumentStructName).
+		Struct(fields...)
 }
 
 // attributesStruct takes a schema and generates the Attributes struct that is used by the user to creates references to
@@ -103,7 +92,16 @@ func attributesStruct(s *Schema) *jen.Statement {
 	for _, attr := range s.graph.attributes {
 		ct := attr.ctyType
 		stmt.Add(
-			jen.Func().
+			jen.Comment(
+				fmt.Sprintf(
+					"%s returns a reference to field %s of %s.",
+					str.PascalCase(attr.name),
+					attr.name,
+					s.Type,
+				),
+			).
+				Line().
+				Func().
 				// Receiver
 				Params(jen.Id(s.Receiver).Id(s.AttributesStructName)).
 				// Name

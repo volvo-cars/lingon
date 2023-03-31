@@ -34,12 +34,22 @@ const (
 )
 
 const (
-	idFieldName  = "Name"
-	idFieldArgs  = "Args"
-	idFieldState = "state"
+	idFieldName      = "Name"
+	idFieldArgs      = "Args"
+	idFieldState     = "state"
+	idFieldLifecycle = "Lifecycle"
+	idFieldDependsOn = "DependsOn"
 
-	idFuncType      = "Type"
-	idFuncLocalName = "LocalName"
-	idFuncState     = "State"
-	idFuncStateMust = "StateMust"
+	idFuncSource              = "Source"
+	idFuncVersion             = "Version"
+	idFuncType                = "Type"
+	idFuncLocalName           = "LocalName"
+	idFuncConfiguration       = "Configuration"
+	idFuncDependOn            = "DependOn"
+	idFuncDependencies        = "Dependencies"
+	idFuncLifecycleManagement = "LifecycleManagement"
+	idFuncAttributes          = "Attributes"
+	idFuncImportState         = "ImportState"
+	idFuncState               = "State"
+	idFuncStateMust           = "StateMust"
 )
