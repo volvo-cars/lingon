@@ -13,6 +13,8 @@ before:
 
 gomod:
   proxy: true
+  env:
+    - GOPROXY=https://proxy.golang.org,direct
 
 builds:
 
@@ -21,6 +23,7 @@ builds:
     env:
       - CGO_ENABLED=0
       - GO111MODULE=on
+      - GOPROXY=https://proxy.golang.org,direct
     goos:
       - linux
       - darwin
