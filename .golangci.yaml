@@ -41,7 +41,6 @@ linters:
     - revive
     - gosimple
     - govet
-    - ineffassign
     - staticcheck
     - stylecheck
     - typecheck

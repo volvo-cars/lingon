@@ -22,3 +22,4 @@ vendor/
 .idea/
 **/out
 .vscode/
+dist/
