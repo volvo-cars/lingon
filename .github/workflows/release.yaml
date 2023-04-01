@@ -7,6 +7,7 @@ on:
 
 permissions:  # added using https://github.com/step-security/
   contents: read
+  packages: write
 
 jobs:
   goreleaser:

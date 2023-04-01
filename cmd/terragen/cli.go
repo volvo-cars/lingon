@@ -29,8 +29,10 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 
 	"github.com/volvo-cars/lingon/pkg/terragen"
 	"golang.org/x/exp/slog"
@@ -43,6 +45,7 @@ func main() {
 		pkgPath     string
 		providerStr string
 		force       bool
+		v           bool
 	)
 
 	flag.StringVar(
@@ -65,8 +68,14 @@ func main() {
 		false,
 		"override any existing generated Go files",
 	)
+	flag.BoolVar(&v, "v", false, "show version")
+
 	flag.Parse()
 
+	if v {
+		printVersion()
+		return
+	}
 	if outDir == "" {
 		slog.Error("-out flag required")
 		os.Exit(1)
@@ -118,4 +127,22 @@ func main() {
 		slog.Error("generating Go wrapper", "err", err)
 		os.Exit(1)
 	}
+}
+
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+)
+
+func printVersion() {
+	bi, ok := debug.ReadBuildInfo()
+	if !ok {
+		_, _ = fmt.Fprintln(os.Stderr, "error reading build-info")
+		os.Exit(1)
+	}
+	fmt.Printf("Build:\n%s\n", bi)
+	fmt.Printf("Version: %s\n", version)
+	fmt.Printf("Commit: %s\n", commit)
+	fmt.Printf("Date: %s\n", date)
 }

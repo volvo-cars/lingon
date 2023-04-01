@@ -5,6 +5,8 @@
 # Make sure to check the documentation at https://goreleaser.com
 project_name: lingon
 
+dist: bin
+
 before:
   hooks:
     - go mod tidy
@@ -15,10 +17,11 @@ gomod:
 builds:
 
   - id: explode
+    binary: explode
     env:
       - CGO_ENABLED=0
       - GO111MODULE=on
-    #      - GOPROXY=https://proxy.golang.org,direct
+      - GOPROXY=https://proxy.golang.org,direct
     goos:
       - linux
       - darwin
@@ -37,16 +40,19 @@ builds:
         -X main.date={{ .Date }}
         -X main.builtBy=goreleaser
 
-  - id: explode-windows
+  - id: kygo
+    binary: kygo
     env:
       - CGO_ENABLED=0
       - GO111MODULE=on
+      - GOPROXY=https://proxy.golang.org,direct
     goos:
-      - windows
+      - linux
+      - darwin
     goarch:
       - amd64
       - arm64
-    main: ./cmd/explode/cli.go
+    main: ./cmd/kygo/cli.go
     flags:
       - -trimpath
     ldflags:
@@ -58,50 +64,89 @@ builds:
         -X main.date={{ .Date }}
         -X main.builtBy=goreleaser
 
-docker_signs:
-  - artifacts: manifests
-    stdin: '{{ .Env.COSIGN_PWD }}'
+  - id: terragen
+    binary: terragen
+    env:
+      - CGO_ENABLED=0
+      - GO111MODULE=on
+      - GOPROXY=https://proxy.golang.org,direct
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    main: ./cmd/terragen/cli.go
+    flags:
+      - -trimpath
+    ldflags:
+      - >
+        -s -w
+        -extldflags "-static"
+        -X main.version={{ .Version }}
+        -X main.commit={{ .Commit }}
+        -X main.date={{ .Date }}
+        -X main.builtBy=goreleaser
+
+
+#docker_signs:
+#  - artifacts: manifests
+#    stdin: '{{ .Env.COSIGN_PWD }}'
 
 kos:
-  - id: lingon
-    # repository: ghcr.io/veggiemonk/lingon # Defaults to the value of $KO_DOCKER_REPO.
+  - id: explode
+    repository: ghcr.io/volvo-cars/lingon/explode # Defaults to the value of $KO_DOCKER_REPO.
+    build: explode
     platforms:
       - linux/amd64
       - linux/arm64
     tags:
       - latest
-      - '{{.Tag}}'
-      # - '{{.Os}}-{{.Arch}}-{{.Tag}}'
-    main: ./cmd/explode/cli.go
+      - '{{.Os}}-{{.Arch}}-{{.Tag}}'
     sbom: spdx
-    bare: true
-    flags:
-      - -trimpath
-    ldflags:
-      - >
-        -s -w
-        -extldflags "-static"
-        -X main.version={{ .Version }}
-        -X main.commit={{ .Commit }}
-        -X main.date={{ .Date }}
-        -X main.builtBy=goreleaser
+    # preserve_import_paths: false
+    # base_import_paths: true
+  - id: kygo
+    repository: ghcr.io/volvo-cars/lingon/kygo # Defaults to the value of $KO_DOCKER_REPO.
+    build: kygo
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    tags:
+      - latest
+      - '{{.Os}}-{{.Arch}}-{{.Tag}}'
+    sbom: spdx
+    # preserve_import_paths: false
+    # base_import_paths: true
+  - id: terragen
+    repository: ghcr.io/volvo-cars/lingon/terragen # Defaults to the value of $KO_DOCKER_REPO.
+    build: terragen
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    tags:
+      - latest
+      - '{{.Os}}-{{.Arch}}-{{.Tag}}'
+    sbom: spdx
     # preserve_import_paths: false
     # base_import_paths: true
 
 archives:
-  - format: tar.gz
-    # this name template makes the OS and Arch compatible with the results of uname.
-    name_template: >-
-      {{ .ProjectName }}_
-      {{- title .Os }}_
-      {{- if eq .Arch "amd64" }}x86_64
-      {{- else if eq .Arch "386" }}i386
-      {{- else }}{{ .Arch }}{{ end }}
-      {{- if .Arm }}v{{ .Arm }}{{ end }}
-    # use zip for windows archives
-    format_overrides:
-      - goos: windows
-        format: zip
+  - id: explode
+    format: tar.gz
+    name_template: "{{ .Binary }}_{{ .Os }}_{{ .Arch }}_{{ .ShortCommit }}"
+    builds:
+      - explode
+  - id: kygo
+    format: tar.gz
+    name_template: "{{ .Binary }}_{{ .Os }}_{{ .Arch }}_{{ .ShortCommit }}"
+    builds:
+      - kygo
+  - id: terragen
+    format: tar.gz
+    name_template: "{{ .Binary }}_{{ .Os }}_{{ .Arch }}_{{ .ShortCommit }}"
+    builds:
+      - terragen
 checksum:
   name_template: 'checksums.txt'
 snapshot:
@@ -110,9 +155,9 @@ changelog:
   sort: asc
   filters:
     exclude:
-      - '^docs:'
-      - '^test:'
-
+      - '^[Dd]ocs:'
+      - '^[Tt]est:'
+      - '^testdata:'
 # The lines beneath this are called `modelines`. See `:help modeline`
 # Feel free to remove those if you don't want/use them.
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json

@@ -7,6 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"runtime/debug"
 	"strings"
 
 	"github.com/volvo-cars/lingon/pkg/kube"
@@ -19,8 +20,10 @@ import (
 
 func main() {
 	var in, out, appName, pkgName string
-	groupByKind := false
-	removeAppName := false
+	var v bool
+
+	groupByKind := true
+	removeAppName := true
 	flag.StringVar(
 		&in,
 		"in",
@@ -57,8 +60,14 @@ func main() {
 		true,
 		"specify if the app name should be removed from the variable, struct and file name.",
 	)
+	flag.BoolVar(&v, "v", false, "show version")
 
 	flag.Parse()
+
+	if v {
+		printVersion()
+		return
+	}
 
 	if pkgName == "" {
 		pkgName = strings.ReplaceAll(appName, "-", "")
@@ -146,4 +155,22 @@ func run(
 		return fmt.Errorf("import: %w", err)
 	}
 	return nil
+}
+
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+)
+
+func printVersion() {
+	bi, ok := debug.ReadBuildInfo()
+	if !ok {
+		_, _ = fmt.Fprintln(os.Stderr, "error reading build-info")
+		os.Exit(1)
+	}
+	fmt.Printf("Build:\n%s\n", bi)
+	fmt.Printf("Version: %s\n", version)
+	fmt.Printf("Commit: %s\n", commit)
+	fmt.Printf("Date: %s\n", date)
 }
