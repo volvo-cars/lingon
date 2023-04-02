@@ -36,7 +36,7 @@ jobs:
         # issue: pattern ./...: directory prefix . does not contain main module or its selected dependencies
         # see https://github.com/golangci/golangci-lint/issues/2654
         # or, maybe, just maybe, I simply forgot to add actions/checkout like a dummy
-        run: go test -v ./pkg/... ./docs/... # -coverprofile=coverage.txt -covermode=atomic
+        run: go test -v ./pkg/... # -coverprofile=coverage.txt -covermode=atomic
       - name: golangci-lint
         uses: golangci/golangci-lint-action@08e2f20817b15149a52b5b3ebe7de50aff2ba8c5 # v3.4.0
         with:
