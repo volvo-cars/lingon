@@ -96,7 +96,7 @@ You can create your own abstraction.
 
 Templating only works for abstracting away some straightforward,
 low level details that are common or should be enforced.  
-The debugging experience is requires a lot of knowledge and focus.
+The debugging experience is painful and requires a lot of knowledge and focus.
 
 We haven't seen it work properly beyond simple string replacement or some naming conventions.
 
@@ -147,7 +147,7 @@ However, we found that the developer experience could be improved.
 A lot of the arguments are raw strings and do not prevent us from writing invalid configurations.
 We would put Pulumi in the category of "more flexible Terraform".
 
-Pulumi does what Lingon doing but forces us to use unnecessary abstraction and
+Pulumi does what Lingon is doing but forces us to use unnecessary abstraction and
 store relevant information in the context `*pulumi.Context`.
 The context object puts us off a bit. It is a global variable that is used to pass values between resources.
 Therefore, we would have to pass the key (just a string) around in order
