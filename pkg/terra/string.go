@@ -65,14 +65,14 @@ func (v StringValue) AsNumber() NumberValue {
 	}
 }
 
-func (v StringValue) InternalTokens() hclwrite.Tokens {
+func (v StringValue) InternalTokens() (hclwrite.Tokens, error) {
 	if !v.isInit {
-		return nil
+		return nil, nil
 	}
 	if v.isRef {
 		return v.ref.InternalTokens()
 	}
-	return hclwrite.TokensForValue(v.value)
+	return hclwrite.TokensForValue(v.value), nil
 }
 
 func (v StringValue) InternalRef() (Reference, error) {

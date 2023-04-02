@@ -77,9 +77,9 @@ func (v SetValue[T]) Splat() T {
 	return t.InternalWithRef(v.ref.splat())
 }
 
-func (v SetValue[T]) InternalTokens() hclwrite.Tokens {
+func (v SetValue[T]) InternalTokens() (hclwrite.Tokens, error) {
 	if !v.isInit {
-		return nil
+		return nil, nil
 	}
 	if v.isRef {
 		return v.ref.InternalTokens()
@@ -87,12 +87,16 @@ func (v SetValue[T]) InternalTokens() hclwrite.Tokens {
 
 	elems := make([]hclwrite.Tokens, len(v.values))
 	for i, val := range v.values {
-		elems[i] = val.InternalTokens()
+		toks, err := val.InternalTokens()
+		if err != nil {
+			return nil, fmt.Errorf("getting tokens: %w", err)
+		}
+		elems[i] = toks
 	}
 	if v.values == nil {
-		return nil
+		return nil, nil
 	}
-	return hclwrite.TokensForTuple(elems)
+	return hclwrite.TokensForTuple(elems), nil
 }
 
 func (v SetValue[T]) InternalRef() (Reference, error) {

@@ -5,6 +5,8 @@ package terra
 
 import (
 	"fmt"
+
+	"golang.org/x/exp/slog"
 )
 
 func ExampleMap_string() {
@@ -15,7 +17,12 @@ func ExampleMap_string() {
 		},
 	)
 
-	fmt.Println(string(s.InternalTokens().Bytes()))
+	toks, err := s.InternalTokens()
+	if err != nil {
+		slog.Error("getting tokens", "err", err)
+		return
+	}
+	fmt.Println(string(toks.Bytes()))
 	// Output:
 	// {
 	//   "a" = "a"
@@ -31,7 +38,12 @@ func ExampleMap_number() {
 		},
 	)
 
-	fmt.Println(string(s.InternalTokens().Bytes()))
+	toks, err := s.InternalTokens()
+	if err != nil {
+		slog.Error("getting tokens", "err", err)
+		return
+	}
+	fmt.Println(string(toks.Bytes()))
 	// Output:
 	// {
 	//   "0" = 0
@@ -47,7 +59,12 @@ func ExampleMap_mixed() {
 		},
 	)
 
-	fmt.Println(string(s.InternalTokens().Bytes()))
+	toks, err := s.InternalTokens()
+	if err != nil {
+		slog.Error("getting tokens", "err", err)
+		return
+	}
+	fmt.Println(string(toks.Bytes()))
 	// Output:
 	// {
 	//   "a" = "a"

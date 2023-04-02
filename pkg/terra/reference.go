@@ -114,7 +114,7 @@ type referenceStep struct {
 
 // InternalTokens returns the tokens to represent this reference in Terraform
 // configurations
-func (r Reference) InternalTokens() hclwrite.Tokens {
+func (r Reference) InternalTokens() (hclwrite.Tokens, error) {
 	var fullSteps []referenceStep
 	switch r.underlyingType {
 	case referenceResource:
@@ -144,14 +144,17 @@ func (r Reference) InternalTokens() hclwrite.Tokens {
 			},
 		}
 	default:
-		panic("unknown underlying type for reference")
+		return nil, fmt.Errorf(
+			"unknown underlying type for reference: %d",
+			r.underlyingType,
+		)
 	}
 	fullSteps = append(fullSteps, r.steps...)
 	tokens, err := tokensForSteps(fullSteps)
 	if err != nil {
 		panic(fmt.Sprintf("creating tokens for reference steps: %s", err))
 	}
-	return tokens
+	return tokens, nil
 }
 
 // Append appends the given string to the reference

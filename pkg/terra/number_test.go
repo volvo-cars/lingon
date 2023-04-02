@@ -3,10 +3,19 @@
 
 package terra
 
-import "fmt"
+import (
+	"fmt"
+
+	"golang.org/x/exp/slog"
+)
 
 func ExampleNumber() {
 	n := Number(1)
-	fmt.Println(string(n.InternalTokens().Bytes()))
+	toks, err := n.InternalTokens()
+	if err != nil {
+		slog.Error("getting tokens", "err", err)
+		return
+	}
+	fmt.Println(string(toks.Bytes()))
 	// 	Output: 1
 }

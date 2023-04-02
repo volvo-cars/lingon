@@ -3,10 +3,19 @@
 
 package terra
 
-import "fmt"
+import (
+	"fmt"
+
+	"golang.org/x/exp/slog"
+)
 
 func ExampleBool() {
 	b := Bool(true)
-	fmt.Println(string(b.InternalTokens().Bytes()))
+	toks, err := b.InternalTokens()
+	if err != nil {
+		slog.Error("getting tokens", "err", err)
+		return
+	}
+	fmt.Println(string(toks.Bytes()))
 	// 	Output: true
 }

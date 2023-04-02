@@ -7,6 +7,6 @@ import "fmt"
 
 func ExampleString() {
 	s := String("hello world")
-	fmt.Println(string(s.InternalTokens().Bytes()))
+	fmt.Println(exampleTokensOrError(s))
 	// 	Output: "hello world"
 }

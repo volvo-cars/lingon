@@ -4,6 +4,8 @@
 package terra
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	tkihcl "github.com/volvo-cars/lingon/pkg/internal/hcl"
 )
@@ -22,18 +24,22 @@ var _ tkihcl.Tokenizer = (*Dependencies)(nil)
 
 type Dependencies []Dependency
 
-func (d Dependencies) InternalTokens() hclwrite.Tokens {
+func (d Dependencies) InternalTokens() (hclwrite.Tokens, error) {
 	if len(d) == 0 {
-		return nil
+		return nil, nil
 	}
 	tokens := hclwrite.TokensForIdentifier("[")
 	length := len(d)
 	for i, dep := range d {
-		tokens = append(tokens, dep.DependOn().InternalTokens()...)
+		t, err := dep.DependOn().InternalTokens()
+		if err != nil {
+			return nil, fmt.Errorf("getting tokens for dependency: %w", err)
+		}
+		tokens = append(tokens, t...)
 		if i < (length - 1) {
 			tokens = append(tokens, hclwrite.TokensForIdentifier(",")...)
 		}
 	}
 	tokens = append(tokens, hclwrite.TokensForIdentifier("]")...)
-	return tokens
+	return tokens, nil
 }

@@ -49,24 +49,22 @@ type LifecyleIgnoreChanges []Reference
 //	    ]
 //	  }
 //	}
-func (l LifecyleIgnoreChanges) InternalTokens() hclwrite.Tokens {
+func (l LifecyleIgnoreChanges) InternalTokens() (hclwrite.Tokens, error) {
 	if len(l) == 0 {
-		return nil
+		return nil, nil
 	}
 	elems := make([]hclwrite.Tokens, len(l))
 	for i, ref := range l {
 		tokens, err := tokensForSteps(ref.steps)
 		if err != nil {
-			panic(
-				fmt.Sprintf(
-					"creating tokens for lifecycle ignore_changes: %s",
-					err.Error(),
-				),
+			return nil, fmt.Errorf(
+				"creating tokens for lifecycle ignore_changes: %w",
+				err,
 			)
 		}
 		elems[i] = tokens
 	}
-	return hclwrite.TokensForTuple(elems)
+	return hclwrite.TokensForTuple(elems), nil
 }
 
 // ReplaceTriggeredBy takes a list of object attributes to add to the
@@ -95,15 +93,21 @@ var _ tkihcl.Tokenizer = (*LifecycleReplaceTriggeredBy)(nil)
 type LifecycleReplaceTriggeredBy []Reference
 
 // InternalTokens returns the HCL tokens for the `replace_triggered_by` list
-func (r LifecycleReplaceTriggeredBy) InternalTokens() hclwrite.Tokens {
+func (r LifecycleReplaceTriggeredBy) InternalTokens() (hclwrite.Tokens, error) {
 	if len(r) == 0 {
-		return nil
+		return nil, nil
 	}
 	elems := make([]hclwrite.Tokens, len(r))
 	for i, ref := range r {
-		elems[i] = ref.InternalTokens()
+		toks, err := ref.InternalTokens()
+		if err != nil {
+			return nil, fmt.Errorf(
+				"creating tokens for lifecycle replace_triggered_by: %w", err,
+			)
+		}
+		elems[i] = toks
 	}
-	return hclwrite.TokensForTuple(elems)
+	return hclwrite.TokensForTuple(elems), nil
 }
 
 type Lifecycle struct {

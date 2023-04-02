@@ -70,9 +70,9 @@ func (v MapValue[T]) Key(s string) T {
 	return t.InternalWithRef(v.ref.key(s))
 }
 
-func (v MapValue[T]) InternalTokens() hclwrite.Tokens {
+func (v MapValue[T]) InternalTokens() (hclwrite.Tokens, error) {
 	if !v.isInit {
-		return nil
+		return nil, nil
 	}
 	if v.isRef {
 		return v.ref.InternalTokens()
@@ -81,13 +81,17 @@ func (v MapValue[T]) InternalTokens() hclwrite.Tokens {
 	elems := make([]hclwrite.ObjectAttrTokens, len(v.values))
 	i := 0
 	for _, key := range sortMapKeys(v.values) {
+		toks, err := v.values[key].InternalTokens()
+		if err != nil {
+			return nil, fmt.Errorf("getting tokens with key %s: %w", key, err)
+		}
 		elems[i] = hclwrite.ObjectAttrTokens{
 			Name:  hclwrite.TokensForIdentifier("\"" + key + "\""),
-			Value: v.values[key].InternalTokens(),
+			Value: toks,
 		}
 		i++
 	}
-	return hclwrite.TokensForObject(elems)
+	return hclwrite.TokensForObject(elems), nil
 }
 
 func (v MapValue[T]) InternalRef() (Reference, error) {

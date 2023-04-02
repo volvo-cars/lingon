@@ -56,7 +56,7 @@ type Tokenizer interface {
 	// configuration when a Terraform stack is exported.
 	//
 	// Internal: users should **not** use this!
-	InternalTokens() hclwrite.Tokens
+	InternalTokens() (hclwrite.Tokens, error)
 }
 
 // Encode writes the HCL encoded from the given stack
@@ -135,11 +135,14 @@ func Encode(wr io.Writer, args EncodeArgs) error {
 		)
 		rb := resourceBlock.Body()
 		// Add depends_on
-		if resource.DependsOn != nil && resource.DependsOn.InternalTokens() != nil {
-			rb.SetAttributeRaw(
-				"depends_on",
-				resource.DependsOn.InternalTokens(),
-			)
+		if resource.DependsOn != nil {
+			toks, err := resource.DependsOn.InternalTokens()
+			if err != nil {
+				return fmt.Errorf("creating tokens for depends_on: %w", err)
+			}
+			if toks != nil {
+				rb.SetAttributeRaw("depends_on", toks)
+			}
 		}
 		rv := reflect.ValueOf(resource.Configuration)
 		if err := encodeStruct(
@@ -236,7 +239,13 @@ func encodeStruct(
 		case "", "attr":
 			switch v := fv.Interface().(type) {
 			case Tokenizer:
-				tokens := v.InternalTokens()
+				tokens, err := v.InternalTokens()
+				if err != nil {
+					return fmt.Errorf(
+						"creating tokens for field %s: %w",
+						sf.Name, err,
+					)
+				}
 				// Make sure that tokens is not nil because we don't want to
 				// write empty attributes
 				if tokens != nil {

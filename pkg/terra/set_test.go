@@ -13,7 +13,7 @@ func ExampleSet_string() {
 		String("b"),
 	)
 
-	fmt.Println(string(s.InternalTokens().Bytes()))
+	fmt.Println(exampleTokensOrError(s))
 	// Output: ["a", "b"]
 }
 
@@ -23,7 +23,7 @@ func ExampleSet_number() {
 		Number(1),
 	)
 
-	fmt.Println(string(s.InternalTokens().Bytes()))
+	fmt.Println(exampleTokensOrError(s))
 	// Output: [0, 1]
 }
 
@@ -33,7 +33,7 @@ func ExampleSet_bool() {
 		Bool(true),
 	)
 
-	fmt.Println(string(s.InternalTokens().Bytes()))
+	fmt.Println(exampleTokensOrError(s))
 	// Output: [false, true]
 }
 
@@ -43,7 +43,7 @@ func ExampleSet_ref() {
 		ReferenceAsString(ReferenceDataResource(&dummyDataResource{})),
 	)
 
-	fmt.Println(string(s.InternalTokens().Bytes()))
+	fmt.Println(exampleTokensOrError(s))
 	// Output: [dummy.dummy, data.dummy.dummy]
 }
 
@@ -53,7 +53,7 @@ func ExampleSet_mixed() {
 		ReferenceAsString(ReferenceResource(&dummyResource{})),
 	)
 
-	fmt.Println(string(s.InternalTokens().Bytes()))
+	fmt.Println(exampleTokensOrError(s))
 	// Output: ["a", dummy.dummy]
 }
 
@@ -63,7 +63,7 @@ func ExampleSet_index() {
 		ReferenceResource(&dummyResource{}),
 	)
 	index := l.Index(0)
-	fmt.Println(string(index.InternalTokens().Bytes()))
+	fmt.Println(exampleTokensOrError(index))
 	// Output: dummy.dummy[0]
 }
 
@@ -76,7 +76,7 @@ func ExampleSet_splat() {
 	// Convert "splatted" set back to a Set
 	var ls SetValue[StringValue] //nolint:gosimple
 	ls = CastAsSet(splat)
-	fmt.Println(string(ls.InternalTokens().Bytes()))
+	fmt.Println(exampleTokensOrError(ls))
 	// Output: dummy.dummy[*]
 }
 
@@ -91,6 +91,6 @@ func ExampleSet_splatNested() {
 	ls = CastAsSet(
 		splat,
 	)
-	fmt.Println(string(ls.InternalTokens().Bytes()))
+	fmt.Println(exampleTokensOrError(ls))
 	// Output: dummy.dummy[*]
 }

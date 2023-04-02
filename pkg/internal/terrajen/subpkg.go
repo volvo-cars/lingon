@@ -171,8 +171,7 @@ func subPkgAttributeStruct(n *node) *jen.Statement {
 			Id(idFuncInternalTokens).
 			Call().
 			// Return type
-			// Id(structName).
-			Add(qualHCLWriteTokens()).
+			Params(qualHCLWriteTokens(), jen.Error()).
 			// Body
 			Block(
 				jen.Return(

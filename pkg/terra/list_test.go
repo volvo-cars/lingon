@@ -17,8 +17,7 @@ func ExampleList_string() {
 		String("a"),
 		String("b"),
 	)
-
-	fmt.Println(string(s.InternalTokens().Bytes()))
+	fmt.Println(exampleTokensOrError(s))
 	// Output: ["a", "b"]
 }
 
@@ -27,8 +26,7 @@ func ExampleList_number() {
 		Number(0),
 		Number(1),
 	)
-
-	fmt.Println(string(s.InternalTokens().Bytes()))
+	fmt.Println(exampleTokensOrError(s))
 	// Output: [0, 1]
 }
 
@@ -37,8 +35,7 @@ func ExampleList_bool() {
 		Bool(false),
 		Bool(true),
 	)
-
-	fmt.Println(string(s.InternalTokens().Bytes()))
+	fmt.Println(exampleTokensOrError(s))
 	// Output: [false, true]
 }
 
@@ -48,7 +45,7 @@ func ExampleList_ref() {
 	refB := ReferenceAsString(ReferenceDataResource(&dummyDataResource{}))
 
 	s := List(refA, refB)
-	fmt.Println(string(s.InternalTokens().Bytes()))
+	fmt.Println(exampleTokensOrError(s))
 	// Output: [dummy.dummy, data.dummy.dummy]
 }
 
@@ -58,8 +55,7 @@ func ExampleList_mixed() {
 		Number(1).AsString(),
 		ReferenceAsString(ReferenceResource(&dummyResource{})),
 	)
-
-	fmt.Println(string(s.InternalTokens().Bytes()))
+	fmt.Println(exampleTokensOrError(s))
 	// Output: ["a", "1", dummy.dummy]
 }
 
@@ -69,7 +65,7 @@ func ExampleList_index() {
 		ReferenceResource(&dummyResource{}),
 	)
 	index := l.Index(0)
-	fmt.Println(string(index.InternalTokens().Bytes()))
+	fmt.Println(exampleTokensOrError(index))
 	// Output: dummy.dummy[0]
 }
 
@@ -82,7 +78,7 @@ func ExampleList_splat() {
 	// Convert "splatted" list back to a List
 	var ls ListValue[StringValue] //nolint:gosimple
 	ls = CastAsList(splat)
-	fmt.Println(string(ls.InternalTokens().Bytes()))
+	fmt.Println(exampleTokensOrError(ls))
 	// Output: dummy.dummy[*]
 }
 
@@ -97,7 +93,7 @@ func ExampleList_splatNested() {
 	ls = CastAsList(
 		splat,
 	)
-	fmt.Println(string(ls.InternalTokens().Bytes()))
+	fmt.Println(exampleTokensOrError(ls))
 	// Output: dummy.dummy[*]
 }
 
@@ -109,7 +105,7 @@ type Attrs struct {
 	ref Reference
 }
 
-func (a Attrs) InternalTokens() hclwrite.Tokens {
+func (a Attrs) InternalTokens() (hclwrite.Tokens, error) {
 	return a.ref.InternalTokens()
 }
 
@@ -130,12 +126,10 @@ func TestCustomTypes(t *testing.T) {
 	index := l.Index(0)
 	name := index.Name()
 	tu.AssertEqual(
-		t, string(name.InternalTokens().Bytes()),
-		"dummy.dummy[0].name",
+		t, exampleTokensOrError(name), "dummy.dummy[0].name",
 	)
 	// Make sure index was not updated after updating name
 	tu.AssertEqual(
-		t, string(index.InternalTokens().Bytes()),
-		"dummy.dummy[0]",
+		t, exampleTokensOrError(index), "dummy.dummy[0]",
 	)
 }

@@ -5,9 +5,8 @@ package local
 import (
 	"encoding/json"
 	"fmt"
-	"io"
-
 	"github.com/volvo-cars/lingon/pkg/terra"
+	"io"
 )
 
 // NewFile creates a new instance of [File].
