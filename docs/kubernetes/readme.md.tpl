@@ -64,12 +64,12 @@ With this library you can:
 5. Apply:
 
    ```shell
-   kubectl apply -f <output folder>
+   kubectl apply -f output_folder/
    ```
 
 done.
 
-Have a look at the [tests](../../pkg/kube/) and the [example](kube/) for a full example.
+Have a look at the [tests](../../pkg/kube/) and the [example](../docs/kubernetes/kube/) for a full example.
 
 What does the Go code looks like, see [tekton example](../../pkg/kube/testdata/go/tekton)
 
@@ -100,7 +100,7 @@ Converts kubernetes manifests to Go structs.
 
 A CLI was written to make it easier to use in the terminal instead of just a library.
 It does support CustomResourceDefinitions but not the custom resources themselves, although it is easy to add them manually.
-An example of how to do it can be found in the [example](kube/).
+An example of how to do it can be found in the [example](../example/kube/).
 
 ## [Packages](../../pkg/)
 

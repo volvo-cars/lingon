@@ -8,7 +8,7 @@ Why Go? Smarter people have a better to explain it: <https://github.com/bwplotka
 
 ## Usage
 
-```
+```sh
 Usage of kygo:
   -app string
     	specify the app name. This will be used as the package name if none is specified. (default "myapp")
@@ -32,7 +32,9 @@ go build -o ./bin/kygo ./cmd/kygo
 ls -Rl1 out/
 ```
 
-```
+The output will be:
+
+```sh
 out/argocd
 ├── app.go
 ├── cluster-role-binding.go

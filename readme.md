@@ -4,6 +4,7 @@
 - [Who is this for?](#who-is-this-for)
 - [Project status](#project-status)
 - [Getting started](#getting-started)
+- [Examples](#examples)
 - [Motivation](#motivation)
   - [Reduce cognitive load](#reduce-cognitive-load)
   - [Type safety](#type-safety)
@@ -16,6 +17,8 @@
 ## What is this?
 
 Lingon is a collection of libraries and tools for building platforms using Go.
+
+> In short, we write Terraform (HCL) and Kubernetes (YAML) in Go. see [Rationale](./docs/rationale.md) for more details.
 
 The following technologies are currently supported:
 
@@ -36,16 +39,27 @@ and have suffered the pain of configuration languages and complexity of gluing t
 ## Project status
 
 This project is in beta.
-The APIs are stable but we do not promise backward compatibility at this point.
+The APIs are stable, but we do not promise backward compatibility at this point.
+We will eventually promise backward compatibility when the project is more battle tested.
 
 See [FAQ](./docs/faq.md) for more details.
 
 ## Getting started
 
+> Note that in the terraform case, the code generation is fast.
+> Compiling all the generated resources will take a while.
+> Thankfully, Go is fast at compiling and keeps a cache of compiled packages.
+> Expect to wait a few minutes the first time you run `go build` after generating the code.
+
 - [Terraform](./docs/terraform/)
 - [Kubernetes](./docs/kubernetes/)
 
-See [Examples](./example) for more details.
+## Examples
+
+All the [Examples](./docs/) are in the [documentation](./docs).
+
+A big example is [Platypus](./docs/platypus/) which shows how 
+the [kubernetes](./docs/kubernetes/) and [terraform](./docs/terraform/) libraries can be used together.
 
 ## Motivation
 
@@ -70,7 +84,9 @@ This significantly reduces the effort in finding the root cause of errors and pr
 
 ### Limitless automation
 
-We are only limited by what a programming language can do.
+We are only limited by what a programming language can do. 
+We can reuse part of what we build in libraries without external tooling.
+That is not possible with YAML as doesn't support "includes", therefore we need a tool for that.
 Configuration languages are limited by the features they provide.
 Gluing tools together with more tools and configuration to manage more tools and configuration is not a sustainable approach.
 We do use a limited set of tools that we learn well and can extend, but we automate them and test them together using Go.

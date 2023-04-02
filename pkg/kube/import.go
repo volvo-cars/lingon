@@ -5,6 +5,7 @@ package kube
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"reflect"
@@ -36,19 +37,20 @@ type jamel struct {
 }
 
 func Import(opts ...ImportOption) error {
-	j := newImporter(opts...)
+	j, err := newImporter(opts...)
+	if err != nil {
+		return fmt.Errorf("import options: %w", err)
+	}
 	if j.useWriter {
 		return j.render()
 	}
-	if err := j.save(); err != nil {
+	if err = j.save(); err != nil {
 		return fmt.Errorf("convert to Go: %w", err)
 	}
 	return nil
 }
 
-func newImporter(
-	opts ...ImportOption,
-) *jamel {
+func newImporter(opts ...ImportOption) (*jamel, error) {
 	j := &jamel{
 		useReader:         false,
 		useWriter:         false,
@@ -64,12 +66,14 @@ func newImporter(
 		opt(j)
 	}
 
-	gatekeeperImportOptions(&j.o)
+	if err := gatekeeperImportOptions(&j.o); err != nil {
+		return nil, err
+	}
 
-	return j
+	return j, nil
 }
 
-func gatekeeperImportOptions(o *importOption) {
+func gatekeeperImportOptions(o *importOption) error {
 	if len(o.AppName) == 0 {
 		o.AppName = "app"
 	}
@@ -77,8 +81,9 @@ func gatekeeperImportOptions(o *importOption) {
 		o.OutputPkgName = strings.ReplaceAll(o.AppName, "-", "")
 	}
 	if strings.Contains(o.OutputPkgName, "-") {
-		panic("package name cannot contain a dash")
+		return errors.New("package name cannot contain a dash")
 	}
+	return nil
 }
 
 func (j *jamel) generateGo() error {

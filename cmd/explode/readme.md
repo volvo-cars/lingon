@@ -2,7 +2,6 @@
 
 organize kubernetes manifests according to their kind
 
-
 ## Usage
 
 ```shell
