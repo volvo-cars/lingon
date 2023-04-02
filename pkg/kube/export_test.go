@@ -304,14 +304,14 @@ type EmbedStruct struct {
 	Depl *appsv1.Deployment
 }
 
-var name = "imthename"
+var appName = "imthename"
 
 var labels = map[string]string{
-	"app": name,
+	"app": appName,
 }
 
 func newEmbeddedStruct() *EmbedStruct {
-	sa := kubeutil.SimpleSA(name, "defaultns")
+	sa := kubeutil.SimpleSA(appName, "defaultns")
 	sa.Labels = labels
 
 	cr := &rbacv1.ClusterRole{
@@ -336,7 +336,7 @@ func newEmbeddedStruct() *EmbedStruct {
 		Crb: crb,
 		Cr:  cr,
 		Depl: kubeutil.SimpleDeployment(
-			"another"+name,
+			"another"+appName,
 			sa.Namespace,
 			labels,
 			int32(1),
@@ -346,7 +346,7 @@ func newEmbeddedStruct() *EmbedStruct {
 
 	return &EmbedStruct{
 		Depl: kubeutil.SimpleDeployment(
-			name,
+			appName,
 			sa.Namespace,
 			labels,
 			int32(1),

@@ -28,7 +28,18 @@ func Export(km Exporter, opts ...ExportOption) error {
 		o(&g)
 	}
 
+	if err := gatekeeperExportOptions(g.o); err != nil {
+		return fmt.Errorf("export: %w", err)
+	}
+
 	return g.export(km)
+}
+
+func gatekeeperExportOptions(o exportOption) error {
+	if o.Explode && o.SingleFile != "" {
+		return errors.New("option conflict: WithExportAsSingleFile not compatible with WithExportExplodeManifests")
+	}
+	return nil
 }
 
 func (g *goky) export(km Exporter) error {
@@ -52,7 +63,7 @@ func (g *goky) export(km Exporter) error {
 
 	if g.o.Kustomize {
 		// extract the filenames for kustomization.yaml
-		filenames := []string{}
+		var filenames []string
 		for _, f := range g.ar.Files {
 			filenames = append(filenames, f.Name)
 		}
@@ -73,8 +84,14 @@ resources:`
 	}
 
 	if g.useWriter {
-		if _, err = g.o.ManifestWriter.Write(txtar.Format(g.ar)); err != nil {
-			return fmt.Errorf("write: %w", err)
+		if g.o.SingleFile != "" {
+			if _, err = g.o.ManifestWriter.Write(Txtar2YAML(g.ar)); err != nil {
+				return fmt.Errorf("write: %w", err)
+			}
+		} else {
+			if _, err = g.o.ManifestWriter.Write(txtar.Format(g.ar)); err != nil {
+				return fmt.Errorf("write: %w", err)
+			}
 		}
 		return nil
 	}
@@ -83,8 +100,16 @@ resources:`
 		return fmt.Errorf("mkdir %s: %w", g.o.OutputDir, err)
 	}
 
-	if err = txtar.Write(g.ar, "."); err != nil {
-		return fmt.Errorf("txtar write: %w", err)
+	if g.o.SingleFile != "" {
+		f := filepath.Join(g.o.OutputDir, g.o.SingleFile)
+		if err = os.WriteFile(f, Txtar2YAML(g.ar), 0o600); err != nil {
+			return fmt.Errorf("write file%s: %w", f, err)
+		}
+		return nil
+	} else {
+		if err = txtar.Write(g.ar, "."); err != nil {
+			return fmt.Errorf("write txtar: %w", err)
+		}
 	}
 
 	return err

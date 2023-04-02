@@ -5,10 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/fatih/color"
 	"github.com/volvo-cars/lingon/pkg/kube"
 	"github.com/volvo-cars/lingon/pkg/kube/testdata/go/tekton"
-	"github.com/zegl/kube-score/renderer/human"
 	"github.com/zegl/kube-score/scorecard"
 )
 
@@ -19,37 +17,76 @@ func TestScore(t *testing.T) {
 	}
 
 	card, err := kube.Score(f)
-	// fmt.Printf("%##v", card)
-	color.NoColor = false
-	output, err := human.Human(card, 0, 110)
 	if err != nil {
 		t.Fatal(err)
 	}
+	// fmt.Printf("%##v", card)
+	// color.NoColor = true
+	// output, err := human.Human(card, 0, 110)
+	// if err != nil {
+	// 	t.Fatal(err)
+	// }
 
-	m, ok := (*card).(map[string]scorecard.ScoredObject)
-	if !ok {
-		t.Fatal("not a map")
-	}
-	for file, object := range m {
-		t.Log("file", file)
+	for _, object := range *card {
+		name := object.ObjectMeta.Name
+		ns := object.ObjectMeta.Namespace
+		tv := object.TypeMeta.APIVersion
+		tk := object.TypeMeta.Kind
+		t.Log(tv + "/" + tk + "/" + ns + "/" + name)
 		for _, check := range object.Checks {
-			_ = check.Comments
+			if check.Skipped {
+				continue
+			}
+			printComments(t, check)
+			// t.Log("file", file, "comment", check.Comments)
 		}
 	}
-	t.Logf("%s\n", output)
+}
+
+func printComments(
+	t *testing.T,
+	ts scorecard.TestScore,
+	// comments []scorecard.TestScoreComment,
+) {
+	if ts.Grade == scorecard.GradeAllOK {
+		return
+	}
+	grade := greade2Str(ts.Grade)
+	for _, comment := range ts.Comments {
+		t.Logf("%s \t [%s] %s - %s\n", grade, ts.Check.ID, comment.Summary, comment.Description)
+	}
+}
+
+func greade2Str(grade scorecard.Grade) string {
+	switch grade {
+	case scorecard.GradeCritical:
+		return "CRITICAL"
+	case scorecard.GradeWarning:
+		return "WARNING"
+	case scorecard.GradeAlmostOK:
+		return "ALMOST OK"
+	case scorecard.GradeAllOK:
+		return "ALL OK"
+	default:
+		return "UNKNOWN"
+	}
 }
 
 func TestTxtar2Reader(t *testing.T) {
 	tk := tekton.New()
 	var buf bytes.Buffer
-	if err := kube.Export(tk, kube.WithExportWriter(&buf)); err != nil {
+	if err := kube.Export(
+		tk,
+		kube.WithExportWriter(&buf),
+		kube.WithExportAsSingleFile("input.yaml"),
+	); err != nil {
 		t.Fatal(err)
 	}
 
-	output, err := kube.Score(kube.Txtar2Reader(&buf))
+	output, err := kube.Score(&buf)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	t.Logf("%s\n", output)
+	t.Logf("%v\n", output)
 }

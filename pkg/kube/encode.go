@@ -41,6 +41,13 @@ func (g *goky) encodeStruct(
 
 		fieldVal := rv.FieldByName(sf.Name)
 		switch t := fieldVal.Interface().(type) {
+		// case *corev1.Secret:
+		// 	if g.o.SecretHook != nil {
+		// 		if err := g.o.SecretHook(t); err != nil {
+		// 			return err
+		// 		}
+		// 		// skip the secret if the hook is used
+		// 	}
 		case runtime.Object:
 			v := reflect.ValueOf(t)
 			if v.IsZero() || v.IsNil() {

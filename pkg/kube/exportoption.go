@@ -41,6 +41,13 @@ type exportOption struct {
 
 	// Explode flag explodes files into multiple files
 	Explode bool
+
+	// SingleFile flag will write all the manifests in a single file.
+	// The file will be place in [OutputDir] and will be named as defined
+	// in the parameter.
+	// Note that this is not compatible with [Explode] flag.
+	// It will ignore the use of [NameFileFunc].
+	SingleFile string
 }
 
 var exportDefaultOpts = exportOption{
@@ -50,6 +57,7 @@ var exportDefaultOpts = exportOption{
 	SecretHook:     nil,
 	Kustomize:      false,
 	Explode:        false,
+	SingleFile:     "",
 }
 
 // WithExportNameFileFunc sets the function to format the name of the file
@@ -59,7 +67,7 @@ var exportDefaultOpts = exportOption{
 // Usage:
 //
 //	WithExportNameFileFunc(func(m metav1.Metadata) string {
-//		return fmt.Sprintf("%s-%s.yaml", strings.ToLower(m.Kind),	m.Meta.Name)
+//		return fmt.Sprintf("%s-%s.yaml", strings.ToLower(m.Kind), m.Meta.Name)
 //	})
 func WithExportNameFileFunc(f func(m *kubeutil.Metadata) string) ExportOption {
 	return func(g *goky) {
@@ -70,6 +78,7 @@ func WithExportNameFileFunc(f func(m *kubeutil.Metadata) string) ExportOption {
 // WithExportExplodeManifests explodes the manifests into separate files
 // organized by namespace to match closely the structure of the kubernetes cluster.
 // See [Explode] for more info.
+// Note that this option is incompatible [WithExportAsSingleFile].
 func WithExportExplodeManifests(b bool) ExportOption {
 	return func(g *goky) {
 		g.o.Explode = b
@@ -100,10 +109,31 @@ func WithExportWriter(w io.Writer) ExportOption {
 }
 
 // WithExportStdOut writes the generated manifests to [os.Stdout]
+// Note that the format is txtar, for more info on [golang.org/x/tools/txtar.Archive] format
+// see: https://pkg.go.dev/golang.org/x/tools/txtar
+// See [WithExportWriter] for more info.
+//
+// If you want to write in the YAML format, use [WithExportAsSingleFile] instead.
 func WithExportStdOut() ExportOption {
 	return func(g *goky) {
 		g.useWriter = true
-		g.o.ManifestWriter = os.Stdout // already set in exportDefaultOpts
+	}
+}
+
+// WithExportAsSingleFile flag will write all the manifests in a single file
+// Note that this is not compatible with [WithExportExplodeManifests] flag
+//
+// Usage:
+//
+//	err := Export(km,
+//			WithExportOutputDirectory("./out"),
+//			WithExportAsSingleFile("manifests.yaml"),
+//			)
+//
+// the output file will be written to ./out/manifests.yaml
+func WithExportAsSingleFile(name string) ExportOption {
+	return func(g *goky) {
+		g.o.SingleFile = name
 	}
 }
 
