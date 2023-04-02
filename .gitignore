@@ -3,7 +3,7 @@
 
 # Local .lingon directories (generated code)
 **/.lingon/*
-**/.terriyaki/*
+**/.terra/*
 
 # Terraform state files
 *.tfstate

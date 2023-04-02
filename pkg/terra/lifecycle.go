@@ -4,10 +4,8 @@
 package terra
 
 import (
-	"errors"
 	"fmt"
 
-	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	tkihcl "github.com/volvo-cars/lingon/pkg/internal/hcl"
 )
@@ -57,17 +55,16 @@ func (l LifecyleIgnoreChanges) InternalTokens() hclwrite.Tokens {
 	}
 	elems := make([]hclwrite.Tokens, len(l))
 	for i, ref := range l {
-		// Ensure the first element in the traversal is a root traversal.
-		tr, err := reRootTraversal(ref.tr)
+		tokens, err := tokensForSteps(ref.steps)
 		if err != nil {
 			panic(
 				fmt.Sprintf(
-					"LifeCycleIngoreChanges: cannot creat tokens"+
-						" for traversal: %s", err.Error(),
+					"creating tokens for lifecycle ignore_changes: %s",
+					err.Error(),
 				),
 			)
 		}
-		elems[i] = hclwrite.TokensForTraversal(tr)
+		elems[i] = tokens
 	}
 	return hclwrite.TokensForTuple(elems)
 }
@@ -114,30 +111,4 @@ type Lifecycle struct {
 	PreventDestroy      BoolValue                   `hcl:"prevent_destroy,attr"`
 	IgnoreChanges       LifecyleIgnoreChanges       `hcl:"ignore_changes,attr"`
 	ReplaceTriggeredBy  LifecycleReplaceTriggeredBy `hcl:"replace_triggered_by,attr"`
-}
-
-// reRootTraversal takes a hcl.Traversal that may not have a root traverser
-// as it's first element, and converts it into a root.
-// This is needed because when turning a hcl.Traversal into hclwrite.Tokens
-// a "." is prefixed to the tokens if the first step in the hcl.Traversal is not
-// a hcl.TraverseRoot.
-func reRootTraversal(tr hcl.Traversal) (hcl.Traversal, error) {
-	if len(tr) == 0 {
-		return nil, errors.New("cannot re-root a traversal with no steps in it")
-	}
-	switch t := tr[0].(type) {
-	case hcl.TraverseRoot:
-		return tr, nil
-	case hcl.TraverseAttr:
-		// Convert the attribute into a root
-		tr[0] = hcl.TraverseRoot{Name: t.Name}
-		return tr, nil
-	case hcl.TraverseIndex, hcl.TraverseSplat:
-		return nil, errors.New(
-			"cannot re-root a traversal with first" +
-				" element index or splat",
-		)
-	default:
-		return nil, errors.New("unknown traverser")
-	}
 }

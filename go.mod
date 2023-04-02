@@ -4,8 +4,6 @@ go 1.20
 
 replace github.com/dave/jennifer => github.com/veggiemonk/jennifer v0.0.0-20230131124350-60c16b6e1cb9
 
-replace github.com/hashicorp/hcl/v2 => github.com/jlarfors/hcl/v2 v2.16.0-patch-1
-
 require (
 	github.com/dave/jennifer v1.6.0
 	github.com/go-playground/validator/v10 v10.12.0

@@ -12,6 +12,7 @@ project {
     ".vscode/**",
     "bin/**",
     "**/.lingon/**",
+    "**/.terra/**",
     "**/testdata/**",
     "**/out/**",
      "vendors/**",

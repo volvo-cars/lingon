@@ -4,8 +4,6 @@ go 1.20
 
 replace github.com/volvo-cars/lingon => ../
 
-replace github.com/hashicorp/hcl/v2 => github.com/jlarfors/hcl/v2 v2.16.0-patch-1
-
 require (
 	github.com/Masterminds/semver/v3 v3.2.0
 	github.com/aws/karpenter v0.27.1
