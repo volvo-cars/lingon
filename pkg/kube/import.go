@@ -61,29 +61,35 @@ func newImporter(opts ...ImportOption) (*jamel, error) {
 		nameFieldVar:      make(map[string]string),
 		o:                 importDefaultOpts,
 	}
-	// options
+
 	for _, opt := range opts {
 		opt(j)
 	}
 
-	if err := gatekeeperImportOptions(&j.o); err != nil {
+	if err := j.gatekeeperImportOptions(); err != nil {
 		return nil, err
 	}
 
 	return j, nil
 }
 
-func gatekeeperImportOptions(o *importOption) error {
-	if len(o.AppName) == 0 {
-		o.AppName = "app"
+func (j *jamel) gatekeeperImportOptions() error {
+	if len(j.o.AppName) == 0 {
+		j.o.AppName = "app"
 	}
-	if len(o.OutputPkgName) == 0 {
-		o.OutputPkgName = strings.ReplaceAll(o.AppName, "-", "")
+	if len(j.o.OutputPkgName) == 0 {
+		j.o.OutputPkgName = strings.ReplaceAll(j.o.AppName, "-", "")
 	}
-	if strings.Contains(o.OutputPkgName, "-") {
-		return errors.New("package name cannot contain a dash")
+	var err error
+	if strings.Contains(j.o.OutputPkgName, "-") {
+		err = errors.New("package name cannot contain a dash")
 	}
-	return nil
+	for _, f := range j.o.ManifestFiles {
+		if errm := j.checkManifests(f); errm != nil {
+			err = errors.Join(err, errm)
+		}
+	}
+	return err
 }
 
 func (j *jamel) generateGo() error {
@@ -225,7 +231,7 @@ func (j *jamel) kube2GoJen(obj runtime.Object) *jen.Statement {
 	return j.convertValue(rv)
 }
 
-func (j *jamel) addManifest(filePath string) error {
+func (j *jamel) checkManifests(filePath string) error {
 	filename := filepath.Base(filePath)
 	e := filepath.Ext(filename)
 	if e != ".yaml" && e != ".yml" {
@@ -235,6 +241,5 @@ func (j *jamel) addManifest(filePath string) error {
 	if !fileExists(filePath) {
 		return fmt.Errorf("file does not exist: %s", filePath)
 	}
-	j.o.ManifestFiles = append(j.o.ManifestFiles, filePath)
 	return nil
 }

@@ -4,6 +4,7 @@
 package kube
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 	"reflect"
@@ -15,6 +16,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	kyaml "sigs.k8s.io/yaml"
 )
+
+var ErrFieldMissing = errors.New("missing")
 
 // encodeStruct encodes [kube.App] struct to a [txtar.Archive].
 func (g *goky) encodeStruct(

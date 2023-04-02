@@ -6,7 +6,6 @@ package kube
 import (
 	"io"
 	"os"
-	"strings"
 
 	"github.com/volvo-cars/lingon/pkg/kubeutil"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -134,9 +133,6 @@ func WithImportAppName(name string) ImportOption {
 //	package tekton
 //	...
 func WithImportPackageName(name string) ImportOption {
-	if strings.Contains(name, "-") {
-		panic("package name cannot contain a dash")
-	}
 	return func(j *jamel) {
 		j.o.OutputPkgName = name
 	}
@@ -213,11 +209,6 @@ func WithImportNameFileFunc(f func(object kubeutil.Metadata) string) ImportOptio
 func WithImportManifestFiles(files []string) ImportOption {
 	return func(j *jamel) {
 		j.useReader = false
-		for _, f := range files {
-			if err := j.addManifest(f); err != nil {
-				panic(err)
-			}
-		}
 		j.o.ManifestFiles = files
 	}
 }

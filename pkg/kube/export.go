@@ -4,7 +4,6 @@
 package kube
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -13,8 +12,6 @@ import (
 
 	"github.com/rogpeppe/go-internal/txtar"
 )
-
-var ErrFieldMissing = errors.New("missing")
 
 type goky struct {
 	ar        *txtar.Archive

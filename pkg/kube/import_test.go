@@ -213,7 +213,7 @@ func TestImport(t *testing.T) {
 		tc := tt
 		t.Run(
 			tt.Name, func(t *testing.T) {
-				t.Parallel()
+				// t.Parallel()
 				tu.AssertNoError(t, os.RemoveAll(tc.OutDir), "rm out dir")
 				var buf bytes.Buffer
 				//nolint:gocritic
@@ -235,6 +235,22 @@ func TestImport(t *testing.T) {
 				}
 			},
 		)
+	}
+}
+
+func TestImport_Error(t *testing.T) {
+	err := kube.Import(
+		kube.WithImportAppName("foo-app"),
+		kube.WithImportPackageName("foo-package"),
+		kube.WithImportManifestFiles([]string{"does-not-exists.yaml"}),
+	)
+	if err == nil {
+		t.Error("expected error")
+	}
+	output := `import options: package name cannot contain a dash
+file does not exist: does-not-exists.yaml`
+	if err.Error() != output {
+		t.Error(tu.Diff(output, err.Error()))
 	}
 }
 
