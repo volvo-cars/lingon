@@ -213,7 +213,7 @@ func TestImport(t *testing.T) {
 		tc := tt
 		t.Run(
 			tt.Name, func(t *testing.T) {
-				// t.Parallel()
+				t.Parallel()
 				tu.AssertNoError(t, os.RemoveAll(tc.OutDir), "rm out dir")
 				var buf bytes.Buffer
 				//nolint:gocritic

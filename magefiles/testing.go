@@ -14,7 +14,7 @@ type Test mg.Namespace
 
 // Summary runs tests with gotestsum
 func (Test) Summary() error {
-	return sh.Run("gotestsum", "--", "go test ./...")
+	return sh.Run("gotestsum", "--", "-v ./...")
 }
 
 // Run tests in normal mode
