@@ -4,6 +4,7 @@
 package terra
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp/hcl/v2/hclwrite"
@@ -75,11 +76,12 @@ func (v NumberValue) InternalTokens() hclwrite.Tokens {
 	return hclwrite.TokensForValue(v.value)
 }
 
-func (v NumberValue) InternalRef() Reference {
+func (v NumberValue) InternalRef() (Reference, error) {
 	if !v.isRef {
-		panic("NumberValue: cannot use value as reference")
+		return Reference{},
+			errors.New("NumberValue: cannot use value as reference")
 	}
-	return v.ref.copy()
+	return v.ref.copy(), nil
 }
 
 func (v NumberValue) InternalWithRef(ref Reference) NumberValue {

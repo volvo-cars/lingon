@@ -4,6 +4,9 @@
 package terra
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/hashicorp/hcl/v2/hclwrite"
 )
 
@@ -27,7 +30,16 @@ func Set[T Value[T]](values ...T) SetValue[T] {
 
 // CastAsSet takes a value (as a reference) and wraps it in a SetValue
 func CastAsSet[T Value[T]](value T) SetValue[T] {
-	return ReferenceAsSet[T](value.InternalRef())
+	ref, err := value.InternalRef()
+	if err != nil {
+		panic(
+			fmt.Sprintf(
+				"CastAsSet: getting internal reference: %s",
+				err.Error(),
+			),
+		)
+	}
+	return ReferenceAsSet[T](ref)
 }
 
 // ReferenceAsSet creates a list reference
@@ -83,11 +95,12 @@ func (v SetValue[T]) InternalTokens() hclwrite.Tokens {
 	return hclwrite.TokensForTuple(elems)
 }
 
-func (v SetValue[T]) InternalRef() Reference {
+func (v SetValue[T]) InternalRef() (Reference, error) {
 	if !v.isRef {
-		panic("SetValue: cannot get reference from value")
+		return Reference{},
+			errors.New("SetValue: cannot get reference from value")
 	}
-	return v.ref.copy()
+	return v.ref.copy(), nil
 }
 
 func (v SetValue[T]) InternalWithRef(ref Reference) SetValue[T] {

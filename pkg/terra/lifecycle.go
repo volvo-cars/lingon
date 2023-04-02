@@ -17,8 +17,16 @@ import (
 func IgnoreChanges(attrs ...Referencer) LifecyleIgnoreChanges {
 	refs := make(LifecyleIgnoreChanges, len(attrs))
 	for i, attr := range attrs {
-		// Make sure we get a copy of the reference
-		refs[i] = attr.InternalRef()
+		ref, err := attr.InternalRef()
+		if err != nil {
+			panic(
+				fmt.Sprintf(
+					"IgnoreChanges: getting list of attributes: %s",
+					err.Error(),
+				),
+			)
+		}
+		refs[i] = ref
 	}
 	return refs
 }
@@ -69,7 +77,16 @@ func (l LifecyleIgnoreChanges) InternalTokens() hclwrite.Tokens {
 func ReplaceTriggeredBy(attrs ...Referencer) LifecycleReplaceTriggeredBy {
 	refs := make(LifecycleReplaceTriggeredBy, len(attrs))
 	for i, attr := range attrs {
-		refs[i] = attr.InternalRef()
+		ref, err := attr.InternalRef()
+		if err != nil {
+			panic(
+				fmt.Sprintf(
+					"ReplaceTriggeredBy: getting list of attributes: %s",
+					err.Error(),
+				),
+			)
+		}
+		refs[i] = ref
 	}
 	return refs
 }

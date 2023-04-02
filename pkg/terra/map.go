@@ -4,6 +4,8 @@
 package terra
 
 import (
+	"errors"
+	"fmt"
 	"sort"
 
 	"github.com/hashicorp/hcl/v2/hclwrite"
@@ -29,7 +31,16 @@ func Map[T Value[T]](value map[string]T) MapValue[T] {
 
 // CastAsMap takes a value (as a reference) and wraps it in a MapValue
 func CastAsMap[T Value[T]](value T) MapValue[T] {
-	return ReferenceAsMap[T](value.InternalRef())
+	ref, err := value.InternalRef()
+	if err != nil {
+		panic(
+			fmt.Sprintf(
+				"CastAsMap: getting internal reference: %s",
+				err.Error(),
+			),
+		)
+	}
+	return ReferenceAsMap[T](ref)
 }
 
 // ReferenceAsMap returns a map value
@@ -79,11 +90,14 @@ func (v MapValue[T]) InternalTokens() hclwrite.Tokens {
 	return hclwrite.TokensForObject(elems)
 }
 
-func (v MapValue[T]) InternalRef() Reference {
+func (v MapValue[T]) InternalRef() (Reference, error) {
 	if !v.isRef {
-		panic("MapValue: cannot get reference from value")
+		return Reference{},
+			errors.New(
+				"MapValue: cannot get reference from value",
+			)
 	}
-	return v.ref.copy()
+	return v.ref.copy(), nil
 }
 
 func (v MapValue[T]) InternalWithRef(ref Reference) MapValue[T] {

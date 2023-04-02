@@ -110,8 +110,8 @@ func subPkgAttributeStruct(n *node) *jen.Statement {
 	// Methods
 	// Override InternalRef, e.g.
 	//
-	// 	func (i OidcRef) InternalRef() terra.Reference {
-	// 		return i.ref
+	// 	func (i OidcRef) InternalRef() (terra.Reference, error) {
+	// 		return i.ref, nil
 	// 	}
 	stmt.Add(
 		jen.Func().
@@ -120,13 +120,14 @@ func subPkgAttributeStruct(n *node) *jen.Statement {
 			// Name
 			Id(idFuncInternalRef).Call().
 			// Return type
-			Add(qualReferenceValue()).
+			Params(qualReferenceValue(), jen.Error()).
 			// Body
 			Block(
 				jen.Return(
 					jen.Id(n.receiver).Dot(
 						structFieldRef,
 					),
+					jen.Nil(),
 				),
 			),
 	)

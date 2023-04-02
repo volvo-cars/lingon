@@ -12,12 +12,12 @@ import (
 
 type Referencer interface {
 	// InternalRef returns a copy of the reference stored, if any.
-	// If the Value T is not a reference, this method should panic to avoid
-	// any nasty hidden errors (i.e.
+	// If the Value T is not a reference, this method should return an error to
+	// avoid any nasty hidden errors (i.e.
 	// silently converting a value to a reference).
 	//
 	// Internal: users should **not** use this!
-	InternalRef() Reference
+	InternalRef() (Reference, error)
 }
 
 // Value represents the most generic type in terra's minimal type system.

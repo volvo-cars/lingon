@@ -113,8 +113,8 @@ func (a Attrs) InternalTokens() hclwrite.Tokens {
 	return a.ref.InternalTokens()
 }
 
-func (a Attrs) InternalRef() Reference {
-	return a.ref.copy()
+func (a Attrs) InternalRef() (Reference, error) {
+	return a.ref.copy(), nil
 }
 
 func (a Attrs) InternalWithRef(ref Reference) Attrs {

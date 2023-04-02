@@ -4,6 +4,9 @@
 package terra
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/hashicorp/hcl/v2/hclwrite"
 )
 
@@ -27,7 +30,16 @@ func List[T Value[T]](values ...T) ListValue[T] {
 
 // CastAsList takes a value (as a reference) and wraps it in a ListValue
 func CastAsList[T Value[T]](value T) ListValue[T] {
-	return ReferenceAsList[T](value.InternalRef())
+	ref, err := value.InternalRef()
+	if err != nil {
+		panic(
+			fmt.Sprintf(
+				"CastAsList: getting internal reference: %s",
+				err.Error(),
+			),
+		)
+	}
+	return ReferenceAsList[T](ref)
 }
 
 // ReferenceAsList creates a list reference
@@ -80,11 +92,12 @@ func (v ListValue[T]) InternalTokens() hclwrite.Tokens {
 	return hclwrite.TokensForTuple(elems)
 }
 
-func (v ListValue[T]) InternalRef() Reference {
+func (v ListValue[T]) InternalRef() (Reference, error) {
 	if !v.isRef {
-		panic("ListValue: cannot get reference from value")
+		return Reference{},
+			errors.New("ListValue: cannot get reference from value")
 	}
-	return v.ref.copy()
+	return v.ref.copy(), nil
 }
 
 func (v ListValue[T]) InternalWithRef(ref Reference) ListValue[T] {

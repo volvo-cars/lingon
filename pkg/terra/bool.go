@@ -4,6 +4,7 @@
 package terra
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp/hcl/v2/hclwrite"
@@ -75,11 +76,12 @@ func (v BoolValue) InternalTokens() hclwrite.Tokens {
 	return hclwrite.TokensForValue(v.value)
 }
 
-func (v BoolValue) InternalRef() Reference {
+func (v BoolValue) InternalRef() (Reference, error) {
 	if !v.isRef {
-		panic("BoolValue: cannot use value as reference")
+		return Reference{},
+			errors.New("BoolValue: cannot use value as reference")
 	}
-	return v.ref.copy()
+	return v.ref.copy(), nil
 }
 
 func (v BoolValue) InternalWithRef(ref Reference) BoolValue {
