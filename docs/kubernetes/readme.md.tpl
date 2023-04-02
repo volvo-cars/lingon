@@ -17,65 +17,44 @@ With this library you can:
 ### Getting started
 
 1. Get a kubernetes manifest
-   - example: `wget https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml`
+   - example:
+```
+wget https://storage.googleapis.com/tekton-releases/pipeline/previous/v0.45.0/release.yaml
+```
   
 2. Convert it to Go structs
-   - example `go run cmd/kygo/ -in=./install.yaml -out=output -app=myapp -group`
-   - for CRDs, create a `main.go` file with the following content:
-
-      ```go
-      func main() {
-         err := kube.Import(
-            kube.WithImportAppName("my-app"),
-            kube.WithImportPackageName("myapp"),
-            kube.WithImportOutputDirectory("./output"),
-            kube.WithImportManifestFiles([]string{"path/to/myapp.yaml"}),
-            kube.WithImportSerializer(defaultSerializer()),
-            kube.WithImportRemoveAppName(true),
-            kube.WithImportGroupByKind(true),
-            kube.WithImportAddMethods(true),
-         )
-         ...
-      }
-
-      func defaultSerializer() runtime.Decoder {
-         // ADD MORE CRDS HERE
-
-         _ = apiextensions.AddToScheme(kubescheme.Scheme)
-         return kubescheme.Codecs.UniversalDeserializer()
-      }
+   - Most manifests don't include extensions CRD object, use the `kygo` CLI:
+      ```sh
+      go run cmd/kygo/ -in=./install.yaml -out=output -app=myapp -group`
       ```
+   - for specific CRDs, create a `main.go` file with the following content:
+
+{{ "Example_import" | example }}
 
 3. Modify the structs to your liking
+   - see [best practices](docs/best-practices.md) for more information
+   - example: [tekton](../platypus/pkg/platform/tekton/app.go)
 
 4. Export:
 
-   ```go
-   // import "github.com/xxx/yyy/output/myapp
-   //
-   myApp := myapp.New() // function lives in "output/app.go"
-   err := kube.Export(myApp, kube.WithExportOutputDirectory("./manifests"))
-	if err != nil {
-		return err
-	}
 
-   ```
+{{ "Example_export" | example }}
 
 5. Apply:
 
-   ```shell
-   kubectl apply -f output_folder/
-   ```
+```sh
+kubectl apply -f out/manifests/
+```
 
-done.
+done ✅.
 
-Have a look at the [tests](../../pkg/kube/) and the [example](../docs/kubernetes/kube/) for a full example.
+Have a look at the [tests](../../pkg/kube/) and the [example](../kube/) for a full example.
 
-What does the Go code looks like, see [tekton example](../../pkg/kube/testdata/go/tekton)
+What does the Go code looks like, see [tekton example](../platypus/pkg/platform/tekton/app.go)
 
 ### Best practices
 
-> PLEASE READ [best practices](docs/best-practices.md) before using this library.
+> PLEASE READ [best practices](./best-practices.md) before using this library.
 
 This project has been heavily inspired by :
 

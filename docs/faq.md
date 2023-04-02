@@ -7,7 +7,7 @@
   - [How did you develop this project?](#how-did-you-develop-this-project)
     - [Proverbs](#proverbs)
   - [Why shelling out to kubectl instead of using the go-client?](#why-shelling-out-to-kubectl-instead-of-using-the-go-client)
-  - [Why do you depend on `k8s.io/client-go` ?](#why-do-you-depend-on-k8sioclient-go-)
+  - [Why do you depend on k8s.io/client-go ?](#why-do-you-depend-on-k8sioclient-go-)
 
 ## Why Go?
 
@@ -109,7 +109,7 @@ That pattern occurs when it is difficult to work with APIs and the lack thereof.
 While investigating, KinD is using this pattern to execute Docker.
 We tried to make it work with the go-client but it was a lot of work and we decided to use the CLI instead.
 
-## Why do you depend on `k8s.io/client-go` ?
+## Why do you depend on k8s.io/client-go ?
 
 We use the `"k8s.io/client-go/kubernetes/scheme"` package to register the CRD.
 As many projects do have CRDs, we decided (relunctantly) to depend on the `client-go` package for now.

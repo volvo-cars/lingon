@@ -67,7 +67,6 @@ require (
 	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/veggiemonk/strcase v0.0.0-20230401153433-418fda9c7e1e // indirect
 	github.com/zclconf/go-cty v1.13.1 // indirect
-	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.7.0 // indirect
 	golang.org/x/mod v0.9.0 // indirect

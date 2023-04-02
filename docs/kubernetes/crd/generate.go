@@ -3,6 +3,7 @@
 
 package crd
 
+//go:generate echo "⚠️ run go mod download before generating"
 //go:generate echo ">>>> cleaning previous output"
 //go:generate rm -rf out/
 //go:generate echo ">>>> importing YAML to Go"
@@ -10,5 +11,5 @@ package crd
 //go:generate echo ">>>> exporting Go to YAML"
 //go:generate go test -v example_export_test.go
 
-//go:generate echo ">>>> generating terraform readme\n"
+//go:generate echo ">>>> generating crd readme\n"
 //go:generate go run github.com/dave/rebecca/cmd/becca@v0.9.2  -package=github.com/volvo-cars/lingon/docs/kubernetes/crd -input readme.md.tpl

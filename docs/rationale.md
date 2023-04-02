@@ -67,33 +67,33 @@ Basically :
 
 > We need to automate the glue between the tools and the infrastructure.
 
-![kubernetes landscape](./assets/kubernetes-landscape.gif "kubernetes memes gif")
+![kubernetes landscape](./assets/k8s.gif "kubernetes memes gif")
 
 ## Solution
 
 When it comes to manipulating data, **general programming languages** such as Python, Go, Java, Rust, C#, ...
-and software engineering best practices have been battle tested and proven. 
+and software engineering best practices have been battle tested and proven.
 
-Lingon has been built from our experience using a general programming language to configure 
+Lingon has been built from our experience using a general programming language to configure
 our applications and infrastructure.
 
-* **Reduce cognitive load**: Building a platform within a single context (i.e. Go) will reduce cognitive load 
+* **Reduce cognitive load**: Building a platform within a single context (i.e. Go) will reduce cognitive load
 by decreasing the number of tools and context switching in the process.
-* **Type safety**: Detect misconfigurations in your text editor at **compile time** by using type-safe Go structs 
-to exchange values across tool boundaries. 
+* **Type safety**: Detect misconfigurations in your text editor at **compile time** by using type-safe Go structs
+to exchange values across tool boundaries.
 This "shifts left" the majority of errors that occur to the earliest possible point in time.
 
 * **Error handling**: Go's error handling enables propagating meaningful errors to the user.
 This significantly reduces the effort in finding the root cause of errors and provides a better developer experience.
 
-* **Limitless automation**: no need to write bash scripts to glue tools together. 
+* **Limitless automation**: no need to write bash scripts to glue tools together.
 We have a general programming language at our disposal that enables us to automate and
 **test** the most critical component before they reach production.
 
-Lingon is aimed at people managing cloud infrastructure who have suffered the pain of configuration languages 
+Lingon is aimed at people managing cloud infrastructure who have suffered the pain of configuration languages
 and the complexity of gluing tools together with yet another tool.
 
-> Lingon was created to manage platforms living in various environments at scale. 
+> Lingon was created to manage platforms living in various environments at scale.
 
 Lingon is not a platform, it is a library meant to be consumed in a Go application that platform engineers write 
 to manage their platforms. It is a tool to build and automate the creation and the management of platforms 

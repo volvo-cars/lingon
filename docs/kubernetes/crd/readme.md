@@ -67,6 +67,7 @@ import (
 	"path/filepath"
 
 	team "github.com/volvo-cars/lingon/docs/kubernetes/crd/out"
+	"github.com/volvo-cars/lingon/pkg/kube"
 )
 
 var defaultOut = "out"
@@ -79,7 +80,7 @@ func Example_export() {
 	_ = os.RemoveAll(out)
 
 	tm := team.New()
-	if err := tm.Export(out); err != nil {
+	if err := kube.Export(tm, kube.WithExportOutputDirectory(out)); err != nil {
 		fmt.Printf("%s\n", err)
 	}
 	fmt.Println("successfully exported CRDs to manifests")
