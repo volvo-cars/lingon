@@ -247,8 +247,8 @@ func TestImport_Error(t *testing.T) {
 	if err == nil {
 		t.Error("expected error")
 	}
-	output := `import options: package name cannot contain a dash.
-file does not exist: does-not-exists.yaml.`
+	output := `import options: package name cannot contain a dash
+file does not exist: does-not-exists.yaml`
 	if err.Error() != output {
 		t.Error(tu.Diff(output, err.Error()))
 	}

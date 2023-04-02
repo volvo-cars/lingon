@@ -82,7 +82,7 @@ func (j *jamel) gatekeeperImportOptions() error {
 	}
 	var err error
 	if strings.Contains(j.o.OutputPkgName, "-") {
-		err = errors.New("package name cannot contain a dash.")
+		err = errors.New("package name cannot contain a dash")
 	}
 	for _, f := range j.o.ManifestFiles {
 		if errm := j.checkManifests(f); errm != nil {
@@ -235,11 +235,11 @@ func (j *jamel) checkManifests(filePath string) error {
 	filename := filepath.Base(filePath)
 	e := filepath.Ext(filename)
 	if e != ".yaml" && e != ".yml" {
-		return fmt.Errorf("not yaml file: %s.", filePath)
+		return fmt.Errorf("not yaml file: %s", filePath)
 	}
 
 	if !fileExists(filePath) {
-		return fmt.Errorf("file does not exist: %s.", filePath)
+		return fmt.Errorf("file does not exist: %s", filePath)
 	}
 	return nil
 }
