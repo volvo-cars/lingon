@@ -14,7 +14,7 @@ require (
 	github.com/imdario/mergo v0.3.15
 	github.com/rogpeppe/go-internal v1.10.0
 	github.com/stretchr/testify v1.8.2
-	github.com/veggiemonk/strcase v0.0.0-20230325182039-9fa4e7cee676
+	github.com/veggiemonk/strcase v0.0.0-20230401153433-418fda9c7e1e
 	github.com/zclconf/go-cty v1.13.1
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
 	gopkg.in/yaml.v3 v3.0.1

@@ -82,6 +82,8 @@ github.com/veggiemonk/jennifer v0.0.0-20230131124350-60c16b6e1cb9 h1:nQsiiFoMNaq
 github.com/veggiemonk/jennifer v0.0.0-20230131124350-60c16b6e1cb9/go.mod h1:AxTG893FiZKqxy3FP1kL80VMshSMuz2G+EgvszgGRnk=
 github.com/veggiemonk/strcase v0.0.0-20230325182039-9fa4e7cee676 h1:k54zdDawXH2Srm91m4G37R2TZzZ9oEhvX70cbXRfn4c=
 github.com/veggiemonk/strcase v0.0.0-20230325182039-9fa4e7cee676/go.mod h1:FhMPOXYKshhGzQYJHiD5+zsWaVMP2NGpi/HfPu14QPA=
+github.com/veggiemonk/strcase v0.0.0-20230401153433-418fda9c7e1e h1:qAwrjJ7s5zLC8L6ogG3skSI8O0/bNPhu1bq8+GJtlIw=
+github.com/veggiemonk/strcase v0.0.0-20230401153433-418fda9c7e1e/go.mod h1:FhMPOXYKshhGzQYJHiD5+zsWaVMP2NGpi/HfPu14QPA=
 github.com/xanzy/ssh-agent v0.3.0 h1:wUMzuKtKilRgBAD1sUb8gOwwRr2FGoBVumcjoOACClI=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
