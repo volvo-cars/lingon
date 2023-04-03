@@ -2,6 +2,8 @@ name: goreleaser
 
 on:
   push:
+    branches:
+      - main
     tags:
       - '202*' # ex: 2023-01-22-6a52eb0
 

@@ -7,6 +7,8 @@
 // during the development process but not otherwise depended on by built code.
 package main
 
+//go:generate go run -modfile=./go.mod ./mage.go -l
+
 import (
 	_ "github.com/anchore/syft/cmd/syft"                    // generate sbom
 	_ "github.com/golangci/golangci-lint/cmd/golangci-lint" // linting

@@ -15,13 +15,14 @@ require (
 	github.com/golingon/terraproviders/aws/4.60.0 v0.0.0-20230403111524-c1a6f4e33c8f
 	github.com/golingon/terraproviders/tls/4.0.4 v0.0.0-20230403111524-c1a6f4e33c8f
 	github.com/google/go-containerregistry v0.14.0
+	github.com/hashicorp/hcl/v2 v2.16.2
 	github.com/hashicorp/terraform-exec v0.18.1
 	github.com/hashicorp/terraform-json v0.16.0
 	github.com/hexops/valast v1.4.3
 	github.com/invopop/yaml v0.2.0
 	github.com/rogpeppe/go-internal v1.10.0
 	github.com/stretchr/testify v1.8.2
-	github.com/volvo-cars/lingon v0.0.0-20230403102705-7175af3ca1ad
+	github.com/volvo-cars/lingon v0.0.0-20230403132235-03234a287cf6
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
 	istio.io/api v0.0.0-20230327210753-eb5bfad7b73b
 	istio.io/client-go v1.17.1
@@ -50,7 +51,6 @@ require (
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect
-	github.com/hashicorp/hcl/v2 v2.16.2 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.16.3 // indirect

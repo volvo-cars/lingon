@@ -83,10 +83,10 @@ func (Run) Scan() error {
 	mg.SerialDeps(
 		Run.Syft,
 		Run.GoVulnCheck,
-		Run.OSVScanner,
 		Run.Notice,
 		Run.GoLicensesCheck,
 		Run.CopyWriteCheck,
+		Run.OSVScanner,
 	)
 	return nil
 }
@@ -128,7 +128,7 @@ func (Run) Syft() error {
 	return err
 }
 
-// GoFumptCheck is used to format code
+// GoFumptCheck is used to check if the code is formatted
 func (Run) GoFumptCheck() error {
 	slog.Info("Running gofumpt - formatting code")
 	return goRun(goFumptRepo+goFumptVersion, "-l", "-extra", ".")
@@ -176,16 +176,16 @@ func (Run) Notice() error {
 	return nil
 }
 
-// GoLicensesCheck is used to export all licenses
+// GoLicensesCheck is used to check all licenses
 func (Run) GoLicensesCheck() error {
 	slog.Info("Running go-licenses - exporting licenses")
 	return goRun(
 		goLicensesRepo+goLicensesVersion,
-		"check ./...",
+		"check", "./...",
 	)
 }
 
-// CopyWriteCheck is used to check license headers
+// CopyWriteCheck is hashicorp/copywrite to check license headers
 func (Run) CopyWriteCheck() error {
 	slog.Info("Running copywrite - checking license headers")
 	return goRun(
@@ -197,7 +197,7 @@ func (Run) CopyWriteCheck() error {
 	)
 }
 
-// CopyWriteFix is used to check license headers
+// CopyWriteFix is hashicorp/copywrite to fix license headers
 func (Run) CopyWriteFix() error {
 	slog.Info("Running copywrite - fixing license headers")
 	return goRun(
@@ -214,28 +214,39 @@ func (Run) GoCILint() error {
 	return goRun(goCILintRepo+goCILintVersion, "-v", "run", "./...")
 }
 
+func (Run) GoModVerify() error {
+	mg.SerialDeps(
+		Run.CheckGoMod,
+		Tidy(),
+		Run.HasGitDiff,
+	)
+	return nil
+}
+
+func (Run) HasGitDiff() error {
+	slog.Info("Running git diff")
+	cmd := exec.Command("git", "--no-pager", "diff")
+	// cmd.Stdout = &stdout
+	// cmd.Stderr = &stderr
+	b, err := cmd.CombinedOutput()
+	if err != nil {
+		return err
+	}
+	if len(b) == 0 {
+		return nil
+	}
+	buf := bytes.NewBuffer(b)
+	slog.Info("exec", slog.String("cmd", cmd.String()))
+	return fmt.Errorf("running git diff:\n\n%s", buf.String())
+}
+
+func (Run) CheckGoMod() error {
+	slog.Info("Running go mod verify")
+	return g0("mod", "verify")
+}
+
 // Tidy runs go mod tidy
 func Tidy() error {
 	slog.Info("Running go mod tidy")
 	return g0("mod", "tidy")
-}
-
-func toStringSlice(x ...any) []string {
-	var args []string
-	for _, arg := range x {
-		switch t := arg.(type) {
-		case string:
-			if t != "" {
-				args = append(args, t)
-			}
-		case []string:
-			if t != nil {
-				args = append(args, t...)
-			}
-		default:
-			panic("not a string or []string")
-		}
-	}
-
-	return args
 }
