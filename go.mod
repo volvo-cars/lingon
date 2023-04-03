@@ -2,8 +2,6 @@ module github.com/volvo-cars/lingon
 
 go 1.20
 
-replace github.com/dave/jennifer => github.com/veggiemonk/jennifer v0.0.0-20230131124350-60c16b6e1cb9
-
 require (
 	github.com/dave/jennifer v1.6.0
 	github.com/go-playground/validator/v10 v10.12.0
