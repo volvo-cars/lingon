@@ -24,6 +24,9 @@ Lingon is a collection of libraries and tools for building platforms using Go.
 
 > In short, we write Terraform (HCL) and Kubernetes (YAML) in Go. see [Rationale](./docs/rationale.md) for more details.
 
+**Lingon is not a platform, it is a library meant to be consumed in a Go application that platform engineers write to manage their platforms. 
+It is a tool to build and automate the creation and the management of platforms regardless of the target infrastructure and services.**
+
 The following technologies are currently supported:
 
 - [Terraform](./docs/terraform/)
