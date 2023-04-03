@@ -36,10 +36,16 @@ jobs:
           fetch-depth: 1
 
       - name: go generate
-        run: go generate -v ./docs/... # -coverprofile=coverage.txt -covermode=atomic
+        working-directory: ./docs
+        run: go generate -v ./... # -coverprofile=coverage.txt -covermode=atomic
 
+      - name: git diff
+        working-directory: ./docs
+        run: git --no-pager diff HEAD --exit-code
+        
       - name: golangci-lint
         uses: golangci/golangci-lint-action@08e2f20817b15149a52b5b3ebe7de50aff2ba8c5 # v3.4.0
+        working-directory: ./docs
         with:
           args: --timeout 1m
 
