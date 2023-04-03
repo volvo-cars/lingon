@@ -4,13 +4,15 @@
 package kube_test
 
 import (
+	"bufio"
 	"bytes"
+	"fmt"
+	"io"
 	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/rogpeppe/go-internal/txtar"
 	"github.com/volvo-cars/lingon/pkg/kube"
 	"github.com/volvo-cars/lingon/pkg/kube/testdata/go/tekton"
@@ -269,11 +271,11 @@ func TestExport(t *testing.T) {
 				t.Parallel()
 				var buf bytes.Buffer
 				//nolint:gocritic
-				opts := append(
+				tc.Opts = append(
 					tc.Opts,
 					kube.WithExportWriter(&buf),
 				)
-				err := kube.Export(tc.km, opts...)
+				err := kube.Export(tc.km, tc.Opts...)
 				tu.AssertNoError(t, err, "failed to import")
 				ar := txtar.Parse(buf.Bytes())
 				got := make([]string, 0, len(ar.Files))
@@ -282,12 +284,60 @@ func TestExport(t *testing.T) {
 				}
 				sort.Strings(got)
 				want := tc.OutFiles
-				if !cmp.Equal(want, got) {
-					t.Error(tu.Diff(want, got))
+				if diff := tu.Diff(got, want); diff != "" {
+					t.Error(diff)
 				}
 			},
 		)
 	}
+}
+
+func TestExport_SingleFile(t *testing.T) {
+	var buf bytes.Buffer
+	err := kube.Export(
+		tekton.New(),
+		kube.WithExportWriter(&buf),
+		kube.WithExportOutputDirectory("out/export"),
+		kube.WithExportAsSingleFile("tekton.yaml"),
+	)
+	tu.AssertNoError(t, err, "failed to import")
+	got, err := splitManifest(&buf)
+	tu.AssertNoError(t, err, "failed to split manifest")
+	if len(got) != 66 {
+		t.Errorf("expected 66 manifests, got %d", len(got))
+	}
+}
+
+func splitManifest(r io.Reader) ([]string, error) {
+	scanner := bufio.NewScanner(r)
+	var content []string
+	var buf bytes.Buffer
+
+	for scanner.Scan() {
+		txt := scanner.Text()
+		switch {
+		// Skip comments
+		case strings.HasPrefix(txt, "#"):
+			continue
+		// Split by '---'
+		case strings.Contains(txt, "---"):
+			if buf.Len() > 0 {
+				content = append(content, buf.String())
+				buf.Reset()
+			}
+		default:
+			buf.WriteString(txt + "\n")
+		}
+	}
+
+	s := buf.String()
+	if len(s) > 0 { // if a manifest ends with '---', don't add it
+		content = append(content, s)
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("spliting manifests: %w", err)
+	}
+	return content, nil
 }
 
 type IAM struct {

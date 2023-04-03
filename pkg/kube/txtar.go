@@ -7,8 +7,6 @@ import (
 )
 
 func Txtar2YAML(ar *txtar.Archive) []byte {
-	// ar := txtar.Parse(b)
-	// txtar.Format(ar)
 	var buf bytes.Buffer
 	for _, f := range ar.Files {
 		buf.WriteString("\n\n---\n")
