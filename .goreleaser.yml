@@ -104,7 +104,7 @@ kos:
       - linux/arm64
     tags:
       - latest
-      - '{{.Os}}-{{.Arch}}-{{.Tag}}'
+      - '{{.Tag}}-{{.Arch}}'
     sbom: spdx
     # preserve_import_paths: false
     # base_import_paths: true
@@ -116,7 +116,7 @@ kos:
       - linux/arm64
     tags:
       - latest
-      - '{{.Os}}-{{.Arch}}-{{.Tag}}'
+      - '{{.Tag}}-{{.Arch}}'
     sbom: spdx
     # preserve_import_paths: false
     # base_import_paths: true
@@ -128,7 +128,7 @@ kos:
       - linux/arm64
     tags:
       - latest
-      - '{{.Os}}-{{.Arch}}-{{.Tag}}'
+      - '{{.Tag}}-{{.Arch}}'
     sbom: spdx
     # preserve_import_paths: false
     # base_import_paths: true
