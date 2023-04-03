@@ -4,6 +4,7 @@
 package kube
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -35,9 +36,11 @@ func Export(km Exporter, opts ...ExportOption) error {
 	return g.export(km)
 }
 
+var errOptConflictOutFiles = errors.New("option conflict: WithExportOutputFiles not compatible with WithExportOutputDir")
+
 func gatekeeperExportOptions(o exportOption) error {
 	if o.Explode && o.SingleFile != "" {
-		return errors.New("option conflict: WithExportAsSingleFile not compatible with WithExportExplodeManifests")
+		return errOptConflictOutFiles
 	}
 	return nil
 }
