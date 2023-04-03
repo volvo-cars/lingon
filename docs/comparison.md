@@ -15,7 +15,7 @@ Most of the tools are good tools, they just don't work for us or are too complic
 - [Terraform](#terraform)
 - [Pulumi](#pulumi)
 - [CUE](#cue)
-- [CDKTF and CDK8s](#cdktf-and-cdk8s)
+- [CDTK and CDK8s](#cdtk-and-cdk8s)
 - [Cluster API](#cluster-api)
 - [CloudFormation](#cloudformation)
 - [Kpt](#kpt)
@@ -57,7 +57,7 @@ Comparing with Lingon, just adding the types to the schema is enough to convert 
 
 ## Kustomize
 
-Kustomize is great for simple use cases where we need to patch a few values in a YAML file.
+[Kustomize](https://kubectl.docs.kubernetes.io/) is great for simple use cases where we need to patch a few values in a YAML file.
 
 The problem with Kustomize is the possible overlays on top of overlays on top of overlays. A problem that CUE forbids for that reason.
 We've seen case where there were five layers of overrides, and it was hard to understand what the final value was.
@@ -78,7 +78,7 @@ Finally, it does not solve the cloud resource management part.
 
 ## Helm
 
-Helm is great when the template is small and simple.
+[Helm](https://helm.sh/) is great when the template is small and simple.
 
 We have converted a few Helm charts to Lingon, and we found mistakes in the configuration which are obvious in Go but
 extremely hard to find and debug in Helm. Even though Helm uses Go templates, and a lot can be done with it,
@@ -107,7 +107,7 @@ Finally, it is only for kubernetes and requires context switching with other too
 
 ## Terraform
 
-We love Terraform and we used it a lot.
+We love [Terraform](https://www.terraform.io/) and we used it a lot.
 Which is why we found that there are some shortcoming that we wanted to address.
 
 - Once you start managing a large number of resources, Terraform becomes cumbersome to use.
@@ -142,7 +142,7 @@ So why not write the code directly and avoid context switching altogether?
 
 ## Pulumi
 
-We looked at it, and it is a great tool.
+We looked at [Pulumi](https://www.pulumi.com/), and it is a great tool.
 However, we found that the developer experience could be improved.
 A lot of the arguments are raw strings and do not prevent us from writing invalid configurations.
 We would put Pulumi in the category of "more flexible Terraform".
@@ -160,7 +160,7 @@ We could not find how to avoid that from their website which doesn't build trust
 
 ## CUE
 
-We love CUE, we've been trying it since 2019, we even [submitted it for review to TGIK](https://github.com/vmware-archive/tgik/issues/211).
+We love [CUE](https://cuelang.org/), we've been trying it since 2019, we even [submitted it for review to TGIK](https://github.com/vmware-archive/tgik/issues/211).
 Unfortunately, as much as we wanted to make it work, we felt the pain points were too big to ignore:
 
 - It is not possible to import kubernetes manifests to Go structs (yet).
@@ -174,9 +174,11 @@ Unfortunately, as much as we wanted to make it work, we felt the pain points wer
 - The community is small.
 - The support for Terraform is not there (yet).
 
-## CDKTF and CDK8s
+Also, on the CUE website, there is a great [comparison with other configuration languages](https://cuelang.org/docs/usecases/configuration/#inheritance-based-configuration-languages).
 
-The developer experience for Go is not great and
+## CDTK and CDK8s
+
+With [CDKTF](https://developer.hashicorp.com/terraform/cdktf) and [CDK8s](https://cdk8s.io/), the developer experience for Go is not great and
 introduces [jsii](https://github.com/aws/jsii) which was a big turn-off for us as it needs NodeJS.
 
 Additionally, and much like Pulumi and AWS CDK, infrastructure is not defined declaratively,
@@ -184,7 +186,7 @@ which is something we can achieve using Go structs.
 
 ## Cluster API
 
-It is a great tool to manage infrastructure and kubernetes clusters, but it is not a general purpose programming language.
+[Cluster API](https://cluster-api.sigs.k8s.io/) is a great tool to manage infrastructure and kubernetes clusters, but it is not a general purpose programming language.
 So the automation is limited to what it can do.
 
 It requires a running kubernetes cluster to manage other kubernetes clusters and admin level access to everything.
@@ -196,11 +198,11 @@ Finally, it does not solve the kubernetes manifest management part.
 
 ## CloudFormation
 
-It is cloud specific and not portable. It is not a general purpose programming language.
+[CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-whatis-concepts.html) is cloud specific and not portable. It is not a general purpose programming language.
 
 ## Kpt
 
-It requires a kubernetes cluster.
+[Kpt](https://github.com/GoogleContainerTools/kpt) requires a kubernetes cluster.
 The installation instructions alone have many of steps, and it is not clear why something is required and what is optional.
 
 The support for Go is great, and it comes with a lot of built-in functions.
@@ -213,10 +215,10 @@ It is that automation that makes the debugging experience hard.
 
 ## Jsonnet
 
-Great language, we used it extensively at a previous company.
+[Jsonnet](https://jsonnet.org/) is a reat language, we used it extensively at a previous company.
 
 In short: tooling, small community, developer experience, debugging experience, IDE support, documentation, error messages, etc.
 
 ## Ksonnet
 
-It is unmaintained and the project is archived on GitHub.
+[Ksonnet](https://github.com/ksonnet/ksonnet) is unmaintained and the project is archived on GitHub.
