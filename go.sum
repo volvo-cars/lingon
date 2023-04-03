@@ -80,8 +80,6 @@ github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
 github.com/stretchr/testify v1.8.2 h1:+h33VjcLVPDHtOdpUCuF+7gSuG3yGIftsP1YvFihtJ8=
 github.com/stretchr/testify v1.8.2/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
-github.com/veggiemonk/jennifer v0.0.0-20230131124350-60c16b6e1cb9 h1:nQsiiFoMNaqzE1RGq7Q/VFhbLQP4cb8oqFAvuckEH40=
-github.com/veggiemonk/jennifer v0.0.0-20230131124350-60c16b6e1cb9/go.mod h1:AxTG893FiZKqxy3FP1kL80VMshSMuz2G+EgvszgGRnk=
 github.com/veggiemonk/strcase v0.0.0-20230401153433-418fda9c7e1e h1:qAwrjJ7s5zLC8L6ogG3skSI8O0/bNPhu1bq8+GJtlIw=
 github.com/veggiemonk/strcase v0.0.0-20230401153433-418fda9c7e1e/go.mod h1:FhMPOXYKshhGzQYJHiD5+zsWaVMP2NGpi/HfPu14QPA=
 github.com/xanzy/ssh-agent v0.3.0 h1:wUMzuKtKilRgBAD1sUb8gOwwRr2FGoBVumcjoOACClI=
