@@ -168,7 +168,7 @@ func structReceiverFromName(name string) string {
 	}
 	r := receiver.String()
 	// Avoid using keywords for the receiver!
-	if token.Lookup(r).IsKeyword() {
+	if token.Lookup(r).IsKeyword() || r == "nil" {
 		r = "_" + r
 	}
 	return r
