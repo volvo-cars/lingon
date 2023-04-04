@@ -1,7 +1,7 @@
 // Copyright 2023 Volvo Car Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-package kube_test
+package testutil_test
 
 import (
 	"bytes"
@@ -80,7 +80,7 @@ func diffLatest(
 	}
 
 	if serializer == nil {
-		serializer = defaultSerializer()
+		serializer = kube.defaultSerializer()
 	}
 	// IMPORT CURRENT MANIFESTS TO GO
 	currentDir := "current"

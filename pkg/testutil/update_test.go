@@ -1,7 +1,7 @@
 // Copyright 2023 Volvo Car Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-package kube_test
+package testutil_test
 
 import (
 	"context"
@@ -15,13 +15,28 @@ import (
 	"github.com/volvo-cars/lingon/pkg/kube"
 	"github.com/volvo-cars/lingon/pkg/kube/testdata/go/tekton"
 	tu "github.com/volvo-cars/lingon/pkg/testutil"
+	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	apiextensionsbeta "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes/scheme"
 )
 
 const (
 	kubeAppPkgPath = "github.com/volvo-cars/lingon/pkg/kube"
 )
 
-var diffOutputDir = filepath.Join(defaultImportOutputDir, "diff")
+var (
+	defaultImportOutputDir = "out"
+	diffOutputDir          = filepath.Join(defaultImportOutputDir, "diff")
+)
+
+func defaultSerializer() runtime.Decoder {
+	// NEEDED FOR CRDS
+	//
+	_ = apiextensions.AddToScheme(scheme.Scheme)
+	_ = apiextensionsbeta.AddToScheme(scheme.Scheme)
+	return scheme.Codecs.UniversalDeserializer()
+}
 
 func TestDiffUpdate(t *testing.T) {
 	_, _ = diffLatest(
