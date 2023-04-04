@@ -80,7 +80,7 @@ func diffLatest(
 	}
 
 	if serializer == nil {
-		serializer = kube.defaultSerializer()
+		serializer = defaultSerializer()
 	}
 	// IMPORT CURRENT MANIFESTS TO GO
 	currentDir := "current"
