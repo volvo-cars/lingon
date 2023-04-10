@@ -3,7 +3,7 @@ module github.com/volvo-cars/lingon
 go 1.20
 
 require (
-	github.com/dave/jennifer v1.6.0
+	github.com/dave/jennifer v1.6.1
 	github.com/eidolon/wordwrap v0.0.0-20161011182207-e0f54129b8bb
 	github.com/fatih/color v1.14.1
 	github.com/go-playground/validator/v10 v10.12.0
