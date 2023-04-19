@@ -11,8 +11,8 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/volvo-cars/lingon/docs/platypus/pkg/infra/eks"
-	"github.com/volvo-cars/lingon/docs/platypus/pkg/infra/vpc"
+	"github.com/volvo-cars/lingon/docs/platypus/pkg/infra/awsvpc"
+	"github.com/volvo-cars/lingon/docs/platypus/pkg/infra/cluster_eks"
 	"github.com/volvo-cars/lingon/docs/platypus/pkg/platform/awsauth"
 	"github.com/volvo-cars/lingon/docs/platypus/pkg/platform/grafana"
 	"github.com/volvo-cars/lingon/docs/platypus/pkg/platform/karpenter"
@@ -120,7 +120,7 @@ func run(p runParams) error {
 	slog.Info("run", "params", p)
 	ctx := context.Background()
 	uniqueName := p.ClusterParams.Name
-	vpcOpts := vpc.Opts{
+	vpcOpts := awsvpc.Opts{
 		Name: uniqueName,
 		AZs: [3]string{
 			"eu-north-1a", "eu-north-1b", "eu-north-1c",
@@ -141,7 +141,7 @@ func run(p runParams) error {
 
 	vpc := vpcStack{
 		AWSStackConfig: newAWSStackConfig(uniqueName+"-vpc", p),
-		AWSVPC:         *vpc.NewAWSVPC(vpcOpts),
+		AWSVPC:         *awsvpc.NewAWSVPC(vpcOpts),
 	}
 
 	if err := tf.Run(ctx, &vpc); err != nil {
@@ -160,8 +160,8 @@ func run(p runParams) error {
 	vpcID := vpcState.Id
 	eks := eksStack{
 		AWSStackConfig: newAWSStackConfig(uniqueName+"-eks", p),
-		Cluster: *eks.NewEKSCluster(
-			eks.ClusterOpts{
+		Cluster: *cluster_eks.NewEKSCluster(
+			cluster_eks.ClusterOpts{
 				Name:             p.ClusterParams.Name,
 				Version:          p.ClusterParams.Version,
 				VPCID:            vpcID,
@@ -354,8 +354,7 @@ func run(p runParams) error {
 	fmt.Printf("\nTerriyaki Summary:\n")
 	for _, mod := range tf.Stacks() {
 		diff := "no plan"
-		plan := mod.Plan()
-		if plan != nil {
+		if plan := mod.Plan(); plan != nil {
 			diff = fmt.Sprintf(
 				"add: %d, destroy: %d",
 				len(plan.AddResources), len(plan.DestroyResources),

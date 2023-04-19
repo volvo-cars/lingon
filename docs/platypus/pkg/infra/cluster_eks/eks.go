@@ -1,17 +1,15 @@
 // Copyright (c) 2023 Volvo Car Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-package eks
+package cluster_eks
 
 import (
 	"fmt"
 
-	"github.com/golingon/terraproviders/aws/4.60.0/dataiampolicydocument"
-
 	aws "github.com/golingon/terraproviders/aws/4.60.0"
+	"github.com/golingon/terraproviders/aws/4.60.0/dataiampolicydocument"
 	"github.com/golingon/terraproviders/aws/4.60.0/ekscluster"
 	tls "github.com/golingon/terraproviders/tls/4.0.4"
-
 	"github.com/volvo-cars/lingon/pkg/terra"
 )
 

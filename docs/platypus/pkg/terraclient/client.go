@@ -307,6 +307,10 @@ func (r *Client) setPlan(stack Stacker, plan *tfjson.Plan) {
 	stack.SetPlan(plan)
 }
 
+//	func NewTerraform(s Stacker) (*tfexec.Terraform, error) {
+//		wd := filepath.Join(tfWorkDir, s.StackName())
+//		tf, err := tfexec.NewTerraform(wd, tfExec)
+//	}
 func (r *Client) newTerraform(stack Stacker) (*tfexec.Terraform, error) {
 	workingDir := r.workingDir(stack)
 	tf, err := tfexec.NewTerraform(workingDir, tfExec)

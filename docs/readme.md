@@ -3,7 +3,8 @@
 ## Getting started
 
 - [Kubernetes](./kubernetes/) (examples, options, CRDs)
-- [Terraform](./terraform/)
+- [Terraform](./terraform/) (examples, options, providers)
+- [Platypus](./platypus/) - an example of how to use Lingon to build an EKS cluster and migrate a database.
 
 ## About the project
 

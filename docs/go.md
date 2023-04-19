@@ -31,9 +31,10 @@
 
 ### References
 
-* [But Why Go](https://github.com/bwplotka/mimic#but-why-go) from [Mimic](https://github.com/bwplotka/mimic) by [bwplotka](https://github.com/bwplotka)  👈 heavily inspired by this one.
+* [But Why Go](https://github.com/bwplotka/mimic#but-why-go) from [Mimic](https://github.com/bwplotka/mimic) by [bwplotka](https://github.com/bwplotka)  👈 we were heavily inspired by this one.
 * [Not Another Markup Language](https://github.com/krisnova/naml) from [NAML](https://github.com/krisnova/naml) by [krisnova](https://github.com/krisnova)
 * [Go for Cloud](https://rakyll.org/go-cloud/) by [rakyll](https://rakyll.org)
+* [How Go fixed everything that was wrong with programming](https://medium.com/@jankammerath/how-go-fixed-everything-that-was-wrong-with-programming-1b599a1055a8) by [jankammerath](https://medium.com/@jankammerath)
 * [The yaml document from hell](https://ruudvanasseldonk.com/2023/01/11/the-yaml-document-from-hell) by [ruudvanasseldonk](https://ruudvanasseldonk.com)
 * [noyaml website](https://noyaml.com)
 * [YAML Considered Harmful - Philipp Krenn 🎥](https://youtu.be/WQurEEfSf8M)

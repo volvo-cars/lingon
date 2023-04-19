@@ -10,8 +10,8 @@ import (
 
 	aws "github.com/golingon/terraproviders/aws/4.60.0"
 	"github.com/golingon/terraproviders/aws/4.60.0/provider"
-	"github.com/volvo-cars/lingon/docs/platypus/pkg/infra/eks"
-	"github.com/volvo-cars/lingon/docs/platypus/pkg/infra/vpc"
+	"github.com/volvo-cars/lingon/docs/platypus/pkg/infra/awsvpc"
+	"github.com/volvo-cars/lingon/docs/platypus/pkg/infra/cluster_eks"
 	"github.com/volvo-cars/lingon/docs/platypus/pkg/platform/grafana"
 	"github.com/volvo-cars/lingon/docs/platypus/pkg/platform/karpenter"
 	"github.com/volvo-cars/lingon/docs/platypus/pkg/terraclient"
@@ -37,12 +37,12 @@ type AWSStackConfig struct {
 
 type vpcStack struct {
 	AWSStackConfig
-	vpc.AWSVPC
+	awsvpc.AWSVPC
 }
 
 type eksStack struct {
 	AWSStackConfig
-	eks.Cluster
+	cluster_eks.Cluster
 }
 
 type rdsSnapshotStack struct {

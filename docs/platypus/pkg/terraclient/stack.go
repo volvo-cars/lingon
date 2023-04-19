@@ -52,8 +52,8 @@ type Stack struct {
 	// generated and the Terraform CLI is executed.
 	Name      string       `lingon:"-" validate:"required"`
 	stateMode StateMode    `lingon:"-"`
-	plan      *Plan        `lingon:"-" `
-	tfplan    *tfjson.Plan `lingon:"-" `
+	plan      *Plan        `lingon:"-"`
+	tfplan    *tfjson.Plan `lingon:"-"`
 }
 
 func (*Stack) Terriyaki() {}

@@ -180,9 +180,13 @@ func (k *Client) Diff(ctx context.Context, km kube.Exporter) error {
 	); err != nil {
 		return err
 	}
+
 	go func() {
 		defer stdin.Close()
-		if err := kube.Export(km, kube.WithExportWriter(stdin)); err != nil {
+		if err := kube.Export(km,
+			kube.WithExportWriter(stdin),
+			kube.WithExportAsSingleFile("stdin"),
+		); err != nil {
 			log.Fatal(err)
 		}
 	}()

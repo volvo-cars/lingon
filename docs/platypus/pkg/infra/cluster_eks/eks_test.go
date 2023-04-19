@@ -3,7 +3,7 @@
 
 //go:build inttest
 
-package eks
+package cluster_eks
 
 import (
 	"testing"
