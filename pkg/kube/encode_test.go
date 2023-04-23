@@ -5,6 +5,7 @@ package kube
 
 import (
 	"errors"
+	"path/filepath"
 	"reflect"
 	"sort"
 	"testing"
@@ -112,6 +113,14 @@ func TestEncode_EmbeddedStruct(t *testing.T) {
 	}
 
 	if diff := tu.Diff(want, filenames); diff != "" {
+		t.Error(tu.Callers(), diff)
+	}
+
+	golden := filepath.Join("testdata", "golden", "encode.txt")
+	expected, err := txtar.ParseFile(golden)
+	tu.AssertNoError(t, err)
+
+	if diff := tu.DiffTxtar(ar, expected); diff != "" {
 		t.Error(tu.Callers(), diff)
 	}
 }

@@ -5,12 +5,12 @@ go 1.20
 replace github.com/volvo-cars/lingon => ../
 
 require (
-	github.com/Masterminds/semver/v3 v3.2.0
-	github.com/aws/karpenter v0.27.1
-	github.com/aws/karpenter-core v0.27.1
+	github.com/Masterminds/semver/v3 v3.2.1
+	github.com/aws/karpenter v0.27.3
+	github.com/aws/karpenter-core v0.27.3
 	github.com/go-playground/validator/v10 v10.12.0
-	github.com/golingon/terraproviders/aws/4.60.0 v0.0.0-20230403111524-c1a6f4e33c8f
-	github.com/golingon/terraproviders/tls/4.0.4 v0.0.0-20230403111524-c1a6f4e33c8f
+	github.com/golingon/terraproviders/aws/4.60.0 v0.0.0-20230419130232-032a27542de9
+	github.com/golingon/terraproviders/tls/4.0.4 v0.0.0-20230419130232-032a27542de9
 	github.com/google/go-containerregistry v0.14.0
 	github.com/hashicorp/hcl/v2 v2.16.2
 	github.com/hashicorp/terraform-exec v0.18.1
@@ -19,9 +19,9 @@ require (
 	github.com/invopop/yaml v0.2.0
 	github.com/rogpeppe/go-internal v1.10.0
 	github.com/stretchr/testify v1.8.2
-	github.com/volvo-cars/lingon v0.0.0-20230406151041-775dd4579e79
-	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
-	istio.io/api v0.0.0-20230406193325-c74882c8130f
+	github.com/volvo-cars/lingon v0.0.0-20230419122405-76e71f8ecbd5
+	golang.org/x/exp v0.0.0-20230419192730-864b3d6c5c2c
+	istio.io/api v0.0.0-20230414193140-04eb39977e2a
 	istio.io/client-go v1.17.1
 	k8s.io/api v0.27.1
 	k8s.io/apiextensions-apiserver v0.27.1
@@ -33,12 +33,12 @@ require (
 require (
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
-	github.com/aws/aws-sdk-go v1.44.239 // indirect
+	github.com/aws/aws-sdk-go v1.44.246 // indirect
 	github.com/dave/jennifer v1.6.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/docker/cli v23.0.3+incompatible // indirect
+	github.com/docker/cli v23.0.4+incompatible // indirect
 	github.com/docker/distribution v2.8.1+incompatible // indirect
-	github.com/docker/docker v23.0.3+incompatible // indirect
+	github.com/docker/docker v23.0.4+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.7.0 // indirect
 	github.com/eidolon/wordwrap v0.0.0-20161011182207-e0f54129b8bb // indirect
 	github.com/fatih/color v1.15.0 // indirect
@@ -52,7 +52,7 @@ require (
 	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.16.4 // indirect
+	github.com/klauspost/compress v1.16.5 // indirect
 	github.com/leodido/go-urn v1.2.3 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.18 // indirect
@@ -66,7 +66,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/samber/lo v1.38.1 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
-	github.com/veggiemonk/strcase v0.0.0-20230408012609-81cba9641077 // indirect
+	github.com/veggiemonk/strcase v0.0.0-20230415204559-d7702c84640b // indirect
 	github.com/zclconf/go-cty v1.13.1 // indirect
 	github.com/zegl/kube-score v1.16.1 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
@@ -77,14 +77,14 @@ require (
 	golang.org/x/sys v0.7.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
 	golang.org/x/tools v0.8.0 // indirect
-	google.golang.org/genproto v0.0.0-20230403163135-c38d8f061ccd // indirect
+	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/klog/v2 v2.90.1 // indirect
 	k8s.io/utils v0.0.0-20230406110748-d93618cff8a2 // indirect
-	knative.dev/pkg v0.0.0-20230404101938-ee73c9355c9d // indirect
+	knative.dev/pkg v0.0.0-20230420071539-300df436f953 // indirect
 	mvdan.cc/gofumpt v0.5.0 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect

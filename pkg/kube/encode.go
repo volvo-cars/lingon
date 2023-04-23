@@ -4,12 +4,14 @@
 package kube
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"path/filepath"
 	"reflect"
 
 	"github.com/rogpeppe/go-internal/txtar"
+	"github.com/tidwall/sjson"
 	"github.com/veggiemonk/strcase"
 	"github.com/volvo-cars/lingon/pkg/kubeutil"
 	corev1 "k8s.io/api/core/v1"
@@ -32,6 +34,7 @@ func (g *goky) encodeStruct(
 		sf := rv.Type().Field(i)
 		fv := rv.Field(i)
 
+		// embedded struct
 		if sf.Anonymous {
 			if err := g.encodeStruct(fv, sf.Name); err != nil {
 				return err
@@ -43,6 +46,7 @@ func (g *goky) encodeStruct(
 		switch t := fieldVal.Interface().(type) {
 		case runtime.Object:
 			v := reflect.ValueOf(t)
+			// TODO: should we continue instead ? Should it be an option ?
 			if v.IsZero() || v.IsNil() {
 				return fmt.Errorf(
 					"%w: %q of type %q",
@@ -64,8 +68,26 @@ func (g *goky) encodeStruct(
 			default:
 
 			}
-			// It works by first marshalling to JSON, so no `yaml` tag necessary
-			b, err := kyaml.Marshal(t)
+
+			kj, err := json.Marshal(t)
+			if err != nil {
+				return fmt.Errorf("error marshaling field %s: %w", sf.Name, err)
+			}
+
+			// delete unwanted fields
+			kjs, err := sjson.Delete(string(kj), "metadata.creationTimestamp")
+			if err != nil {
+				return fmt.Errorf(
+					"deleting creationTimestamp %s: %w", sf.Name, err,
+				)
+			}
+
+			kjs, err = sjson.Delete(kjs, "status")
+			if err != nil {
+				return fmt.Errorf("deleting status %s: %w", sf.Name, err)
+			}
+
+			b, err := kyaml.JSONToYAML([]byte(kjs))
 			if err != nil {
 				return fmt.Errorf("error marshaling field %s: %w", sf.Name, err)
 			}
@@ -79,6 +101,7 @@ func (g *goky) encodeStruct(
 			ext := "yaml"
 			if g.o.OutputJSON {
 				ext = "json"
+				b = []byte(kjs)
 			}
 			name := fmt.Sprintf(
 				"%d_%s.%s",
@@ -99,16 +122,6 @@ func (g *goky) encodeStruct(
 				name = filepath.Join(g.o.OutputDir, name)
 			}
 
-			if g.o.OutputJSON {
-				b, err = kyaml.YAMLToJSON(b)
-				if err != nil {
-					return fmt.Errorf(
-						"error converting %q to JSON: %w",
-						m.GVK(),
-						err,
-					)
-				}
-			}
 			g.ar.Files = append(g.ar.Files, txtar.File{Name: name, Data: b})
 
 		default:

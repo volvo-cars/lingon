@@ -201,6 +201,7 @@ func TestImport(t *testing.T) {
 				sort.Strings(got)
 				want := tc.OutFiles
 				tu.AssertEqualSlice(t, want, got)
+				tu.AssertNoError(t, tu.VerifyGo(ar))
 			},
 		)
 	}

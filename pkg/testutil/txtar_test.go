@@ -7,6 +7,7 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/rogpeppe/go-internal/txtar"
 	tu "github.com/volvo-cars/lingon/pkg/testutil"
 )
 
@@ -39,16 +40,25 @@ func TestFolder2Txtar(t *testing.T) {
 		"../kube/testdata/golden/configmap.yaml",
 		"../kube/testdata/golden/deployment.golden",
 		"../kube/testdata/golden/deployment.yaml",
+		"../kube/testdata/golden/embedded struct explode.txt",
+		"../kube/testdata/golden/embedded struct with explode and name file func as JSON.txt",
+		"../kube/testdata/golden/embedded struct with explode and name file func.txt",
+		"../kube/testdata/golden/embedded struct with name file func.txt",
+		"../kube/testdata/golden/embedded struct.txt",
 		"../kube/testdata/golden/empty.golden",
 		"../kube/testdata/golden/empty.yaml",
+		"../kube/testdata/golden/encode.txt",
 		"../kube/testdata/golden/log.golden",
 		"../kube/testdata/golden/reader.yaml",
+		"../kube/testdata/golden/remove secrets.txt",
 		"../kube/testdata/golden/secret.golden",
 		"../kube/testdata/golden/secret.yaml",
 		"../kube/testdata/golden/service.golden",
 		"../kube/testdata/golden/service.yaml",
+		"../kube/testdata/golden/tekton.txt",
 		"../kube/testdata/grafana.yaml",
 		"../kube/testdata/istio.yaml",
+
 		"../kube/testdata/karpenter.yaml",
 		"../kube/testdata/spark.yaml",
 		"../kube/testdata/tekton-updated.yaml",
@@ -60,4 +70,33 @@ func TestFolder2Txtar(t *testing.T) {
 	}
 	sort.Strings(want)
 	tu.AssertEqualSlice(t, want, filenames)
+}
+
+func TestVerifyGo(t *testing.T) {
+	ar := &txtar.Archive{
+		Files: []txtar.File{
+			{
+				Name: "main.go",
+				Data: []byte(`package main
+func main() { fmt.Println("Hello, world!") }
+`),
+			},
+			{
+				Name: "bla.go",
+				Data: []byte(`package main
+oops I did it again
+func main() { fmt.Println("Hello, world!") }
+`),
+			},
+		},
+	}
+
+	want := "bla.go:2:1: expected declaration, found oops"
+	tu.AssertError(t, tu.VerifyGo(ar), want)
+
+	// test the generated tekton example
+	ar, err := tu.Folder2Txtar("../kube/testdata/go/tekton")
+	tu.AssertNoError(t, err)
+	tu.IsNotEqual(t, 0, len(ar.Files))
+	tu.AssertNoError(t, tu.VerifyGo(ar))
 }

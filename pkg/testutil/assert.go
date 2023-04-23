@@ -8,32 +8,36 @@ import (
 	"testing"
 )
 
+// AssertEqual checks if the expected and actual are equal. Errors if not.
 func AssertEqual[C comparable](t *testing.T, expected, actual C) {
 	if diff := Diff(actual, expected); diff != "" {
-		t.Error(Callers(), diff)
+		t.Fatal(Callers(), diff)
 	}
 }
 
+// AssertEqualSlice checks if the expected and actual slices are equal. Errors if not.
 func AssertEqualSlice[C comparable](t *testing.T, expected, actual []C) {
 	if diff := Diff(actual, expected); diff != "" {
-		t.Error(Callers(), diff)
+		t.Fatal(Callers(), diff)
 	}
 }
 
+// AssertNoError checks if the error is nil.
 func AssertNoError(t *testing.T, err error, msg ...string) {
 	t.Helper()
 	if err != nil {
-		t.Error(Callers(), err, msg)
+		t.Fatal(Callers(), err, msg)
 	}
 }
 
+// AssertError checks if the error is not nil.
 func AssertError(t *testing.T, err error, msg string) {
 	t.Helper()
 	if err == nil {
-		t.Error(Callers(), msg, errors.New("error was expected but is nil"))
+		t.Fatal(Callers(), msg, errors.New("error was expected but is nil"))
 	}
 	if diff := Diff(err.Error(), msg); diff != "" {
-		t.Error(Callers(), diff)
+		t.Fatal(Callers(), diff)
 	}
 }
 
@@ -41,6 +45,7 @@ func equal[C comparable](a, b C) bool {
 	return a == b
 }
 
+// IsEqual checks if the expected and actual are equal. Errors if not.
 func IsEqual[C comparable](t *testing.T, expected, actual C) {
 	t.Helper()
 	if !equal(expected, actual) {
@@ -48,6 +53,7 @@ func IsEqual[C comparable](t *testing.T, expected, actual C) {
 	}
 }
 
+// IsNotEqual checks if the expected and actual are not equal. Errors if not.
 func IsNotEqual[C comparable](t *testing.T, expected, actual C) {
 	t.Helper()
 	if equal(expected, actual) {
@@ -55,6 +61,7 @@ func IsNotEqual[C comparable](t *testing.T, expected, actual C) {
 	}
 }
 
+// IsNil checks if the obj is nil. Errors if not.
 func IsNil(t *testing.T, obj any) {
 	t.Helper()
 	switch o := obj.(type) {
@@ -72,6 +79,7 @@ func IsNil(t *testing.T, obj any) {
 	}
 }
 
+// IsNotNil checks if the obj is not nil. Errors if not.
 func IsNotNil(t *testing.T, obj any) {
 	t.Helper()
 	switch o := obj.(type) {
@@ -99,6 +107,7 @@ func contains[C comparable](haystack []C, needle C) bool {
 	return false
 }
 
+// Contains checks if the needle is in the haystack. Errors if not.
 func Contains[C comparable](t *testing.T, haystack []C, needle C) {
 	t.Helper()
 	if !contains(haystack, needle) {
@@ -106,6 +115,7 @@ func Contains[C comparable](t *testing.T, haystack []C, needle C) {
 	}
 }
 
+// NotContains checks if the needle is not in the haystack. Errors if it is.
 func NotContains[C comparable](t *testing.T, haystack []C, needle C) {
 	t.Helper()
 	if contains(haystack, needle) {

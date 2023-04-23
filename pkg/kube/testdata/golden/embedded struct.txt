@@ -1,0 +1,97 @@
+-- out/export/embeddedstruct/1_iamsa.yaml --
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app: imthename
+  name: imthename
+  namespace: defaultns
+-- out/export/embeddedstruct/2_iamcrb.yaml --
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app: imthename
+  name: imthename
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: imthename
+subjects:
+- kind: ServiceAccount
+  name: imthename
+  namespace: defaultns
+-- out/export/embeddedstruct/1_iamcr.yaml --
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: imthename
+  name: imthename
+rules:
+- apiGroups:
+  - '*'
+  resources:
+  - '*'
+  verbs:
+  - '*'
+-- out/export/embeddedstruct/3_iamdepl.yaml --
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: imthename
+  name: anotherimthename
+  namespace: defaultns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: imthename
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: imthename
+    spec:
+      containers:
+      - image: nginx:latest
+        name: anotherimthename
+        resources: {}
+      serviceAccountName: anotherimthename
+-- out/export/embeddedstruct/3_depl.yaml --
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: imthename
+  name: imthename
+  namespace: defaultns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: imthename
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: imthename
+    spec:
+      containers:
+      - image: nginx:latest
+        name: imthename
+        resources: {}
+      serviceAccountName: imthename
+-- out/export/embeddedstruct/kustomization.yaml --
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - out/export/embeddedstruct/1_iamcr.yaml
+  - out/export/embeddedstruct/1_iamsa.yaml
+  - out/export/embeddedstruct/2_iamcrb.yaml
+  - out/export/embeddedstruct/3_depl.yaml
+  - out/export/embeddedstruct/3_iamdepl.yaml

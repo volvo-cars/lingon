@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"errors"
 	"path/filepath"
-	"sort"
 	"strings"
 	"testing"
 
@@ -227,7 +226,7 @@ func TestExport(t *testing.T) {
 			},
 		},
 		{
-			name: "tekton",
+			name: "remove secrets",
 			km:   tekton.New(),
 			opts: []kube.ExportOption{
 				kube.WithExportOutputDirectory(outTekton),
@@ -330,73 +329,48 @@ func TestExport(t *testing.T) {
 				tu.AssertNoError(t, tc.err, "failed to check error")
 				tu.AssertNoError(t, err, "failed to export")
 				ar := txtar.Parse(buf.Bytes())
-				got := make([]string, 0, len(ar.Files))
-				for _, f := range ar.Files {
-					got = append(got, f.Name)
+
+				f := filepath.Join("testdata", "golden", tc.name+".txt")
+				expected, err := txtar.ParseFile(f)
+				tu.AssertNoError(t, err, "failed to parse expected txtar")
+				if diff := tu.DiffTxtar(ar, expected); diff != "" {
+					t.Fatal(tu.Callers(), diff)
 				}
-				sort.Strings(got)
-				want := tc.outFiles
-				tu.AssertEqualSlice(t, got, want)
 			},
 		)
 	}
 }
 
-func TestExport_SingleFile(t *testing.T) {
-	type args struct {
-		name       string
-		km         kube.Exporter
-		opts       []kube.ExportOption
-		numObjects int
-		isJSON     bool
-	}
-	TT := []args{
-		{
-			name: "tekton yaml",
-			km:   tekton.New(),
-			opts: []kube.ExportOption{
-				kube.WithExportOutputDirectory("out/export"),
-				kube.WithExportAsSingleFile("tekton.yaml"),
-			},
-			numObjects: 65,
-		},
-		{
-			name: "tekton json",
-			km:   tekton.New(),
-			opts: []kube.ExportOption{
-				kube.WithExportOutputDirectory("out/export"),
-				kube.WithExportOutputJSON(true),
-				kube.WithExportAsSingleFile("tekton.json"),
-			},
-			numObjects: 65,
-			isJSON:     true,
-		},
-	}
-	for _, tt := range TT {
-		tc := tt
-		t.Run(
-			tt.name, func(t *testing.T) {
-				t.Parallel()
-				var buf bytes.Buffer
-				tc.opts = append(
-					tc.opts,
-					kube.WithExportWriter(&buf),
-				)
-				err := kube.Export(tc.km, tc.opts...)
-				tu.AssertNoError(t, err, "failed to import")
-				if tc.isJSON {
-					var got []map[string]interface{}
-					err := json.Unmarshal(buf.Bytes(), &got)
-					tu.AssertNoError(t, err, "failed to unmarshal json")
-					tu.IsEqual(t, len(got), tc.numObjects)
-				} else {
-					got, err := kubeutil.ManifestSplit(&buf)
-					tu.AssertNoError(t, err, "failed to split manifest")
-					tu.IsEqual(t, tc.numObjects, len(got))
-				}
-			},
-		)
-	}
+func TestExport_SingleFileJSON(t *testing.T) {
+	var buf bytes.Buffer
+
+	err := kube.Export(
+		tekton.New(),
+		kube.WithExportOutputDirectory("out/export"),
+		kube.WithExportOutputJSON(true),
+		kube.WithExportAsSingleFile("tekton.json"),
+		kube.WithExportWriter(&buf))
+	tu.AssertNoError(t, err, "failed to import")
+
+	var got []map[string]interface{}
+	err = json.Unmarshal(buf.Bytes(), &got)
+	tu.AssertNoError(t, err, "failed to unmarshal json")
+	tu.IsEqual(t, 65, len(got))
+}
+
+func TestExport_SingleFileYAML(t *testing.T) {
+	var buf bytes.Buffer
+
+	err := kube.Export(
+		tekton.New(),
+		kube.WithExportWriter(&buf),
+		kube.WithExportOutputDirectory("out/export"),
+		kube.WithExportAsSingleFile("tekton.yaml"),
+	)
+	tu.AssertNoError(t, err, "failed to import")
+	got, err := kubeutil.ManifestSplit(&buf)
+	tu.AssertNoError(t, err, "failed to split manifest")
+	tu.IsEqual(t, 65, len(got))
 }
 
 type IAM struct {
