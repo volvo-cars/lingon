@@ -21,7 +21,7 @@ builds:
   #
   #  EXPLODE
   #
-  # check results of yaml anchros
+  # check results of yaml anchors
   # with https://yaml-online-parser.appspot.com/
   - &buildstep
     id: explode-linux
