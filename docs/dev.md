@@ -1,4 +1,12 @@
-# Development
+# Development <!-- omit in toc -->
+
+- [FIRST run this](#first-run-this)
+- [Documentation](#documentation)
+  - [Build docs](#build-docs)
+  - [View docs](#view-docs)
+  - [Docs examples](#docs-examples)
+- [Run tests](#run-tests)
+- [Release](#release)
 
 ## FIRST run this
 
@@ -6,7 +14,7 @@
 git clone https://github.com/volvo-cars/lingon.git
 cd lingon
 
-go mod tidy
+go mod download
 go generate -v ./...
 ```
 
@@ -14,7 +22,15 @@ to download dependencies and to generate the code.
 
 ## Documentation
 
-To view the godoc, run :
+### Build docs
+
+```shell
+cd docs
+go mod download
+go generate ./...
+```
+
+### View docs
 
 ```shell
 godoc -http=:6060
@@ -29,10 +45,11 @@ go install golang.org/x/pkgsite/cmd/pkgsite@latest && pkgsite
 # open http://localhost:8080/github.com/volvo-cars/lingon.
 ```
 
-To run tests for the documentation and examples, run:
+### Docs examples
 
 ```shell
 cd docs 
+go mod download
 go generate -v ./... && go test -v ./...
 ```
 
@@ -49,15 +66,6 @@ On the second run, the cache will be used, and it will be much faster.
 go test -v ./...
 # with coverage
 go test -v -coverprofile=coverage.out ./...
-```
-
-## Automation
-
-see [mage](https://magefile.org/)
-
-```shell
-# list all available targets
-mage -l
 ```
 
 ## Release

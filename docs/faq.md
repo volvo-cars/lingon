@@ -1,13 +1,12 @@
-# FAQ
+# FAQ <!-- omit in toc -->
 
-- [FAQ](#faq)
-  - [Why Go?](#why-go)
-  - [Why did you build this project?](#why-did-you-build-this-project)
-  - [Is the API stable?](#is-the-api-stable)
-  - [How did you develop this project?](#how-did-you-develop-this-project)
-    - [Proverbs](#proverbs)
-  - [Why shelling out to kubectl instead of using the go-client?](#why-shelling-out-to-kubectl-instead-of-using-the-go-client)
-  - [Why do you depend on k8s.io/client-go ?](#why-do-you-depend-on-k8sioclient-go-)
+- [Why Go?](#why-go)
+- [Why did you build this project?](#why-did-you-build-this-project)
+- [Is the API stable?](#is-the-api-stable)
+- [How did you develop this project?](#how-did-you-develop-this-project)
+  - [Proverbs](#proverbs)
+- [Why shelling out to kubectl instead of using the go-client?](#why-shelling-out-to-kubectl-instead-of-using-the-go-client)
+- [Why do you depend on k8s.io/client-go ?](#why-do-you-depend-on-k8sioclient-go-)
 
 ## Why Go?
 
