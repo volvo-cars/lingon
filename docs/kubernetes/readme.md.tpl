@@ -1,5 +1,18 @@
 # Kubernetes manifests in Go
 
+- [What is this?](#what-is-this)
+- [But why?](#but-why)
+	- [Getting started](#getting-started)
+	- [Best practices](#best-practices)
+- [CLI Utilities](#cli-utilities)
+	- [Explode](#explode)
+	- [Kygo](#kygo)
+- [Packages](#packages)
+	- [Kube](#kube)
+	- [Kubeconfig](#kubeconfig)
+	- [KubeUtil](#kubeutil)
+	- [Testutils](#testutils)
+
 ## What is this?
 
 This is a collection of libraries and helpers functions that helps to work with kubernetes manifests.
@@ -7,7 +20,9 @@ This is a collection of libraries and helpers functions that helps to work with 
 With this library you can:
 
 - `Import` kubernetes manifests to Go structs ( YAML to Go )
+   - see [Import Options](./options-import.md) for more information
 - `Export` Go structs to kubernetes manifests ( Go to YAML )
+   - see [Export Options](./options-export.md) for more information
 - `Explode` kubernetes manifests to a single resource per file organized by namespaces (YAML to YAML)
 
 ## But why?

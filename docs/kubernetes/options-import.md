@@ -2,6 +2,9 @@
 
 Various settings to convert kubernetes YAML to Go.
 
+- [Example with YAML files containing CustomResourceDefinition (CRDs)](#example-with-yaml-files-containing-customresourcedefinition-crds)
+- [Example with io.Writer](#example-with-iowriter)
+
 ## Example with YAML files containing CustomResourceDefinition (CRDs)
 
 ```go

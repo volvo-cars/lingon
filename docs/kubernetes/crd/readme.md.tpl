@@ -1,5 +1,10 @@
 # Example CRD
 
+- [Import the manifest in Go](#import-the-manifest-in-go)
+- [Export the Go struct to YAML](#export-the-go-struct-to-yaml)
+- [How to find CRD types](#how-to-find-crd-types)
+- [List of well-known CRDs types](#list-of-well-known-crds-types)
+
 All can be done in one step:
 
 ```bash
