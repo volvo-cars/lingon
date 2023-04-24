@@ -1,7 +1,6 @@
 apiVersion: networking.istio.io/v1beta1
 kind: ServiceEntry
 metadata:
-  creationTimestamp: null
   name: team-graph-microsoft
   namespace: team-onboarding
 spec:
@@ -14,4 +13,3 @@ spec:
     number: 443
     protocol: HTTPS
   resolution: DNS
-status: {}

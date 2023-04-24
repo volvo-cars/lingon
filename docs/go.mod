@@ -66,6 +66,10 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/samber/lo v1.38.1 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
+	github.com/tidwall/gjson v1.14.2 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.0 // indirect
+	github.com/tidwall/sjson v1.2.5 // indirect
 	github.com/veggiemonk/strcase v0.0.0-20230415204559-d7702c84640b // indirect
 	github.com/zclconf/go-cty v1.13.1 // indirect
 	github.com/zegl/kube-score v1.16.1 // indirect

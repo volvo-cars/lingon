@@ -78,6 +78,9 @@ type importOption struct {
 
 	// IgnoreErrors flag ignores errors when reading manifests
 	IgnoreErrors bool
+
+	// CleanUp flag cleans up the manifest code before importing it
+	CleanUp bool
 }
 
 var importDefaultOpts = importOption{
@@ -92,11 +95,12 @@ var importDefaultOpts = importOption{
 	NameVarFunc:    NameVarFunc,
 	NameFileFunc:   NameFileFunc,
 	RemoveAppName:  false,
-	GroupByKind:    false, // FIXME: should default to true ?
+	GroupByKind:    false, // TODO: should default to true ?
 	AddMethods:     true,
 	RedactSecrets:  false,
 	Verbose:        false,
 	IgnoreErrors:   false,
+	CleanUp:        true,
 }
 
 func defaultSerializer() runtime.Decoder {
@@ -111,6 +115,16 @@ func defaultSerializer() runtime.Decoder {
 func WithImportVerbose(v bool) ImportOption {
 	return func(j *jamel) {
 		j.o.Verbose = v
+	}
+}
+
+// WithImportCleanUp sets the flag to remove status field and
+// other output-only fields from the manifest code before importing it.
+// Note that ConfigMap are not cleaned up as the comments will be lost.
+// Default: true
+func WithImportCleanUp(c bool) ImportOption {
+	return func(j *jamel) {
+		j.o.CleanUp = c
 	}
 }
 

@@ -40,6 +40,8 @@ func TestFolder2Txtar(t *testing.T) {
 		"../kube/testdata/golden/configmap.yaml",
 		"../kube/testdata/golden/deployment.golden",
 		"../kube/testdata/golden/deployment.yaml",
+		"../kube/testdata/golden/dirty.txt",
+		"../kube/testdata/golden/dirty.yaml",
 		"../kube/testdata/golden/embedded struct explode.txt",
 		"../kube/testdata/golden/embedded struct with explode and name file func as JSON.txt",
 		"../kube/testdata/golden/embedded struct with explode and name file func.txt",
@@ -58,7 +60,6 @@ func TestFolder2Txtar(t *testing.T) {
 		"../kube/testdata/golden/tekton.txt",
 		"../kube/testdata/grafana.yaml",
 		"../kube/testdata/istio.yaml",
-
 		"../kube/testdata/karpenter.yaml",
 		"../kube/testdata/spark.yaml",
 		"../kube/testdata/tekton-updated.yaml",

@@ -11,8 +11,8 @@ import (
 	"strings"
 
 	"github.com/rogpeppe/go-internal/txtar"
+	"github.com/volvo-cars/lingon/docs/kubernetes/kube/out/tekton"
 	"github.com/volvo-cars/lingon/pkg/kube"
-	"github.com/volvo-cars/lingon/pkg/kube/testdata/go/tekton"
 )
 
 func Example() {
@@ -52,7 +52,6 @@ func Example() {
 	//	apiVersion: rbac.authorization.k8s.io/v1
 	//	kind: ClusterRole
 	//	metadata:
-	//	  creationTimestamp: null
 	//	  labels:
 	//	    app.kubernetes.io/instance: default
 	//	    app.kubernetes.io/part-of: tekton-pipelines

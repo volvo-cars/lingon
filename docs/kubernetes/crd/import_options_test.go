@@ -60,6 +60,10 @@ func ExampleImport_withManifest() {
 		// how to create a logger (see [golang.org/x/tools/slog](https://golang.org/x/tools/slog))
 		// this has no effect with WithImportVerbose(false)
 		kube.WithImportLogger(kube.Logger(os.Stderr)),
+		// remove the status field and
+		// other output-only fields from the manifest code before importing it.
+		// Note that ConfigMap are not cleaned up as the comments will be lost.
+		kube.WithImportCleanUp(true),
 	)
 	if err != nil {
 		panic(fmt.Errorf("import: %w", err))

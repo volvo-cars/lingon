@@ -1,0 +1,134 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "8"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"application-crd-id":"kubeflow-pipelines","argocd.argoproj.io/instance":"pipelines-kubeflow","component":"metadata-grpc-server"},"name":"metadata-grpc-deployment","namespace":"kubeflow"},"spec":{"replicas":1,"selector":{"matchLabels":{"application-crd-id":"kubeflow-pipelines","component":"metadata-grpc-server"}},"template":{"metadata":{"labels":{"application-crd-id":"kubeflow-pipelines","component":"metadata-grpc-server"}},"spec":{"containers":[{"args":["--grpc_port=8080","--mysql_config_database=$(MYSQL_DATABASE)","--mysql_config_host=$(MYSQL_HOST)","--mysql_config_port=$(MYSQL_PORT)","--mysql_config_user=$(DBCONFIG_USER)","--mysql_config_password=$(DBCONFIG_PASSWORD)","--enable_database_upgrade=true"],"command":["/bin/metadata_store_server"],"env":[{"name":"DBCONFIG_USER","valueFrom":{"secretKeyRef":{"key":"username","name":"kubeflow-pipelines-db-credentials"}}},{"name":"DBCONFIG_PASSWORD","valueFrom":{"secretKeyRef":{"key":"password","name":"kubeflow-pipelines-db-credentials"}}},{"name":"MYSQL_DATABASE","valueFrom":{"configMapKeyRef":{"key":"mlmdDb","name":"pipeline-install-config"}}},{"name":"MYSQL_HOST","valueFrom":{"secretKeyRef":{"key":"hostname","name":"kubeflow-pipelines-db-credentials"}}},{"name":"MYSQL_PORT","valueFrom":{"configMapKeyRef":{"key":"dbPort","name":"pipeline-install-config"}}}],"image":"gcr.io/tfx-oss-public/ml_metadata_store_server:1.5.0","livenessProbe":{"initialDelaySeconds":3,"periodSeconds":5,"tcpSocket":{"port":"grpc-api"},"timeoutSeconds":2},"name":"container","ports":[{"containerPort":8080,"name":"grpc-api"}],"readinessProbe":{"initialDelaySeconds":3,"periodSeconds":5,"tcpSocket":{"port":"grpc-api"},"timeoutSeconds":2},"resources":{"limits":{"cpu":"250m","memory":"512Mi"},"requests":{"cpu":"50m","memory":"128Mi"}}}],"serviceAccountName":"metadata-grpc-server"}}}}
+  creationTimestamp: "2023-02-21T13:45:10Z"
+  generation: 8
+  labels:
+    application-crd-id: kubeflow-pipelines
+    argocd.argoproj.io/instance: pipelines-kubeflow
+    component: metadata-grpc-server
+  name: metadata-grpc-deployment
+  namespace: kubeflow
+  resourceVersion: "938550116"
+  uid: 1f0d04fc-041e-43ba-b0ce-e583eabb7ee9
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      application-crd-id: kubeflow-pipelines
+      component: metadata-grpc-server
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/restartedAt: "2023-02-22T11:20:01+01:00"
+      creationTimestamp: null
+      labels:
+        application-crd-id: kubeflow-pipelines
+        component: metadata-grpc-server
+    spec:
+      containers:
+        - args:
+            - --grpc_port=8080
+            - --mysql_config_database=$(MYSQL_DATABASE)
+            - --mysql_config_host=$(MYSQL_HOST)
+            - --mysql_config_port=$(MYSQL_PORT)
+            - --mysql_config_user=$(DBCONFIG_USER)
+            - --mysql_config_password=$(DBCONFIG_PASSWORD)
+            - --enable_database_upgrade=true
+          command:
+            - /bin/metadata_store_server
+          env:
+            - name: DBCONFIG_USER
+              valueFrom:
+                secretKeyRef:
+                  key: username
+                  name: kubeflow-pipelines-db-credentials
+            - name: DBCONFIG_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: kubeflow-pipelines-db-credentials
+            - name: MYSQL_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  key: mlmdDb
+                  name: pipeline-install-config
+            - name: MYSQL_HOST
+              valueFrom:
+                secretKeyRef:
+                  key: hostname
+                  name: kubeflow-pipelines-db-credentials
+            - name: MYSQL_PORT
+              valueFrom:
+                configMapKeyRef:
+                  key: dbPort
+                  name: pipeline-install-config
+          image: gcr.io/tfx-oss-public/ml_metadata_store_server:1.5.0
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            successThreshold: 1
+            tcpSocket:
+              port: grpc-api
+            timeoutSeconds: 2
+          name: container
+          ports:
+            - containerPort: 8080
+              name: grpc-api
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            successThreshold: 1
+            tcpSocket:
+              port: grpc-api
+            timeoutSeconds: 2
+          resources:
+            limits:
+              cpu: 250m
+              memory: 512Mi
+            requests:
+              cpu: 50m
+              memory: 128Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      serviceAccount: metadata-grpc-server
+      serviceAccountName: metadata-grpc-server
+      terminationGracePeriodSeconds: 30
+status:
+  availableReplicas: 1
+  conditions:
+    - lastTransitionTime: "2023-02-22T09:32:29Z"
+      lastUpdateTime: "2023-02-22T10:20:29Z"
+      message: ReplicaSet "metadata-grpc-deployment-5fb8996497" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    - lastTransitionTime: "2023-03-10T13:02:58Z"
+      lastUpdateTime: "2023-03-10T13:02:58Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+  observedGeneration: 8
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1

@@ -387,6 +387,7 @@ func TestImport_ConfigMapComments(t *testing.T) {
 		kube.WithImportRemoveAppName(true),
 		kube.WithImportGroupByKind(true),
 		kube.WithImportAddMethods(true),
+		kube.WithImportCleanUp(false),
 	)
 	tu.AssertNoError(t, err, "failed to import")
 
@@ -419,10 +420,10 @@ func TestImport_ConfigMapComments(t *testing.T) {
 	tu.AssertNoError(t, err, "reading config-map.go")
 
 	comments := []string{
-		"Contains pipelines version which can be queried by external\n\t\t   tools such as CLI. Elevated permissions are already given to\n\t\t   this ConfigMap such that even if we don't have access to\n\t\t   other resources in the namespace we still can have access to\n\t\t   this ConfigMap.",
-		"Setting this flag to \"enforce\" will enforce verification of tasks/pipeline. Failing to verify\n\t\t   will fail the taskrun/pipelinerun. \"warn\" will only log the err message and \"skip\"\n\t\t   will skip the whole verification",
-		"Setting this flag to \"false\" will stop Tekton from waiting for a\n\t\t   TaskRun's sidecar containers to be running before starting the first\n\t\t   step. This will allow Tasks to be run in environments that don't\n\t\t   support the DownwardAPI volume type, but may lead to unintended\n\t\t   behaviour if sidecars are used.\n\t\t   #\n\t\t   See https://github.com/tektoncd/pipeline/issues/4937 for more info.",
-		"Setting this flag to \"true\" enables CloudEvents for CustomRuns and Runs, as long as a\n\t\t   CloudEvents sink is configured in the config-defaults config map",
+		"\t\t   Contains pipelines version which can be queried by external\n\t\t   tools such as CLI. Elevated permissions are already given to\n\t\t   this ConfigMap such that even if we don't have access to\n\t\t   other resources in the namespace we still can have access to\n\t\t   this ConfigMap.\n",
+		"\t\t   Setting this flag to \"enforce\" will enforce verification of tasks/pipeline. Failing to verify\n\t\t   will fail the taskrun/pipelinerun. \"warn\" will only log the err message and \"skip\"\n\t\t   will skip the whole verification\n",
+		"\t\t   Setting this flag to \"false\" will stop Tekton from waiting for a\n\t\t   TaskRun's sidecar containers to be running before starting the first\n\t\t   step. This will allow Tasks to be run in environments that don't\n\t\t   support the DownwardAPI volume type, but may lead to unintended\n\t\t   behaviour if sidecars are used.\n\t\t   #\n\t\t   See https://github.com/tektoncd/pipeline/issues/4937 for more info.\n",
+		"\t\t   Setting this flag to \"true\" enables CloudEvents for CustomRuns and Runs, as long as a\n\t\t   CloudEvents sink is configured in the config-defaults config map\n",
 	}
 	set := token.NewFileSet()
 	astFile, err := parser.ParseFile(set, "", src, parser.ParseComments)
@@ -436,18 +437,7 @@ func TestImport_ConfigMapComments(t *testing.T) {
 		cc = append(cc, comment.Text())
 	}
 	sort.SliceStable(cc, func(i, j int) bool { return cc[i] < cc[j] })
-	for i, comment := range comments {
-		tu.AssertEqual(t, cleanStr(comment), cleanStr(cc[i]))
-	}
-}
-
-var clm = strings.NewReplacer(
-	"\t", "",
-	"\n", "",
-)
-
-func cleanStr(m string) string {
-	return strings.TrimSpace(clm.Replace(m))
+	tu.AssertEqualSlice(t, comments, cc[:len(comments)])
 }
 
 func TestImport_VerboseLogger(t *testing.T) {
@@ -490,6 +480,7 @@ func TestImport_VerboseLogger(t *testing.T) {
 		kube.WithImportVerbose(true),
 		kube.WithImportIgnoreErrors(true),
 		kube.WithImportLogger(log(&bufLog)),
+		kube.WithImportCleanUp(true),
 	)
 	tu.AssertNoError(t, err, "failed to import")
 
@@ -497,4 +488,19 @@ func TestImport_VerboseLogger(t *testing.T) {
 	want, err := os.ReadFile(golden)
 	tu.AssertNoError(t, err, "reading golden file")
 	tu.AssertEqual(t, string(want), got)
+}
+
+func TestImport_CleanUp(t *testing.T) {
+	var buf bytes.Buffer
+	err := kube.Import(
+		kube.WithImportManifestFiles([]string{"testdata/golden/dirty.yaml"}),
+		kube.WithImportWriter(&buf),
+		kube.WithImportCleanUp(true),
+	)
+	tu.AssertNoError(t, err, "failed to import")
+
+	ar, err := txtar.ParseFile("testdata/golden/dirty.txt")
+	tu.AssertNoError(t, err, "reading golden file")
+	want := txtar.Format(ar)
+	tu.AssertEqual(t, string(want), buf.String())
 }

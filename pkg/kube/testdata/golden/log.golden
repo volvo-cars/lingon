@@ -1,4 +1,4 @@
-level=INFO msg=import app=lingon opt.app-name=tekton opt.package-name=tekton opt.output-dir=out/import/tekton opt.reader=false opt.manifests=[testdata/tekton.yaml] opt.writer=true opt.remove-app-name=true opt.group-by-kind=true opt.add-methods=true opt.redact-secrets=false opt.ignore-errors=true
+level=INFO msg=import app=lingon opt.app-name=tekton opt.package-name=tekton opt.output-dir=out/import/tekton opt.reader=false opt.manifests=[testdata/tekton.yaml] opt.writer=true opt.remove-app-name=true opt.group-by-kind=true opt.add-methods=true opt.redact-secrets=false opt.ignore-errors=true opt.clean-up=true
 level=INFO msg="importing from manifest" app=lingon files=[testdata/tekton.yaml]
 level=INFO msg=manifest app=lingon file=testdata/tekton.yaml manifests=65
 level=INFO msg="converting manifest" app=lingon number=1 head="apiVersion: v1\nkind: Namespace\nmetadata:\n  name: tekton-pipelines\n  labels:\n    app.kubernetes.io/instance: default\n    app.kubernetes.io/part-of: tek..."

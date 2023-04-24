@@ -6,9 +6,9 @@ Components:
 
 github.com/agext/levenshtein v1.2.3 : Apache-2.0
 github.com/apparentlymart/go-textseg/v13/textseg v13.0.0 : MIT
-github.com/dave/jennifer/jen v1.6.0 : MIT
+github.com/dave/jennifer/jen v1.6.1 : MIT
 github.com/eidolon/wordwrap v0.0.0-20161011182207-e0f54129b8bb : MIT
-github.com/fatih/color v1.14.1 : MIT
+github.com/fatih/color v1.15.0 : MIT
 github.com/go-logr/logr v1.2.4 : Apache-2.0
 github.com/go-playground/locales v0.14.1 : MIT
 github.com/go-playground/universal-translator v0.18.1 : MIT
@@ -22,35 +22,39 @@ github.com/hashicorp/terraform-exec v0.18.1 : MPL-2.0
 github.com/hashicorp/terraform-json v0.16.0 : MPL-2.0
 github.com/imdario/mergo v0.3.15 : BSD-3-Clause
 github.com/json-iterator/go v1.1.12 : MIT
-github.com/leodido/go-urn v1.2.2 : MIT
+github.com/leodido/go-urn v1.2.3 : MIT
 github.com/mattn/go-colorable v0.1.13 : MIT
-github.com/mattn/go-isatty v0.0.17 : MIT
+github.com/mattn/go-isatty v0.0.18 : MIT
 github.com/mitchellh/go-wordwrap v1.0.1 : MIT
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd : Apache-2.0
 github.com/modern-go/reflect2 v1.0.2 : Apache-2.0
 github.com/rogpeppe/go-internal/txtar v1.10.0 : BSD-3-Clause
-github.com/veggiemonk/strcase v0.0.0-20230401153433-418fda9c7e1e : MIT
+github.com/tidwall/gjson v1.14.2 : MIT
+github.com/tidwall/match v1.1.1 : MIT
+github.com/tidwall/pretty v1.2.0 : MIT
+github.com/tidwall/sjson v1.2.5 : MIT
+github.com/veggiemonk/strcase v0.0.0-20230408012609-81cba9641077 : MIT
 github.com/zclconf/go-cty/cty v1.13.1 : MIT
 github.com/zegl/kube-score v1.16.1 : MIT
-golang.org/x/crypto/sha3 v0.7.0 : BSD-3-Clause
+golang.org/x/crypto/sha3 v0.8.0 : BSD-3-Clause
 golang.org/x/exp v0.0.0-20230321023759-10a507213a29 : BSD-3-Clause
-golang.org/x/mod v0.9.0 : BSD-3-Clause
-golang.org/x/net v0.8.0 : BSD-3-Clause
-golang.org/x/sys/unix v0.6.0 : BSD-3-Clause
-golang.org/x/text v0.8.0 : BSD-3-Clause
-golang.org/x/tools v0.7.0 : BSD-3-Clause
+golang.org/x/mod v0.10.0 : BSD-3-Clause
+golang.org/x/net v0.9.0 : BSD-3-Clause
+golang.org/x/sys/unix v0.7.0 : BSD-3-Clause
+golang.org/x/text v0.9.0 : BSD-3-Clause
+golang.org/x/tools v0.8.0 : BSD-3-Clause
 gopkg.in/inf.v0 v0.9.1 : BSD-3-Clause
 gopkg.in/yaml.v2 v2.4.0 : Apache-2.0
 gopkg.in/yaml.v3 v3.0.1 : MIT
-k8s.io/api v0.26.3 : Apache-2.0
-k8s.io/apiextensions-apiserver/pkg/apis/apiextensions v0.26.3 : Apache-2.0
-k8s.io/apimachinery/pkg v0.26.3 : Apache-2.0
-k8s.io/apimachinery/third_party/forked/golang/reflect v0.26.3 : BSD-3-Clause
-k8s.io/client-go/kubernetes/scheme v0.26.3 : Apache-2.0
+k8s.io/api v0.27.1 : Apache-2.0
+k8s.io/apiextensions-apiserver/pkg/apis/apiextensions v0.27.1 : Apache-2.0
+k8s.io/apimachinery/pkg v0.27.1 : Apache-2.0
+k8s.io/apimachinery/third_party/forked/golang/reflect v0.27.1 : BSD-3-Clause
+k8s.io/client-go/kubernetes/scheme v0.27.1 : Apache-2.0
 k8s.io/klog/v2 v2.90.1 : Apache-2.0
-k8s.io/utils v0.0.0-20230313181309-38a27ef9d749 : Apache-2.0
-k8s.io/utils/internal/third_party/forked/golang/net v0.0.0-20230313181309-38a27ef9d749 : BSD-3-Clause
-mvdan.cc/gofumpt v0.4.0 : BSD-3-Clause
+k8s.io/utils v0.0.0-20230406110748-d93618cff8a2 : Apache-2.0
+k8s.io/utils/internal/third_party/forked/golang/net v0.0.0-20230406110748-d93618cff8a2 : BSD-3-Clause
+mvdan.cc/gofumpt v0.5.0 : BSD-3-Clause
 sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd : Apache-2.0
 sigs.k8s.io/structured-merge-diff/v4/value v4.2.3 : Apache-2.0
 sigs.k8s.io/yaml v1.3.0 : MIT
@@ -66,11 +70,11 @@ github.com/agext/levenshtein v1.2.3
 
 github.com/apparentlymart/go-textseg/v13/textseg v13.0.0
 
-github.com/dave/jennifer/jen v1.6.0
+github.com/dave/jennifer/jen v1.6.1
 
 github.com/eidolon/wordwrap v0.0.0-20161011182207-e0f54129b8bb
 
-github.com/fatih/color v1.14.1
+github.com/fatih/color v1.15.0
 
 github.com/go-logr/logr v1.2.4
 
@@ -98,11 +102,11 @@ github.com/imdario/mergo v0.3.15
 
 github.com/json-iterator/go v1.1.12
 
-github.com/leodido/go-urn v1.2.2
+github.com/leodido/go-urn v1.2.3
 
 github.com/mattn/go-colorable v0.1.13
 
-github.com/mattn/go-isatty v0.0.17
+github.com/mattn/go-isatty v0.0.18
 
 github.com/mitchellh/go-wordwrap v1.0.1
 
@@ -112,25 +116,33 @@ github.com/modern-go/reflect2 v1.0.2
 
 github.com/rogpeppe/go-internal/txtar v1.10.0
 
-github.com/veggiemonk/strcase v0.0.0-20230401153433-418fda9c7e1e
+github.com/tidwall/gjson v1.14.2
+
+github.com/tidwall/match v1.1.1
+
+github.com/tidwall/pretty v1.2.0
+
+github.com/tidwall/sjson v1.2.5
+
+github.com/veggiemonk/strcase v0.0.0-20230408012609-81cba9641077
 
 github.com/zclconf/go-cty/cty v1.13.1
 
 github.com/zegl/kube-score v1.16.1
 
-golang.org/x/crypto/sha3 v0.7.0
+golang.org/x/crypto/sha3 v0.8.0
 
 golang.org/x/exp v0.0.0-20230321023759-10a507213a29
 
-golang.org/x/mod v0.9.0
+golang.org/x/mod v0.10.0
 
-golang.org/x/net v0.8.0
+golang.org/x/net v0.9.0
 
-golang.org/x/sys/unix v0.6.0
+golang.org/x/sys/unix v0.7.0
 
-golang.org/x/text v0.8.0
+golang.org/x/text v0.9.0
 
-golang.org/x/tools v0.7.0
+golang.org/x/tools v0.8.0
 
 gopkg.in/inf.v0 v0.9.1
 
@@ -164,23 +176,23 @@ gopkg.in/yaml.v3 v3.0.1
 	See the License for the specific language governing permissions and
 	limitations under the License.
 
-k8s.io/api v0.26.3
+k8s.io/api v0.27.1
 
-k8s.io/apiextensions-apiserver/pkg/apis/apiextensions v0.26.3
+k8s.io/apiextensions-apiserver/pkg/apis/apiextensions v0.27.1
 
-k8s.io/apimachinery/pkg v0.26.3
+k8s.io/apimachinery/pkg v0.27.1
 
-k8s.io/apimachinery/third_party/forked/golang/reflect v0.26.3
+k8s.io/apimachinery/third_party/forked/golang/reflect v0.27.1
 
-k8s.io/client-go/kubernetes/scheme v0.26.3
+k8s.io/client-go/kubernetes/scheme v0.27.1
 
 k8s.io/klog/v2 v2.90.1
 
-k8s.io/utils v0.0.0-20230313181309-38a27ef9d749
+k8s.io/utils v0.0.0-20230406110748-d93618cff8a2
 
-k8s.io/utils/internal/third_party/forked/golang/net v0.0.0-20230313181309-38a27ef9d749
+k8s.io/utils/internal/third_party/forked/golang/net v0.0.0-20230406110748-d93618cff8a2
 
-mvdan.cc/gofumpt v0.4.0
+mvdan.cc/gofumpt v0.5.0
 
 sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd
 
@@ -502,7 +514,7 @@ written authorization of the copyright holder.
 ---
 
 MIT
-(github.com/dave/jennifer/jen v1.6.0)
+(github.com/dave/jennifer/jen v1.6.1)
 
 MIT License
 
@@ -558,7 +570,7 @@ SOFTWARE.
 ---
 
 MIT
-(github.com/fatih/color v1.14.1)
+(github.com/fatih/color v1.15.0)
 
 The MIT License (MIT)
 
@@ -2712,7 +2724,7 @@ SOFTWARE.
 ---
 
 MIT
-(github.com/leodido/go-urn v1.2.2)
+(github.com/leodido/go-urn v1.2.3)
 
 MIT License
 
@@ -2768,7 +2780,7 @@ SOFTWARE.
 ---
 
 MIT
-(github.com/mattn/go-isatty v0.0.17)
+(github.com/mattn/go-isatty v0.0.18)
 
 Copyright (c) Yasuhiro MATSUMOTO <mattn.jp@gmail.com>
 
@@ -3262,7 +3274,116 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---
 
 MIT
-(github.com/veggiemonk/strcase v0.0.0-20230401153433-418fda9c7e1e)
+(github.com/tidwall/gjson v1.14.2)
+
+The MIT License (MIT)
+
+Copyright (c) 2016 Josh Baker
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+---
+
+MIT
+(github.com/tidwall/match v1.1.1)
+
+The MIT License (MIT)
+
+Copyright (c) 2016 Josh Baker
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+---
+
+MIT
+(github.com/tidwall/pretty v1.2.0)
+
+The MIT License (MIT)
+
+Copyright (c) 2017 Josh Baker
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+---
+
+MIT
+(github.com/tidwall/sjson v1.2.5)
+
+The MIT License (MIT)
+
+Copyright (c) 2016 Josh Baker
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+
+---
+
+MIT
+(github.com/veggiemonk/strcase v0.0.0-20230408012609-81cba9641077)
 
 The MIT License (MIT)
 
@@ -3346,7 +3467,7 @@ SOFTWARE.
 ---
 
 BSD-3-Clause
-(golang.org/x/crypto/sha3 v0.7.0)
+(golang.org/x/crypto/sha3 v0.8.0)
 
 Copyright (c) 2009 The Go Authors. All rights reserved.
 
@@ -3414,7 +3535,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---
 
 BSD-3-Clause
-(golang.org/x/mod v0.9.0)
+(golang.org/x/mod v0.10.0)
 
 Copyright (c) 2009 The Go Authors. All rights reserved.
 
@@ -3448,7 +3569,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---
 
 BSD-3-Clause
-(golang.org/x/net v0.8.0)
+(golang.org/x/net v0.9.0)
 
 Copyright (c) 2009 The Go Authors. All rights reserved.
 
@@ -3482,7 +3603,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---
 
 BSD-3-Clause
-(golang.org/x/sys/unix v0.6.0)
+(golang.org/x/sys/unix v0.7.0)
 
 Copyright (c) 2009 The Go Authors. All rights reserved.
 
@@ -3516,7 +3637,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---
 
 BSD-3-Clause
-(golang.org/x/text v0.8.0)
+(golang.org/x/text v0.9.0)
 
 Copyright (c) 2009 The Go Authors. All rights reserved.
 
@@ -3550,7 +3671,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---
 
 BSD-3-Clause
-(golang.org/x/tools v0.7.0)
+(golang.org/x/tools v0.8.0)
 
 Copyright (c) 2009 The Go Authors. All rights reserved.
 
@@ -3884,7 +4005,7 @@ limitations under the License.
 ---
 
 Apache-2.0
-(k8s.io/api v0.26.3)
+(k8s.io/api v0.27.1)
 
 
                                  Apache License
@@ -4093,7 +4214,7 @@ Apache-2.0
 ---
 
 Apache-2.0
-(k8s.io/apiextensions-apiserver/pkg/apis/apiextensions v0.26.3)
+(k8s.io/apiextensions-apiserver/pkg/apis/apiextensions v0.27.1)
 
 
                                  Apache License
@@ -4302,7 +4423,7 @@ Apache-2.0
 ---
 
 Apache-2.0
-(k8s.io/apimachinery/pkg v0.26.3)
+(k8s.io/apimachinery/pkg v0.27.1)
 
 
                                  Apache License
@@ -4511,7 +4632,7 @@ Apache-2.0
 ---
 
 BSD-3-Clause
-(k8s.io/apimachinery/third_party/forked/golang/reflect v0.26.3)
+(k8s.io/apimachinery/third_party/forked/golang/reflect v0.27.1)
 
 Copyright (c) 2009 The Go Authors. All rights reserved.
 
@@ -4545,7 +4666,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---
 
 Apache-2.0
-(k8s.io/client-go/kubernetes/scheme v0.26.3)
+(k8s.io/client-go/kubernetes/scheme v0.27.1)
 
 
                                  Apache License
@@ -4952,7 +5073,7 @@ third-party archives.
 ---
 
 Apache-2.0
-(k8s.io/utils v0.0.0-20230313181309-38a27ef9d749)
+(k8s.io/utils v0.0.0-20230406110748-d93618cff8a2)
 
 
                                  Apache License
@@ -5161,7 +5282,7 @@ Apache-2.0
 ---
 
 BSD-3-Clause
-(k8s.io/utils/internal/third_party/forked/golang/net v0.0.0-20230313181309-38a27ef9d749)
+(k8s.io/utils/internal/third_party/forked/golang/net v0.0.0-20230406110748-d93618cff8a2)
 
 Copyright (c) 2012 The Go Authors. All rights reserved.
 
@@ -5195,7 +5316,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---
 
 BSD-3-Clause
-(mvdan.cc/gofumpt v0.4.0)
+(mvdan.cc/gofumpt v0.5.0)
 
 Copyright (c) 2019, Daniel Martí. All rights reserved.
 
