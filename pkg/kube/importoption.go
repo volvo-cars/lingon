@@ -95,7 +95,7 @@ var importDefaultOpts = importOption{
 	NameVarFunc:    NameVarFunc,
 	NameFileFunc:   NameFileFunc,
 	RemoveAppName:  false,
-	GroupByKind:    false, // TODO: should default to true ?
+	GroupByKind:    true,
 	AddMethods:     true,
 	RedactSecrets:  false,
 	Verbose:        false,

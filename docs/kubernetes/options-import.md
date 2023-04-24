@@ -175,6 +175,9 @@ err := kube.Import(
 	// and WithImportWriter
 	kube.WithImportReader(file),
 	kube.WithImportWriter(&buf),
+	// We don't want to group the resources by kind,
+	// each file will contain a single resource
+	kube.WithImportGroupByKind(false),
 	// We rename the files to avoid name collisions.
 	// Tip: use the Kind and Name of the resource to
 	// create a unique name and avoid collision.

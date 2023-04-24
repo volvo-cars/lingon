@@ -4,6 +4,7 @@
 package kube
 
 //go:generate rm -rf out/
+//go:generate go run github.com/dave/rebecca/cmd/becca@v0.9.2  -package=github.com/volvo-cars/lingon/docs/kubernetes/kube -input=readme.md.tpl -output=readme.md
 //go:generate echo ">>>> exploding manifests"
 //go:generate go run github.com/volvo-cars/lingon/cmd/explode -in ../../../pkg/kube/testdata/tekton.yaml -out out/explode
 //go:generate echo ">>>> importing YAML to Go"

@@ -105,6 +105,7 @@ func TestImport(t *testing.T) {
 				kube.WithImportManifestFiles([]string{"testdata/karpenter.yaml"}),
 				kube.WithImportSerializer(defaultSerializer()),
 				kube.WithImportRemoveAppName(true),
+				kube.WithImportGroupByKind(false),
 			},
 			OutFiles: []string{
 				"out/import/karpenter/admin_cr.go",
@@ -231,6 +232,7 @@ func TestImport_ErrorEmptyManifest(t *testing.T) {
 		kube.WithImportPackageName("foopackage"),
 		kube.WithImportManifestFiles([]string{pathy}),
 		kube.WithImportWriter(&buf),
+		kube.WithImportGroupByKind(false),
 	)
 	tu.AssertNoError(t, err, "failed to import")
 	tu.AssertEqual(t, string(golden), buf.String())
@@ -250,6 +252,7 @@ func TestImport_SaveFromReader(t *testing.T) {
 		kube.WithImportReader(file),
 		kube.WithImportNameFieldFunc(kube.NameFieldFunc),
 		kube.WithImportNameVarFunc(kube.NameVarFunc),
+		kube.WithImportGroupByKind(false),
 		kube.WithImportNameFileFunc(
 			func(m kubeutil.Metadata) string {
 				return fmt.Sprintf(
@@ -302,6 +305,7 @@ func TestImport_MissingCRDs(t *testing.T) {
 		kube.WithImportOutputDirectory("manifests/"),
 		kube.WithImportReader(file),
 		kube.WithImportWriter(&buf),
+		kube.WithImportGroupByKind(false),
 		kube.WithImportNameFileFunc(
 			func(m kubeutil.Metadata) string {
 				return fmt.Sprintf(
@@ -331,6 +335,7 @@ func TestImport_ReaderWriter(t *testing.T) {
 		kube.WithImportOutputDirectory("manifests/"),
 		kube.WithImportReader(file),
 		kube.WithImportWriter(&buf),
+		kube.WithImportGroupByKind(false),
 		kube.WithImportNameFileFunc(
 			func(m kubeutil.Metadata) string {
 				return fmt.Sprintf(
@@ -495,6 +500,7 @@ func TestImport_CleanUp(t *testing.T) {
 	err := kube.Import(
 		kube.WithImportManifestFiles([]string{"testdata/golden/dirty.yaml"}),
 		kube.WithImportWriter(&buf),
+		kube.WithImportGroupByKind(false),
 		kube.WithImportCleanUp(true),
 	)
 	tu.AssertNoError(t, err, "failed to import")
