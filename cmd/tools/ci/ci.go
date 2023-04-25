@@ -15,25 +15,28 @@ import (
 )
 
 const (
-	// OSVScanner is the OSV Scanner to find vulnarabilities
+	// OSVScanner is the OSV Scanner to find vulnerabilities
 	osvScannerRepo    = "github.com/google/osv-scanner/cmd/osv-scanner"
 	osvScannerVersion = "@v1"
 
-	// vuln is the GoVulnCheck to find vulnarabilities
+	// goVuln to find vulnerabilities
 	vulnRepo    = "golang.org/x/vuln/cmd/govulncheck"
 	vulnVersion = "@latest"
+	goVuln      = vulnRepo + vulnVersion
 
-	// syft is the Syft to generate SBOM
+	// syft is for generating SBOM
 	syftRepo    = "github.com/anchore/syft/cmd/syft"
 	syftVersion = "@v0.79.0"
 
 	// goLicenses is Google's go-licenses to export all licenses
 	goLicensesRepo    = "github.com/google/go-licenses"
 	goLicensesVersion = "@v1.6.0"
+	goLicenses        = goLicensesRepo + goLicensesVersion
 
-	// goCILint is golangci/golangci-lint to lint code
+	// goCILint is for linting code
 	goCILintRepo    = "github.com/golangci/golangci-lint/cmd/golangci-lint"
 	goCILintVersion = "@v1.52.2"
+	goCILint        = goCILintRepo + goCILintVersion
 
 	// copyWriteCheck is hashicorp/copywrite to check license headers
 	copyWriteRepo    = "github.com/hashicorp/copywrite"
@@ -42,102 +45,190 @@ const (
 	// goFumpt is mvdan.cc/gofumpt to format code
 	goFumptRepo    = "mvdan.cc/gofumpt"
 	goFumptVersion = "@v0.5.0"
+	goFumpt        = goFumptRepo + goFumptVersion
 )
 
 const (
-	dir    = "."
+	curDir = "."
 	recDir = "./..."
 )
 
 func main() {
-	var fix, scan, verify bool
-	flag.BoolVar(&fix, "fix", false, "Run all fixes")
-	flag.BoolVar(&scan, "scan", false, "Run all scans")
-	flag.BoolVar(&verify, "verify", false, "Run all verifications")
+	var cover, lint, doc, examples, fix, nodiff, pr, scan bool
+	flag.BoolVar(&cover, "cover", false, "tests with coverage")
+	flag.BoolVar(
+		&lint,
+		"lint",
+		false,
+		"linting and formatting code (gofumpt, golangci-lint)")
+	flag.BoolVar(&doc, "doc", false, "generate all docs and readme")
+	flag.BoolVar(&examples, "examples", false, "tests all docs examples")
+	flag.BoolVar(
+		&fix,
+		"fix",
+		false,
+		"same as -lint + generating notice and licenses headers")
+	flag.BoolVar(&nodiff, "nodiff", false, "error if git diff is not empty")
+	flag.BoolVar(&pr, "pr", false, "run pull request checks: -fix + go test")
+	flag.BoolVar(&scan, "scan", false, "scan for vulnerabilities")
+
 	flag.Parse()
+
+	if cover {
+		iferr(
+			Go(
+				"test", recDir,
+				"-coverprofile=coverage.txt",
+				"-covermode=atomic"))
+	}
+	if lint {
+		Lint()
+	}
+	if doc {
+		Doc()
+	}
+	if examples {
+		DocExamples()
+	}
 	if fix {
 		Fix()
+	}
+	if pr {
+		PullRequest()
 	}
 	if scan {
 		Scan()
 	}
-	if verify {
-		GoModVerify()
+	if nodiff {
+		// should be last
+		HasGitDiff()
 	}
 }
 
-type run func() error
+func Lint() {
+	fmt.Println("🧹 code linting")
+	iferr(Go("mod", "tidy"))
+	iferr(Go("mod", "verify"))
+	iferr(GoRun(goFumpt, "-w", "-extra", curDir))
+	iferr(GoRun(goCILint, "-v", "run", recDir))
+	fmt.Println("✅ code linted")
+}
 
-func g0(args ...string) error {
+func Fix() {
+	Lint()
+	fmt.Println("📋 copywrite and licenses fix")
+	iferr(CopyWriteFix())
+	iferr(Notice())
+	fmt.Println("✅ All fixes applied")
+}
+
+func PullRequest() {
+	Fix()
+	iferr(Go("test", "-v", recDir))
+	fmt.Println("✅ pull request checks passed")
+}
+
+func Scan() {
+	iferr(Sbom())
+	iferr(GoRun(goVuln, recDir))
+	// check(OSVScanner) // because of github.com/aws/aws-sdk-go in docs/go.mod
+	fmt.Println("✅ all scans completed")
+}
+
+func iferr(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
+func Go(args ...string) error {
 	cmd := exec.Command("go", args...)
 	slog.Info("exec", slog.String("cmd", cmd.String()))
+	defer slog.Info("done", slog.String("cmd", cmd.String()))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
+		_ = os.Stderr.Sync()
+		_ = os.Stdout.Sync()
 		return fmt.Errorf("go: %s", err)
 	}
 	return nil
 }
 
-func goRun(args ...string) error {
-	return g0(append([]string{"run"}, args...)...)
+func GoRun(args ...string) error {
+	return Go(append([]string{"run", "-mod=readonly"}, args...)...)
 }
 
-func check(f run) {
-	if err := f(); err != nil {
+// CopyWriteFix is hashicorp/copywrite to fix license headers
+func CopyWriteFix() error {
+	return GoRun(
+		copyWriteRepo+copyWriteVersion,
+		"headers",
+		"--dirPath", "./",
+		"--config", "./.copywrite.hcl",
+	)
+}
+
+// HasGitDiff displays the git diff and errors if there is a diff
+func HasGitDiff() {
+	cmd := exec.Command("git", "--no-pager", "diff")
+	slog.Info("exec", slog.String("cmd", cmd.String()))
+	b, err := cmd.CombinedOutput()
+	iferr(err)
+	if len(b) == 0 {
+		return
+	}
+	buf := bytes.NewBuffer(b)
+	fmt.Println(buf.String())
+	panic("git diff is not empty")
+}
+
+// docRun runs a command in the docs directory
+func docRun(args ...string) {
+	cmd := exec.Command(args[0], args[1:]...) //nolint:gosec
+	slog.Info("exec", slog.String("cmd", cmd.String()))
+	defer slog.Info("exec", slog.String("cmd", args[0]+" done"))
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Dir = "./docs"
+	if err := cmd.Run(); err != nil {
+		_ = os.Stderr.Sync()
+		_ = os.Stdout.Sync()
 		panic(err)
 	}
 }
 
-// Fix is used to run all fixes sequentially
-func Fix() {
-	slog.Info("running all fixes")
-	defer slog.Info("DONE all fixes")
-	check(Tidy)
-	check(GoFumpt)
-	check(CopyWriteFix)
-	check(GoCILint)
+func Doc() {
+	fmt.Println("📝 generating docs")
+	docRun("go", "mod", "tidy")
+	docRun("go", "generate", "-mod=readonly", "./...")
+	fmt.Println("✅ docs generated")
 }
 
-func Scan() {
-	slog.Info("running all scans")
-	defer slog.Info("DONE all scans")
-	check(Syft)
-	check(GoVulnCheck)
-	check(Notice)
-	check(GoLicensesCheck)
-	check(CopyWriteCheck)
-	// check(OSVScanner) // because: https://osv.dev/GO-2022-0646 github.com/aws/aws-sdk-go │ 1.44.246 │ docs/go.mod
-}
-
-func GoModVerify() {
-	check(CheckGoMod)
-	check(Tidy)
-	check(HasGitDiff)
+func DocExamples() {
+	fmt.Println("📝 generating docs and testing examples")
+	docRun("go", "mod", "tidy")
+	docRun("go", "generate", "-mod=readonly", "./...")
+	docRun("go", "test", "-mod=readonly", "-v", "./...")
+	fmt.Println("✅ docs generated and examples tested")
 }
 
 // OSVScanner is the OSV Scanner to find vulnerabilities
 func OSVScanner() error {
 	slog.Info("running OSV Scanner")
-	return goRun(osvScannerRepo+osvScannerVersion, "-r", dir)
+	defer slog.Info("DONE OSV Scanner")
+	return GoRun(osvScannerRepo+osvScannerVersion, "-r", curDir)
 }
 
-// GoVulnCheck is the GoVulnCheck to find vulnerabilities
-func GoVulnCheck() error {
-	slog.Info("running govulncheck")
-	defer slog.Info("DONE govulncheck")
-	return goRun(vulnRepo+vulnVersion, recDir)
-}
-
-// Syft is used to generate SBOM
-func Syft() error {
+// Sbom is used to generate SBOM
+func Sbom() error {
 	slog.Info("running syft - generating SBOM")
 	defer slog.Info("DONE syft - generating SBOM")
 	cmd := exec.Command(
 		"go", "run",
 		syftRepo+syftVersion,
 		"packages",
-		"dir:"+dir,
+		"dir:"+curDir,
 		"-o=spdx-json",
 		"--file=bin/sbom.json",
 	)
@@ -152,13 +243,6 @@ func Syft() error {
 	return nil
 }
 
-// GoFumpt is used to format code
-func GoFumpt() error {
-	slog.Info("running gofumpt - formatting code")
-	defer slog.Info("DONE gofumpt - formatting code")
-	return goRun(goFumptRepo+goFumptVersion, "-w", "-extra", dir)
-}
-
 // Notice is used to generate a NOTICE file
 func Notice() error {
 	slog.Info("running go-licenses - generating report")
@@ -166,7 +250,7 @@ func Notice() error {
 	var stdout, stderr bytes.Buffer
 	cmd := exec.Command(
 		"go", "run",
-		goLicensesRepo+goLicensesVersion,
+		goLicenses,
 		"report",
 		recDir,
 		"--template=./cmd/tools/ci/licenses.tpl",
@@ -192,71 +276,4 @@ func Notice() error {
 		return fmt.Errorf("generating NOTICE file: %w", err)
 	}
 	return nil
-}
-
-// GoLicensesCheck is used to check all licenses
-func GoLicensesCheck() error {
-	slog.Info("running go-licenses - exporting licenses")
-	defer slog.Info("DONE go-licenses - exporting licenses")
-	return goRun(
-		goLicensesRepo+goLicensesVersion,
-		"check", recDir,
-	)
-}
-
-// CopyWriteCheck is hashicorp/copywrite to check license headers
-func CopyWriteCheck() error {
-	slog.Info("running copywrite - checking license headers")
-	defer slog.Info("DONE copywrite - checking license headers")
-	return goRun(
-		copyWriteRepo+copyWriteVersion,
-		"headers",
-		"--dirPath", "./",
-		"--config", "./.copywrite.hcl",
-		"--plan",
-	)
-}
-
-// CopyWriteFix is hashicorp/copywrite to fix license headers
-func CopyWriteFix() error {
-	slog.Info("running copywrite - fixing license headers")
-	defer slog.Info("DONE copywrite - fixing license headers")
-	return goRun(
-		copyWriteRepo+copyWriteVersion,
-		"headers",
-		"--dirPath", "./",
-		"--config", "./.copywrite.hcl",
-	)
-}
-
-// GoCILint is used to lint code
-func GoCILint() error {
-	slog.Info("running golangci-lint - linting code")
-	defer slog.Info("DONE golangci-lint - linting code")
-	return goRun(goCILintRepo+goCILintVersion, "-v", "run", recDir)
-}
-
-func HasGitDiff() error {
-	slog.Info("running git diff")
-	defer slog.Info("DONE git diff")
-	cmd := exec.Command("git", "--no-pager", "diff")
-	slog.Info("exec", slog.String("cmd", cmd.String()))
-	b, err := cmd.CombinedOutput()
-	if err != nil {
-		return err
-	}
-	if len(b) == 0 {
-		return nil
-	}
-	buf := bytes.NewBuffer(b)
-	return fmt.Errorf("running git diff:\n\n%s", buf.String())
-}
-
-func CheckGoMod() error {
-	return g0("mod", "verify")
-}
-
-// Tidy runs go mod tidy
-func Tidy() error {
-	return g0("mod", "tidy")
 }

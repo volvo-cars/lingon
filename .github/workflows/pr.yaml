@@ -1,9 +1,7 @@
-name: main
+name: pr
 
 on:
-  push:
-    branches:
-      - main
+  pull_request:
 
 concurrency:
   # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-only-cancel-in-progress-jobs-or-runs-for-the-current-workflow
@@ -20,7 +18,7 @@ jobs:
       pull-requests: read  # for golangci/golangci-lint-action to fetch pull requests
     runs-on: ubuntu-latest
     steps:
-      
+
       - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
         with:
           fetch-depth: 1
@@ -30,14 +28,5 @@ jobs:
           check-latest: true
           cache-dependency-path: ./go.mod
 
-      - name: go test
-        run: go test -v ./pkg/...
-
-      - name: git diff
-        run: git --no-pager diff HEAD --exit-code
-
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@08e2f20817b15149a52b5b3ebe7de50aff2ba8c5 # v3.4.0
-        with:
-          args: -v --timeout 1m
-
+      - name: run CI
+        run: go run cmd/tools/ci/*.go -pr -doc -nodiff

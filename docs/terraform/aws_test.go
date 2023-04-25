@@ -1,8 +1,6 @@
 // Copyright (c) 2023 Volvo Car Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-//go:build inttest
-
 package terraform
 
 import (
