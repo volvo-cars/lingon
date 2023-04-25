@@ -2,6 +2,21 @@
 
 Why we built this? Because we had no other choice, no tools supported a controlled and reproducible way to upgrade our infrastructure.
 
+Note that most tools are fine, we just didn't want to manage YAML, HCL or simply put, text files anymore.
+The declarative approach has worked well until it hasn't.
+Above a certain threshold of complexity, code is necessary.
+We didn't want another kubernetes cluster to manage all other kubernetes clusters.
+We are software engineers and we wanted Go code, we wanted tests,
+we wanted to abstract away when it makes sense and leave it bare when it makes sense.
+Go is usually a second class citizen compared to TypeScript and Python
+when it comes to infra-as-code tools such as Pulumi and CDK.
+All the solutions we tried were too simple for our use case or too bloated.
+Most of us worked with Terraform a lot and kubernetes a lot.
+We were missing a way to combine the two and automate the glue with code.
+Therefore, Lingon has evolved into what it is today.
+We don't try to compete with other tools, we built it for us.
+If it ends up being useful to someone, we are more than happy to help with that.
+
 We didn't want to build yet another abstraction that tries to cover everyone's use cases (see <https://xkcd.com/927/>).
 So we decided to build a library to facilitate the creation of **your** abstraction for your platform, regardless of the target infrastructure and services.
 

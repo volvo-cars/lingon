@@ -13,7 +13,7 @@ In details this means:
   product, you need to understand how to use that product just as if you were
   configuring it directly.
 
-* Use native structs as much as possible as this e.g Kubernetes struts directly:
+* Use native structs as much as possible as this e.g Kubernetes structs directly:
   * Immediately maps with what you will see once file is deployed. (e.g if you do `kubectl get po <your-pod> -o yaml` someday)
       It helps to debug in future and allows others to quickly tweak it even if you are from different team.
   * Helps to reuse other templates/patterns from upstream in future
