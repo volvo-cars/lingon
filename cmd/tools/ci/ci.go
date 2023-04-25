@@ -200,8 +200,8 @@ func docRun(args ...string) {
 
 func Doc() {
 	fmt.Println("📝 generating docs")
-	docRun("go", "mod", "tidy")
 	docRun("go", "generate", "-mod=readonly", "./...")
+	docRun("go", "mod", "tidy")
 	fmt.Println("✅ docs generated")
 }
 
