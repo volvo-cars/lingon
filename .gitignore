@@ -14,7 +14,6 @@
 
 # Generated Go files from Terraform schemas
 gen/
-
 bin/
 vendor/
 
@@ -23,3 +22,4 @@ vendor/
 **/out
 .vscode/
 dist/
+cover.*

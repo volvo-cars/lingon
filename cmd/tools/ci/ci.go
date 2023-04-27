@@ -62,7 +62,11 @@ func main() {
 		false,
 		"linting and formatting code (gofumpt, golangci-lint)")
 	flag.BoolVar(&doc, "doc", false, "generate all docs and readme")
-	flag.BoolVar(&examples, "examples", false, "tests all docs examples")
+	flag.BoolVar(
+		&examples,
+		"examples",
+		false,
+		"tests all docs examples /!\\ slow without build cache")
 	flag.BoolVar(
 		&fix,
 		"fix",
@@ -75,11 +79,7 @@ func main() {
 	flag.Parse()
 
 	if cover {
-		iferr(
-			Go(
-				"test", recDir,
-				"-coverprofile=coverage.txt",
-				"-covermode=atomic"))
+		CoverP()
 	}
 	if lint {
 		Lint()
@@ -103,6 +103,28 @@ func main() {
 		// should be last
 		HasGitDiff()
 	}
+}
+
+func Cover() {
+	coverOutput := "cover.out"
+	coverMode := "count" // see `go help testflag` for more info
+	iferr(
+		Go(
+			"test",
+			recDir,
+			"-coverprofile="+coverOutput,
+			"-covermode="+coverMode,
+		))
+	iferr(
+		Go(
+			"tool",
+			"cover",
+			"-func="+coverOutput,
+			// "-html="+coverOutput,
+			// "-o",
+			// "cover.html",
+		))
+	fmt.Println("✅ coverage generated: open cover.html to see results")
 }
 
 func Lint() {
@@ -133,6 +155,20 @@ func Scan() {
 	iferr(GoRun(goVuln, recDir))
 	// check(OSVScanner) // because of github.com/aws/aws-sdk-go in docs/go.mod
 	fmt.Println("✅ all scans completed")
+}
+
+func Doc() {
+	fmt.Println("📝 generating docs")
+	docRun("go", "generate", "-mod=readonly", recDir)
+	docRun("go", "mod", "tidy")
+	fmt.Println("✅ docs generated")
+}
+
+func DocExamples() {
+	Doc()
+	fmt.Println("📝 testing examples")
+	docRun("go", "test", "-mod=readonly", "-v", recDir)
+	fmt.Println("✅ docs generated and examples tested")
 }
 
 func iferr(err error) {
@@ -196,21 +232,6 @@ func docRun(args ...string) {
 		_ = os.Stdout.Sync()
 		panic(err)
 	}
-}
-
-func Doc() {
-	fmt.Println("📝 generating docs")
-	docRun("go", "generate", "-mod=readonly", "./...")
-	docRun("go", "mod", "tidy")
-	fmt.Println("✅ docs generated")
-}
-
-func DocExamples() {
-	fmt.Println("📝 generating docs and testing examples")
-	docRun("go", "mod", "tidy")
-	docRun("go", "generate", "-mod=readonly", "./...")
-	docRun("go", "test", "-mod=readonly", "-v", "./...")
-	fmt.Println("✅ docs generated and examples tested")
 }
 
 // OSVScanner is the OSV Scanner to find vulnerabilities
