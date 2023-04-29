@@ -45,15 +45,17 @@ func ManifestSplit(r io.Reader) ([]string, error) {
 	for scanner.Scan() {
 		txt := scanner.Text()
 		tmp := strings.ReplaceAll(txt, " ", "")
-		if len(tmp) == 0 {
-			continue
-		}
+
 		switch {
-		// Skip comments
+		case len(tmp) == 0:
+			continue
+
+		// Skip top level comments
 		case strings.HasPrefix(txt, "#"):
 			continue
+
 		// Split by '---'
-		case txt == "---":
+		case strings.HasPrefix(txt, "---"):
 			if buf.Len() > 0 {
 				content = append(content, buf.String())
 				buf.Reset()

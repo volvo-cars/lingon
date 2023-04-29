@@ -1,0 +1,80 @@
+-- broken.yaml --
+apiVersion: v1
+kind: Service
+metadata:
+  name: componentid-svc
+spec:
+  selector:
+    app: componentid
+  ports:
+    - port: 8091
+      targetPort: 8091
+  type: ClusterIP
+
+---
+apiVersion: secrets-store.csi.x-k8s.io/v1
+kind: SecretProviderClass
+metadata:
+  name: vault-sync-componentid
+spec:
+  parameters:
+    vaultAddress: "https://vault.prod.internal.example.com"
+
+---
+    # this cannot be filtered out
+---
+# this is just a comment
+--- # can this work
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: componentid
+spec:
+  selector:
+    matchLabels:
+      app: componentid
+  strategy:
+    rollingUpdate:
+      maxSurge: 50%
+      maxUnavailable: 20%
+    type: RollingUpdate
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+        prometheus.io/path: /actuator/prometheus
+        prometheus.io/port: "8091"
+        prometheus.io/scheme: http
+        prometheus.io/scrape: "true"
+        prometheus.io/scrapehttps: "false"
+      labels:
+        app: componentid
+    spec:
+      containers:
+        - name: componentid-container
+          image: componentid
+          ports:
+            - name: http
+              containerPort: 8091
+          resources:
+            requests:
+              cpu: 500m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+---
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: componentid
+spec:
+  maxReplicas: 2
+  minReplicas: 1
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: componentid
+  targetCPUUtilizationPercentage: 70
