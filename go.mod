@@ -13,7 +13,7 @@ require (
 	github.com/hashicorp/terraform-json v0.16.0
 	github.com/imdario/mergo v0.3.15
 	github.com/rogpeppe/go-internal v1.10.0
-	github.com/tidwall/gjson v1.14.2
+	github.com/tidwall/gjson v1.14.4
 	github.com/tidwall/sjson v1.2.5
 	github.com/veggiemonk/strcase v0.0.0-20230408012609-81cba9641077
 	github.com/zclconf/go-cty v1.13.1
