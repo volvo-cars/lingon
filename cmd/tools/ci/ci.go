@@ -10,6 +10,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"time"
 
 	"golang.org/x/exp/slog"
 )
@@ -17,7 +18,7 @@ import (
 const (
 	// OSVScanner is the OSV Scanner to find vulnerabilities
 	osvScannerRepo    = "github.com/google/osv-scanner/cmd/osv-scanner"
-	osvScannerVersion = "@v1"
+	osvScannerVersion = "@v1.3.2"
 
 	// goVuln to find vulnerabilities
 	vulnRepo    = "golang.org/x/vuln/cmd/govulncheck"
@@ -54,7 +55,7 @@ const (
 )
 
 func main() {
-	var cover, lint, doc, examples, fix, nodiff, pr, scan bool
+	var cover, lint, doc, examples, fix, nodiff, pr, scan, release bool
 	flag.BoolVar(&cover, "cover", false, "tests with coverage")
 	flag.BoolVar(
 		&lint,
@@ -75,6 +76,7 @@ func main() {
 	flag.BoolVar(&nodiff, "nodiff", false, "error if git diff is not empty")
 	flag.BoolVar(&pr, "pr", false, "run pull request checks: -fix + go test")
 	flag.BoolVar(&scan, "scan", false, "scan for vulnerabilities")
+	flag.BoolVar(&release, "release", false, "create a new release")
 
 	flag.Parse()
 
@@ -99,10 +101,44 @@ func main() {
 	if scan {
 		Scan()
 	}
+	if release {
+		Release()
+	}
 	if nodiff {
 		// should be last
 		HasGitDiff()
 	}
+}
+
+func Release() {
+	d := time.Now().UTC().Format("2006-01-02")
+	ssha, err := shortSha()
+	iferr(err)
+	v := d + "-" + ssha
+	iferr(TagRelease(v, "Release "+v))
+}
+
+func TagRelease(tag, msg string) error {
+	cmd := exec.Command("git", "tag", "-a", tag, "-s", "-m", msg)
+	slog.Info("exec", slog.String("cmd", cmd.String()))
+	_, err := cmd.CombinedOutput()
+	if err != nil {
+		return err
+	}
+	cmdgp := exec.Command("git", "push", "--tags")
+	slog.Info("exec", slog.String("cmd", cmdgp.String()))
+	_, err = cmdgp.CombinedOutput()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func shortSha() (string, error) {
+	cmd := exec.Command("git", "rev-parse", "--short", "HEAD")
+	slog.Info("exec", slog.String("cmd", cmd.String()))
+	b, err := cmd.CombinedOutput()
+	return string(b), err
 }
 
 func Cover() {
@@ -153,7 +189,7 @@ func PullRequest() {
 func Scan() {
 	iferr(Sbom())
 	iferr(GoRun(goVuln, recDir))
-	// check(OSVScanner) // because of github.com/aws/aws-sdk-go in docs/go.mod
+	iferr(OSVScanner())
 	fmt.Println("✅ all scans completed")
 }
 
@@ -238,7 +274,10 @@ func docRun(args ...string) {
 func OSVScanner() error {
 	slog.Info("running OSV Scanner")
 	defer slog.Info("DONE OSV Scanner")
-	return GoRun(osvScannerRepo+osvScannerVersion, "-r", curDir)
+	// return GoRun(osvScannerRepo+osvScannerVersion, "-r", curDir)
+	// not scanning docs/go.mod because of github.com/aws/aws-sdk-go
+	// and the osvScanner returns an error when a vulnerability is detected
+	return GoRun(osvScannerRepo+osvScannerVersion, curDir)
 }
 
 // Sbom is used to generate SBOM
