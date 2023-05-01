@@ -16,7 +16,7 @@ var TeamGraphMicrosoftServiceEntry = &v1beta1.ServiceEntry{
 	Spec: v1beta11.ServiceEntry{
 		ExportTo: []string{"."},
 		Hosts:    []string{"graph.microsoft.com"},
-		Ports: []*v1beta11.ServicePort{&v1beta11.ServicePort{
+		Ports: []*v1beta11.ServicePort{{
 			Name:     "https",
 			Number:   uint32(0x1bb),
 			Protocol: "HTTPS",
