@@ -454,11 +454,11 @@ func TestImport_VerboseLogger(t *testing.T) {
 		replace := func(groups []string, a slog.Attr) slog.Attr {
 			// Remove time.
 			if a.Key == slog.TimeKey && len(groups) == 0 {
-				a.Key = ""
+				return slog.Attr{}
 			}
 			// remove file:line
 			if a.Key == slog.SourceKey {
-				a.Key = ""
+				return slog.Attr{}
 			}
 			return a
 		}

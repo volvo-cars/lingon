@@ -54,69 +54,69 @@ var TeamOnboardingAuthSecretProviderClass = &v1.SecretProviderClass{
 			"vaultAddress": "https://vault.secretstore.company.com",
 		},
 		Provider: v1.Provider("vault"),
-		SecretObjects: []*v1.SecretObject{{
-			Data: []*v1.SecretObjectData{{
+		SecretObjects: []*v1.SecretObject{&v1.SecretObject{
+			Data: []*v1.SecretObjectData{&v1.SecretObjectData{
 				Key:        "token",
 				ObjectName: "xxx-gh-token",
-			}, {
+			}, &v1.SecretObjectData{
 				Key:        "username",
 				ObjectName: "xxx-gh-username",
 			}},
 			SecretName: "github-auth",
 			Type:       "Opaque",
-		}, {
-			Data: []*v1.SecretObjectData{{
+		}, &v1.SecretObject{
+			Data: []*v1.SecretObjectData{&v1.SecretObjectData{
 				Key:        "token",
 				ObjectName: "abk-vcc-test-xxx-xxx-gh-dev-token",
-			}, {
+			}, &v1.SecretObjectData{
 				Key:        "username",
 				ObjectName: "abk-vcc-test-xxx-gh-dev-username",
 			}},
 			SecretName: "github-abk-vcc-test-auth",
 			Type:       "Opaque",
-		}, {
-			Data: []*v1.SecretObjectData{{
+		}, &v1.SecretObject{
+			Data: []*v1.SecretObjectData{&v1.SecretObjectData{
 				Key:        "token",
 				ObjectName: "scim-auth-token",
 			}},
 			SecretName: "scim-auth",
 			Type:       "Opaque",
-		}, {
-			Data: []*v1.SecretObjectData{{
+		}, &v1.SecretObject{
+			Data: []*v1.SecretObjectData{&v1.SecretObjectData{
 				Key:        "username",
 				ObjectName: "harbor-username",
-			}, {
+			}, &v1.SecretObjectData{
 				Key:        "password",
 				ObjectName: "harbor-password",
 			}},
 			SecretName: "harbor-auth",
 			Type:       "Opaque",
-		}, {
-			Data: []*v1.SecretObjectData{{
+		}, &v1.SecretObject{
+			Data: []*v1.SecretObjectData{&v1.SecretObjectData{
 				Key:        "access-key-id",
 				ObjectName: "key-id",
-			}, {
+			}, &v1.SecretObjectData{
 				Key:        "secret-access-key",
 				ObjectName: "secret-key",
 			}},
 			SecretName: "lakefs-auth",
 			Type:       "Opaque",
-		}, {
-			Data: []*v1.SecretObjectData{{
+		}, &v1.SecretObject{
+			Data: []*v1.SecretObjectData{&v1.SecretObjectData{
 				Key:        "token",
 				ObjectName: "sendgrid-api-key",
 			}},
 			SecretName: "sendgrid-api-key",
 			Type:       "Opaque",
-		}, {
-			Data: []*v1.SecretObjectData{{
+		}, &v1.SecretObject{
+			Data: []*v1.SecretObjectData{&v1.SecretObjectData{
 				Key:        "client-secret",
 				ObjectName: "team-az-group-management-prod",
 			}},
 			SecretName: "team-az-group-management-prod",
 			Type:       "Opaque",
-		}, {
-			Data: []*v1.SecretObjectData{{
+		}, &v1.SecretObject{
+			Data: []*v1.SecretObjectData{&v1.SecretObjectData{
 				Key:        "client-secret",
 				ObjectName: "team-az-group-management-qa",
 			}},
