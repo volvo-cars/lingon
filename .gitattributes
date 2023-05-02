@@ -5,3 +5,7 @@
 **/testdata/ linguist-generated=true
 
 docs/*.md linguist-documentation
+
+NOTICE linguist-documentation
+CONTRIBUTING.md linguist-documentation
+LICENSE linguist-documentation
