@@ -2,7 +2,7 @@
 
 There are no shortage of tools for [Kubernetes](https://docs.google.com/spreadsheets/d/1FCgqz1Ci7_VCz_wdh8vBitZ3giBtac_H8SBw4uxnrsE/edit#gid=0) and to manage infrastructure.
 
-Most of the tools are good tools, they just don't work for us or are too complicated and requires a lot of investment to get started.
+Most of the tools are good tools, they just don't work for us or are too complicated and require a lot of investment to get started.
 
 > We may sound negative, but it is not our intention.
 > We are just trying to be honest about our experience.
@@ -33,10 +33,10 @@ Since both terraform and kubernetes are written in Go, it felt natural to use Go
 We have tried to use other languages, but we found that Go was the best fit for our use case.
 We like the opinions that Go has and that let us focus on the problem at hand.
 
-- Python dependencies are just hell to manage, and we have seen a lot of issues with them. Also, it is not as strongly type as Go.
+- Python dependencies are just hell to manage, and we have seen a lot of issues with them. Also, it is not as strongly typed as Go.
 - Javascript/Typescript have a steeper learning curve. We found that we would need to pull in a lot of dependencies to get the same result.
 - Rust is a great language but the learning curve is too steep for us to teach it.
-- Java/C# are great languages but their runtime dependency prevent us to easily share the code with others.
+- Java/C# are great languages but their runtime dependency prevents us from easily sharing code with others.
 
 ### Mimic
 
@@ -166,7 +166,7 @@ Unless the documentation is super clear on what the value does,
 it is hard to understand what the value is for.
 Moreover, when there are too many values, the template becomes unreadable.
 Have a look at a [deployment](https://github.com/prometheus-community/helm-charts/blob/main/charts/prometheus/templates/deploy.yaml)
-and try to understand what it does. It requires a lot of mental gymanstics.
+and try to understand what it does. It requires a lot of mental gymnastics.
 
 When in Go, the code is much more readable,
 you can create your own abstraction if needed,
@@ -179,7 +179,7 @@ The debugging experience is painful and requires a lot of knowledge and focus.
 We haven't seen it work properly beyond simple string replacement or some naming conventions.
 
 Front-end developers know that all too well and keep on finding new abstractions
-all the time with every possible ways to generate HTML & CSS.
+all the time with every possible way to generate HTML & CSS.
 
 Finally, it is only for kubernetes and requires context switching with other tools,
 it does not solve the cloud resource management part.
@@ -187,7 +187,7 @@ it does not solve the cloud resource management part.
 ### Terraform
 
 We love [Terraform](https://www.terraform.io/) and we used it a lot.
-Which is why we found that there are some shortcoming that we wanted to address.
+Which is why we found that there are some shortcomings that we wanted to address.
 
 - Once you start managing a large number of resources, Terraform becomes cumbersome to use.
 - State splitting is something that needs to be set right from the beginning, and it is difficult to change it later on.
@@ -232,7 +232,7 @@ We saw that the cost of getting started is pretty high.
 We wanted to avoid that as it would be a blocker for adoption, too many people to convince and teach about it.
 
 It uses a declarative approach to manage infrastructure at scale.
-Declarative language are fine for simple use cases, and they do a lot of automation under the hood.
+Declarative languages are fine for simple use cases, and they do a lot of automation under the hood.
 It is that automation that makes the debugging experience hard.
 
 ### Cluster API
