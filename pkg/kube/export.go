@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"sort"
 
 	"github.com/rogpeppe/go-internal/txtar"
 	"github.com/volvo-cars/lingon/pkg/kubeutil"
@@ -78,8 +77,6 @@ func (g *goky) export(km Exporter) error {
 		for _, f := range g.ar.Files {
 			filenames = append(filenames, f.Name)
 		}
-		// predictable output
-		sort.Strings(filenames)
 
 		// add the kustomization.yaml file
 		k := filepath.Join(g.o.OutputDir, "kustomization.yaml")

@@ -37,7 +37,7 @@ func TestExport(t *testing.T) {
 	outTekton := filepath.Join(defaultExportOutputDir, "tekton")
 	TT := []args{
 		{
-			name: "embedded struct",
+			name: "export embedded struct",
 			km:   newEmbeddedStruct(),
 			opts: []kube.ExportOption{
 				kube.WithExportKustomize(true),
@@ -53,7 +53,7 @@ func TestExport(t *testing.T) {
 			},
 		},
 		{
-			name: "embedded struct explode",
+			name: "export embedded struct explode",
 			km:   newEmbeddedStruct(),
 			opts: []kube.ExportOption{
 				kube.WithExportExplodeManifests(true),
@@ -68,7 +68,7 @@ func TestExport(t *testing.T) {
 			},
 		},
 		{
-			name: "embedded struct with name file func",
+			name: "export embedded struct with name file func",
 			km:   newEmbeddedStruct(),
 			opts: []kube.ExportOption{
 				kube.WithExportOutputDirectory(outEBDS),
@@ -87,7 +87,7 @@ func TestExport(t *testing.T) {
 			},
 		},
 		{
-			name: "embedded struct with explode and name file func",
+			name: "export embedded struct with explode and name file func",
 			km:   newEmbeddedStruct(),
 			opts: []kube.ExportOption{
 				kube.WithExportOutputDirectory(outEBDS),
@@ -107,7 +107,7 @@ func TestExport(t *testing.T) {
 			},
 		},
 		{
-			name: "embedded struct with explode and name file func as JSON",
+			name: "export embedded struct with explode and name file func as JSON",
 			km:   newEmbeddedStruct(),
 			opts: []kube.ExportOption{
 				kube.WithExportOutputDirectory(outEBDS),
@@ -128,7 +128,7 @@ func TestExport(t *testing.T) {
 			},
 		},
 		{
-			name: "incompatible options explode with single file",
+			name: "export incompatible options explode with single file",
 			km:   newEmbeddedStruct(),
 			opts: []kube.ExportOption{
 				kube.WithExportOutputDirectory(outEBDS),
@@ -140,7 +140,7 @@ func TestExport(t *testing.T) {
 			isErr: true,
 		},
 		{
-			name: "incompatible options json with kustomize",
+			name: "export incompatible options json with kustomize",
 			km:   newEmbeddedStruct(),
 			opts: []kube.ExportOption{
 				kube.WithExportOutputDirectory(outEBDS),
@@ -152,7 +152,7 @@ func TestExport(t *testing.T) {
 			isErr: true,
 		},
 		{
-			name: "tekton",
+			name: "export tekton",
 			km:   tekton.New(),
 			opts: []kube.ExportOption{
 				kube.WithExportOutputDirectory(outTekton),
@@ -226,7 +226,7 @@ func TestExport(t *testing.T) {
 			},
 		},
 		{
-			name: "remove secrets",
+			name: "export remove secrets",
 			km:   tekton.New(),
 			opts: []kube.ExportOption{
 				kube.WithExportOutputDirectory(outTekton),
@@ -265,7 +265,6 @@ func TestExport(t *testing.T) {
 				"out/export/tekton/_cluster/webhook/4_config_webhook_pipeline_dev_validatingwebhookconfigurations.yaml",
 				"out/export/tekton/_cluster/webhook/4_validation_webhook_pipeline_dev_validatingwebhookconfigurations.yaml",
 				"out/export/tekton/_cluster/webhook/4_webhook_pipeline_dev_mutatingwebhookconfigurations.yaml",
-				"out/export/tekton/kustomization.yaml",
 				"out/export/tekton/tekton-pipelines-resolvers/1_pipelines_resolvers_namespace_rbac_role.yaml",
 				"out/export/tekton/tekton-pipelines-resolvers/1_pipelines_resolvers_sa.yaml",
 				"out/export/tekton/tekton-pipelines-resolvers/2_bundleresolver_config_cm.yaml",
@@ -305,6 +304,7 @@ func TestExport(t *testing.T) {
 				"out/export/tekton/tekton-pipelines/3_pipelines_controller_deploy.yaml",
 				"out/export/tekton/tekton-pipelines/3_pipelines_webhook_deploy.yaml",
 				"out/export/tekton/tekton-pipelines/4_pipelines_webhook_hpa.yaml",
+				"out/export/tekton/kustomization.yaml",
 			},
 		},
 	}
@@ -328,17 +328,39 @@ func TestExport(t *testing.T) {
 				}
 				tu.AssertNoError(t, tc.err, "failed to check error")
 				tu.AssertNoError(t, err, "failed to export")
-				ar := txtar.Parse(buf.Bytes())
+				// fname := exportGoldenFileName(tc.name)
+				// gf, err := os.OpenFile(
+				// 	fname,
+				// 	os.O_CREATE|os.O_RDWR,
+				// 	os.ModePerm,
+				// )
+				// tu.AssertNoError(t, err)
+				// _, _ = gf.Write(buf.Bytes())
+				// _ = gf.Close()
+				got := txtar.Parse(buf.Bytes())
 
-				f := filepath.Join("testdata", "golden", tc.name+".txt")
-				expected, err := txtar.ParseFile(f)
+				filenames := []string{}
+				for _, file := range got.Files {
+					filenames = append(filenames, file.Name)
+				}
+				tu.AssertEqualSlice(t, filenames, tc.outFiles)
+				f := filepath.Join(
+					"testdata",
+					"golden",
+					exportGoldenFileName(tc.name),
+				)
+				want, err := txtar.ParseFile(f)
 				tu.AssertNoError(t, err, "failed to parse expected txtar")
-				if diff := tu.DiffTxtar(ar, expected); diff != "" {
+				if diff := tu.DiffTxtar(got, want); diff != "" {
 					t.Fatal(tu.Callers(), diff)
 				}
 			},
 		)
 	}
+}
+
+func exportGoldenFileName(s string) string {
+	return strings.ReplaceAll(s, " ", "_") + ".txt"
 }
 
 func TestExport_SingleFileJSON(t *testing.T) {
@@ -349,7 +371,8 @@ func TestExport_SingleFileJSON(t *testing.T) {
 		kube.WithExportOutputDirectory("out/export"),
 		kube.WithExportOutputJSON(true),
 		kube.WithExportAsSingleFile("tekton.json"),
-		kube.WithExportWriter(&buf))
+		kube.WithExportWriter(&buf),
+	)
 	tu.AssertNoError(t, err, "failed to import")
 
 	var got []map[string]interface{}
@@ -405,7 +428,7 @@ func newEmbeddedStruct() *EmbedStruct {
 		ObjectMeta: metav1.ObjectMeta{Name: sa.Name, Labels: labels},
 		Rules: []rbacv1.PolicyRule{
 			{
-				APIGroups: []string{"*"},
+				APIGroups: []string{""},
 				Resources: []string{"*"},
 				Verbs:     []string{"*"},
 			},

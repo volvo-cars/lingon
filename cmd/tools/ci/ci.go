@@ -10,6 +10,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"strings"
 	"time"
 
 	"golang.org/x/exp/slog"
@@ -138,7 +139,8 @@ func shortSha() (string, error) {
 	cmd := exec.Command("git", "rev-parse", "--short", "HEAD")
 	slog.Info("exec", slog.String("cmd", cmd.String()))
 	b, err := cmd.CombinedOutput()
-	return string(b), err
+	s := strings.ReplaceAll(string(b), "\n", "")
+	return s, err
 }
 
 func Cover() {

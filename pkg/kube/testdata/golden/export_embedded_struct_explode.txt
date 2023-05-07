@@ -1,12 +1,18 @@
--- out/export/embeddedstruct/serviceaccount_imthename.yaml --
-apiVersion: v1
-kind: ServiceAccount
+-- out/export/embeddedstruct/_cluster/rbac/1_iamcr.yaml --
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
 metadata:
   labels:
     app: imthename
   name: imthename
-  namespace: defaultns
--- out/export/embeddedstruct/clusterrolebinding_imthename.yaml --
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - '*'
+  verbs:
+  - '*'
+-- out/export/embeddedstruct/_cluster/rbac/2_iamcrb.yaml --
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -21,46 +27,15 @@ subjects:
 - kind: ServiceAccount
   name: imthename
   namespace: defaultns
--- out/export/embeddedstruct/clusterrole_imthename.yaml --
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+-- out/export/embeddedstruct/defaultns/1_iamsa.yaml --
+apiVersion: v1
+kind: ServiceAccount
 metadata:
   labels:
     app: imthename
   name: imthename
-rules:
-- apiGroups:
-  - '*'
-  resources:
-  - '*'
-  verbs:
-  - '*'
--- out/export/embeddedstruct/deployment_anotherimthename.yaml --
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    app: imthename
-  name: anotherimthename
   namespace: defaultns
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: imthename
-  strategy: {}
-  template:
-    metadata:
-      creationTimestamp: null
-      labels:
-        app: imthename
-    spec:
-      containers:
-      - image: nginx:latest
-        name: anotherimthename
-        resources: {}
-      serviceAccountName: anotherimthename
--- out/export/embeddedstruct/deployment_imthename.yaml --
+-- out/export/embeddedstruct/defaultns/3_depl.yaml --
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -85,3 +60,28 @@ spec:
         name: imthename
         resources: {}
       serviceAccountName: imthename
+-- out/export/embeddedstruct/defaultns/3_iamdepl.yaml --
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: imthename
+  name: anotherimthename
+  namespace: defaultns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: imthename
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: imthename
+    spec:
+      containers:
+      - image: nginx:latest
+        name: anotherimthename
+        resources: {}
+      serviceAccountName: anotherimthename

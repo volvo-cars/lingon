@@ -4,11 +4,11 @@
 package kube
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"path/filepath"
 	"reflect"
+	"sort"
 
 	"github.com/rogpeppe/go-internal/txtar"
 	"github.com/tidwall/sjson"
@@ -69,39 +69,42 @@ func (g *goky) encodeStruct(
 
 			}
 
-			kj, err := json.Marshal(t)
+			kj, err := kyaml.Marshal(t)
 			if err != nil {
 				return fmt.Errorf("error marshaling field %s: %w", sf.Name, err)
 			}
+			// Extract metadata to get the name of the file
+			m, err := kubeutil.ExtractMetadata(kj)
+			if err != nil {
+				return fmt.Errorf("extract metadata: %w", err)
+			}
 
+			kj, err = kyaml.YAMLToJSON(kj)
+			if err != nil {
+				return fmt.Errorf("YAMLToJSON %s: %w", sf.Name, err)
+			}
 			// delete unwanted fields
-			kjs, err := sjson.Delete(string(kj), "metadata.creationTimestamp")
+			kj, err = sjson.DeleteBytes(kj, "metadata.creationTimestamp")
 			if err != nil {
 				return fmt.Errorf(
 					"deleting creationTimestamp %s: %w", sf.Name, err,
 				)
 			}
 
-			kjs, err = sjson.Delete(kjs, "status")
+			kj, err = sjson.DeleteBytes(kj, "status")
 			if err != nil {
 				return fmt.Errorf("deleting status %s: %w", sf.Name, err)
 			}
 
-			b, err := kyaml.JSONToYAML([]byte(kjs))
+			yb, err := kyaml.JSONToYAML(kj)
 			if err != nil {
 				return fmt.Errorf("error marshaling field %s: %w", sf.Name, err)
-			}
-
-			// Extract metadata to get the name of the file
-			m, err := kubeutil.ExtractMetadata(b)
-			if err != nil {
-				return fmt.Errorf("extract metadata: %w", err)
 			}
 
 			ext := "yaml"
 			if g.o.OutputJSON {
 				ext = "json"
-				b = []byte(kjs)
+				yb = kj
 			}
 			name := fmt.Sprintf(
 				"%d_%s.%s",
@@ -122,7 +125,7 @@ func (g *goky) encodeStruct(
 				name = filepath.Join(g.o.OutputDir, name)
 			}
 
-			g.ar.Files = append(g.ar.Files, txtar.File{Name: name, Data: b})
+			g.ar.Files = append(g.ar.Files, txtar.File{Name: name, Data: yb})
 
 		default:
 			// Not sure if this should be an error, but rather be explicit at this point
@@ -134,6 +137,12 @@ func (g *goky) encodeStruct(
 			)
 		}
 	}
+	// predictable output
+	sort.SliceStable(
+		g.ar.Files, func(i, j int) bool {
+			return g.ar.Files[i].Name < g.ar.Files[j].Name
+		},
+	)
 
 	return nil
 }

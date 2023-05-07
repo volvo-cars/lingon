@@ -1,0 +1,10 @@
+-- out/export/embeddedstruct/_cluster/rbac/clusterrole_imthename.json --
+{"apiVersion":"rbac.authorization.k8s.io/v1","kind":"ClusterRole","metadata":{"labels":{"app":"imthename"},"name":"imthename"},"rules":[{"apiGroups":[""],"resources":["*"],"verbs":["*"]}]}
+-- out/export/embeddedstruct/_cluster/rbac/clusterrolebinding_imthename.json --
+{"apiVersion":"rbac.authorization.k8s.io/v1","kind":"ClusterRoleBinding","metadata":{"labels":{"app":"imthename"},"name":"imthename"},"roleRef":{"apiGroup":"rbac.authorization.k8s.io","kind":"ClusterRole","name":"imthename"},"subjects":[{"kind":"ServiceAccount","name":"imthename","namespace":"defaultns"}]}
+-- out/export/embeddedstruct/defaultns/deployment_anotherimthename.json --
+{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"labels":{"app":"imthename"},"name":"anotherimthename","namespace":"defaultns"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"imthename"}},"strategy":{},"template":{"metadata":{"creationTimestamp":null,"labels":{"app":"imthename"}},"spec":{"containers":[{"image":"nginx:latest","name":"anotherimthename","resources":{}}],"serviceAccountName":"anotherimthename"}}}}
+-- out/export/embeddedstruct/defaultns/deployment_imthename.json --
+{"apiVersion":"apps/v1","kind":"Deployment","metadata":{"labels":{"app":"imthename"},"name":"imthename","namespace":"defaultns"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"imthename"}},"strategy":{},"template":{"metadata":{"creationTimestamp":null,"labels":{"app":"imthename"}},"spec":{"containers":[{"image":"nginx:latest","name":"imthename","resources":{}}],"serviceAccountName":"imthename"}}}}
+-- out/export/embeddedstruct/defaultns/serviceaccount_imthename.json --
+{"apiVersion":"v1","kind":"ServiceAccount","metadata":{"labels":{"app":"imthename"},"name":"imthename","namespace":"defaultns"}}

@@ -102,7 +102,7 @@ func TestEncode_EmbeddedStruct(t *testing.T) {
 	for _, f := range ar.Files {
 		filenames = append(filenames, f.Name)
 	}
-	sort.Strings(filenames)
+	// sort.Strings(filenames)
 
 	want := []string{
 		"out/1_iamcr.yaml",

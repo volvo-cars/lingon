@@ -1,12 +1,18 @@
--- out/export/embeddedstruct/defaultns/serviceaccount_imthename.yaml --
-apiVersion: v1
-kind: ServiceAccount
+-- out/export/embeddedstruct/clusterrole_imthename.yaml --
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
 metadata:
   labels:
     app: imthename
   name: imthename
-  namespace: defaultns
--- out/export/embeddedstruct/_cluster/rbac/clusterrolebinding_imthename.yaml --
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - '*'
+  verbs:
+  - '*'
+-- out/export/embeddedstruct/clusterrolebinding_imthename.yaml --
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -21,21 +27,7 @@ subjects:
 - kind: ServiceAccount
   name: imthename
   namespace: defaultns
--- out/export/embeddedstruct/_cluster/rbac/clusterrole_imthename.yaml --
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  labels:
-    app: imthename
-  name: imthename
-rules:
-- apiGroups:
-  - '*'
-  resources:
-  - '*'
-  verbs:
-  - '*'
--- out/export/embeddedstruct/defaultns/deployment_anotherimthename.yaml --
+-- out/export/embeddedstruct/deployment_anotherimthename.yaml --
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -60,7 +52,7 @@ spec:
         name: anotherimthename
         resources: {}
       serviceAccountName: anotherimthename
--- out/export/embeddedstruct/defaultns/deployment_imthename.yaml --
+-- out/export/embeddedstruct/deployment_imthename.yaml --
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -85,3 +77,11 @@ spec:
         name: imthename
         resources: {}
       serviceAccountName: imthename
+-- out/export/embeddedstruct/serviceaccount_imthename.yaml --
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app: imthename
+  name: imthename
+  namespace: defaultns

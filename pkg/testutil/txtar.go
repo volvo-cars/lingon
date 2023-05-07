@@ -33,16 +33,22 @@ func Folder2Txtar(folder string) (*txtar.Archive, error) {
 	return &ar, nil
 }
 
-func DiffTxtar(a, b *txtar.Archive) string {
+func DiffTxtarSort(got, want *txtar.Archive) string {
 	sort.SliceStable(
-		a.Files, func(i, j int) bool {
-			return a.Files[i].Name < a.Files[j].Name
-		})
+		got.Files, func(i, j int) bool {
+			return got.Files[i].Name < got.Files[j].Name
+		},
+	)
 	sort.SliceStable(
-		b.Files, func(i, j int) bool {
-			return b.Files[i].Name < b.Files[j].Name
-		})
-	return Diff(string(txtar.Format(a)), string(txtar.Format(b)))
+		want.Files, func(i, j int) bool {
+			return want.Files[i].Name < want.Files[j].Name
+		},
+	)
+	return Diff(got, want)
+}
+
+func DiffTxtar(got, want *txtar.Archive) string {
+	return Diff(string(txtar.Format(got)), string(txtar.Format(want)))
 }
 
 func listFiles(root string) ([]string, error) {
@@ -80,7 +86,8 @@ func VerifyGo(ar *txtar.Archive) error {
 			fset,
 			file.Name,
 			file.Data,
-			parser.AllErrors)
+			parser.AllErrors,
+		)
 		if err != nil {
 			return err
 		}
@@ -105,6 +112,7 @@ func hasBadNodes(node ast.Node) bool {
 				a = true
 			}
 			return true
-		})
+		},
+	)
 	return a
 }
