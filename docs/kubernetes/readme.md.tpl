@@ -2,8 +2,9 @@
 
 - [What is this?](#what-is-this)
 - [But why?](#but-why)
-	- [Getting started](#getting-started)
-	- [Best practices](#best-practices)
+- [Getting started](#getting-started)
+- [CRDs](#CRDs)
+- [Best practices](#best-practices)
 - [CLI Utilities](#cli-utilities)
 	- [Explode](#explode)
 	- [Kygo](#kygo)
@@ -29,7 +30,7 @@ With this library you can:
 
 [Rationale.md](../rationale.md)
 
-### Getting started
+## Getting started
 
 1. Get a kubernetes manifest
    - example:
@@ -37,13 +38,13 @@ With this library you can:
 wget https://storage.googleapis.com/tekton-releases/pipeline/previous/v0.45.0/release.yaml
 ```
   
-2. Convert it to Go structs
-   - Most manifests don't include extensions CRD object, use the `kygo` CLI:
+2. Convert it to Go structs. Choose either:
+   A) Most manifests don't include extensions CRD object, use the `kygo` CLI:
       ```sh
       go run cmd/kygo/ -in=./install.yaml -out=output -app=myapp -group`
       ```
-   - for specific CRDs, look at the [CRD example](./crd)
-   - for more options, see [Import Options](./options-import.md)
+   B) for **CRDs**, look at the [CRD example](./crd)
+   C) for more options, see [Import Options](./options-import.md)
 
 3. Modify the structs to your liking
    - see [best practices](docs/best-practices.md) for more information
@@ -66,7 +67,7 @@ Have a look at the [tests](../../pkg/kube/) and the [example](../kube/) for a fu
 
 What does the Go code looks like, see [tekton example](../platypus/pkg/platform/tekton/app.go)
 
-### Best practices
+## Best practices
 
 > PLEASE READ [best practices](./best-practices.md) before using this library.
 
@@ -79,6 +80,37 @@ Honorable mentions:
 
 - [valast](https://github.com/hexops/valast) convert Go structs to its Go code representation
 - [jennifer](https://github.com/dave/jennifer) generate Go code
+
+## CRDs(./crd)
+
+How to convert CRDs from YAML to Go. By setting a kubernetes runtime scheme:
+
+```
+"k8s.io/apimachinery/pkg/runtime"
+"k8s.io/client-go/kubernetes/scheme"
+```
+
+Short example:
+
+```
+func defaultSerializer() runtime.Decoder {
+// Add CRDs to scheme
+// This is needed to be able to import CRDs from kubernetes manifests files.
+_ = apiextensions.AddToScheme(scheme.Scheme)
+_ = apiextensionsv1.AddToScheme(scheme.Scheme)
+_ = secretsstorev1.AddToScheme(scheme.Scheme)
+_ = istionetworkingv1beta1.AddToScheme(scheme.Scheme)
+return scheme.Codecs.UniversalDeserializer()
+}
+
+_ = kube.Import(
+    kube.WithImportSerializer(defaultSerializer()),
+    ...
+)
+```
+
+Full example in the [crd folder](./crd)
+
 
 ## [CLI Utilities](../../cmd/)
 

@@ -112,3 +112,7 @@ We tried to make it work with the go-client but it was a lot of work and we deci
 
 We use the `"k8s.io/client-go/kubernetes/scheme"` package to register the CRD.
 As many projects do have CRDs, we decided (relunctantly) to depend on the `client-go` package for now.
+
+## How to import CRDs ?
+
+Register the types to the kubernetes scheme as describe in the full examples [crd](./kubernetes/crd)
