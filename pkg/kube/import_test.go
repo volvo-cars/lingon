@@ -195,10 +195,7 @@ func TestImport(t *testing.T) {
 				err := kube.Import(tc.Opts...)
 				tu.AssertNoError(t, err, "failed to import")
 				ar := txtar.Parse(buf.Bytes())
-				got := make([]string, 0, len(ar.Files))
-				for _, f := range ar.Files {
-					got = append(got, f.Name)
-				}
+				got := tu.Filenames(ar)
 				sort.Strings(got)
 				want := tc.OutFiles
 				tu.AssertEqualSlice(t, want, got)
@@ -266,10 +263,7 @@ func TestImport_SaveFromReader(t *testing.T) {
 	tu.AssertNoError(t, err, "failed to import")
 
 	ar := txtar.Parse(buf.Bytes())
-	got := make([]string, 0, len(ar.Files))
-	for _, f := range ar.Files {
-		got = append(got, f.Name)
-	}
+	got := tu.Filenames(ar)
 	sort.Strings(got)
 
 	want := []string{
@@ -366,10 +360,7 @@ func TestImport_ReaderWriter(t *testing.T) {
 	}
 
 	ar := txtar.Parse(buf.Bytes())
-	got := make([]string, len(ar.Files))
-	for i, f := range ar.Files {
-		got[i] = f.Name
-	}
+	got := tu.Filenames(ar)
 	sort.Strings(got)
 	tu.AssertEqualSlice(t, want, got)
 }

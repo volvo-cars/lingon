@@ -328,22 +328,8 @@ func TestExport(t *testing.T) {
 				}
 				tu.AssertNoError(t, tc.err, "failed to check error")
 				tu.AssertNoError(t, err, "failed to export")
-				// fname := exportGoldenFileName(tc.name)
-				// gf, err := os.OpenFile(
-				// 	fname,
-				// 	os.O_CREATE|os.O_RDWR,
-				// 	os.ModePerm,
-				// )
-				// tu.AssertNoError(t, err)
-				// _, _ = gf.Write(buf.Bytes())
-				// _ = gf.Close()
 				got := txtar.Parse(buf.Bytes())
-
-				filenames := []string{}
-				for _, file := range got.Files {
-					filenames = append(filenames, file.Name)
-				}
-				tu.AssertEqualSlice(t, filenames, tc.outFiles)
+				tu.AssertEqualSlice(t, tu.Filenames(got), tc.outFiles)
 				f := filepath.Join(
 					"testdata",
 					"golden",

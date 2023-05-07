@@ -48,10 +48,6 @@ func TestEncode_EmptyField(t *testing.T) {
 	if !errors.Is(err, ErrFieldMissing) {
 		t.Fatal(err)
 	}
-	filenames := []string{}
-	for _, f := range ar.Files {
-		filenames = append(filenames, f.Name)
-	}
 
 	want := []string{
 		"out/1_iamcr.yaml",
@@ -60,7 +56,7 @@ func TestEncode_EmptyField(t *testing.T) {
 		"out/3_iamdepl.yaml",
 	}
 
-	if diff := tu.Diff(want, filenames); diff != "" {
+	if diff := tu.Diff(want, tu.Filenames(ar)); diff != "" {
 		t.Error(tu.Callers(), diff)
 	}
 }
@@ -96,11 +92,6 @@ func TestEncode_EmbeddedStruct(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	filenames := []string{}
-	for _, f := range ar.Files {
-		filenames = append(filenames, f.Name)
-	}
-
 	want := []string{
 		"out/1_iamcr.yaml",
 		"out/1_iamsa.yaml",
@@ -109,7 +100,7 @@ func TestEncode_EmbeddedStruct(t *testing.T) {
 		"out/3_iamdepl.yaml",
 	}
 
-	if diff := tu.Diff(want, filenames); diff != "" {
+	if diff := tu.Diff(want, tu.Filenames(ar)); diff != "" {
 		t.Error(tu.Callers(), diff)
 	}
 

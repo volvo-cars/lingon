@@ -33,6 +33,14 @@ func Folder2Txtar(folder string) (*txtar.Archive, error) {
 	return &ar, nil
 }
 
+func Filenames(ar *txtar.Archive) []string {
+	filenames := []string{}
+	for _, file := range ar.Files {
+		filenames = append(filenames, file.Name)
+	}
+	return filenames
+}
+
 func DiffTxtarSort(got, want *txtar.Archive) string {
 	sort.SliceStable(
 		got.Files, func(i, j int) bool {
