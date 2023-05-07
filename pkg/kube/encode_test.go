@@ -7,7 +7,6 @@ import (
 	"errors"
 	"path/filepath"
 	"reflect"
-	"sort"
 	"testing"
 
 	"github.com/rogpeppe/go-internal/txtar"
@@ -53,7 +52,6 @@ func TestEncode_EmptyField(t *testing.T) {
 	for _, f := range ar.Files {
 		filenames = append(filenames, f.Name)
 	}
-	sort.Strings(filenames)
 
 	want := []string{
 		"out/1_iamcr.yaml",
@@ -102,7 +100,6 @@ func TestEncode_EmbeddedStruct(t *testing.T) {
 	for _, f := range ar.Files {
 		filenames = append(filenames, f.Name)
 	}
-	// sort.Strings(filenames)
 
 	want := []string{
 		"out/1_iamcr.yaml",
