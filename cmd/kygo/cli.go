@@ -19,13 +19,11 @@ import (
 	kubescheme "k8s.io/client-go/kubernetes/scheme"
 )
 
-const crdMsg = `
-IF there is an issue with CRDs. Please visit https://github.com/volvo-cars/lingon/tree/main/docs/kubernetes
-`
+const crdMsg = "IF there is an issue with CRDs. Please visit this page to solve it https://github.com/volvo-cars/lingon/tree/main/docs/kubernetes/crd"
 
 func main() {
 	var in, out, appName, pkgName string
-	var v, verbose, ignoreErr bool
+	var version, verbose, ignoreErr bool
 
 	groupByKind := true
 	removeAppName := true
@@ -65,8 +63,8 @@ func main() {
 		true,
 		"specify if the app name should be removed from the variable, struct and file name.",
 	)
-	flag.BoolVar(&v, "v", false, "show version")
-	flag.BoolVar(&verbose, "verbose", false, "show logs")
+	flag.BoolVar(&version, "version", false, "show version")
+	flag.BoolVar(&verbose, "v", false, "show logs")
 	flag.BoolVar(
 		&ignoreErr,
 		"ignore-errors",
@@ -75,7 +73,7 @@ func main() {
 	)
 	flag.Parse()
 
-	if v {
+	if version {
 		printVersion()
 		return
 	}
@@ -133,18 +131,10 @@ func run(
 		kube.WithImportOutputDirectory(out),
 		kube.WithImportSerializer(defaultSerializer()),
 	}
-	if groupByKind {
-		opts = append(opts, kube.WithImportGroupByKind(true))
-	}
-	if removeAppName {
-		opts = append(opts, kube.WithImportRemoveAppName(true))
-	}
-	if verbose {
-		opts = append(opts, kube.WithImportVerbose(true))
-	}
-	if ignoreErr {
-		opts = append(opts, kube.WithImportIgnoreErrors(true))
-	}
+	opts = append(opts, kube.WithImportGroupByKind(groupByKind))
+	opts = append(opts, kube.WithImportRemoveAppName(removeAppName))
+	opts = append(opts, kube.WithImportVerbose(verbose))
+	opts = append(opts, kube.WithImportIgnoreErrors(ignoreErr))
 
 	// stdin
 	if in == "-" {
@@ -183,9 +173,9 @@ func run(
 }
 
 var (
-	version = "dev"
-	commit  = "none"
-	date    = "unknown"
+	ver    = "dev"
+	commit = "none"
+	date   = "unknown"
 )
 
 func printVersion() {
@@ -195,7 +185,7 @@ func printVersion() {
 		os.Exit(1)
 	}
 	fmt.Printf("Build:\n%s\n", bi)
-	fmt.Printf("Version: %s\n", version)
+	fmt.Printf("Version: %s\n", ver)
 	fmt.Printf("Commit: %s\n", commit)
 	fmt.Printf("Date: %s\n", date)
 }

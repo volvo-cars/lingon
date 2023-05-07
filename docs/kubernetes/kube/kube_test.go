@@ -37,9 +37,9 @@ func Example() {
 
 	fmt.Printf("\nexported %d manifests\n\n", len(ar.Files))
 	fmt.Println("\t>>> first manifest <<<")
-	if len(ar.Files) > 0 {
+	if len(ar.Files) > 2 {
 		// avoiding diff due to character invisible to the naked eye 😅
-		l := strings.ReplaceAll(string(ar.Files[0].Data), "\n", "\n\t")
+		l := strings.ReplaceAll(string(ar.Files[2].Data), "\n", "\n\t")
 		fmt.Printf("\t%s\n", l)
 	}
 
