@@ -15,11 +15,18 @@ import (
 // TFLabels without a prefix are private to users.
 // The shared prefix ensures that shared labels do not interfere with custom user labels.
 const (
-	AppLabelName      = "app.kubernetes.io/name"
-	AppLabelInstance  = "app.kubernetes.io/instance"
-	AppLabelVersion   = "app.kubernetes.io/version"
+
+	// AppLabelName defines the name of the application i.e. mysql
+	AppLabelName = "app.kubernetes.io/name"
+	// AppLabelInstance defines a unique name identifying the instance of an application i.e. mysql-abcxyz
+	AppLabelInstance = "app.kubernetes.io/instance"
+	// AppLabelVersion defines the current version of the application i.e. 5.7.21
+	AppLabelVersion = "app.kubernetes.io/version"
+	// AppLabelComponent defines the component withing the architecture i.e. database
 	AppLabelComponent = "app.kubernetes.io/component"
-	AppLabelPartOf    = "app.kubernetes.io/part-of"
+	// AppLabelPartOf defines the name of a higher level application this one is part of i.e. WordPress
+	AppLabelPartOf = "app.kubernetes.io/part-of"
+	// AppLabelManagedBy defines the tool being used to manage the operation of an application i.e. lingon
 	AppLabelManagedBy = "app.kubernetes.io/managed-by"
 )
 
