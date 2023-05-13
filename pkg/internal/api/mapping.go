@@ -76,6 +76,7 @@ var PkgAliasToImport = map[string]string{
 	"admissionv1":                  "k8s.io/api/admission/v1",
 	"admissionv1beta1":             "k8s.io/api/admission/v1beta1",
 	"apiextensionsv1":              "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1",
+	"apiregistration.k8s.io":       "k8s.io/kube-aggregator/pkg/apis/apiregistration/v1",
 	"appsv1":                       "k8s.io/api/apps/v1",
 	"authenticationv1":             "k8s.io/api/authentication/v1",
 	"authenticationv1beta1":        "k8s.io/api/authentication/v1beta1",

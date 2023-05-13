@@ -60,7 +60,7 @@ function manifests() {
 
   rm -rf promcrd
   helm template promcrd prometheus-community/prometheus-operator-crds | \
-    $KYGO -out promcrd -app prometheus -pkg promcrd
+    $KYGO -out promcrd -app prometheus -pkg promcrd -group=false
 
   rm -rf promstack
   helm template promstack prometheus-community/kube-prometheus-stack --namespace=monitoring | \
