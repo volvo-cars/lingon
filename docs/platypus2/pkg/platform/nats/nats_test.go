@@ -1,3 +1,6 @@
+// Copyright (c) 2023 Volvo Car Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 package nats
 
 import (
@@ -14,5 +17,4 @@ func TestMonitoring(t *testing.T) {
 	if err := n.Export("out"); err != nil {
 		tu.AssertNoError(t, err, "prometheus crd")
 	}
-
 }
