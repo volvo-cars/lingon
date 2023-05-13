@@ -18,25 +18,28 @@
 // # Kube
 //
 //   - [kube.App] struct that is embedded to mark kubernetes applications
-//   - [kube.Export] kubernetes objects defined as Go struct to kubernetes manifests in YAML.
+//   - [kube.Export] converts kubernetes objects defined as Go struct to kubernetes manifests in YAML.
 //   - [kube.Explode] kubernetes manifests in YAML to multiple files, organized by namespace.
-//   - [kube.Import] kubernetes manifests in YAML to Go structs.
+//   - [kube.Import] converts kubernetes manifests in YAML to Go structs.
 //
 // # Kubeconfig
 //
-// Manipulate kubeconfig files **without** any dependencies on `go-client`.
+// utility package to read and merge kubeconfig files without any dependencies on `go-client`.
 //
 // # Kubeutil
 //
-// Reusable functions used to create kubernetes objects in Go.
+// Reusable functions used to create and validate kubernetes objects in Go.
 //
 // # Terra
 //
 // Core functionality for working with Terraform.
+//   - [terra.Export] converts a [terra.Stack] to HCL files.
 //
 // # Terragen
 //
 // Generate Go code for Terraform providers.
+//   - [terragen.GenerateProviderSchema] generates a terraform provider JSON schema from terraform provider registry.
+//   - [terragen.GenerateGoCode] converts a terraform provider schema to Go structs.
 //
 // # Testutils
 //
@@ -46,4 +49,7 @@
 // [kube.Explode]: https://pkg.go.dev/github.com/volvo-cars/lingon/pkg/kube#Explode
 // [kube.Import]: https://pkg.go.dev/github.com/volvo-cars/lingon/pkg/kube#Import
 // [kube.App]: https://pkg.go.dev/github.com/volvo-cars/lingon/pkg/kube#App
+// [terra.Export]: https://pkg.go.dev/github.com/volvo-cars/lingon/pkg/terra#Export
+// [terragen.GenerateProviderSchema]: https://pkg.go.dev/github.com/volvo-cars/lingon/pkg/terragen#GenerateProviderSchema
+// [terragen.GenerateGoCode]: https://pkg.go.dev/github.com/volvo-cars/lingon/pkg/terragen#GenerateGoCode
 package main
