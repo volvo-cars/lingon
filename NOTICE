@@ -33,16 +33,16 @@ github.com/tidwall/gjson v1.14.4 : MIT
 github.com/tidwall/match v1.1.1 : MIT
 github.com/tidwall/pretty v1.2.1 : MIT
 github.com/tidwall/sjson v1.2.5 : MIT
-github.com/veggiemonk/strcase v0.0.0-20230429005612-4eea184f55cd : MIT
+github.com/veggiemonk/strcase v0.0.0-20230512231117-47e800e445de : MIT
 github.com/zclconf/go-cty/cty v1.13.1 : MIT
 github.com/zegl/kube-score v1.16.1 : MIT
-golang.org/x/crypto/sha3 v0.8.0 : BSD-3-Clause
-golang.org/x/exp v0.0.0-20230425010034-47ecfdc1ba53 : BSD-3-Clause
+golang.org/x/crypto/sha3 v0.9.0 : BSD-3-Clause
+golang.org/x/exp v0.0.0-20230510235704-dd950f8aeaea : BSD-3-Clause
 golang.org/x/mod v0.10.0 : BSD-3-Clause
-golang.org/x/net v0.9.0 : BSD-3-Clause
-golang.org/x/sys/unix v0.7.0 : BSD-3-Clause
+golang.org/x/net v0.10.0 : BSD-3-Clause
+golang.org/x/sys/unix v0.8.0 : BSD-3-Clause
 golang.org/x/text v0.9.0 : BSD-3-Clause
-golang.org/x/tools v0.8.0 : BSD-3-Clause
+golang.org/x/tools v0.9.1 : BSD-3-Clause
 gopkg.in/inf.v0 v0.9.1 : BSD-3-Clause
 gopkg.in/yaml.v2 v2.4.0 : Apache-2.0
 gopkg.in/yaml.v3 v3.0.1 : MIT
@@ -52,8 +52,8 @@ k8s.io/apimachinery/pkg v0.27.1 : Apache-2.0
 k8s.io/apimachinery/third_party/forked/golang/reflect v0.27.1 : BSD-3-Clause
 k8s.io/client-go/kubernetes/scheme v0.27.1 : Apache-2.0
 k8s.io/klog/v2 v2.100.1 : Apache-2.0
-k8s.io/utils v0.0.0-20230406110748-d93618cff8a2 : Apache-2.0
-k8s.io/utils/internal/third_party/forked/golang/net v0.0.0-20230406110748-d93618cff8a2 : BSD-3-Clause
+k8s.io/utils v0.0.0-20230505201702-9f6742963106 : Apache-2.0
+k8s.io/utils/internal/third_party/forked/golang/net v0.0.0-20230505201702-9f6742963106 : BSD-3-Clause
 mvdan.cc/gofumpt v0.5.0 : BSD-3-Clause
 sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd : Apache-2.0
 sigs.k8s.io/structured-merge-diff/v4/value v4.2.3 : Apache-2.0
@@ -124,25 +124,25 @@ github.com/tidwall/pretty v1.2.1
 
 github.com/tidwall/sjson v1.2.5
 
-github.com/veggiemonk/strcase v0.0.0-20230429005612-4eea184f55cd
+github.com/veggiemonk/strcase v0.0.0-20230512231117-47e800e445de
 
 github.com/zclconf/go-cty/cty v1.13.1
 
 github.com/zegl/kube-score v1.16.1
 
-golang.org/x/crypto/sha3 v0.8.0
+golang.org/x/crypto/sha3 v0.9.0
 
-golang.org/x/exp v0.0.0-20230425010034-47ecfdc1ba53
+golang.org/x/exp v0.0.0-20230510235704-dd950f8aeaea
 
 golang.org/x/mod v0.10.0
 
-golang.org/x/net v0.9.0
+golang.org/x/net v0.10.0
 
-golang.org/x/sys/unix v0.7.0
+golang.org/x/sys/unix v0.8.0
 
 golang.org/x/text v0.9.0
 
-golang.org/x/tools v0.8.0
+golang.org/x/tools v0.9.1
 
 gopkg.in/inf.v0 v0.9.1
 
@@ -188,9 +188,9 @@ k8s.io/client-go/kubernetes/scheme v0.27.1
 
 k8s.io/klog/v2 v2.100.1
 
-k8s.io/utils v0.0.0-20230406110748-d93618cff8a2
+k8s.io/utils v0.0.0-20230505201702-9f6742963106
 
-k8s.io/utils/internal/third_party/forked/golang/net v0.0.0-20230406110748-d93618cff8a2
+k8s.io/utils/internal/third_party/forked/golang/net v0.0.0-20230505201702-9f6742963106
 
 mvdan.cc/gofumpt v0.5.0
 
@@ -3383,7 +3383,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ---
 
 MIT
-(github.com/veggiemonk/strcase v0.0.0-20230429005612-4eea184f55cd)
+(github.com/veggiemonk/strcase v0.0.0-20230512231117-47e800e445de)
 
 The MIT License (MIT)
 
@@ -3467,7 +3467,7 @@ SOFTWARE.
 ---
 
 BSD-3-Clause
-(golang.org/x/crypto/sha3 v0.8.0)
+(golang.org/x/crypto/sha3 v0.9.0)
 
 Copyright (c) 2009 The Go Authors. All rights reserved.
 
@@ -3501,7 +3501,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---
 
 BSD-3-Clause
-(golang.org/x/exp v0.0.0-20230425010034-47ecfdc1ba53)
+(golang.org/x/exp v0.0.0-20230510235704-dd950f8aeaea)
 
 Copyright (c) 2009 The Go Authors. All rights reserved.
 
@@ -3569,7 +3569,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---
 
 BSD-3-Clause
-(golang.org/x/net v0.9.0)
+(golang.org/x/net v0.10.0)
 
 Copyright (c) 2009 The Go Authors. All rights reserved.
 
@@ -3603,7 +3603,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---
 
 BSD-3-Clause
-(golang.org/x/sys/unix v0.7.0)
+(golang.org/x/sys/unix v0.8.0)
 
 Copyright (c) 2009 The Go Authors. All rights reserved.
 
@@ -3671,7 +3671,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---
 
 BSD-3-Clause
-(golang.org/x/tools v0.8.0)
+(golang.org/x/tools v0.9.1)
 
 Copyright (c) 2009 The Go Authors. All rights reserved.
 
@@ -5073,7 +5073,7 @@ third-party archives.
 ---
 
 Apache-2.0
-(k8s.io/utils v0.0.0-20230406110748-d93618cff8a2)
+(k8s.io/utils v0.0.0-20230505201702-9f6742963106)
 
 
                                  Apache License
@@ -5282,7 +5282,7 @@ Apache-2.0
 ---
 
 BSD-3-Clause
-(k8s.io/utils/internal/third_party/forked/golang/net v0.0.0-20230406110748-d93618cff8a2)
+(k8s.io/utils/internal/third_party/forked/golang/net v0.0.0-20230505201702-9f6742963106)
 
 Copyright (c) 2012 The Go Authors. All rights reserved.
 

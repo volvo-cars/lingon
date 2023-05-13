@@ -18,10 +18,13 @@ func Logger(w io.Writer) *slog.Logger {
 		w = os.Stderr
 	}
 	return slog.New(
-		slog.HandlerOptions{
-			AddSource:   true,
-			ReplaceAttr: logReplace,
-		}.NewTextHandler(w).WithAttrs(
+		slog.NewTextHandler(
+			w,
+			&slog.HandlerOptions{
+				AddSource:   true,
+				ReplaceAttr: logReplace,
+			},
+		).WithAttrs(
 			[]slog.Attr{slog.String("app", defaultAppName)},
 		),
 	)
@@ -30,11 +33,12 @@ func Logger(w io.Writer) *slog.Logger {
 func logReplace(groups []string, a slog.Attr) slog.Attr {
 	// Remove time.
 	if a.Key == slog.TimeKey && len(groups) == 0 {
-		a.Key = ""
+		return slog.Attr{}
 	}
 	// Remove the directory from the source's filename.
 	if a.Key == slog.SourceKey {
-		a.Value = slog.StringValue(filepath.Base(a.Value.String()))
+		source := a.Value.Any().(*slog.Source)
+		source.File = filepath.Base(source.File)
 	}
 	return a
 }

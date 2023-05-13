@@ -454,10 +454,13 @@ func TestImport_VerboseLogger(t *testing.T) {
 			return a
 		}
 		return slog.New(
-			slog.HandlerOptions{
-				AddSource:   true,
-				ReplaceAttr: replace,
-			}.NewTextHandler(w).WithAttrs(
+			slog.NewTextHandler(
+				w,
+				&slog.HandlerOptions{
+					AddSource:   true,
+					ReplaceAttr: replace,
+				},
+			).WithAttrs(
 				[]slog.Attr{slog.String("app", "lingon")},
 			),
 		)
