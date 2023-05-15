@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/dave/jennifer/jen"
@@ -141,6 +142,21 @@ func (j *jamel) convertValue(v reflect.Value) *jen.Statement {
 	// Array and Slice types
 	//
 	case reflect.Array, reflect.Slice:
+		if v.Type().Elem().Kind() == reflect.Uint8 {
+			r := []rune{}
+			var i int
+			for i = 0; i < v.Len(); i++ {
+				bla := v.Index(i).Interface().(uint8)
+				if strconv.IsPrint(rune(bla)) {
+					r = append(r, rune(bla))
+				}
+			}
+			if i == v.Len() {
+				s := string(r)
+				return jen.Index().Byte().Params(jen.Lit(s))
+			}
+		}
+
 		pk := j.prefixKind(v)
 		if isEmptyValue(v) {
 			return pk.Block()
@@ -217,7 +233,7 @@ func (j *jamel) convertValue(v reflect.Value) *jen.Statement {
 		if isEmptyValue(v) {
 			return jen.Nil()
 		}
-		return j.convertValue(v.Elem())
+		return jen.Interface(j.convertValue(v.Elem()))
 
 	default:
 		slog.Error(
@@ -506,34 +522,6 @@ func (j *jamel) prefixKind(v reflect.Value) *jen.Statement {
 		return nil
 	}
 	switch v.Kind() {
-	case reflect.String:
-		return jen.String()
-	case reflect.Bool:
-		return jen.Bool()
-	case reflect.Int:
-		return jen.Int()
-	case reflect.Int64:
-		return jen.Int64()
-	case reflect.Int32:
-		return jen.Int32()
-	case reflect.Int16:
-		return jen.Int16()
-	case reflect.Int8:
-		return jen.Int8()
-	case reflect.Uint:
-		return jen.Uint()
-	case reflect.Uint64:
-		return jen.Uint64()
-	case reflect.Uint32:
-		return jen.Uint32()
-	case reflect.Uint16:
-		return jen.Uint16()
-	case reflect.Uint8:
-		return jen.Uint8()
-	case reflect.Float32:
-		return jen.Float32()
-	case reflect.Float64:
-		return jen.Float64()
 
 	case reflect.Ptr:
 		if v.IsNil() {
@@ -545,8 +533,28 @@ func (j *jamel) prefixKind(v reflect.Value) *jen.Statement {
 	case reflect.Array, reflect.Slice:
 		switch v.Type().Elem().Kind() {
 		case reflect.Ptr:
+			// arrays of pointers
 			pkgPath, name := j.storePkgPath(v.Type().Elem().Elem())
 			return jen.Index().Op("*").Add(jen.Qual(pkgPath, name))
+
+		case reflect.Slice, reflect.Array:
+			// arrays of arrays
+			pkgPath, name := j.storePkgPath(v.Type().Elem().Elem())
+			if pkgPath == "" {
+				// built-in type
+
+				// []uint8 is the representation of []byte
+				if name == "uint8" { // TODO: taking a chance here !! should inspect
+					name = "byte"
+				}
+				return jen.Index().Index().Id(name)
+			}
+			return jen.Index().Index().Qual(pkgPath, name)
+
+		// array of maps .... TODO
+
+		case reflect.Interface:
+			return jen.Index().Interface()
 		default:
 			pkgPath, name := j.storePkgPath(v.Type().Elem())
 			if pkgPath == "" {
@@ -565,21 +573,55 @@ func (j *jamel) prefixKind(v reflect.Value) *jen.Statement {
 			keyName = jen.Id(kname)
 		}
 
-		// Resolve Value type
-		valuePkgPath, vname := j.storePkgPath(v.Type().Elem())
-		if vname == "" {
-			// If the value type is not a named type, use string as the default type.
-			// In some configMap in YAML, `data: {}` is used to represent an empty map
-			// which yields `map[string]{}` and cause the rendering to fail.
-			vname = "string"
-		}
-		valueName := jen.Qual(valuePkgPath, vname)
-		if valuePkgPath == "" {
-			// built-in type
-			valueName = jen.Id(vname)
-		}
+		switch v.Type().Elem().Kind() {
+		case reflect.Ptr:
+			// map of pointers
+			pkgPath, name := j.storePkgPath(v.Type().Elem().Elem())
+			return jen.Map(keyName).Op("*").Add(jen.Qual(pkgPath, name))
 
-		return jen.Map(keyName).Add(valueName)
+		case reflect.Slice, reflect.Array:
+			// map of array
+			pkgPath, name := j.storePkgPath(v.Type().Elem().Elem())
+			if pkgPath == "" {
+				// built-in type
+				return jen.Map(keyName).Index().Id(name)
+			}
+			return jen.Map(keyName).Index().Qual(pkgPath, name)
+
+		case reflect.Map:
+			// map of map
+			ekPkgPath, ekname := j.storePkgPath(v.Type().Elem().Key())
+			ekeyName := jen.Qual(ekPkgPath, ekname)
+			if ekPkgPath == "" {
+				// built-in type
+				ekeyName = jen.Id(kname)
+			}
+			return jen.Map(keyName).Map(ekeyName).Add(
+				jen.Qual(
+					ekPkgPath,
+					ekname,
+				),
+			)
+		case reflect.Interface:
+			return jen.Map(keyName).Interface()
+		default:
+
+			// Resolve Value type
+			valuePkgPath, vname := j.storePkgPath(v.Type().Elem())
+			if vname == "" {
+				// If the value type is not a named type, use string as the default type.
+				// In some configMap in YAML, `data: {}` is used to represent an empty map
+				// which yields `map[string]{}` and cause the rendering to fail.
+				vname = "string"
+			}
+			valueName := jen.Qual(valuePkgPath, vname)
+			if valuePkgPath == "" {
+				// built-in type
+				valueName = jen.Id(vname)
+			}
+
+			return jen.Map(keyName).Add(valueName)
+		}
 
 	case reflect.Struct:
 		pkgPath, name := j.storePkgPath(v.Type())

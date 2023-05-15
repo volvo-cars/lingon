@@ -10,6 +10,7 @@ import (
 
 // AssertEqual checks if the expected and actual are equal. Errors if not.
 func AssertEqual[C comparable](t *testing.T, expected, actual C) {
+	t.Helper()
 	if diff := Diff(actual, expected); diff != "" {
 		t.Fatal(Callers(), diff)
 	}
@@ -17,6 +18,7 @@ func AssertEqual[C comparable](t *testing.T, expected, actual C) {
 
 // AssertEqualSlice checks if the expected and actual slices are equal. Errors if not.
 func AssertEqualSlice[C comparable](t *testing.T, expected, actual []C) {
+	t.Helper()
 	if diff := Diff(actual, expected); diff != "" {
 		t.Fatal(Callers(), diff)
 	}
