@@ -81,7 +81,7 @@ func IsNil(t *testing.T, obj any) {
 	}
 }
 
-// IsNotNil checks if the obj is not nil. Errors if not.
+// IsNotNil checks if the obj is not nil. Errors if it is.
 func IsNotNil(t *testing.T, obj any) {
 	t.Helper()
 	switch o := obj.(type) {
