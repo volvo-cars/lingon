@@ -1,7 +1,7 @@
 // Copyright 2023 Volvo Car Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-package test
+package terragen
 
 import (
 	"bytes"
@@ -15,7 +15,6 @@ import (
 
 	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/rogpeppe/go-internal/txtar"
-	"github.com/volvo-cars/lingon/pkg/terragen"
 	tu "github.com/volvo-cars/lingon/pkg/testutil"
 )
 
@@ -100,7 +99,7 @@ func RunTest(wd string, ar *txtar.Archive) error {
 	if err := json.NewDecoder(sch).Decode(&ps); err != nil {
 		return fmt.Errorf("decoding schema.json file: %w", err)
 	}
-	genArgs := terragen.GenerateGoArgs{
+	genArgs := GenerateGoArgs{
 		ProviderName:    cfg.Provider.Name,
 		ProviderSource:  cfg.Provider.Source,
 		ProviderVersion: cfg.Provider.Version,
@@ -108,7 +107,7 @@ func RunTest(wd string, ar *txtar.Archive) error {
 		PkgPath:         fmt.Sprintf("test/out/%s", cfg.Provider.Name),
 		Force:           true,
 	}
-	if err := terragen.GenerateGoCode(genArgs, &ps); err != nil {
+	if err := GenerateGoCode(genArgs, &ps); err != nil {
 		return fmt.Errorf("generating Go code: %w", err)
 	}
 

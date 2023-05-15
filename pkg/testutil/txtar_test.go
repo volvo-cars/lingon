@@ -20,6 +20,7 @@ func TestFolder2Txtar(t *testing.T) {
 		"../kube/testdata/cilium.yaml",
 		"../kube/testdata/external-secrets.yaml",
 		"../kube/testdata/go/tekton/app.go",
+		"../kube/testdata/go/tekton/app_test.go",
 		"../kube/testdata/go/tekton/cluster-role-binding.go",
 		"../kube/testdata/go/tekton/cluster-role.go",
 		"../kube/testdata/go/tekton/config-map.go",
