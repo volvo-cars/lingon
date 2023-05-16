@@ -3,8 +3,9 @@
 - [What is this?](#what-is-this)
 - [But why?](#but-why)
 - [Getting started](#getting-started)
-- [CRDs](#CRDs)
 - [Best practices](#best-practices)
+- [CRDs](#crds)
+- [Testing manifests](#testing-manifests)
 - [CLI Utilities](#cli-utilities)
 	- [Explode](#explode)
 	- [Kygo](#kygo)
@@ -21,9 +22,9 @@ This is a collection of libraries and helpers functions that helps to work with 
 With this library you can:
 
 - `Import` kubernetes manifests to Go structs ( YAML to Go )
-   - see [Import Options](./options-import.md) for more information
+  - see [Import Options](./options-import.md) for more information
 - `Export` Go structs to kubernetes manifests ( Go to YAML )
-   - see [Export Options](./options-export.md) for more information
+  - see [Export Options](./options-export.md) for more information
 - `Explode` kubernetes manifests to a single resource per file organized by namespaces (YAML to YAML)
 
 ## But why?
@@ -34,7 +35,8 @@ With this library you can:
 
 1. Get a kubernetes manifest
    - example:
-```
+
+```sh
 wget https://storage.googleapis.com/tekton-releases/pipeline/previous/v0.45.0/release.yaml
 ```
   
@@ -51,7 +53,6 @@ wget https://storage.googleapis.com/tekton-releases/pipeline/previous/v0.45.0/re
    - example: [tekton](../platypus/pkg/platform/tekton/app.go)
 
 4. Export:
-
 
 {{ "Example_export" | example }}
 
@@ -81,18 +82,18 @@ Honorable mentions:
 - [valast](https://github.com/hexops/valast) convert Go structs to its Go code representation
 - [jennifer](https://github.com/dave/jennifer) generate Go code
 
-## CRDs(./crd)
+## CRDs
 
 How to convert CRDs from YAML to Go. By setting a kubernetes runtime scheme:
 
-```
+```go
 "k8s.io/apimachinery/pkg/runtime"
 "k8s.io/client-go/kubernetes/scheme"
 ```
 
 Short example:
 
-```
+```go
 func defaultSerializer() runtime.Decoder {
 // Add CRDs to scheme
 // This is needed to be able to import CRDs from kubernetes manifests files.
@@ -111,6 +112,9 @@ _ = kube.Import(
 
 Full example in the [crd folder](./crd)
 
+## Testing manifests
+
+see [testing manifests](./testing-manifests.md]
 
 ## [CLI Utilities](../../cmd/)
 

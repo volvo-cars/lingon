@@ -83,9 +83,7 @@ for _, f := range got {
 // gocode/tekton/validating-webhook-configuration.go
 ```
 
-
 Another example:
-
 
 ```go
 package crd_test
@@ -231,5 +229,3 @@ for _, f := range ar.Files {
 // manifests/serviceaccount-grafana-test.go
 // manifests/serviceaccount-grafana.go
 ```
-
-

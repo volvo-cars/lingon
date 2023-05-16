@@ -9,9 +9,7 @@ Various settings to convert kubernetes YAML to Go.
 
 {{ "ExampleImport_withManifest" | example }}
 
-
 Another example:
-
 
 {{ "Example_import" | example }}
 
@@ -38,5 +36,3 @@ to be passed and all the code will be written to it.
 Code:
 
 {{ "ExampleImport_withWriter" | example }}
-
-

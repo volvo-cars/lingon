@@ -1,8 +1,6 @@
 # Testing Manifests
 
-## Requirements
-
-### KWOK
+## KWOK
 
 or Kubernetes without Kubelet
 
@@ -15,7 +13,11 @@ brew install kwok
 
 ### Build kubernetes binaries
 
-This is only for non-Linux system (OSX and Windows).
+> If you want to use docker, you can skip this step
+
+The kubernetes SIG release team issues only linux binaries.
+Using Docker solve that issue for non-Linux system (OSX and Windows).
+Here, we outline how to compile kubernetes binaries to avoid running docker.
 
 ```shell
 TMP=~/tmp
@@ -38,6 +40,8 @@ export KUBE_BIN="$TMP/_output/local/bin/$(go env GOOS)/$(go env GOARCH)"
 
 ## Start a cluster
 
+### With binaries
+
 ```shell
 # get the path of the binaries (from previous step)
 # KUBE_BIN="$TMP/_output/local/bin/$(go env GOOS)/$(go env GOARCH)"
@@ -53,6 +57,18 @@ kwokctl create cluster \
    --kube-scheduler-binary "$KUBE_BIN"/kube-scheduler
 
 ```
+
+### With docker
+
+```shell
+kwokctl create cluster \
+   --name fake \
+   --kube-admission \
+   --kube-authorization \
+   --kubeconfig "$TMP"/kubeconfig
+```
+
+### Set kubeconfig and context
 
 In order to avoid setting `--kubeconfig` and `--context` at every kubectl command
 
@@ -95,12 +111,9 @@ done
 kubectl  --context kwok-fake --kubeconfig "$TMP"/kubeconfig apply -f "$TMP"/node.yaml
 ```
 
-
-## Deploy manifests to fake cluster
+### Deploy manifests to fake cluster
 
 > NOTE: the CRDs must be deployed to the cluster before testing custom resources.
-
-### Simple
 
 #### Create a test
 
@@ -108,20 +121,20 @@ kubectl  --context kwok-fake --kubeconfig "$TMP"/kubeconfig apply -f "$TMP"/node
 package app_test
 
 import (
-	"testing"
-	"example.com/example/app"
-	"github.com/volvo-cars/lingon/pkg/kube"
+    "testing"
+    "example.com/example/app"
+    "github.com/volvo-cars/lingon/pkg/kube"
 )
 func TestAppExport(t *testing.T) {
-	if err := kube.Export(app.New() /*, kube.WithExportOptions(...) */); err != nil {
-	    t.Error(err)
-	}
+    if err := kube.Export(app.New() /*, kube.WithExportOptions(...) */); err != nil {
+        t.Error(err)
+    }
 }
 ```
 
 #### Run test
 
-This command will generate the manifests as a file and, with the help of `kubectl`, 
+This command will generate the manifests as a file and, with the help of `kubectl`,
 deploys it to the `kwok-fake` cluster.
 
 ```shell
@@ -129,3 +142,17 @@ go test ./app && \
 kubectl --context kwok-fake --kubeconfig "$TMP"/kubeconfig \
   apply -f ./app/out
 ```
+
+### Cleanup
+
+```shell
+kwokctl delete cluster --name fake
+```
+
+## Kubescore
+
+[Kubescore](https://github.com/zegl/kube-score)
+
+Export the manifest to YAML and run kubescore on them.
+
+To get a score programmatically, there is an [example here](../../pkg/testutil/example_score_test.go).
