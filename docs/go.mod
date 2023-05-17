@@ -11,7 +11,7 @@ require (
 	github.com/go-playground/validator/v10 v10.13.0
 	github.com/golingon/terraproviders/aws/4.60.0 v0.0.0-20230509084449-0fa7b8ef9a53
 	github.com/golingon/terraproviders/tls/4.0.4 v0.0.0-20230509084449-0fa7b8ef9a53
-	github.com/google/go-containerregistry v0.15.1
+	github.com/google/go-containerregistry v0.15.2
 	github.com/hashicorp/hcl/v2 v2.16.2
 	github.com/hashicorp/terraform-exec v0.18.1
 	github.com/hashicorp/terraform-json v0.16.0
@@ -19,9 +19,9 @@ require (
 	github.com/invopop/yaml v0.2.0
 	github.com/rogpeppe/go-internal v1.10.0
 	github.com/stretchr/testify v1.8.2
-	github.com/volvo-cars/lingon v0.0.0-20230511210139-da86ebf7dc33
-	golang.org/x/exp v0.0.0-20230510235704-dd950f8aeaea
-	istio.io/api v0.0.0-20230512140303-8ba6dc2ef1d7
+	github.com/volvo-cars/lingon v0.0.0-20230517075911-42dfea949556
+	golang.org/x/exp v0.0.0-20230515195305-f3d0a9c9a5cc
+	istio.io/api v0.0.0-20230516190108-40537bfae764
 	istio.io/client-go v1.17.1
 	k8s.io/api v0.27.1
 	k8s.io/apiextensions-apiserver v0.27.1
@@ -33,13 +33,13 @@ require (
 require (
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
-	github.com/aws/aws-sdk-go v1.44.262 // indirect
+	github.com/aws/aws-sdk-go v1.44.264 // indirect
 	github.com/containerd/stargz-snapshotter/estargz v0.14.3 // indirect
 	github.com/dave/jennifer v1.6.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/docker/cli v23.0.6+incompatible // indirect
+	github.com/docker/cli v24.0.0+incompatible // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
-	github.com/docker/docker v23.0.6+incompatible // indirect
+	github.com/docker/docker v24.0.0+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.7.0 // indirect
 	github.com/eidolon/wordwrap v0.0.0-20161011182207-e0f54129b8bb // indirect
 	github.com/fatih/color v1.15.0 // indirect
@@ -66,7 +66,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/samber/lo v1.38.1 // indirect
-	github.com/sirupsen/logrus v1.9.0 // indirect
+	github.com/sirupsen/logrus v1.9.1 // indirect
 	github.com/tidwall/gjson v1.14.4 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
