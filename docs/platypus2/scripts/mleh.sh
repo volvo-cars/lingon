@@ -21,6 +21,7 @@ VALUES_DIR="$ROOT_DIR"/docs/platypus2/scripts
 TEMPD="$ROOT_DIR"/out
 KYGO="$TEMPD"/kygo
 
+DEBUG=0
 pushd "$ROOT_DIR"
 
 command -v helm > /dev/null
@@ -35,9 +36,10 @@ function tool() {
   popd > /dev/null
 
   pushd "$TEMPD"/lingonweb > /dev/null
+  [ $DEBUG ] && printf  "\n replace github.com/volvo-cars/lingon => ../../ \n" >> go.mod
   go build -o kygo ./cmd/kygo && mv kygo "$TEMPD"
   popd > /dev/null
-  rm -rf "$TEMPD"/lingonweb
+  [ $DEBUG ] && rm -rf "$TEMPD"/lingonweb
 
 }
 
@@ -60,7 +62,7 @@ function manifests() {
 
   rm -rf promcrd
   helm template promcrd prometheus-community/prometheus-operator-crds | \
-    $KYGO -out promcrd -app prometheus -pkg promcrd -group=false
+    $KYGO -out promcrd -app prometheus -pkg promcrd -group=false -clean-name=false
 
   rm -rf promstack
   helm template promstack prometheus-community/kube-prometheus-stack --namespace=monitoring | \

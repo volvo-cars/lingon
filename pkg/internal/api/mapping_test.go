@@ -13,13 +13,13 @@ import (
 
 func TestImportKubernetesPkgAlias(t *testing.T) {
 	tests := []struct {
-		name string
-		file *jen.File
-		want string
+		name    string
+		varQual [2]string
+		want    string
 	}{
 		{
-			name: "pkg alias",
-			file: jen.NewFile("mypackage"),
+			name:    "pkg alias deploy",
+			varQual: [2]string{"k8s.io/api/apps/v1", "Deployment"},
 			want: `package mypackage
 
 import appsv1 "k8s.io/api/apps/v1"
@@ -27,18 +27,54 @@ import appsv1 "k8s.io/api/apps/v1"
 var bla = appsv1.Deployment{}
 `,
 		},
+		{
+			name:    "pkg alias cm",
+			varQual: [2]string{"k8s.io/api/core/v1", "ConfigMap"},
+			want: `package mypackage
+
+import corev1 "k8s.io/api/core/v1"
+
+var bla = corev1.ConfigMap{}
+`,
+		},
+		{
+			name: "pkg alias API service",
+			varQual: [2]string{
+				"k8s.io/kube-aggregator/pkg/apis/apiregistration/v1",
+				"APIService",
+			},
+			want: `package mypackage
+
+import apiregistrationv1 "k8s.io/kube-aggregator/pkg/apis/apiregistration/v1"
+
+var bla = apiregistrationv1.APIService{}
+`,
+		},
+		{
+			name: "err",
+			varQual: [2]string{
+				"github.com/bork/totallyborked/pkg/apis/v1",
+				"Deployment",
+			},
+			want: `package mypackage
+
+import v1 "github.com/bork/totallyborked/pkg/apis/v1"
+
+var bla = v1.Deployment{}
+`,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(
 			tt.name, func(t *testing.T) {
-				tt.file.Add(
+				f := jen.NewFile("mypackage")
+				f.Add(
 					jen.Var().Id("bla").Op("=").Qual(
-						"k8s.io/api/apps/v1",
-						"Deployment",
+						tt.varQual[0], tt.varQual[1],
 					).Block(),
 				)
-				ImportKubernetesPkgAlias(tt.file)
-				s := fmt.Sprintf("%#v", tt.file)
+				ImportKubernetesPkgAlias(f)
+				s := fmt.Sprintf("%#v", f)
 				tu.AssertEqual(t, s, tt.want)
 			},
 		)
