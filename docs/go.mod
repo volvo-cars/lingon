@@ -19,7 +19,7 @@ require (
 	github.com/invopop/yaml v0.2.0
 	github.com/rogpeppe/go-internal v1.10.0
 	github.com/stretchr/testify v1.8.2
-	github.com/volvo-cars/lingon v0.0.0-20230517075911-42dfea949556
+	github.com/volvo-cars/lingon v0.0.0-20230517081700-cd389cbbcaa1
 	golang.org/x/exp v0.0.0-20230515195305-f3d0a9c9a5cc
 	istio.io/api v0.0.0-20230516190108-40537bfae764
 	istio.io/client-go v1.17.1
@@ -72,7 +72,7 @@ require (
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/tidwall/sjson v1.2.5 // indirect
 	github.com/vbatts/tar-split v0.11.3 // indirect
-	github.com/veggiemonk/strcase v0.0.0-20230512231117-47e800e445de // indirect
+	github.com/veggiemonk/strcase v0.0.0-20230517082939-d8f090482b40 // indirect
 	github.com/zclconf/go-cty v1.13.1 // indirect
 	github.com/zegl/kube-score v1.16.1 // indirect
 	go.uber.org/multierr v1.11.0 // indirect

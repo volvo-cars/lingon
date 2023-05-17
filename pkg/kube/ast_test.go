@@ -92,6 +92,8 @@ func TestConvertValue(t *testing.T) {
 	}
 	type sarray struct {
 		Names          []string
+		Bin            []byte
+		UINT           []uint8
 		unexported     string
 		alsoUnexported struct {
 			Nope bool
@@ -132,6 +134,30 @@ func TestConvertValue(t *testing.T) {
 				},
 			},
 			want: `[][]kube.sarray{[]kube.sarray{kube.sarray{Names: []string{"s1"}}, kube.sarray{Names: []string{"s2", "s3"}}}}`,
+		},
+		{
+			name: "array of struct of array of byte",
+			in: []sarray{
+				{
+					Bin: []byte("bibin"),
+				},
+			},
+			want: `[]kube.sarray{kube.sarray{Bin: []byte("bibin")}}`,
+		},
+		{
+			name: "array of struct of array of uint8",
+			in: []sarray{
+				{
+					UINT: []uint8{
+						uint8(0x62),
+						uint8(0x69),
+						uint8(0x62),
+						uint8(0x69),
+						uint8(0x6e),
+					}, // "bibin"
+				},
+			},
+			want: `[]kube.sarray{kube.sarray{UINT: []byte("bibin")}}`,
 		},
 		{
 			name: "map of array",

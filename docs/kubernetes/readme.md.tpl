@@ -114,7 +114,7 @@ Full example in the [crd folder](./crd)
 
 ## Testing manifests
 
-see [testing manifests](./testing-manifests.md]
+see [testing manifests](./testing-manifests.md)
 
 ## [CLI Utilities](../../cmd/)
 
