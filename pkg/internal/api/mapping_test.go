@@ -51,7 +51,7 @@ var bla = apiregistrationv1.APIService{}
 `,
 		},
 		{
-			name: "err",
+			name: "non existent package",
 			varQual: [2]string{
 				"github.com/bork/totallyborked/pkg/apis/v1",
 				"Deployment",

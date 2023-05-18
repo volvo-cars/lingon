@@ -544,7 +544,7 @@ func (j *jamel) prefixKind(v reflect.Value) *jen.Statement {
 				// built-in type
 
 				// []uint8 is the representation of []byte
-				if name == "uint8" { // TODO: taking a chance here !! should inspect
+				if name == "uint8" {
 					name = "byte"
 				}
 				return jen.Index().Index().Id(name)
