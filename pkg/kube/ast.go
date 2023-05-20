@@ -156,6 +156,12 @@ func (j *jamel) convertValue(v reflect.Value) *jen.Statement {
 				return jen.Index().Byte().Params(jen.Lit(s))
 			}
 		}
+		// edge case: []string{""} instead of []string{}
+		if v.Type().Elem().Kind() == reflect.String &&
+			v.Len() == 1 &&
+			v.Index(0).String() == "" {
+			return jen.Index().String().Values(jen.Lit(""))
+		}
 
 		pk := j.prefixKind(v)
 		if isEmptyValue(v) {
@@ -247,7 +253,7 @@ func (j *jamel) convertValue(v reflect.Value) *jen.Statement {
 
 func isEmptyValue(v reflect.Value) bool {
 	switch v.Kind() {
-	case reflect.Array, reflect.Map, reflect.Slice, reflect.String:
+	case reflect.Array, reflect.Map, reflect.Slice:
 		return v.Len() == 0
 	case reflect.Bool:
 		return !v.Bool()
@@ -325,7 +331,7 @@ func (j *jamel) convertConfigMap(
 			for i := 0; i < v.NumField(); i++ {
 				switch v.Type().Field(i).Name {
 				case "Data":
-					d[jen.Id(v.Type().Field(i).Name)] = j.convertConfigMapData(
+					d[jen.Id(v.Type().Field(i).Name)] = convertConfigMapData(
 						v.Field(i),
 						comment,
 					)
@@ -338,7 +344,7 @@ func (j *jamel) convertConfigMap(
 	return jen.Op("&").Add(pk.Values(vf))
 }
 
-func (j *jamel) convertConfigMapData(
+func convertConfigMapData(
 	field reflect.Value,
 	comment map[string]string,
 ) *jen.Statement {
@@ -433,7 +439,13 @@ func (j *jamel) replaceSecretData(field reflect.Value) jen.Code {
 	}
 	return jen.Map(jen.String()).Index().Byte().ValuesFunc(
 		func(v *jen.Group) {
-			for _, k := range field.MapKeys() {
+			vv := field.MapKeys()
+			sort.SliceStable(
+				vv, func(i, j int) bool {
+					return vv[i].String() < vv[j].String()
+				},
+			)
+			for _, k := range vv {
 				v.Add(
 					jen.DictFunc(
 						func(d jen.Dict) {

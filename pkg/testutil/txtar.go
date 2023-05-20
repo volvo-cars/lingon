@@ -86,6 +86,8 @@ func listFiles(root string) ([]string, error) {
 	return files, nil
 }
 
+// VerifyGo parses a [txtar.Archive], if the files are not valid Go code
+// and error is returned
 func VerifyGo(ar *txtar.Archive) error {
 	fset := token.NewFileSet()
 	for _, file := range ar.Files {

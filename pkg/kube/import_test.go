@@ -46,7 +46,7 @@ func TestImport(t *testing.T) {
 	}
 	TT := []args{
 		{
-			Name:   "with CRDs and remove app name and group by kind",
+			Name:   "import with CRDs and remove app name and group by kind",
 			OutDir: filepath.Join(defaultImportOutputDir, "argocd"),
 			Opts: []kube.ImportOption{
 				kube.WithImportAppName("argocd"),
@@ -70,8 +70,9 @@ func TestImport(t *testing.T) {
 				"out/import/argocd/service.go",
 				"out/import/argocd/stateful-set.go",
 			},
-		}, {
-			Name: "with CRDs and remove app name containing dash and group by kind",
+		},
+		{
+			Name: "import with CRDs and remove app name containing dash and group by kind",
 			OutDir: filepath.Join(
 				defaultImportOutputDir,
 				"external-secrets",
@@ -96,8 +97,9 @@ func TestImport(t *testing.T) {
 				"out/import/external-secrets/service.go",
 				"out/import/external-secrets/validating-webhook-configuration.go",
 			},
-		}, {
-			Name:   "with CRDs and remove app name and split by name",
+		},
+		{
+			Name:   "import with CRDs and remove app name and split by name",
 			OutDir: filepath.Join(defaultImportOutputDir, "karpenter"),
 			Opts: []kube.ImportOption{
 				kube.WithImportAppName("karpenter"),
@@ -131,8 +133,9 @@ func TestImport(t *testing.T) {
 				"out/import/karpenter/validation.webhook..sh_validatingwebhookconfigurations.go",
 				"out/import/karpenter/validation.webhook.config..sh_validatingwebhookconfigurations.go",
 			},
-		}, {
-			Name:   "with vanilla serializer and remove app name and group by kind",
+		},
+		{
+			Name:   "import with vanilla serializer and remove app name and group by kind",
 			OutDir: filepath.Join(defaultImportOutputDir, "grafana"),
 			Opts: []kube.ImportOption{
 				kube.WithImportAppName("grafana"),
@@ -154,8 +157,9 @@ func TestImport(t *testing.T) {
 				"out/import/grafana/service-account.go",
 				"out/import/grafana/service.go",
 			},
-		}, {
-			Name:   "with vanilla serializer and add methods",
+		},
+		{
+			Name:   "import with vanilla serializer and add methods",
 			OutDir: filepath.Join(defaultImportOutputDir, "manifester"),
 			Opts: []kube.ImportOption{
 				kube.WithImportAppName("grafana"),
@@ -179,6 +183,36 @@ func TestImport(t *testing.T) {
 				"out/import/manifester/service.go",
 			},
 		},
+		{
+			Name:   "import with group kind and clean name",
+			OutDir: filepath.Join(defaultImportOutputDir, "tekton"),
+			Opts: []kube.ImportOption{
+				kube.WithImportAppName("tekton"),
+				kube.WithImportPackageName("tekton"),
+				kube.WithImportManifestFiles([]string{"testdata/tekton.yaml"}),
+				kube.WithImportRemoveAppName(true),
+				kube.WithImportGroupByKind(true),
+				kube.WithImportAddMethods(true),
+				kube.WithImportCleanUp(true),
+			},
+			OutFiles: []string{
+				"out/import/tekton/app.go",
+				"out/import/tekton/cluster-role-binding.go",
+				"out/import/tekton/cluster-role.go",
+				"out/import/tekton/config-map.go",
+				"out/import/tekton/custom-resource-definition.go",
+				"out/import/tekton/deployment.go",
+				"out/import/tekton/horizontal-pod-autoscaler.go",
+				"out/import/tekton/mutating-webhook-configuration.go",
+				"out/import/tekton/namespace.go",
+				"out/import/tekton/role-binding.go",
+				"out/import/tekton/role.go",
+				"out/import/tekton/secret.go",
+				"out/import/tekton/service-account.go",
+				"out/import/tekton/service.go",
+				"out/import/tekton/validating-webhook-configuration.go",
+			},
+		},
 	}
 
 	for _, tt := range TT {
@@ -194,12 +228,26 @@ func TestImport(t *testing.T) {
 				)
 				err := kube.Import(tc.Opts...)
 				tu.AssertNoError(t, err, "failed to import")
+
+				// compare filenames
 				ar := txtar.Parse(buf.Bytes())
 				got := tu.Filenames(ar)
 				sort.Strings(got)
 				want := tc.OutFiles
 				tu.AssertEqualSlice(t, want, got)
 				tu.AssertNoError(t, tu.VerifyGo(ar))
+
+				// compare content
+				golden, err := txtar.ParseFile(
+					filepath.Join(
+						"testdata", "golden",
+						strings.ReplaceAll(tc.Name, " ", "_")+".txt",
+					),
+				)
+				tu.AssertNoError(t, err, "reading golden file")
+				if diff := tu.DiffTxtarSort(ar, golden); diff != "" {
+					t.Fatal(tu.Callers(), diff)
+				}
 			},
 		)
 	}
@@ -262,10 +310,6 @@ func TestImport_SaveFromReader(t *testing.T) {
 	)
 	tu.AssertNoError(t, err, "failed to import")
 
-	ar := txtar.Parse(buf.Bytes())
-	got := tu.Filenames(ar)
-	sort.Strings(got)
-
 	want := []string{
 		"out/import/reader/app.go",
 		"out/import/reader/clusterrole-grafana-clusterrole.go",
@@ -283,7 +327,24 @@ func TestImport_SaveFromReader(t *testing.T) {
 		"out/import/reader/serviceaccount-grafana.go",
 	}
 
+	// compare filenames
+	ar := txtar.Parse(buf.Bytes())
+	got := tu.Filenames(ar)
+	sort.Strings(got)
 	tu.AssertEqualSlice(t, want, got)
+
+	// compare content
+	golden, err := txtar.ParseFile(
+		filepath.Join(
+			"testdata",
+			"golden",
+			"import_save_from_reader.txt",
+		),
+	)
+	tu.AssertNoError(t, err, "reading golden file")
+	if diff := tu.DiffTxtarSort(ar, golden); diff != "" {
+		t.Fatal(tu.Callers(), diff)
+	}
 }
 
 func TestImport_MissingCRDs(t *testing.T) {
@@ -359,10 +420,24 @@ func TestImport_ReaderWriter(t *testing.T) {
 		"manifests/serviceaccount-grafana.go",
 	}
 
+	// compare filenames
 	ar := txtar.Parse(buf.Bytes())
 	got := tu.Filenames(ar)
 	sort.Strings(got)
 	tu.AssertEqualSlice(t, want, got)
+
+	// compare content
+	golden, err := txtar.ParseFile(
+		filepath.Join(
+			"testdata",
+			"golden",
+			"import_reader_writer.txt",
+		),
+	)
+	tu.AssertNoError(t, err, "reading golden file")
+	if diff := tu.DiffTxtarSort(ar, golden); diff != "" {
+		t.Fatal(tu.Callers(), diff)
+	}
 }
 
 func TestImport_ConfigMapComments(t *testing.T) {
@@ -482,7 +557,6 @@ func TestImport_VerboseLogger(t *testing.T) {
 		kube.WithImportCleanUp(true),
 	)
 	tu.AssertNoError(t, err, "failed to import")
-
 	got := bufLog.String()
 	want, err := os.ReadFile(golden)
 	tu.AssertNoError(t, err, "reading golden file")

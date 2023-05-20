@@ -80,4 +80,4 @@ level=INFO msg=render app=lingon filename=out/import/tekton/secret.go
 level=INFO msg=render app=lingon filename=out/import/tekton/service.go
 level=INFO msg=render app=lingon filename=out/import/tekton/service-account.go
 level=INFO msg=render app=lingon filename=out/import/tekton/validating-webhook-configuration.go
-level=INFO msg=output app=lingon "bytes written"=112154
+level=INFO msg=output app=lingon "bytes written"=112184

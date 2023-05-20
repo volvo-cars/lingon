@@ -12,6 +12,7 @@ import (
 
 	"github.com/volvo-cars/lingon/pkg/kubeutil"
 	tu "github.com/volvo-cars/lingon/pkg/testutil"
+	rbacv1 "k8s.io/api/rbac/v1"
 )
 
 func TestKube2GoJen(t *testing.T) {
@@ -60,11 +61,7 @@ func TestKube2GoJen(t *testing.T) {
 	}
 }
 
-func convert(
-	t *testing.T,
-	path string,
-	redact bool,
-) string {
+func convert(t *testing.T, path string, redact bool) string {
 	t.Helper()
 	data, err := os.ReadFile(path)
 	tu.AssertNoError(t, err, "read manifest")
@@ -109,6 +106,16 @@ func TestConvertValue(t *testing.T) {
 			name: "bytes array",
 			in:   []byte("ok"),
 			want: "[]byte(\"ok\")",
+		},
+		{
+			name: "string array empty",
+			in:   []string{},
+			want: `[]string{}`,
+		},
+		{
+			name: "string array empty string",
+			in:   []string{""},
+			want: `[]string{""}`,
 		},
 		{
 			name: "string array array",
@@ -290,6 +297,91 @@ func TestConvertValue(t *testing.T) {
 					o:           importOption{},
 				}
 				got := j.convertValue(reflect.ValueOf(tt.in))
+				tu.AssertEqual(t, tt.want, fmt.Sprintf("%#v", got))
+			},
+		)
+	}
+}
+
+func Test_convertPolicyRule(t *testing.T) {
+	tests := []struct {
+		name string
+		in   rbacv1.PolicyRule
+		want string
+	}{
+		{
+			name: "list configmaps",
+			in: rbacv1.PolicyRule{
+				APIGroups: []string{""},
+				Resources: []string{"configmaps"},
+				Verbs:     []string{"list", "watch"},
+			},
+			want: `v1.PolicyRule{
+	APIGroups: []string{""},
+	Resources: []string{"configmaps"},
+	Verbs:     []string{"list", "watch"},
+}`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(
+			tt.name, func(t *testing.T) {
+				j := jamel{
+					crdPkgAlias: make(map[string]string, 0),
+					o:           importOption{},
+				}
+				got := j.convertValue(reflect.ValueOf(tt.in))
+				tu.AssertEqual(t, tt.want, fmt.Sprintf("%#v", got))
+			},
+		)
+	}
+}
+
+func Test_rawString(t *testing.T) {
+	tests := []struct {
+		name string
+		s    string
+		want string
+	}{
+		{
+			name: "simple",
+			s:    "simple",
+			want: `"simple"`,
+		},
+		{
+			name: "empty",
+			s:    "",
+			want: `""`,
+		},
+		{
+			name: "with double quote",
+			s:    `this "double quote" in a string`,
+			want: `"this \"double quote\" in a string"`,
+		},
+		{
+			name: "with new line",
+			s:    "this line \n and this line",
+			want: "`" + `
+this line 
+ and this line
+` + "`",
+		},
+		{
+			name: "with backtick",
+			s:    "this ` is a backtick",
+			want: "\"this ` is a backtick\"",
+		},
+		{
+			name: "backticks with new line",
+			s: `fun 
+stuff` + "`\"with backticks`\" and new lines",
+			want: "`\nfun \nstuff\"\"with backticks\"\" and new lines\n`",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(
+			tt.name, func(t *testing.T) {
+				got := rawString(tt.s)
 				tu.AssertEqual(t, tt.want, fmt.Sprintf("%#v", got))
 			},
 		)

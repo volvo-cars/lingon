@@ -12,7 +12,6 @@ import (
 // https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/
 //
 // Shared labels and annotations share a common prefix: `app.kubernetes.io`.
-// TFLabels without a prefix are private to users.
 // The shared prefix ensures that shared labels do not interfere with custom user labels.
 const (
 
@@ -62,6 +61,7 @@ var NotInWindows = corev1.NodeSelectorTerm{
 }
 
 // MergeLabels merges multiple label maps into one.
+// If a label already exists, it will be overwritten by the latest instance.
 func MergeLabels(labels ...map[string]string) map[string]string {
 	result := map[string]string{}
 	for _, l := range labels {
