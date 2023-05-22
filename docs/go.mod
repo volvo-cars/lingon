@@ -8,7 +8,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/aws/karpenter v0.27.3
 	github.com/aws/karpenter-core v0.27.3
-	github.com/go-playground/validator/v10 v10.13.0
+	github.com/go-playground/validator/v10 v10.14.0
 	github.com/golingon/terraproviders/aws/4.60.0 v0.0.0-20230509084449-0fa7b8ef9a53
 	github.com/golingon/terraproviders/tls/4.0.4 v0.0.0-20230509084449-0fa7b8ef9a53
 	github.com/google/go-containerregistry v0.15.2
@@ -20,13 +20,13 @@ require (
 	github.com/rogpeppe/go-internal v1.10.0
 	github.com/stretchr/testify v1.8.2
 	github.com/volvo-cars/lingon v0.0.0-20230517081700-cd389cbbcaa1
-	golang.org/x/exp v0.0.0-20230515195305-f3d0a9c9a5cc
+	golang.org/x/exp v0.0.0-20230519143937-03e91628a987
 	istio.io/api v0.0.0-20230516190108-40537bfae764
 	istio.io/client-go v1.17.1
-	k8s.io/api v0.27.1
-	k8s.io/apiextensions-apiserver v0.27.1
-	k8s.io/apimachinery v0.27.1
-	k8s.io/client-go v0.27.1
+	k8s.io/api v0.27.2
+	k8s.io/apiextensions-apiserver v0.27.2
+	k8s.io/apimachinery v0.27.2
+	k8s.io/client-go v0.27.2
 	sigs.k8s.io/secrets-store-csi-driver v1.3.3
 )
 
@@ -43,6 +43,7 @@ require (
 	github.com/docker/docker-credential-helpers v0.7.0 // indirect
 	github.com/eidolon/wordwrap v0.0.0-20161011182207-e0f54129b8bb // indirect
 	github.com/fatih/color v1.15.0 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
@@ -56,7 +57,7 @@ require (
 	github.com/klauspost/compress v1.16.5 // indirect
 	github.com/leodido/go-urn v1.2.4 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.18 // indirect
+	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
@@ -72,7 +73,7 @@ require (
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/tidwall/sjson v1.2.5 // indirect
 	github.com/vbatts/tar-split v0.11.3 // indirect
-	github.com/veggiemonk/strcase v0.0.0-20230517082939-d8f090482b40 // indirect
+	github.com/veggiemonk/strcase v0.0.0-20230521123733-cfc6c0b1ba22 // indirect
 	github.com/zclconf/go-cty v1.13.1 // indirect
 	github.com/zegl/kube-score v1.16.1 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
