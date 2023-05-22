@@ -14,13 +14,7 @@ import (
 
 var Deploy = &appsv1.Deployment{
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "metrics-server",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "metrics-server",
-			"app.kubernetes.io/version":    "0.6.3",
-			"helm.sh/chart":                "metrics-server-3.10.0",
-		},
+		Labels:    BaseLabels(),
 		Name:      "metrics-server",
 		Namespace: namespace,
 	},

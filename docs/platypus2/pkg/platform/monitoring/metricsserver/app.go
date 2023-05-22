@@ -13,6 +13,7 @@ import (
 
 	promoperator "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/volvo-cars/lingon/pkg/kube"
+	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -22,7 +23,28 @@ import (
 // validate the struct implements the interface
 var _ kube.Exporter = (*MetricsServer)(nil)
 
-const namespace = "monitoring"
+const (
+	namespace = "monitoring"
+	version   = "0.6.3"
+	appName   = "metrics-server"
+)
+
+var matchLabels = map[string]string{
+	ku.AppLabelName:     appName,
+	ku.AppLabelInstance: appName,
+}
+
+func BaseLabels() map[string]string {
+	return ku.MergeLabels(
+		matchLabels, map[string]string{
+			"app":                appName,
+			ku.AppLabelComponent: appName,
+			ku.AppLabelPartOf:    appName,
+			ku.AppLabelVersion:   version,
+			ku.AppLabelManagedBy: "lingon",
+		},
+	)
+}
 
 // MetricsServer contains kubernetes manifests
 type MetricsServer struct {

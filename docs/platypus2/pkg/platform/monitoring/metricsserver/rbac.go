@@ -6,6 +6,7 @@
 package metricsserver
 
 import (
+	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -13,14 +14,8 @@ import (
 
 var SA = &corev1.ServiceAccount{
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "metrics-server",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "metrics-server",
-			"app.kubernetes.io/version":    "0.6.3",
-			"helm.sh/chart":                "metrics-server-3.10.0",
-		},
-		Name:      "metrics-server",
+		Labels:    BaseLabels(),
+		Name:      appName,
 		Namespace: namespace,
 	},
 	TypeMeta: metav1.TypeMeta{
@@ -31,25 +26,19 @@ var SA = &corev1.ServiceAccount{
 
 var AuthReaderRB = &rbacv1.RoleBinding{
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "metrics-server",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "metrics-server",
-			"app.kubernetes.io/version":    "0.6.3",
-			"helm.sh/chart":                "metrics-server-3.10.0",
-		},
+		Labels:    BaseLabels(),
 		Name:      "metrics-server-auth-reader",
-		Namespace: "kube-system",
+		Namespace: ku.NSKubeSystem,
 	},
 	RoleRef: rbacv1.RoleRef{
 		APIGroup: "rbac.authorization.k8s.io",
 		Kind:     "Role",
-		Name:     "extension-apiserver-authentication-reader",
+		Name:     "extension-apiserver-authentication-reader", // predefined ?
 	},
 	Subjects: []rbacv1.Subject{
 		{
 			Kind:      "ServiceAccount",
-			Name:      "metrics-server",
+			Name:      SA.Name,
 			Namespace: namespace,
 		},
 	},
@@ -61,16 +50,13 @@ var AuthReaderRB = &rbacv1.RoleBinding{
 
 var SystemAggregatedReaderCR = &rbacv1.ClusterRole{
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":                   "metrics-server",
-			"app.kubernetes.io/managed-by":                 "Helm",
-			"app.kubernetes.io/name":                       "metrics-server",
-			"app.kubernetes.io/version":                    "0.6.3",
-			"helm.sh/chart":                                "metrics-server-3.10.0",
-			"rbac.authorization.k8s.io/aggregate-to-admin": "true",
-			"rbac.authorization.k8s.io/aggregate-to-edit":  "true",
-			"rbac.authorization.k8s.io/aggregate-to-view":  "true",
-		},
+		Labels: ku.MergeLabels(
+			BaseLabels(), map[string]string{
+				ku.LabelRbacAggregateToAdmin: "true",
+				ku.LabelRbacAggregateToEdit:  "true",
+				ku.LabelRbacAggregateToView:  "true",
+			},
+		),
 		Name: "system:metrics-server-aggregated-reader",
 	},
 	Rules: []rbacv1.PolicyRule{
@@ -88,14 +74,8 @@ var SystemAggregatedReaderCR = &rbacv1.ClusterRole{
 
 var SystemCR = &rbacv1.ClusterRole{
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "metrics-server",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "metrics-server",
-			"app.kubernetes.io/version":    "0.6.3",
-			"helm.sh/chart":                "metrics-server-3.10.0",
-		},
-		Name: "system:metrics-server",
+		Labels: BaseLabels(),
+		Name:   "system:" + appName,
 	},
 	Rules: []rbacv1.PolicyRule{
 		{
@@ -116,14 +96,8 @@ var SystemCR = &rbacv1.ClusterRole{
 
 var SystemAuthDelegatorCRB = &rbacv1.ClusterRoleBinding{
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "metrics-server",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "metrics-server",
-			"app.kubernetes.io/version":    "0.6.3",
-			"helm.sh/chart":                "metrics-server-3.10.0",
-		},
-		Name: "metrics-server:system:auth-delegator",
+		Labels: BaseLabels(),
+		Name:   "metrics-server:system:auth-delegator",
 	},
 	RoleRef: rbacv1.RoleRef{
 		APIGroup: "rbac.authorization.k8s.io",
@@ -133,7 +107,7 @@ var SystemAuthDelegatorCRB = &rbacv1.ClusterRoleBinding{
 	Subjects: []rbacv1.Subject{
 		{
 			Kind:      "ServiceAccount",
-			Name:      "metrics-server",
+			Name:      SA.Name,
 			Namespace: namespace,
 		},
 	},
@@ -145,24 +119,18 @@ var SystemAuthDelegatorCRB = &rbacv1.ClusterRoleBinding{
 
 var SystemCRB = &rbacv1.ClusterRoleBinding{
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "metrics-server",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "metrics-server",
-			"app.kubernetes.io/version":    "0.6.3",
-			"helm.sh/chart":                "metrics-server-3.10.0",
-		},
-		Name: "system:metrics-server",
+		Labels: BaseLabels(),
+		Name:   "system:" + appName,
 	},
 	RoleRef: rbacv1.RoleRef{
 		APIGroup: "rbac.authorization.k8s.io",
 		Kind:     "ClusterRole",
-		Name:     "system:metrics-server",
+		Name:     SystemCR.Name,
 	},
 	Subjects: []rbacv1.Subject{
 		{
 			Kind:      "ServiceAccount",
-			Name:      "metrics-server",
+			Name:      SA.Name,
 			Namespace: namespace,
 		},
 	},

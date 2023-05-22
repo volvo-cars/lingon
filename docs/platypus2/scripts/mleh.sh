@@ -57,20 +57,24 @@ function manifests() {
   pushd $TEMPD > /dev/null
 
   rm -rf metrics-server
-  helm template metrics-server metrics-server/metrics-server --values "$VALUES_DIR"/metrics-server.values.yaml | \
-    $KYGO -out metrics-server -app matrics-server -pkg metricsserver
+  helm template metrics-server metrics-server/metrics-server --namespace=monitoring --values="$VALUES_DIR"/metrics-server.values.yaml | \
+    $KYGO -out metrics-server -app metrics-server -pkg metricsserver
 
   rm -rf promcrd
   helm template promcrd prometheus-community/prometheus-operator-crds | \
     $KYGO -out promcrd -app prometheus -pkg promcrd -group=false -clean-name=false
 
   rm -rf promstack
-  helm template promstack prometheus-community/kube-prometheus-stack --namespace=monitoring | \
+  helm template kube-promtheus-stack prometheus-community/kube-prometheus-stack --namespace=monitoring | \
     $KYGO -out promstack -app kube-prometheus-stack -pkg promstack
 
   rm -rf nats
   helm template nats nats/nats --namespace=nats --values "$VALUES_DIR"/nats.values.yaml | \
     $KYGO -out nats -app nats -pkg nats
+
+  rm -rf surveyor
+  helm template surveyor nats/surveyor --namespace=surveyor --values "$VALUES_DIR"/surveyor.values.yaml | \
+    $KYGO -out surveyor -app surveyor -pkg surveyor
 
   popd
 }

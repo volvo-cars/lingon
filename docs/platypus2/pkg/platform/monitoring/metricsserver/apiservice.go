@@ -12,14 +12,8 @@ import (
 
 var V1Beta1MetricsK8SIoApiservices = &apiregistrationv1.APIService{
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "metrics-server",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "metrics-server",
-			"app.kubernetes.io/version":    "0.6.3",
-			"helm.sh/chart":                "metrics-server-3.10.0",
-		},
-		Name: "v1beta1.metrics.k8s.io",
+		Labels: BaseLabels(),
+		Name:   "v1beta1.metrics.k8s.io",
 	},
 	Spec: apiregistrationv1.APIServiceSpec{
 		Group:                 "metrics.k8s.io",

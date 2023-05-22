@@ -14,16 +14,7 @@ import (
 
 var PrometheusPrometheus = &v1.Prometheus{
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "kube-prometheus-stack-prometheus",
-			"app.kubernetes.io/instance":   "kube-prometheus-stack",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/part-of":    "kube-prometheus-stack",
-			"app.kubernetes.io/version":    "45.27.2",
-			"chart":                        "kube-prometheus-stack-45.27.2",
-			"heritage":                     "Helm",
-			"release":                      "kube-prometheus-stack",
-		},
+		Labels:    BaseLabels("prometheus", "database"),
 		Name:      "kube-prometheus-stack-prometheus",
 		Namespace: namespace,
 	},

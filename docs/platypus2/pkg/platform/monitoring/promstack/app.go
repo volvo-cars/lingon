@@ -13,6 +13,7 @@ import (
 
 	prometheusoperatorv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/volvo-cars/lingon/pkg/kube"
+	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
 	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
@@ -23,7 +24,23 @@ import (
 // validate the struct implements the interface
 var _ kube.Exporter = (*KubePrometheusStack)(nil)
 
-const namespace = "monitoring"
+const (
+	namespace = "monitoring"
+	version   = "45.27.2"
+	stack     = "kube-prometheus-stack"
+)
+
+func BaseLabels(app, component string) map[string]string {
+	return map[string]string{
+		"app":                app,
+		ku.AppLabelName:      app,
+		ku.AppLabelComponent: component,
+		ku.AppLabelInstance:  stack,
+		ku.AppLabelPartOf:    stack,
+		ku.AppLabelVersion:   version,
+		ku.AppLabelManagedBy: "lingon",
+	}
+}
 
 // KubePrometheusStack contains kubernetes manifests
 type KubePrometheusStack struct {

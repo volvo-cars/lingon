@@ -11,6 +11,7 @@ import (
 	"github.com/volvo-cars/lingoneks/pkg/platform/monitoring/metricsserver"
 	"github.com/volvo-cars/lingoneks/pkg/platform/monitoring/promcrd"
 	"github.com/volvo-cars/lingoneks/pkg/platform/monitoring/promstack"
+	"github.com/volvo-cars/lingoneks/pkg/platform/monitoring/surveyor"
 )
 
 func TestMonitoring(t *testing.T) {
@@ -35,5 +36,10 @@ func TestMonitoring(t *testing.T) {
 	ps := promstack.New()
 	if err := ps.Export(folders[2]); err != nil {
 		tu.AssertNoError(t, err, "prometheus stack")
+	}
+
+	sn := surveyor.New()
+	if err := sn.Export(folders[3]); err != nil {
+		tu.AssertNoError(t, err, "surveyor")
 	}
 }
