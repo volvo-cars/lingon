@@ -13,9 +13,14 @@ import (
 
 	promoperatorv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/volvo-cars/lingon/pkg/kube"
+	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
+	"github.com/volvo-cars/lingoneks/pkg/platform/nats/benthos"
+	"github.com/volvo-cars/lingoneks/pkg/platform/nats/jetstream"
+	"github.com/volvo-cars/lingoneks/pkg/platform/nats/surveyor"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	policyv1 "k8s.io/api/policy/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 )
 
 // validate the struct implements the interface
@@ -25,9 +30,15 @@ var _ kube.Exporter = (*Nats)(nil)
 type Nats struct {
 	kube.App
 
+	// embedded struct
+	CRD
+	surveyor.Surveyor
+	benthos.Benthos
+
+	NS *corev1.Namespace
+
 	BoxDeploy          *appsv1.Deployment
 	ConfigCM           *corev1.ConfigMap
-	NS                 *corev1.Namespace
 	PDB                *policyv1.PodDisruptionBudget
 	SA                 *corev1.ServiceAccount
 	STS                *appsv1.StatefulSet
@@ -39,9 +50,17 @@ type Nats struct {
 // New creates a new Nats
 func New() *Nats {
 	return &Nats{
-		BoxDeploy:          BoxDeploy,
-		ConfigCM:           ConfigCM,
+		CRD: CRD{
+			AccountsNatsIoCRD:        jetstream.AccountsJetstreamNatsIoCRD,
+			ConsumersNatsIoCRD:       jetstream.ConsumersJetstreamNatsIoCRD,
+			StreamsNatsIoCRD:         jetstream.StreamsJetstreamNatsIoCRD,
+			StreamtemplatesNatsIoCRD: jetstream.StreamTemplatesJetstreamNatsIoCRD,
+		},
 		NS:                 NS,
+		Surveyor:           *surveyor.New(),
+		Benthos:            *benthos.New(),
+		BoxDeploy:          BoxDeploy,
+		ConfigCM:           cm.ConfigMap(),
 		PDB:                PDB,
 		SA:                 SA,
 		STS:                STS,
@@ -49,6 +68,95 @@ func New() *Nats {
 		ServiceMonitor:     ServiceMonitor,
 		TestRequestReplyPO: TestRequestReplyPO,
 	}
+}
+
+type CRD struct {
+	AccountsNatsIoCRD        *apiextensionsv1.CustomResourceDefinition
+	ConsumersNatsIoCRD       *apiextensionsv1.CustomResourceDefinition
+	StreamsNatsIoCRD         *apiextensionsv1.CustomResourceDefinition
+	StreamtemplatesNatsIoCRD *apiextensionsv1.CustomResourceDefinition
+}
+
+const (
+	appName   = "nats"
+	namespace = "nats"
+	version   = "2.9.16"
+	replicas  = 3
+)
+
+const (
+	ImgNats           = "nats:" + version + "-alpine"
+	ImgConfigReloader = "natsio/nats-server-config-reloader:0.10.1"
+	ImgPromExporter   = "natsio/prometheus-nats-exporter:0.10.1"
+)
+
+const (
+	PortClient     int32 = 4222
+	PortNameClient       = "client"
+
+	PortCluster     int32 = 6222
+	PortNameCluster       = "cluster"
+
+	PortMonitor     int32 = 8222
+	PortNameMonitor       = "monitor"
+
+	PortMetrics     int32 = 7777
+	PortNameMetrics       = "metrics"
+
+	PortLeafNodes     int32 = 7422
+	PortNameLeafNodes       = "leafnodes"
+
+	PortGateways     int32 = 7522
+	PortNameGateways       = "gateways"
+
+	PortProbe = 8222
+)
+
+var (
+	NS = ku.Namespace(namespace, BaseLabels(), nil)
+
+	SA = ku.ServiceAccount(appName, namespace, BaseLabels(), nil)
+
+	cmd = map[string][]string{
+		ImgNats: {
+			"nats-server",
+			"--config",
+			"/etc/nats-config/nats.conf",
+		},
+		ImgConfigReloader: {
+			"nats-server-config-reloader",
+			"-pid",
+			"/var/run/nats/nats.pid",
+			"-config",
+			"/etc/nats-config/nats.conf",
+		},
+		ImgPromExporter: {
+			"-connz",
+			"-routez",
+			"-subz",
+			"-varz",
+			"-prefix=nats",
+			"-use_internal_server_id",
+			"http://localhost:8222/",
+		},
+	}
+)
+
+var matchLabels = map[string]string{
+	ku.AppLabelName:     appName,
+	ku.AppLabelInstance: appName,
+}
+
+func BaseLabels() map[string]string {
+	return ku.MergeLabels(
+		matchLabels, map[string]string{
+			"app":                appName,
+			ku.AppLabelComponent: appName,
+			ku.AppLabelPartOf:    appName,
+			ku.AppLabelVersion:   version,
+			ku.AppLabelManagedBy: "lingon",
+		},
+	)
 }
 
 // Apply applies the kubernetes objects to the cluster

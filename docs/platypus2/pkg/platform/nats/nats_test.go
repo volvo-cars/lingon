@@ -4,17 +4,26 @@
 package nats
 
 import (
+	"context"
 	"os"
 	"testing"
 
 	tu "github.com/volvo-cars/lingon/pkg/testutil"
 )
 
-func TestMonitoring(t *testing.T) {
+func TestNatsManifestExport(t *testing.T) {
 	_ = os.RemoveAll("out")
-
 	n := New()
 	if err := n.Export("out"); err != nil {
-		tu.AssertNoError(t, err, "prometheus crd")
+		tu.AssertNoError(t, err, "nats")
+	}
+}
+
+// TODO: THIS IS INTEGRATION and needs KWOK
+
+func TestNatsDeploy(t *testing.T) {
+	n := New()
+	if err := n.Apply(context.Background()); err != nil {
+		tu.AssertNoError(t, err, "nats")
 	}
 }

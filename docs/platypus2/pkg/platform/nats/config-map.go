@@ -6,13 +6,15 @@
 package nats
 
 import (
+	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var ConfigCM = &corev1.ConfigMap{
-	Data: map[string]string{
-		"nats.conf": `
+// TODO: template the config
+
+var natsConfig = map[string]string{
+	"nats.conf": `
 # NATS Clients Port
 port: 4222
 # PID file shared with configuration reloader.
@@ -44,20 +46,17 @@ lame_duck_grace_period: 10s
 lame_duck_duration: 30s
 
 `,
-	},
+}
+
+var cm = ku.ConfigAndMount{
+	Data: natsConfig,
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "nats",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "nats",
-			"app.kubernetes.io/version":    "2.9.16",
-			"helm.sh/chart":                "nats-0.19.13",
-		},
+		Labels:    BaseLabels(),
 		Name:      "nats-config",
-		Namespace: "nats",
+		Namespace: namespace,
 	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "ConfigMap",
+	VolumeMount: corev1.VolumeMount{
+		Name:      "config-volume",
+		MountPath: "/etc/nats-config",
 	},
 }

@@ -13,23 +13,14 @@ import (
 
 var PDB = &policyv1.PodDisruptionBudget{
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "nats",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "nats",
-			"app.kubernetes.io/version":    "2.9.16",
-			"helm.sh/chart":                "nats-0.19.13",
-		},
-		Name:      "nats",
-		Namespace: "nats",
+		Labels:    BaseLabels(),
+		Name:      appName,
+		Namespace: namespace,
 	},
 	Spec: policyv1.PodDisruptionBudgetSpec{
 		MaxUnavailable: &intstr.IntOrString{IntVal: int32(1)},
 		Selector: &metav1.LabelSelector{
-			MatchLabels: map[string]string{
-				"app.kubernetes.io/instance": "nats",
-				"app.kubernetes.io/name":     "nats",
-			},
+			MatchLabels: matchLabels,
 		},
 	},
 	TypeMeta: metav1.TypeMeta{

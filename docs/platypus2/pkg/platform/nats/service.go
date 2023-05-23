@@ -6,59 +6,78 @@
 package nats
 
 import (
+	"sort"
+
+	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+var (
+	HTTP = P("http")
+	TCP  = P("tcp")
+)
+
+var ports = map[string]corev1.ServicePort{
+	PortNameClient: {
+		Name:        PortNameClient,
+		Port:        PortClient,
+		AppProtocol: TCP,
+	},
+	PortNameCluster: {
+		Name:        PortNameCluster,
+		Port:        PortCluster,
+		AppProtocol: TCP,
+	},
+	PortNameMonitor: {
+		Name:        PortNameMonitor,
+		Port:        PortMonitor,
+		AppProtocol: HTTP,
+	},
+	PortNameMetrics: {
+		Name:        PortNameMetrics,
+		Port:        PortMetrics,
+		AppProtocol: HTTP,
+	},
+	PortNameLeafNodes: {
+		Name:        PortNameLeafNodes,
+		Port:        PortLeafNodes,
+		AppProtocol: TCP,
+	},
+	PortNameGateways: {
+		Name:        PortNameGateways,
+		Port:        PortGateways,
+		AppProtocol: TCP,
+	},
+}
+
+func mapToSlice[T any](m map[string]T) []T {
+	keys := []string{}
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	res := make([]T, len(keys))
+	for i, k := range keys {
+		res[i] = m[k]
+	}
+	return res
+}
+
 var SVC = &corev1.Service{
+	TypeMeta: ku.TypeServiceV1,
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "nats",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "nats",
-			"app.kubernetes.io/version":    "2.9.16",
-			"helm.sh/chart":                "nats-0.19.13",
-		},
-		Name:      "nats",
-		Namespace: "nats",
+		Labels:    BaseLabels(),
+		Name:      appName,
+		Namespace: namespace,
 	},
 	Spec: corev1.ServiceSpec{
-		ClusterIP: "None",
-		Ports: []corev1.ServicePort{
-			{
-				AppProtocol: P("tcp"),
-				Name:        "client",
-				Port:        int32(4222),
-			}, {
-				AppProtocol: P("tcp"),
-				Name:        "cluster",
-				Port:        int32(6222),
-			}, {
-				AppProtocol: P("http"),
-				Name:        "monitor",
-				Port:        int32(8222),
-			}, {
-				AppProtocol: P("http"),
-				Name:        "metrics",
-				Port:        int32(7777),
-			}, {
-				AppProtocol: P("tcp"),
-				Name:        "leafnodes",
-				Port:        int32(7422),
-			}, {
-				AppProtocol: P("tcp"),
-				Name:        "gateways",
-				Port:        int32(7522),
-			},
-		},
+		// Headless Services - no load balancing
+		// https://kubernetes.io/docs/concepts/services-networking/service/#headless-services
+		ClusterIP:                "None",
+		Ports:                    mapToSlice(ports),
 		PublishNotReadyAddresses: true,
-		Selector: map[string]string{
-			"app.kubernetes.io/instance": "nats",
-			"app.kubernetes.io/name":     "nats",
-		},
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "Service",
+		Selector:                 matchLabels,
 	},
 }

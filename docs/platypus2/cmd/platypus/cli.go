@@ -17,68 +17,23 @@ import (
 	"github.com/volvo-cars/lingoneks/pkg/infra"
 	"github.com/volvo-cars/lingoneks/pkg/platform/awsauth"
 	"github.com/volvo-cars/lingoneks/pkg/platform/karpenter"
+	"github.com/volvo-cars/lingoneks/pkg/platform/monitoring/metricsserver"
+	"github.com/volvo-cars/lingoneks/pkg/platform/monitoring/promcrd"
+	"github.com/volvo-cars/lingoneks/pkg/platform/monitoring/promstack"
+	"github.com/volvo-cars/lingoneks/pkg/platform/nats"
 	"github.com/volvo-cars/lingoneks/pkg/terraclient"
 	"golang.org/x/exp/slog"
 )
 
 var S = terra.String
 
-func main() {
-	var apply bool
-	var destroy bool
-	var plan bool
-	flag.BoolVar(
-		&apply,
-		"apply",
-		false,
-		"Apply the terraform changes (default: false)",
-	)
-	flag.BoolVar(
-		&destroy,
-		"destroy",
-		false,
-		"Destroy the terraform resources (default: false)",
-	)
-	flag.BoolVar(
-		&plan,
-		"plan",
-		false,
-		"Plan the terraform changes (default: false)",
-	)
-	flag.Parse()
-
-	ap := AWSParams{
-		BackendS3Key: "terriyaki-tf-experiment",
-		Region:       "eu-north-1",
-		Profile:      "vcc-cdds-prod-legacy",
-	}
-	p := runParams{
-		Apply:          apply,
-		Destroy:        destroy,
-		Plan:           plan,
-		AWSParams:      ap,
-		KubeconfigPath: "kubeconfig",
-		ManifestPath:   ".lingon/k8s",
-		ClusterParams: ClusterParams{
-			Name:    "platypus-2",
-			Version: "1.24",
-			ID:      1,
-		},
-		TFLabels: map[string]string{
-			infra.TagEnv: "dev",
-			"terraform":  "true",
-		},
-		KLabels: map[string]string{
-			infra.TagEnv: "dev",
-		},
-	}
-
-	if err := run(p); err != nil {
-		slog.Error("run", "err", err)
-		os.Exit(1)
-	}
-	slog.Info("done")
-}
+const (
+	manifestPath   = ".lingon/k8s"
+	kubeconfigPath = "kubeconfig"
+	name           = "platypus-2"
+	kubeVersion    = "1.25"
+	region         = "eu-north-1"
+)
 
 type runParams struct {
 	AWSParams      AWSParams
@@ -102,6 +57,73 @@ type ClusterParams struct {
 	ID      int
 }
 
+func main() {
+	var apply, destroy, plan bool
+	var profile string
+
+	flag.BoolVar(
+		&apply,
+		"apply",
+		false,
+		"Apply the terraform changes (default: false)",
+	)
+	flag.BoolVar(
+		&destroy,
+		"destroy",
+		false,
+		"Destroy the terraform resources (default: false)",
+	)
+	flag.BoolVar(
+		&plan,
+		"plan",
+		false,
+		"Plan the terraform changes (default: false)",
+	)
+	flag.StringVar(
+		&profile,
+		"profile",
+		"",
+		"name of the aws profile in ~/.aws/config (default: none)",
+	)
+	flag.Parse()
+
+	if profile == "" {
+		slog.Error("no profile defined")
+		return
+	}
+	ap := AWSParams{
+		BackendS3Key: "terriyaki-tf-experiment",
+		Region:       region,
+		Profile:      profile,
+	}
+	p := runParams{
+		Apply:          apply,
+		Destroy:        destroy,
+		Plan:           plan,
+		AWSParams:      ap,
+		KubeconfigPath: kubeconfigPath,
+		ManifestPath:   manifestPath,
+		ClusterParams: ClusterParams{
+			Name:    name,
+			Version: kubeVersion,
+			ID:      1,
+		},
+		TFLabels: map[string]string{
+			infra.TagEnv: "dev",
+			"terraform":  "true",
+		},
+		KLabels: map[string]string{
+			infra.TagEnv: "dev",
+		},
+	}
+
+	if err := run(p); err != nil {
+		slog.Error("run", "err", err)
+		os.Exit(1)
+	}
+	slog.Info("done")
+}
+
 func StepSep(name string) {
 	fmt.Printf("\n\n> %s  \n =====================\n\n", name)
 }
@@ -115,9 +137,10 @@ func run(p runParams) error {
 		terraclient.WithDefaultPlan(p.Plan),
 		terraclient.WithDefaultApply(p.Apply),
 	)
-	StepSep("vpc")
 
 	// VPC
+
+	StepSep("vpc")
 
 	vpcName := uniqueName + "-vpc"
 	vpcOpts := infra.Opts{
@@ -159,6 +182,7 @@ func run(p runParams) error {
 	}
 
 	// EKS
+
 	StepSep("eks")
 
 	vpcID := vpcState.Id
@@ -190,6 +214,7 @@ func run(p runParams) error {
 	oidcState := eks.IAMOIDCProvider.StateMust()
 
 	// KARPENTER INFRA
+
 	StepSep("karpenter infra")
 
 	karpenterName := uniqueName + "-karpenter"
@@ -388,8 +413,61 @@ func run(p runParams) error {
 		return err
 	}
 
-	// This needs to come last, in case state is in sync but destroy flag was
-	// passed
+	// MONITORING - kube-prometheus-stack
+
+	StepSep("k8s kube-prometheus-stack crds")
+
+	if err := kubeExportApply(
+		ctx,
+		promcrd.New(),
+		"promcrd",
+		kctlOpts,
+		"--server-side=true",
+		"apply", "-f", "-",
+	); err != nil {
+		return err
+	}
+
+	StepSep("k8s metrics-server")
+
+	if err := kubeExportApply(
+		ctx,
+		metricsserver.New(),
+		"metricsserver",
+		kctlOpts,
+		"apply", "-f", "-",
+	); err != nil {
+		return err
+	}
+
+	StepSep("k8s kube-prometheus-stack")
+
+	if err := kubeExportApply(
+		ctx,
+		promstack.New(),
+		"promstack",
+		kctlOpts,
+		"apply", "-f", "-",
+	); err != nil {
+		return err
+	}
+
+	// NATS messaging
+
+	StepSep("k8s nats")
+
+	if err := kubeExportApply(
+		ctx,
+		nats.New(),
+		"nats",
+		kctlOpts,
+		"apply", "-f", "-",
+	); err != nil {
+		return err
+	}
+
+	// This needs to come last,
+	// in case the state is in sync but destroy flag was passed
 	if p.Destroy {
 		return finishAndDestroy(ctx, p, tf)
 	}
@@ -444,6 +522,16 @@ func kubeExportApply(
 	p kubectlOpts,
 	args ...string,
 ) error {
+	if err := kube.Export(
+		ka,
+		kube.WithExportOutputDirectory(p.ManifestPath),
+		kube.WithExportAsSingleFile("%s.yaml"),
+	); err != nil {
+		return fmt.Errorf("exporting %s: %w", name, err)
+	}
+
+	slog.Info("manifest written to", slog.String("path", p.ManifestPath))
+
 	var buf bytes.Buffer
 	if err := kube.Export(
 		ka,
@@ -452,13 +540,7 @@ func kubeExportApply(
 	); err != nil {
 		return fmt.Errorf("exporting %s: %w", name, err)
 	}
-	if err := kube.Export(
-		ka,
-		kube.WithExportOutputDirectory(p.ManifestPath),
-		kube.WithExportAsSingleFile("%s.yaml"),
-	); err != nil {
-		return fmt.Errorf("exporting %s: %w", name, err)
-	}
+
 	if err := kubectl(
 		ctx,
 		&buf,

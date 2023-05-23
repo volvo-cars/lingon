@@ -154,6 +154,9 @@ func (r *Client) Run(
 }
 
 func (r *Client) Stacks() []Stacker {
+	if r == nil {
+		return nil
+	}
 	return r.stacks
 }
 

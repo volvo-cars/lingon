@@ -6,7 +6,6 @@ package kubeutil
 import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -43,18 +42,4 @@ func SimpleDeployment(
 func SetDeploySA(deploy *appsv1.Deployment, saName string) *appsv1.Deployment {
 	deploy.Spec.Template.Spec.ServiceAccountName = saName
 	return deploy
-}
-
-// Resources creates a ResourceRequirements struct.
-func Resources(cpuWant, memWant, cpuMax, memMax string) corev1.ResourceRequirements {
-	return corev1.ResourceRequirements{
-		Requests: corev1.ResourceList{
-			corev1.ResourceCPU:    resource.MustParse(cpuWant),
-			corev1.ResourceMemory: resource.MustParse(memWant),
-		},
-		Limits: corev1.ResourceList{
-			corev1.ResourceCPU:    resource.MustParse(cpuMax),
-			corev1.ResourceMemory: resource.MustParse(memMax),
-		},
-	}
 }

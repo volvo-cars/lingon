@@ -16,6 +16,10 @@ echo '                                   '
 
 set -exuo pipefail
 
+command -v helm > /dev/null
+command -v go > /dev/null
+command -v git > /dev/null
+
 ROOT_DIR=$(git rev-parse --show-toplevel)
 VALUES_DIR="$ROOT_DIR"/docs/platypus2/scripts
 TEMPD="$ROOT_DIR"/out
@@ -24,9 +28,6 @@ KYGO="$TEMPD"/kygo
 DEBUG=0
 pushd "$ROOT_DIR"
 
-command -v helm > /dev/null
-command -v go > /dev/null
-command -v git > /dev/null
 
 
 # build a version of kygo with all possible CRDs
@@ -49,32 +50,34 @@ function install_repo() {
   helm repo add kube-state-metrics https://kubernetes.github.io/kube-state-metrics
   helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server
   helm repo add nats https://nats-io.github.io/k8s/helm/charts/
+  helm repo add benthos https://benthosdev.github.io/benthos-helm-chart/
   helm repo update
 }
 
 function manifests() {
-  mkdir -p $TEMPD
-  pushd $TEMPD > /dev/null
+  rm -rf "$TEMPD"/manifests
+  mkdir -p $TEMPD/manifests && pushd $TEMPD/manifests > /dev/null
 
-  rm -rf metrics-server
   helm template metrics-server metrics-server/metrics-server --namespace=monitoring --values="$VALUES_DIR"/metrics-server.values.yaml | \
-    $KYGO -out metrics-server -app metrics-server -pkg metricsserver
+    $KYGO -out "monitoring/metrics-server" -app metrics-server -pkg metricsserver
 
-  rm -rf promcrd
   helm template promcrd prometheus-community/prometheus-operator-crds | \
-    $KYGO -out promcrd -app prometheus -pkg promcrd -group=false -clean-name=false
+    $KYGO -out "monitoring/promcrd" -app prometheus -pkg promcrd -group=false -clean-name=false
 
-  rm -rf promstack
   helm template kube-promtheus-stack prometheus-community/kube-prometheus-stack --namespace=monitoring | \
-    $KYGO -out promstack -app kube-prometheus-stack -pkg promstack
+    $KYGO -out "monitoring/promstack" -app kube-prometheus-stack -pkg promstack
 
-  rm -rf nats
   helm template nats nats/nats --namespace=nats --values "$VALUES_DIR"/nats.values.yaml | \
-    $KYGO -out nats -app nats -pkg nats
+    $KYGO -out "nats" -app nats -pkg nats
 
-  rm -rf surveyor
   helm template surveyor nats/surveyor --namespace=surveyor --values "$VALUES_DIR"/surveyor.values.yaml | \
-    $KYGO -out surveyor -app surveyor -pkg surveyor
+    $KYGO -out "nats/surveyor" -app surveyor -pkg surveyor
+
+  helm template benthos benthos/benthos --namespace=benthos --values "$VALUES_DIR"/benthos.values.yaml | \
+    $KYGO -out "nats/benthos" -app benthos -pkg benthos
+
+  wget https://github.com/nats-io/nack/releases/latest/download/crds.yml -O - | \
+    $KYGO -out "nats/jetstream" -pkg jetstream -app jetstream -group=false -clean-name=false
 
   popd
 }

@@ -7,27 +7,26 @@ package nats
 
 import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var ServiceMonitor = &v1.ServiceMonitor{
 	ObjectMeta: metav1.ObjectMeta{
-		Name:      "nats",
+		Name:      appName,
 		Namespace: "monitoring",
+		Labels:    BaseLabels(),
 	},
 	Spec: v1.ServiceMonitorSpec{
 		Endpoints: []v1.Endpoint{
 			{
-				Path: "/metrics",
-				Port: "metrics",
+				Path: ku.PathMetrics,
+				Port: PortNameMetrics,
 			},
 		},
 		NamespaceSelector: v1.NamespaceSelector{Any: true},
 		Selector: metav1.LabelSelector{
-			MatchLabels: map[string]string{
-				"app.kubernetes.io/instance": "nats",
-				"app.kubernetes.io/name":     "nats",
-			},
+			MatchLabels: matchLabels,
 		},
 	},
 	TypeMeta: metav1.TypeMeta{

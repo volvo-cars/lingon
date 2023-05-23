@@ -4,6 +4,7 @@
 package monitoring
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -11,14 +12,14 @@ import (
 	"github.com/volvo-cars/lingoneks/pkg/platform/monitoring/metricsserver"
 	"github.com/volvo-cars/lingoneks/pkg/platform/monitoring/promcrd"
 	"github.com/volvo-cars/lingoneks/pkg/platform/monitoring/promstack"
-	"github.com/volvo-cars/lingoneks/pkg/platform/monitoring/surveyor"
 )
 
-func TestMonitoring(t *testing.T) {
+func TestMonitoringExport(t *testing.T) {
 	folders := []string{
 		"out/1_promcrd",
 		"out/2_metrics-server",
 		"out/3_promstack",
+		"out/4_surveyor",
 	}
 	for _, f := range folders {
 		_ = os.RemoveAll(f)
@@ -37,9 +38,23 @@ func TestMonitoring(t *testing.T) {
 	if err := ps.Export(folders[2]); err != nil {
 		tu.AssertNoError(t, err, "prometheus stack")
 	}
+}
 
-	sn := surveyor.New()
-	if err := sn.Export(folders[3]); err != nil {
-		tu.AssertNoError(t, err, "surveyor")
+// TODO: THIS IS INTEGRATION and needs KWOK
+func TestMonitoringDeploy(t *testing.T) {
+	ctx := context.Background()
+
+	pcrd := promcrd.New()
+	if err := pcrd.Apply(ctx); err != nil {
+		tu.AssertNoError(t, err, "prometheus crd")
+	}
+	ms := metricsserver.New()
+	if err := ms.Apply(ctx); err != nil {
+		tu.AssertNoError(t, err, "metrics-server")
+	}
+
+	ps := promstack.New()
+	if err := ps.Apply(ctx); err != nil {
+		tu.AssertNoError(t, err, "prometheus stack")
 	}
 }

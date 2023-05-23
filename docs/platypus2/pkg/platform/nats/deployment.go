@@ -11,20 +11,24 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const (
+	natsBox        = "nats-box"
+	natsBoxVersion = "0.13.8"
+)
+
+var natsBoxLabel = map[string]string{"app": natsBox}
+
 var BoxDeploy = &appsv1.Deployment{
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":   "nats-box",
-			"chart": "nats-0.19.13",
-		},
-		Name:      "nats-box",
-		Namespace: "nats",
+		Labels:    natsBoxLabel,
+		Name:      natsBox,
+		Namespace: namespace,
 	},
 	Spec: appsv1.DeploymentSpec{
 		Replicas: P(int32(1)),
-		Selector: &metav1.LabelSelector{MatchLabels: map[string]string{"app": "nats-box"}},
+		Selector: &metav1.LabelSelector{MatchLabels: natsBoxLabel},
 		Template: corev1.PodTemplateSpec{
-			ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{"app": "nats-box"}},
+			ObjectMeta: metav1.ObjectMeta{Labels: natsBoxLabel},
 			Spec: corev1.PodSpec{
 				Containers: []corev1.Container{
 					{
@@ -35,9 +39,9 @@ var BoxDeploy = &appsv1.Deployment{
 								Value: "nats",
 							},
 						},
-						Image:           "natsio/nats-box:0.13.8",
+						Image:           "natsio/" + natsBox + ":" + natsBoxVersion,
 						ImagePullPolicy: corev1.PullPolicy("IfNotPresent"),
-						Name:            "nats-box",
+						Name:            natsBox,
 					},
 				},
 			},

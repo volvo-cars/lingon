@@ -4,7 +4,7 @@
 
 **/testdata/ linguist-generated=true
 
-docs/*.md linguist-documentation
+docs/**/* linguist-documentation
 
 NOTICE linguist-documentation
 CONTRIBUTING.md linguist-documentation
