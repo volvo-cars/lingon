@@ -1,3 +1,6 @@
+# Copyright (c) 2023 Volvo Car Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 # Default values for surveyor.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.

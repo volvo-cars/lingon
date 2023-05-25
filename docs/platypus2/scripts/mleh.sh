@@ -48,6 +48,7 @@ function install_repo() {
   helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
   helm repo add aws-ebs-csi-driver https://kubernetes-sigs.github.io/aws-ebs-csi-driver
   helm repo add kube-state-metrics https://kubernetes.github.io/kube-state-metrics
+  helm repo add vm https://victoriametrics.github.io/helm-charts/
   helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server
   helm repo add nats https://nats-io.github.io/k8s/helm/charts/
   helm repo add benthos https://benthosdev.github.io/benthos-helm-chart/
@@ -66,6 +67,9 @@ function manifests() {
 
   helm template kube-promtheus-stack prometheus-community/kube-prometheus-stack --namespace=monitoring | \
     $KYGO -out "monitoring/promstack" -app kube-prometheus-stack -pkg promstack
+
+  helm template vm vm/victoria-metrics-single --namespace=monitoring --values "$VALUES_DIR"/victoriametrics-single.values.yaml | \
+    $KYGO -out "monitoring/victoriametrics" -app victoria-metrics -pkg victoriametrics
 
   helm template nats nats/nats --namespace=nats --values "$VALUES_DIR"/nats.values.yaml | \
     $KYGO -out "nats" -app nats -pkg nats

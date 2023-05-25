@@ -104,11 +104,11 @@ func TestListGoFiles(t *testing.T) {
 				"namespace.go",
 				"p.go",
 				"p_test.go",
+				"pod.go",
 				"secret.go",
 				"txtar.go",
 				"txtar_test.go",
 				"typemeta_gen.go",
-				"volume.go",
 			},
 		},
 		{
