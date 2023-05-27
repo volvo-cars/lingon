@@ -16,7 +16,6 @@ import (
 	"github.com/volvo-cars/lingon/pkg/terra"
 	"github.com/volvo-cars/lingoneks/pkg/infra"
 	"github.com/volvo-cars/lingoneks/pkg/platform/awsauth"
-	"github.com/volvo-cars/lingoneks/pkg/platform/externalsecrets"
 	"github.com/volvo-cars/lingoneks/pkg/platform/karpenter"
 	karpentercrd "github.com/volvo-cars/lingoneks/pkg/platform/karpenter/crd"
 	"github.com/volvo-cars/lingoneks/pkg/platform/monitoring/metricsserver"
@@ -111,10 +110,7 @@ func main() {
 			Version: kubeVersion,
 			ID:      1,
 		},
-		TFLabels: map[string]string{
-			infra.TagEnv: "dev",
-			"terraform":  "true",
-		},
+		TFLabels: infra.TFBaseTags,
 		KLabels: map[string]string{
 			infra.TagEnv: "dev",
 		},
@@ -158,6 +154,7 @@ func run(p runParams) error {
 		PrivateSubnetCIDRs: [3]string{
 			"10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24",
 		},
+		KarpenterDiscovery: p.ClusterParams.Name,
 	}
 	slog.Info(
 		"vpc stack",
@@ -289,6 +286,7 @@ func run(p runParams) error {
 	); err != nil {
 		return err
 	}
+
 	if err := kubeExportApply(
 		ctx,
 		karpentercrd.New(),
@@ -419,17 +417,17 @@ func run(p runParams) error {
 
 	// EXTERNAL SECRETS
 
-	StepSep("k8s external secret")
-
-	if err := kubeExportApply(
-		ctx,
-		externalsecrets.New(),
-		"externalsecret",
-		kctlOpts,
-		"apply", "-f", "-",
-	); err != nil {
-		return err
-	}
+	// StepSep("k8s external secret")
+	//
+	// if err := kubeExportApply(
+	// 	ctx,
+	// 	externalsecrets.New(),
+	// 	"externalsecret",
+	// 	kctlOpts,
+	// 	"apply", "-f", "-",
+	// ); err != nil {
+	// 	return err
+	// }
 
 	// CSI EBS INFRA
 

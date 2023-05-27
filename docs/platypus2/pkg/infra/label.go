@@ -83,3 +83,13 @@ func MergeSTags(
 	sv[TagManagedBy] = S(TagManagedByValue)
 	return terra.Map(sv)
 }
+
+func MergeMaps(labels ...map[string]string) map[string]string {
+	result := map[string]string{}
+	for _, l := range labels {
+		for k, v := range l {
+			result[k] = v
+		}
+	}
+	return result
+}

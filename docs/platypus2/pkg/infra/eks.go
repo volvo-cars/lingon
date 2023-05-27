@@ -14,16 +14,8 @@ import (
 )
 
 var (
-	S = terra.String
-	N = terra.Number
-)
-
-var (
 	arnClusterPolicy         = S("arn:aws:iam::aws:policy/AmazonEKSClusterPolicy")
 	arnVPCResourceController = S("arn:aws:iam::aws:policy/AmazonEKSVPCResourceController")
-	PORT_HTTPS               = N(443)
-	PORT_DNS                 = N(53)
-	PROTOCOL_TCP             = S("tcp")
 	INGRESS                  = S("ingress")
 	EGRESS                   = S("egress")
 )
@@ -62,10 +54,9 @@ func NewCluster(opts ClusterOpts) *Cluster {
 				),
 			),
 			VpcId: S(opts.VPCID),
-			Tags: terra.Map(
-				map[string]terra.StringValue{
-					"karpenter.sh/discovery": S(opts.Name),
-				},
+			Tags: MergeSTags(
+				MergeMaps(TFBaseTags, TFTags("platypus", "platform")),
+				KarpenterDiscoveryKey, opts.Name,
 			),
 		},
 	)

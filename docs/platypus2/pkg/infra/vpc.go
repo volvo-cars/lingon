@@ -10,17 +10,13 @@ import (
 	aws "github.com/volvo-cars/lingoneks/providers/aws/4.66.1"
 )
 
-var (
-	B        = terra.Bool
-	Anywhere = S("0.0.0.0/0")
-)
-
 type Opts struct {
 	Name               string
 	AZs                [3]string
 	CIDR               string
 	PublicSubnetCIDRs  [3]string
 	PrivateSubnetCIDRs [3]string
+	KarpenterDiscovery string
 	CommonTags         map[string]string
 }
 
@@ -141,7 +137,7 @@ func NewAWSVPC(opts Opts) *AWSVPC {
 				Tags: MergeSTags(
 					opts.CommonTags,
 					TagName, name+"-private",
-					"karpenter.sh/discovery", name,
+					KarpenterDiscoveryKey, opts.KarpenterDiscovery,
 				),
 			},
 		)

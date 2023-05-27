@@ -7,6 +7,7 @@ import (
 	"github.com/aws/karpenter-core/pkg/apis/v1alpha5"
 	"github.com/aws/karpenter/pkg/apis/v1alpha1"
 	"github.com/volvo-cars/lingon/pkg/kube"
+	"github.com/volvo-cars/lingoneks/pkg/infra"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -39,13 +40,13 @@ func NewProvisioners(opts ProvisionersOpts) *Provisioners {
 		Spec: v1alpha1.AWSNodeTemplateSpec{
 			AWS: v1alpha1.AWS{
 				SubnetSelector: map[string]string{
-					"karpenter.sh/discovery": opts.ClusterName,
+					infra.KarpenterDiscoveryKey: opts.ClusterName,
 				},
 				SecurityGroupSelector: map[string]string{
-					"karpenter.sh/discovery": opts.ClusterName,
+					infra.KarpenterDiscoveryKey: opts.ClusterName,
 				},
 				Tags: map[string]string{
-					"karpenter.sh/discovery": opts.ClusterName,
+					infra.KarpenterDiscoveryKey: opts.ClusterName,
 				},
 			},
 		},
