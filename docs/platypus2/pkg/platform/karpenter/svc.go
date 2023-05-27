@@ -13,31 +13,23 @@ import (
 var Svc = &corev1.Service{
 	TypeMeta: kubeutil.TypeServiceV1,
 	ObjectMeta: metav1.ObjectMeta{
-		Name:      "karpenter",
-		Namespace: "karpenter",
+		Name:      AppName,
+		Namespace: Namespace,
 		Labels:    commonLabels,
 	},
 	Spec: corev1.ServiceSpec{
-		Type:     corev1.ServiceType("ClusterIP"),
+		Type:     corev1.ServiceTypeClusterIP,
 		Selector: matchLabels,
 		Ports: []corev1.ServicePort{
 			{
-				Name:     "http-metrics",
-				Protocol: corev1.ProtocolTCP,
-				Port:     8080,
-				TargetPort: intstr.IntOrString{
-					Type:   intstr.Type(1),
-					StrVal: "http-metrics",
-				},
+				Name:       PortNameMetrics,
+				Port:       PortMetrics,
+				TargetPort: intstr.FromString(PortNameMetrics),
 			},
 			{
-				Name:     "https-webhook",
-				Protocol: corev1.ProtocolTCP,
-				Port:     443,
-				TargetPort: intstr.IntOrString{
-					Type:   intstr.Type(1),
-					StrVal: "https-webhook",
-				},
+				Name:       PortNameWebhook,
+				Port:       PortWebhookSvc,
+				TargetPort: intstr.FromString(PortNameWebhook),
 			},
 		},
 	},

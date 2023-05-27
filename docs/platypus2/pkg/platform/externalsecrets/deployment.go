@@ -93,7 +93,7 @@ var CertControllerDeploy = &appsv1.Deployment{
 							ProbeHandler: corev1.ProbeHandler{
 								HTTPGet: &corev1.HTTPGetAction{
 									Path: "/readyz",
-									Port: intstr.IntOrString{IntVal: int32(8081)},
+									Port: intstr.FromInt(healthzPort),
 								},
 							},
 						},
@@ -144,7 +144,6 @@ var WebhookDeploy = &appsv1.Deployment{
 							{
 								ContainerPort: int32(webhookPort),
 								Name:          "webhook",
-								Protocol:      corev1.ProtocolTCP,
 							},
 						},
 						ReadinessProbe: &corev1.Probe{
@@ -153,7 +152,7 @@ var WebhookDeploy = &appsv1.Deployment{
 							ProbeHandler: corev1.ProbeHandler{
 								HTTPGet: &corev1.HTTPGetAction{
 									Path: "/readyz",
-									Port: intstr.IntOrString{IntVal: int32(healthzPort)},
+									Port: intstr.FromInt(healthzPort),
 								},
 							},
 						},
@@ -169,8 +168,7 @@ var WebhookDeploy = &appsv1.Deployment{
 				ServiceAccountName: "external-secrets-webhook", // Patched by kubeutil.SetDeploySA
 				Volumes: []corev1.Volume{
 					{
-						Name: "certs",
-						// VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "external-secrets-webhook"}},
+						Name:         "certs",
 						VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: webhookName}},
 					},
 				},

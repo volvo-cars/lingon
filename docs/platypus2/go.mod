@@ -5,19 +5,19 @@ go 1.20
 replace github.com/volvo-cars/lingon => ../../
 
 require (
-	github.com/aws/karpenter v0.27.3
-	github.com/aws/karpenter-core v0.27.3
+	github.com/aws/karpenter v0.27.5
+	github.com/aws/karpenter-core v0.27.5
 	github.com/hashicorp/hcl/v2 v2.16.2
 	github.com/hashicorp/terraform-exec v0.18.1
 	github.com/hashicorp/terraform-json v0.16.0
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.65.1
 	github.com/stretchr/testify v1.8.2
-	github.com/volvo-cars/lingon v0.0.0-20230508092709-704bd07cf81a
-	golang.org/x/exp v0.0.0-20230519143937-03e91628a987
+	github.com/volvo-cars/lingon v0.0.0-20230522071136-dca6a6fc5a39
+	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 	k8s.io/api v0.27.2
 	k8s.io/apiextensions-apiserver v0.27.2
 	k8s.io/apimachinery v0.27.2
-	k8s.io/kube-aggregator v0.27.1
+	k8s.io/kube-aggregator v0.27.2
 	sigs.k8s.io/yaml v1.3.0
 )
 
@@ -25,7 +25,7 @@ require (
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
-	github.com/aws/aws-sdk-go v1.44.195 // indirect
+	github.com/aws/aws-sdk-go v1.44.270 // indirect
 	github.com/dave/jennifer v1.6.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/eidolon/wordwrap v0.0.0-20161011182207-e0f54129b8bb // indirect
@@ -55,7 +55,7 @@ require (
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/tidwall/sjson v1.2.5 // indirect
 	github.com/veggiemonk/strcase v0.0.0-20230521123733-cfc6c0b1ba22 // indirect
-	github.com/zclconf/go-cty v1.13.1 // indirect
+	github.com/zclconf/go-cty v1.13.2 // indirect
 	github.com/zegl/kube-score v1.16.1 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.9.0 // indirect
@@ -70,7 +70,7 @@ require (
 	k8s.io/client-go v0.27.2 // indirect
 	k8s.io/klog/v2 v2.100.1 // indirect
 	k8s.io/utils v0.0.0-20230505201702-9f6742963106 // indirect
-	knative.dev/pkg v0.0.0-20221123154742-05b694ec4d3a // indirect
+	knative.dev/pkg v0.0.0-20230525143525-9bda38b21643 // indirect
 	mvdan.cc/gofumpt v0.5.0 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect

@@ -181,7 +181,7 @@ func newIAMRole(
 		},
 	)
 	role := aws.NewIamRole(
-		"karpenter", aws.IamRoleArgs{
+		AppName, aws.IamRoleArgs{
 			Name:             S(opts.Name + "-controller"),
 			Description:      S("IAM Role for Karpenter Controller (pod) to assume"),
 			AssumeRolePolicy: assumeRolePolicy.Attributes().Json(),
@@ -203,7 +203,7 @@ func newIAMRole(
 
 func newNodeTerminationQueue(opts InfraOpts) NodeTerminationQueue {
 	queue := aws.NewSqsQueue(
-		"karpenter", aws.SqsQueueArgs{
+		AppName, aws.SqsQueueArgs{
 			Name:                    S(opts.Name),
 			MessageRetentionSeconds: terra.Number(300),
 		},
@@ -229,7 +229,7 @@ func newNodeTerminationQueue(opts InfraOpts) NodeTerminationQueue {
 		},
 	)
 	queuePolicy := aws.NewSqsQueuePolicy(
-		"karpenter", aws.SqsQueuePolicyArgs{
+		AppName, aws.SqsQueuePolicyArgs{
 			QueueUrl: queue.Attributes().Url(),
 			Policy:   policyDoc.Attributes().Json(),
 		},

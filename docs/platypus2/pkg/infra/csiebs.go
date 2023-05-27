@@ -34,7 +34,7 @@ func NewCSIEBS(opts CSIOpts) *CSI {
 		CSIDriver: aws.NewEksAddon(
 			opts.ClusterName+"-csiebs", aws.EksAddonArgs{
 				AddonName:             S("aws-ebs-csi-driver"),
-				AddonVersion:          S("v1.18.0-eksbuild.1"),
+				AddonVersion:          S("v1.19.0-eksbuild.1"),
 				ClusterName:           S(opts.ClusterName),
 				ServiceAccountRoleArn: ir.Role.Attributes().Arn(),
 				ResolveConflicts:      S("OVERWRITE"),

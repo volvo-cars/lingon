@@ -64,7 +64,7 @@ func NewCluster(opts ClusterOpts) *Cluster {
 			VpcId: S(opts.VPCID),
 			Tags: terra.Map(
 				map[string]terra.StringValue{
-					"karpenter.sh/discovery": S("platypus-1"),
+					"karpenter.sh/discovery": S(opts.Name),
 				},
 			),
 		},

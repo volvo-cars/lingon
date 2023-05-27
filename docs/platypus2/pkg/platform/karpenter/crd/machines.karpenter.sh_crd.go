@@ -7,27 +7,65 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var ProvisionersKarpenterShCRD = &apiextensionsv1.CustomResourceDefinition{
+var MachinesKarpenterShCRD = &apiextensionsv1.CustomResourceDefinition{
 	ObjectMeta: metav1.ObjectMeta{
 		Annotations: map[string]string{"controller-gen.kubebuilder.io/version": "v0.11.3"},
-		Name:        "provisioners.karpenter.sh",
+		Name:        "machines.karpenter.sh",
 	},
 	Spec: apiextensionsv1.CustomResourceDefinitionSpec{
 		Group: "karpenter.sh",
 		Names: apiextensionsv1.CustomResourceDefinitionNames{
 			Categories: []string{"karpenter"},
-			Kind:       "Provisioner",
-			ListKind:   "ProvisionerList",
-			Plural:     "provisioners",
-			Singular:   "provisioner",
+			Kind:       "Machine",
+			ListKind:   "MachineList",
+			Plural:     "machines",
+			Singular:   "machine",
 		},
 		Scope: apiextensionsv1.ResourceScope("Cluster"),
 		Versions: []apiextensionsv1.CustomResourceDefinitionVersion{
 			{
+				AdditionalPrinterColumns: []apiextensionsv1.CustomResourceColumnDefinition{
+					{
+						JSONPath: ".metadata.labels.node\\.kubernetes\\.io/instance-type",
+						Name:     "Type",
+						Type:     "string",
+					}, {
+						JSONPath: ".metadata.labels.topology\\.kubernetes\\.io/zone",
+						Name:     "Zone",
+						Type:     "string",
+					}, {
+						JSONPath: ".status.nodeName",
+						Name:     "Node",
+						Type:     "string",
+					}, {
+						JSONPath: ".status.conditions[?(@.type==\"Ready\")].status",
+						Name:     "Ready",
+						Type:     "string",
+					}, {
+						JSONPath: ".metadata.creationTimestamp",
+						Name:     "Age",
+						Type:     "date",
+					}, {
+						JSONPath: ".metadata.labels.karpenter\\.sh/capacity-type",
+						Name:     "Capacity",
+						Priority: int32(1),
+						Type:     "string",
+					}, {
+						JSONPath: ".metadata.labels.karpenter\\.sh/provisioner-name",
+						Name:     "Provisioner",
+						Priority: int32(1),
+						Type:     "string",
+					}, {
+						JSONPath: ".spec.machineTemplateRef.name",
+						Name:     "Template",
+						Priority: int32(1),
+						Type:     "string",
+					},
+				},
 				Name: "v1alpha5",
 				Schema: &apiextensionsv1.CustomResourceValidation{
 					OpenAPIV3Schema: &apiextensionsv1.JSONSchemaProps{
-						Description: "Provisioner is the Schema for the Provisioners API",
+						Description: "Machine is the Schema for the Machines API",
 						Properties: map[string]apiextensionsv1.JSONSchemaProps{
 							"apiVersion": {
 								Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
@@ -39,28 +77,10 @@ var ProvisionersKarpenterShCRD = &apiextensionsv1.CustomResourceDefinition{
 							},
 							"metadata": {Type: "object"},
 							"spec": {
-								Description: "ProvisionerSpec is the top level provisioner specification. Provisioners launch nodes in response to pods that are unschedulable. A single provisioner is capable of managing a diverse set of nodes. Node properties are determined from a combination of provisioner and pod scheduling constraints.",
+								Description: "MachineSpec describes the desired state of the Machine",
 								Properties: map[string]apiextensionsv1.JSONSchemaProps{
-									"annotations": {
-										AdditionalProperties: &apiextensionsv1.JSONSchemaPropsOrBool{
-											Allows: true,
-											Schema: &apiextensionsv1.JSONSchemaProps{Type: "string"},
-										},
-										Description: "Annotations are applied to every node.",
-										Type:        "object",
-									},
-									"consolidation": {
-										Description: "Consolidation are the consolidation parameters",
-										Properties: map[string]apiextensionsv1.JSONSchemaProps{
-											"enabled": {
-												Description: "Enabled enables consolidation if it has been set",
-												Type:        "boolean",
-											},
-										},
-										Type: "object",
-									},
-									"kubeletConfiguration": {
-										Description: "KubeletConfiguration are options passed to the kubelet when provisioning nodes",
+									"kubelet": {
+										Description: "Kubelet are options passed to the kubelet when provisioning nodes",
 										Properties: map[string]apiextensionsv1.JSONSchemaProps{
 											"clusterDNS": {
 												Description: "clusterDNS is a list of IP addresses for the cluster DNS server. Note that not all providers may use all addresses.",
@@ -159,42 +179,8 @@ var ProvisionersKarpenterShCRD = &apiextensionsv1.CustomResourceDefinition{
 										},
 										Type: "object",
 									},
-									"labels": {
-										AdditionalProperties: &apiextensionsv1.JSONSchemaPropsOrBool{
-											Allows: true,
-											Schema: &apiextensionsv1.JSONSchemaProps{Type: "string"},
-										},
-										Description: "Labels are layered with Requirements and applied to every node.",
-										Type:        "object",
-									},
-									"limits": {
-										Description: "Limits define a set of bounds for provisioning capacity.",
-										Properties: map[string]apiextensionsv1.JSONSchemaProps{
-											"resources": {
-												AdditionalProperties: &apiextensionsv1.JSONSchemaPropsOrBool{
-													Allows: true,
-													Schema: &apiextensionsv1.JSONSchemaProps{
-														AnyOf: []apiextensionsv1.JSONSchemaProps{
-															{Type: "integer"},
-															{Type: "string"},
-														},
-														Pattern:      "^(\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))))?$",
-														XIntOrString: true,
-													},
-												},
-												Description: "Resources contains all the allocatable resources that Karpenter supports for limiting.",
-												Type:        "object",
-											},
-										},
-										Type: "object",
-									},
-									"provider": {
-										Description:            "Provider contains fields specific to your cloudprovider.",
-										Type:                   "object",
-										XPreserveUnknownFields: P(true),
-									},
-									"providerRef": {
-										Description: "ProviderRef is a reference to a dedicated CRD for the chosen provider, that holds additional configuration options",
+									"machineTemplateRef": {
+										Description: "MachineTemplateRef is a reference to an object that defines provider specific configuration",
 										Properties: map[string]apiextensionsv1.JSONSchemaProps{
 											"apiVersion": {
 												Description: "API version of the referent",
@@ -241,6 +227,27 @@ var ProvisionersKarpenterShCRD = &apiextensionsv1.CustomResourceDefinition{
 										},
 										Type: "array",
 									},
+									"resources": {
+										Description: "Resources models the resource requirements for the Machine to launch",
+										Properties: map[string]apiextensionsv1.JSONSchemaProps{
+											"requests": {
+												AdditionalProperties: &apiextensionsv1.JSONSchemaPropsOrBool{
+													Allows: true,
+													Schema: &apiextensionsv1.JSONSchemaProps{
+														AnyOf: []apiextensionsv1.JSONSchemaProps{
+															{Type: "integer"},
+															{Type: "string"},
+														},
+														Pattern:      "^(\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))))?$",
+														XIntOrString: true,
+													},
+												},
+												Description: "Requests describes the minimum required resources for the Machine to launch",
+												Type:        "object",
+											},
+										},
+										Type: "object",
+									},
 									"startupTaints": {
 										Description: "StartupTaints are taints that are applied to nodes upon startup which are expected to be removed automatically within a short period of time, typically by a DaemonSet that tolerates the taint. These are commonly used by daemonsets to allow initialization and enforce startup ordering.  StartupTaints are ignored for provisioning purposes in that pods are not required to tolerate a StartupTaint in order to have nodes provisioned for them.",
 										Items: &apiextensionsv1.JSONSchemaPropsOrArray{
@@ -275,7 +282,7 @@ var ProvisionersKarpenterShCRD = &apiextensionsv1.CustomResourceDefinition{
 										Type: "array",
 									},
 									"taints": {
-										Description: "Taints will be applied to every node launched by the Provisioner. If specified, the provisioner will not provision nodes for pods that do not have matching tolerations. Additional taints will be created that match pod tolerations on a per-node basis.",
+										Description: "Taints will be applied to the machine's node.",
 										Items: &apiextensionsv1.JSONSchemaPropsOrArray{
 											Schema: &apiextensionsv1.JSONSchemaProps{
 												Description: "The node this Taint is attached to has the \"effect\" on any pod that does not tolerate the Taint.",
@@ -307,37 +314,44 @@ var ProvisionersKarpenterShCRD = &apiextensionsv1.CustomResourceDefinition{
 										},
 										Type: "array",
 									},
-									"ttlSecondsAfterEmpty": {
-										Description: `
-TTLSecondsAfterEmpty is the number of seconds the controller will wait before attempting to delete a node, measured from when the node is detected to be empty. A Node is considered to be empty when it does not have pods scheduled to it, excluding daemonsets. 
- Termination due to no utilization is disabled if this field is not set.
-`,
-										Format: "int64",
-										Type:   "integer",
-									},
-									"ttlSecondsUntilExpired": {
-										Description: `
-TTLSecondsUntilExpired is the number of seconds the controller will wait before terminating a node, measured from when the node is created. This is useful to implement features like eventually consistent node upgrade, memory leak protection, and disruption testing. 
- Termination due to expiration is disabled if this field is not set.
-`,
-										Format: "int64",
-										Type:   "integer",
-									},
-									"weight": {
-										Description: "Weight is the priority given to the provisioner during scheduling. A higher numerical weight indicates that this provisioner will be ordered ahead of other provisioners with lower weights. A provisioner with no weight will be treated as if it is a provisioner with a weight of 0.",
-										Format:      "int32",
-										Maximum:     P(100.0),
-										Minimum:     P(1.0),
-										Type:        "integer",
-									},
 								},
 								Type: "object",
 							},
 							"status": {
-								Description: "ProvisionerStatus defines the observed state of Provisioner",
+								Description: "MachineStatus defines the observed state of Machine",
 								Properties: map[string]apiextensionsv1.JSONSchemaProps{
+									"allocatable": {
+										AdditionalProperties: &apiextensionsv1.JSONSchemaPropsOrBool{
+											Allows: true,
+											Schema: &apiextensionsv1.JSONSchemaProps{
+												AnyOf: []apiextensionsv1.JSONSchemaProps{
+													{Type: "integer"},
+													{Type: "string"},
+												},
+												Pattern:      "^(\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))))?$",
+												XIntOrString: true,
+											},
+										},
+										Description: "Allocatable is the estimated allocatable capacity of the machine",
+										Type:        "object",
+									},
+									"capacity": {
+										AdditionalProperties: &apiextensionsv1.JSONSchemaPropsOrBool{
+											Allows: true,
+											Schema: &apiextensionsv1.JSONSchemaProps{
+												AnyOf: []apiextensionsv1.JSONSchemaProps{
+													{Type: "integer"},
+													{Type: "string"},
+												},
+												Pattern:      "^(\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))))?$",
+												XIntOrString: true,
+											},
+										},
+										Description: "Capacity is the estimated full capacity of the machine",
+										Type:        "object",
+									},
 									"conditions": {
-										Description: "Conditions is the set of conditions required for this provisioner to scale its target, and indicates whether or not those conditions are met.",
+										Description: "Conditions contains signals for health and readiness",
 										Items: &apiextensionsv1.JSONSchemaPropsOrArray{
 											Schema: &apiextensionsv1.JSONSchemaProps{
 												Description: "Condition defines a readiness condition for a Knative resource. See: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties",
@@ -376,25 +390,13 @@ TTLSecondsUntilExpired is the number of seconds the controller will wait before 
 										},
 										Type: "array",
 									},
-									"lastScaleTime": {
-										Description: "LastScaleTime is the last time the Provisioner scaled the number of nodes",
-										Format:      "date-time",
+									"nodeName": {
+										Description: "NodeName is the name of the corresponding node object",
 										Type:        "string",
 									},
-									"resources": {
-										AdditionalProperties: &apiextensionsv1.JSONSchemaPropsOrBool{
-											Allows: true,
-											Schema: &apiextensionsv1.JSONSchemaProps{
-												AnyOf: []apiextensionsv1.JSONSchemaProps{
-													{Type: "integer"},
-													{Type: "string"},
-												},
-												Pattern:      "^(\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))))?$",
-												XIntOrString: true,
-											},
-										},
-										Description: "Resources is the list of resources that have been provisioned.",
-										Type:        "object",
+									"providerID": {
+										Description: "ProviderID of the corresponding node object",
+										Type:        "string",
 									},
 								},
 								Type: "object",

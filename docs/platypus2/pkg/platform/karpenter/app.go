@@ -4,32 +4,53 @@
 package karpenter
 
 import (
-	"github.com/volvo-cars/lingoneks/pkg/platform/karpenter/crd"
-
 	"github.com/volvo-cars/lingon/pkg/kube"
-	"github.com/volvo-cars/lingon/pkg/kubeutil"
+	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
 	ar "k8s.io/api/admissionregistration/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	policyv1 "k8s.io/api/policy/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var _ kube.Exporter = (*Karpenter)(nil)
 
+// KARPENTER
+//
+// to see the logs:
+// 		kubectl logs -f -n karpenter -l app.kubernetes.io/name=karpenter -c controller
+//
+
 const (
-	AppName   = "karpenter"
-	Namespace = "karpenter"
-	Version   = "0.25.0"
+	AppName         = "karpenter"
+	Namespace       = "karpenter"
+	Version         = "0.27.5"
+	ImgCtrlBase     = "public.ecr.aws/karpenter/controller"
+	ImgSha          = "f9023101d05d0c0c6a5d67f19b8ecf754bf97cb4e94b41d9d80a75ee5be5150c"
+	ImgController   = ImgCtrlBase + ":v" + Version + "@sha256:" + ImgSha
+	ConfigName      = AppName + "-global-settings"
+	PortNameMetrics = "http-metrics"
+	PortMetrics     = 8080
+
+	PortNameProbe = "http"
+	PortProbe     = 8081
+
+	PortNameWebhook = "https-webhook"
+	PortWebhookSvc  = 443
+	PortWebhookCtnr = 8443
 )
 
 var commonLabels = map[string]string{
-	kubeutil.AppLabelInstance:  AppName,
-	kubeutil.AppLabelManagedBy: "lingon",
-	kubeutil.AppLabelName:      AppName,
-	kubeutil.AppLabelVersion:   Version,
+	ku.AppLabelInstance:  AppName,
+	ku.AppLabelManagedBy: "lingon",
+	ku.AppLabelName:      AppName,
+	ku.AppLabelVersion:   Version,
+}
+
+var matchLabels = map[string]string{
+	ku.AppLabelInstance: AppName,
+	ku.AppLabelName:     AppName,
 }
 
 func appendCommonLabels(items map[string]string) map[string]string {
@@ -45,8 +66,6 @@ func appendCommonLabels(items map[string]string) map[string]string {
 
 type Karpenter struct {
 	kube.App
-
-	CustomResourceDefinitions
 
 	Ns *corev1.Namespace
 	// Configuration
@@ -81,13 +100,8 @@ type Karpenter struct {
 	WHValidationAWS    *ar.ValidatingWebhookConfiguration
 	WHValidationConfig *ar.ValidatingWebhookConfiguration
 
-	WHMutation    *ar.MutatingWebhookConfiguration
+	// WHMutation    *ar.MutatingWebhookConfiguration
 	WHMutationAWS *ar.MutatingWebhookConfiguration
-}
-
-type CustomResourceDefinitions struct {
-	AWSNodeTemplates *apiextensionsv1.CustomResourceDefinition
-	Provisioner      *apiextensionsv1.CustomResourceDefinition
 }
 
 type Opts struct {
@@ -98,12 +112,10 @@ type Opts struct {
 	InterruptQueue         string
 }
 
-func New(
-	opts Opts,
-) *Karpenter {
+func New(opts Opts) *Karpenter {
 	sacc := &corev1.ServiceAccount{
-		TypeMeta: kubeutil.TypeServiceAccountV1,
-		ObjectMeta: kubeutil.ObjectMeta(
+		TypeMeta: ku.TypeServiceAccountV1,
+		ObjectMeta: ku.ObjectMeta(
 			AppName,
 			Namespace,
 			commonLabels,
@@ -112,13 +124,8 @@ func New(
 	}
 
 	return &Karpenter{
-		CustomResourceDefinitions: CustomResourceDefinitions{
-			AWSNodeTemplates: crd.AwsnodetemplatesKarpenterK8SAwsCRD,
-			Provisioner:      crd.ProvisionersKarpenterShCRD,
-		},
-
 		Ns: &corev1.Namespace{
-			TypeMeta: kubeutil.TypeNamespaceV1,
+			TypeMeta: ku.TypeNamespaceV1,
 			ObjectMeta: metav1.ObjectMeta{
 				Name:   Namespace,
 				Labels: commonLabels,
@@ -129,7 +136,7 @@ func New(
 		Settings:      GlobalSettings(opts),
 		LoggingConfig: LoggingConfig,
 
-		Deploy: kubeutil.SetDeploySA(Deploy, sacc.Name),
+		Deploy: ku.SetDeploySA(Deploy, sacc.Name),
 		Svc:    Svc,
 		Pdb:    Pdb,
 
@@ -137,7 +144,7 @@ func New(
 		DNSRole: DnsRole,
 		DNSRb:   DnsRoleBinding,
 		Role:    Role,
-		Rb: kubeutil.BindRole(
+		Rb: ku.BindRole(
 			"karpenter-rb",
 			sacc,
 			Role,
@@ -145,14 +152,14 @@ func New(
 		),
 
 		CR: CanUpdateWebhooks,
-		CRB: kubeutil.BindClusterRole(
+		CRB: ku.BindClusterRole(
 			"karpenter-crb-hook",
 			sacc,
 			CanUpdateWebhooks,
 			commonLabels,
 		),
 		CoreCR: CoreCr,
-		CoreCRB: kubeutil.BindClusterRole(
+		CoreCRB: ku.BindClusterRole(
 			"karpenter-crb-core",
 			sacc,
 			CoreCr,
@@ -163,7 +170,12 @@ func New(
 		WHValidation:       WebhookValidationKarpenter,
 		WHValidationAWS:    WebhookValidationKarpenterAWS,
 		WHValidationConfig: WebhookValidationKarpenterConfig,
-		WHMutation:         WebhookMutatingKarpenter,
-		WHMutationAWS:      WebhookMutatingKarpenterAws,
+		// WHMutation:         WebhookMutatingKarpenter, // removed when updating to 0.27.5
+		WHMutationAWS: WebhookMutatingKarpenterAws,
 	}
+}
+
+// P returns a pointer to the given value.
+func P[T any](t T) *T {
+	return &t
 }

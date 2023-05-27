@@ -18,12 +18,12 @@ var LeaderElectionRole = &rbacv1.Role{
 	},
 	Rules: []rbacv1.PolicyRule{
 		{
-			APIGroups:     []string{},
+			APIGroups:     []string{""},
 			ResourceNames: []string{"external-secrets-controller"},
 			Resources:     []string{"configmaps"},
 			Verbs:         []string{"get", "update", "patch"},
 		}, {
-			APIGroups: []string{},
+			APIGroups: []string{""},
 			Resources: []string{"configmaps"},
 			Verbs:     []string{"create"},
 		}, {

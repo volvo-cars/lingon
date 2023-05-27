@@ -9,11 +9,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const dnsRoleName = AppName + "-dns"
+
 var DnsRole = &rbacv1.Role{
 	TypeMeta: kubeutil.TypeRoleV1,
 	ObjectMeta: metav1.ObjectMeta{
-		Name:      "karpenter-dns",
-		Namespace: "kube-system",
+		Name:      dnsRoleName,
+		Namespace: kubeutil.NSKubeSystem,
 		Labels:    commonLabels,
 	},
 	Rules: []rbacv1.PolicyRule{
@@ -29,19 +31,19 @@ var DnsRole = &rbacv1.Role{
 var DnsRoleBinding = &rbacv1.RoleBinding{
 	TypeMeta: kubeutil.TypeRoleBindingV1,
 	ObjectMeta: metav1.ObjectMeta{
-		Name:      "karpenter-dns",
-		Namespace: "kube-system",
+		Name:      dnsRoleName,
+		Namespace: kubeutil.NSKubeSystem,
 		Labels:    commonLabels,
 	},
-	Subjects: kubeutil.RoleSubject("karpenter", "karpenter"),
-	RoleRef:  kubeutil.RoleRef("karpenter-dns"),
+	Subjects: kubeutil.RoleSubject(AppName, Namespace),
+	RoleRef:  kubeutil.RoleRef(DnsRole.Name),
 }
 
 var Role = &rbacv1.Role{
 	TypeMeta: kubeutil.TypeRoleV1,
 	ObjectMeta: metav1.ObjectMeta{
-		Name:      "karpenter",
-		Namespace: "karpenter",
+		Name:      AppName,
+		Namespace: Namespace,
 		Labels:    commonLabels,
 	},
 	Rules: []rbacv1.PolicyRule{
@@ -59,15 +61,15 @@ var Role = &rbacv1.Role{
 			Verbs:         []string{"update"},
 			APIGroups:     []string{""},
 			Resources:     []string{"secrets"},
-			ResourceNames: []string{"karpenter-cert"},
+			ResourceNames: []string{CertSecret.Name},
 		},
 		{
 			Verbs:     []string{"update", "patch", "delete"},
 			APIGroups: []string{""},
 			Resources: []string{"configmaps"},
 			ResourceNames: []string{
-				"karpenter-global-settings",
-				"config-logging",
+				ConfigName,
+				LoggingConfig.Name,
 			},
 		},
 		{

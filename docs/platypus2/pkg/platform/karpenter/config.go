@@ -10,26 +10,21 @@ import (
 )
 
 var CertSecret = &corev1.Secret{
-	TypeMeta: metav1.TypeMeta{
-		Kind:       "Secret",
-		APIVersion: "v1",
-	},
+	TypeMeta: kubeutil.TypeSecretV1,
 	ObjectMeta: metav1.ObjectMeta{
-		Name:      "karpenter-cert",
-		Namespace: "karpenter",
+		Name:      AppName + "-cert",
+		Namespace: Namespace,
 		Labels:    commonLabels,
 	},
-	Data: map[string][]uint8{}, // Injected by karpenter-webhook
+	Data: map[string][]byte{}, // Injected by karpenter-webhook
 }
 
-func GlobalSettings(
-	opts Opts,
-) *corev1.ConfigMap {
+func GlobalSettings(opts Opts) *corev1.ConfigMap {
 	return &corev1.ConfigMap{
 		TypeMeta: kubeutil.TypeConfigMapV1,
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "karpenter-global-settings",
-			Namespace: "karpenter",
+			Name:      ConfigName,
+			Namespace: Namespace,
 			Labels:    commonLabels,
 		},
 		Data: map[string]string{
@@ -52,7 +47,7 @@ var LoggingConfig = &corev1.ConfigMap{
 	TypeMeta: kubeutil.TypeConfigMapV1,
 	ObjectMeta: metav1.ObjectMeta{
 		Name:      "config-logging",
-		Namespace: "karpenter",
+		Namespace: Namespace,
 		Labels:    commonLabels,
 	},
 	Data: map[string]string{

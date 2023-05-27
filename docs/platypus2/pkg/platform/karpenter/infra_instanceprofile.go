@@ -72,7 +72,7 @@ func newInstanceProfile() InstanceProfile {
 	}
 
 	instanceProfile := aws.NewIamInstanceProfile(
-		"karpenter", aws.IamInstanceProfileArgs{
+		AppName, aws.IamInstanceProfileArgs{
 			Name: S("platypus-karpenter-instance-profile"),
 			Role: iamRole.Attributes().Name(),
 		},

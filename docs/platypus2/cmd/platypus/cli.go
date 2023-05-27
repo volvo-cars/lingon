@@ -16,7 +16,9 @@ import (
 	"github.com/volvo-cars/lingon/pkg/terra"
 	"github.com/volvo-cars/lingoneks/pkg/infra"
 	"github.com/volvo-cars/lingoneks/pkg/platform/awsauth"
+	"github.com/volvo-cars/lingoneks/pkg/platform/externalsecrets"
 	"github.com/volvo-cars/lingoneks/pkg/platform/karpenter"
+	karpentercrd "github.com/volvo-cars/lingoneks/pkg/platform/karpenter/crd"
 	"github.com/volvo-cars/lingoneks/pkg/platform/monitoring/metricsserver"
 	"github.com/volvo-cars/lingoneks/pkg/platform/monitoring/promcrd"
 	"github.com/volvo-cars/lingoneks/pkg/platform/monitoring/promstack"
@@ -31,8 +33,9 @@ const (
 	manifestPath   = ".lingon/k8s"
 	kubeconfigPath = "kubeconfig"
 	name           = "platypus-2"
-	kubeVersion    = "1.25"
+	kubeVersion    = "1.26"
 	region         = "eu-north-1"
+	stateBucket    = "platypusbootstrap-lingon"
 )
 
 type runParams struct {
@@ -92,7 +95,7 @@ func main() {
 		return
 	}
 	ap := AWSParams{
-		BackendS3Key: "terriyaki-tf-experiment",
+		BackendS3Key: stateBucket,
 		Region:       region,
 		Profile:      profile,
 	}
@@ -140,7 +143,7 @@ func run(p runParams) error {
 
 	// VPC
 
-	StepSep("vpc")
+	StepSep("tf vpc")
 
 	vpcName := uniqueName + "-vpc"
 	vpcOpts := infra.Opts{
@@ -183,7 +186,7 @@ func run(p runParams) error {
 
 	// EKS
 
-	StepSep("eks")
+	StepSep("tf eks")
 
 	vpcID := vpcState.Id
 	eksName := uniqueName + "-eks"
@@ -215,7 +218,7 @@ func run(p runParams) error {
 
 	// KARPENTER INFRA
 
-	StepSep("karpenter infra")
+	StepSep("tf karpenter infra")
 
 	karpenterName := uniqueName + "-karpenter"
 	karinfraOpts := karpenter.InfraOpts{
@@ -240,30 +243,6 @@ func run(p runParams) error {
 		slog.Info(
 			"stack state not in sync",
 			slog.String("stack", ks.StackName()),
-		)
-		return finishAndDestroy(ctx, p, tf)
-	}
-
-	// CSI EBS INFRA
-
-	StepSep("csi ebs infra")
-
-	csiEbsOpts := infra.CSIOpts{
-		ClusterName:     eksState.Name,
-		OIDCProviderArn: oidcState.Arn,
-		OIDCProviderURL: oidcState.Url,
-	}
-	cs := csiEbsStack{
-		AWSStackConfig: newAWSStackConfig(uniqueName+"-csi-ebs", p),
-		CSI:            *infra.NewCSIEBS(csiEbsOpts),
-	}
-	if err := tf.Run(ctx, &cs); err != nil {
-		return fmt.Errorf("terraforming csi-ebs: %w", err)
-	}
-	if !cs.IsStateComplete() {
-		slog.Info(
-			"stack state not in sync",
-			slog.String("stack", cs.StackName()),
 		)
 		return finishAndDestroy(ctx, p, tf)
 	}
@@ -296,6 +275,31 @@ func run(p runParams) error {
 		ManifestPath:   p.ManifestPath,
 	}
 
+	// CRDs
+
+	StepSep("k8s crds")
+
+	if err := kubeExportApply(
+		ctx,
+		promcrd.New(),
+		"promcrd",
+		kctlOpts,
+		serverSide,
+		"apply", "-f", "-",
+	); err != nil {
+		return err
+	}
+	if err := kubeExportApply(
+		ctx,
+		karpentercrd.New(),
+		"karpentercrd",
+		kctlOpts,
+		serverSide,
+		"apply", "-f", "-",
+	); err != nil {
+		return err
+	}
+
 	// KARPENTER KUBERNETES
 
 	StepSep("k8s karpenter")
@@ -318,7 +322,7 @@ func run(p runParams) error {
 		kap,
 		"karpenter",
 		kctlOpts,
-		"--server-side=true",
+		serverSide,
 		"apply", "-f", "-",
 	); err != nil {
 		return err
@@ -376,7 +380,7 @@ func run(p runParams) error {
 		kapProvisioners,
 		"karpenter-provisioners",
 		kctlOpts,
-		"--server-side=true",
+		serverSide,
 		"apply", "-f", "-",
 	); err != nil {
 		return err
@@ -406,27 +410,52 @@ func run(p runParams) error {
 		awsAuth,
 		"aws-auth",
 		kctlOpts,
-		"--server-side=true",
+		serverSide,
 		"apply", "-f", "-",
 		"--force-conflicts", // Required to become owner
 	); err != nil {
 		return err
 	}
 
-	// MONITORING - kube-prometheus-stack
+	// EXTERNAL SECRETS
 
-	StepSep("k8s kube-prometheus-stack crds")
+	StepSep("k8s external secret")
 
 	if err := kubeExportApply(
 		ctx,
-		promcrd.New(),
-		"promcrd",
+		externalsecrets.New(),
+		"externalsecret",
 		kctlOpts,
-		"--server-side=true",
 		"apply", "-f", "-",
 	); err != nil {
 		return err
 	}
+
+	// CSI EBS INFRA
+
+	StepSep("tf csi ebs infra")
+
+	csiEbsOpts := infra.CSIOpts{
+		ClusterName:     eksState.Name,
+		OIDCProviderArn: oidcState.Arn,
+		OIDCProviderURL: oidcState.Url,
+	}
+	cs := csiEbsStack{
+		AWSStackConfig: newAWSStackConfig(uniqueName+"-csi-ebs", p),
+		CSI:            *infra.NewCSIEBS(csiEbsOpts),
+	}
+	if err := tf.Run(ctx, &cs); err != nil {
+		return fmt.Errorf("terraforming csi-ebs: %w", err)
+	}
+	if !cs.IsStateComplete() {
+		slog.Info(
+			"stack state not in sync",
+			slog.String("stack", cs.StackName()),
+		)
+		return finishAndDestroy(ctx, p, tf)
+	}
+
+	// MONITORING - kube-prometheus-stack
 
 	StepSep("k8s metrics-server")
 
@@ -492,6 +521,8 @@ func run(p runParams) error {
 	return nil
 }
 
+const serverSide = "--server-side=true"
+
 func kubectl(
 	ctx context.Context,
 	stdin io.Reader,
@@ -525,7 +556,7 @@ func kubeExportApply(
 	if err := kube.Export(
 		ka,
 		kube.WithExportOutputDirectory(p.ManifestPath),
-		kube.WithExportAsSingleFile("%s.yaml"),
+		kube.WithExportAsSingleFile(fmt.Sprintf("%s.yaml", name)),
 	); err != nil {
 		return fmt.Errorf("exporting %s: %w", name, err)
 	}

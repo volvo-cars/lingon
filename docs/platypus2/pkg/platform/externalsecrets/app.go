@@ -6,11 +6,9 @@
 package externalsecrets
 
 import (
-	"github.com/volvo-cars/lingon/docs/platypus/pkg/platform/externalsecrets/crd"
-	"github.com/volvo-cars/lingon/docs/platypus/pkg/platform/externalsecrets/webhook"
-
 	"github.com/volvo-cars/lingon/pkg/kube"
 	"github.com/volvo-cars/lingon/pkg/kubeutil"
+	"github.com/volvo-cars/lingoneks/pkg/platform/externalsecrets/crd"
 	arv1 "k8s.io/api/admissionregistration/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -148,8 +146,8 @@ func New() *ExternalSecrets {
 		Deploy: kubeutil.SetDeploySA(Deploy, sa.Name),
 
 		// WEBHOOK
-		ExternalSecretValidateWH: webhook.ExternalsecretValidateValidatingWH,
-		SecretStoreValidateWH:    webhook.SecretstoreValidateValidatingWH,
+		ExternalSecretValidateWH: ExternalsecretValidateValidatingWH,
+		SecretStoreValidateWH:    SecretstoreValidateValidatingWH,
 
 		WebhookSA:     webhookSA,
 		WebhookDeploy: kubeutil.SetDeploySA(WebhookDeploy, webhookSA.Name),
@@ -164,7 +162,7 @@ func New() *ExternalSecrets {
 				WebhookLabels,
 				nil,
 			),
-			Data: nil, // okayyy ??
+			Data: nil,
 		},
 
 		// LEADER ELECTION ?? not needed unless more than one instance

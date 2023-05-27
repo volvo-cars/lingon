@@ -76,9 +76,9 @@ func newFargateProfile(opts InfraOpts) FargateProfile {
 	}
 
 	fargateProfile := aws.NewEksFargateProfile(
-		"karpenter", aws.EksFargateProfileArgs{
+		AppName, aws.EksFargateProfileArgs{
 			ClusterName:         S(opts.ClusterName),
-			FargateProfileName:  S("karpenter"),
+			FargateProfileName:  S(AppName),
 			PodExecutionRoleArn: iamRole.Attributes().Arn(),
 			SubnetIds:           terra.SetString(opts.PrivateSubnetIDs[:]...),
 			Selector: []eksfargateprofile.Selector{

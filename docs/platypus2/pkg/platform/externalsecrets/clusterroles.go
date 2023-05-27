@@ -25,15 +25,15 @@ var CertControllerCR = &rbacv1.ClusterRole{
 			Resources: []string{"validatingwebhookconfigurations"},
 			Verbs:     []string{"get", "list", "watch", "update", "patch"},
 		}, {
-			APIGroups: []string{},
+			APIGroups: []string{""},
 			Resources: []string{"endpoints"},
 			Verbs:     []string{"list", "get", "watch"},
 		}, {
-			APIGroups: []string{},
+			APIGroups: []string{""},
 			Resources: []string{"events"},
 			Verbs:     []string{"create", "patch"},
 		}, {
-			APIGroups: []string{},
+			APIGroups: []string{""},
 			Resources: []string{"secrets"},
 			Verbs:     []string{"get", "list", "watch", "update", "patch"},
 		},
@@ -88,15 +88,15 @@ var ControllerCr = &rbacv1.ClusterRole{
 			},
 			Verbs: []string{"get", "list", "watch"},
 		}, {
-			APIGroups: []string{},
+			APIGroups: []string{""},
 			Resources: []string{"serviceaccounts", "namespaces"},
 			Verbs:     []string{"get", "list", "watch"},
 		}, {
-			APIGroups: []string{},
+			APIGroups: []string{""},
 			Resources: []string{"configmaps"},
 			Verbs:     []string{"get", "list", "watch"},
 		}, {
-			APIGroups: []string{},
+			APIGroups: []string{""},
 			Resources: []string{"secrets"},
 			Verbs: []string{
 				"get",
@@ -108,11 +108,11 @@ var ControllerCr = &rbacv1.ClusterRole{
 				"patch",
 			},
 		}, {
-			APIGroups: []string{},
+			APIGroups: []string{""},
 			Resources: []string{"serviceaccounts/token"},
 			Verbs:     []string{"create"},
 		}, {
-			APIGroups: []string{},
+			APIGroups: []string{""},
 			Resources: []string{"events"},
 			Verbs:     []string{"create", "patch"},
 		}, {

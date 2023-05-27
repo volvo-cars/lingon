@@ -45,6 +45,7 @@ function tool() {
 }
 
 function install_repo() {
+  helm repo add external-secrets https://charts.external-secrets.io
   helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
   helm repo add aws-ebs-csi-driver https://kubernetes-sigs.github.io/aws-ebs-csi-driver
   helm repo add kube-state-metrics https://kubernetes.github.io/kube-state-metrics
@@ -52,6 +53,7 @@ function install_repo() {
   helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server
   helm repo add nats https://nats-io.github.io/k8s/helm/charts/
   helm repo add benthos https://benthosdev.github.io/benthos-helm-chart/
+  helm repo add autoscaler https://kubernetes.github.io/autoscaler
   helm repo update
 }
 
@@ -59,6 +61,13 @@ function manifests() {
   rm -rf "$TEMPD"/manifests
   mkdir -p $TEMPD/manifests && pushd $TEMPD/manifests > /dev/null
 
+  helm template external-secrets external-secrets/external-secrets \
+    --namespace=external-secrets --create-namespace --set installCRDs=true | \
+    $KYGO -out "externalsecrets" -app external-secrets -pkg externalsecrets
+
+  #
+  # MONITORING
+  #
   helm template metrics-server metrics-server/metrics-server --namespace=monitoring --values="$VALUES_DIR"/metrics-server.values.yaml | \
     $KYGO -out "monitoring/metrics-server" -app metrics-server -pkg metricsserver
 
@@ -71,6 +80,9 @@ function manifests() {
   helm template vm vm/victoria-metrics-single --namespace=monitoring --values "$VALUES_DIR"/victoriametrics-single.values.yaml | \
     $KYGO -out "monitoring/victoriametrics" -app victoria-metrics -pkg victoriametrics
 
+  #
+  # NATS
+  #
   helm template nats nats/nats --namespace=nats --values "$VALUES_DIR"/nats.values.yaml | \
     $KYGO -out "nats" -app nats -pkg nats
 
@@ -81,7 +93,34 @@ function manifests() {
     $KYGO -out "nats/benthos" -app benthos -pkg benthos
 
   wget https://github.com/nats-io/nack/releases/latest/download/crds.yml -O - | \
-    $KYGO -out "nats/jetstream" -pkg jetstream -app jetstream -group=false -clean-name=false
+    $KYGO -out "nats/jetstream" -app jetstream -pkg jetstream -group=false -clean-name=false
+
+  #
+  # Karpenter
+  #
+  helm template karpenter oci://public.ecr.aws/karpenter/karpenter --namespace=karpenter \
+    --create-namespace \
+    --version "v0.27.5" \
+    --set serviceAccount.annotations."eks\.amazonaws\.com/role-arn"=REPLACE_ME_KARPENTER_IAM_ROLE_ARN \
+    --set settings.aws.clusterName=REPLACE_ME_CLUSTER_NAME \
+    --set settings.aws.defaultInstanceProfile=KarpenterNodeInstanceProfile-REPLACE_ME_CLUSTER_NAME \
+    --set settings.aws.interruptionQueueName=REPLACE_ME_CLUSTER_NAME \
+    --set controller.resources.requests.cpu=1 \
+    --set controller.resources.requests.memory=1Gi \
+    --set controller.resources.limits.cpu=1 \
+    --set controller.resources.limits.memory=1Gi \
+  | $KYGO -out "karpenter" -app karpenter -pkg karpenter
+
+
+
+  wget https://raw.githubusercontent.com/aws/karpenter/main/pkg/apis/crds/karpenter.sh_provisioners.yaml -O - >> karpenter/mani.yaml
+  wget https://raw.githubusercontent.com/aws/karpenter/main/pkg/apis/crds/karpenter.sh_machines.yaml -O - >> karpenter/mani.yaml
+  wget https://raw.githubusercontent.com/aws/karpenter/main/pkg/apis/crds/karpenter.k8s.aws_awsnodetemplates.yaml -O -  >> karpenter/mani.yaml
+
+  $KYGO -in karpenter/mani.yaml -out "karpenter/crd" -pkg karpentercrd -app karpenter -group=false -clean-name=false
+
+  helm template autoscaler autoscaler/cluster-autoscaler  --set 'autoDiscovery.clusterName'="REPLACE_ME"  | \
+    $KYGO -out "autoscaler" -pkg autoscaler -app autoscaler
 
   popd
 }

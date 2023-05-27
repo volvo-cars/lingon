@@ -9,6 +9,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+var createUpdateOps = []ar.OperationType{
+	ar.Create,
+	ar.Update,
+}
+
+// MUTATION WEBHOOK
+
 var WebhookMutatingKarpenterAws = &ar.MutatingWebhookConfiguration{
 	TypeMeta: kubeutil.TypeMutatingWebhookConfigurationV1,
 	ObjectMeta: metav1.ObjectMeta{
@@ -17,140 +24,19 @@ var WebhookMutatingKarpenterAws = &ar.MutatingWebhookConfiguration{
 	},
 	Webhooks: []ar.MutatingWebhook{
 		{
-			Name:         "defaulting.webhook.karpenter.k8s.aws",
-			ClientConfig: webHookClientConfig,
-			Rules: []ar.RuleWithOperations{
-				awsRuleWithNoDeleteOp,
-				karpenterRuleWithNoDeleteOp,
-			},
+			Name:                    "defaulting.webhook.karpenter.k8s.aws",
 			FailurePolicy:           P(ar.Fail),
 			SideEffects:             P(ar.SideEffectClassNone),
-			AdmissionReviewVersions: []string{"v1"},
-		},
-	},
-}
-
-var awsRuleWithNoDeleteOp = ar.RuleWithOperations{
-	Operations: createUpdateOps,
-	Rule:       awsNodeTemplateRule,
-}
-
-var WebhookMutatingKarpenter = &ar.MutatingWebhookConfiguration{
-	TypeMeta: kubeutil.TypeMutatingWebhookConfigurationV1,
-	ObjectMeta: metav1.ObjectMeta{
-		Name:   "defaulting.webhook.karpenter.sh",
-		Labels: commonLabels,
-	},
-	Webhooks: []ar.MutatingWebhook{
-		{
-			Name:         "defaulting.webhook.karpenter.sh",
-			ClientConfig: webHookClientConfig,
-			Rules: []ar.RuleWithOperations{
-				karpenterRuleWithNoDeleteOp,
-			},
-			FailurePolicy:           P(ar.Fail),
-			SideEffects:             P(ar.SideEffectClassNone),
-			AdmissionReviewVersions: []string{"v1"},
-		},
-	},
-}
-
-var karpenterRuleWithAllOperations = ar.RuleWithOperations{
-	Operations: allOperations,
-	Rule:       provisionersRule,
-}
-
-var karpenterRuleWithNoDeleteOp = ar.RuleWithOperations{
-	Operations: createUpdateOps,
-	Rule:       provisionersRule,
-}
-
-var webHookClientConfig = ar.WebhookClientConfig{
-	Service: &ar.ServiceReference{
-		Namespace: AppName,
-		Name:      Namespace,
-	},
-}
-
-var createUpdateOps = []ar.OperationType{
-	ar.Create,
-	ar.Update,
-}
-
-var allOperations = []ar.OperationType{
-	ar.Create,
-	ar.Update,
-	ar.Delete,
-}
-
-var provisionersRule = ar.Rule{
-	APIGroups:   []string{"karpenter.sh"},
-	APIVersions: []string{"v1alpha5"},
-	Resources: []string{
-		"provisioners",
-		"provisioners/status",
-	},
-}
-
-var awsNodeTemplateRule = ar.Rule{
-	APIGroups:   []string{"karpenter.k8s.aws"},
-	APIVersions: []string{"v1alpha1"},
-	Resources: []string{
-		"awsnodetemplates",
-		"awsnodetemplates/status",
-	},
-	Scope: P(ar.AllScopes),
-}
-
-var WebhookValidationKarpenter = &ar.ValidatingWebhookConfiguration{
-	TypeMeta: kubeutil.TypeValidatingWebhookConfigurationV1,
-	ObjectMeta: metav1.ObjectMeta{
-		Name:   "validation.webhook.karpenter.sh",
-		Labels: commonLabels,
-	},
-	Webhooks: []ar.ValidatingWebhook{
-		{
-			Name:         "validation.webhook.karpenter.sh",
-			ClientConfig: webHookClientConfig,
-			Rules: []ar.RuleWithOperations{
-				{
-					Operations: createUpdateOps,
-					Rule:       provisionersRule,
-				},
-			},
-			FailurePolicy:           P(ar.Fail),
-			SideEffects:             P(ar.SideEffectClassNone),
-			AdmissionReviewVersions: []string{"v1"},
-		},
-	},
-}
-
-var WebhookValidationKarpenterAWS = &ar.ValidatingWebhookConfiguration{
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "admissionregistration.k8s.io/v1",
-		Kind:       "ValidatingWebhookConfiguration",
-	},
-	ObjectMeta: metav1.ObjectMeta{
-		Name:   "validation.webhook.karpenter.k8s.aws",
-		Labels: commonLabels,
-	},
-	Webhooks: []ar.ValidatingWebhook{
-		{
 			AdmissionReviewVersions: []string{"v1"},
 			ClientConfig: ar.WebhookClientConfig{
 				Service: &ar.ServiceReference{
-					Name:      "karpenter",
-					Namespace: "karpenter",
+					Namespace: Svc.Namespace,
+					Name:      Svc.Name,
 				},
 			},
-			FailurePolicy: P(ar.FailurePolicyType("Fail")),
-			Name:          "validation.webhook.karpenter.k8s.aws",
 			Rules: []ar.RuleWithOperations{
 				{
-					Operations: []ar.OperationType{
-						ar.OperationType("CREATE"),
-						ar.OperationType("UPDATE"),
-					},
+					Operations: createUpdateOps,
 					Rule: ar.Rule{
 						APIGroups:   []string{"karpenter.k8s.aws"},
 						APIVersions: []string{"v1alpha1"},
@@ -158,13 +44,11 @@ var WebhookValidationKarpenterAWS = &ar.ValidatingWebhookConfiguration{
 							"awsnodetemplates",
 							"awsnodetemplates/status",
 						},
-						Scope: P(ar.ScopeType("*")),
+						Scope: P(ar.AllScopes),
 					},
-				}, {
-					Operations: []ar.OperationType{
-						ar.OperationType("CREATE"),
-						ar.OperationType("UPDATE"),
-					},
+				},
+				{
+					Operations: createUpdateOps,
 					Rule: ar.Rule{
 						APIGroups:   []string{"karpenter.sh"},
 						APIVersions: []string{"v1alpha5"},
@@ -175,10 +59,11 @@ var WebhookValidationKarpenterAWS = &ar.ValidatingWebhookConfiguration{
 					},
 				},
 			},
-			SideEffects: P(ar.SideEffectClass("None")),
 		},
 	},
 }
+
+// VALIDATION WEBHOOKS
 
 var WebhookValidationKarpenterConfig = &ar.ValidatingWebhookConfiguration{
 	TypeMeta: kubeutil.TypeValidatingWebhookConfigurationV1,
@@ -189,11 +74,101 @@ var WebhookValidationKarpenterConfig = &ar.ValidatingWebhookConfiguration{
 	Webhooks: []ar.ValidatingWebhook{
 		{
 			Name:                    "validation.webhook.config.karpenter.sh",
-			ClientConfig:            webHookClientConfig,
-			ObjectSelector:          &metav1.LabelSelector{MatchLabels: map[string]string{"app.kubernetes.io/part-of": "karpenter"}},
 			FailurePolicy:           P(ar.Fail),
 			SideEffects:             P(ar.SideEffectClassNone),
 			AdmissionReviewVersions: []string{"v1"},
+			ClientConfig: ar.WebhookClientConfig{
+				Service: &ar.ServiceReference{
+					Namespace: Svc.Namespace,
+					Name:      Svc.Name,
+				},
+			},
+			ObjectSelector: &metav1.LabelSelector{
+				// FIXME: not set on anything ??
+				MatchLabels: map[string]string{"app.kubernetes.io/part-of": "karpenter"},
+			},
+		},
+	},
+}
+
+var WebhookValidationKarpenter = &ar.ValidatingWebhookConfiguration{
+	TypeMeta: kubeutil.TypeValidatingWebhookConfigurationV1,
+	ObjectMeta: metav1.ObjectMeta{
+		Name:   "validation.webhook.karpenter.sh",
+		Labels: commonLabels,
+	},
+	Webhooks: []ar.ValidatingWebhook{
+		{
+			Name:                    "validation.webhook.karpenter.sh",
+			FailurePolicy:           P(ar.Fail),
+			SideEffects:             P(ar.SideEffectClassNone),
+			AdmissionReviewVersions: []string{"v1"},
+			ClientConfig: ar.WebhookClientConfig{
+				Service: &ar.ServiceReference{
+					Namespace: Svc.Namespace,
+					Name:      Svc.Name,
+				},
+			},
+			Rules: []ar.RuleWithOperations{
+				{
+					Operations: createUpdateOps,
+					Rule: ar.Rule{
+						APIGroups:   []string{"karpenter.sh"},
+						APIVersions: []string{"v1alpha5"},
+						Resources: []string{
+							"provisioners",
+							"provisioners/status",
+						},
+					},
+				},
+			},
+		},
+	},
+}
+
+var WebhookValidationKarpenterAWS = &ar.ValidatingWebhookConfiguration{
+	TypeMeta: kubeutil.TypeValidatingWebhookConfigurationV1,
+	ObjectMeta: metav1.ObjectMeta{
+		Name:   "validation.webhook.karpenter.k8s.aws",
+		Labels: commonLabels,
+	},
+	Webhooks: []ar.ValidatingWebhook{
+		{
+			Name:                    "validation.webhook.karpenter.k8s.aws",
+			FailurePolicy:           P(ar.Fail),
+			SideEffects:             P(ar.SideEffectClassNone),
+			AdmissionReviewVersions: []string{"v1"},
+			ClientConfig: ar.WebhookClientConfig{
+				Service: &ar.ServiceReference{
+					Namespace: Svc.Namespace,
+					Name:      Svc.Name,
+				},
+			},
+
+			Rules: []ar.RuleWithOperations{
+				{
+					Operations: createUpdateOps,
+					Rule: ar.Rule{
+						APIGroups:   []string{"karpenter.k8s.aws"},
+						APIVersions: []string{"v1alpha1"},
+						Resources: []string{
+							"awsnodetemplates",
+							"awsnodetemplates/status",
+						},
+						Scope: P(ar.AllScopes),
+					},
+				}, {
+					Operations: createUpdateOps,
+					Rule: ar.Rule{
+						APIGroups:   []string{"karpenter.sh"},
+						APIVersions: []string{"v1alpha5"},
+						Resources: []string{
+							"provisioners",
+							"provisioners/status",
+						},
+					},
+				},
+			},
 		},
 	},
 }

@@ -10,14 +10,8 @@ import (
 )
 
 var CanUpdateWebhooks = &rbacv1.ClusterRole{
-	TypeMeta: metav1.TypeMeta{
-		Kind:       "ClusterRole",
-		APIVersion: "rbac.authorization.k8s.io/v1",
-	},
-	ObjectMeta: metav1.ObjectMeta{
-		Name:   "karpenter",
-		Labels: commonLabels,
-	},
+	TypeMeta:   kubeutil.TypeClusterRoleV1,
+	ObjectMeta: metav1.ObjectMeta{Name: AppName, Labels: commonLabels},
 	Rules: []rbacv1.PolicyRule{
 		{
 			Verbs: []string{
@@ -32,13 +26,14 @@ var CanUpdateWebhooks = &rbacv1.ClusterRole{
 			Verbs:         []string{"update"},
 			APIGroups:     []string{"admissionregistration.k8s.io"},
 			Resources:     []string{"validatingwebhookconfigurations"},
-			ResourceNames: []string{"validation.webhook.karpenter.k8s.aws"},
+			ResourceNames: []string{WebhookValidationKarpenterAWS.Name},
 		},
 		{
 			Verbs:         []string{"update"},
 			APIGroups:     []string{"admissionregistration.k8s.io"},
 			Resources:     []string{"mutatingwebhookconfigurations"},
-			ResourceNames: []string{"defaulting.webhook.karpenter.k8s.aws"},
+			ResourceNames: []string{WebhookMutatingKarpenterAws.Name},
+			// ResourceNames: []string{"defaulting.webhook.karpenter.k8s.aws"},
 		},
 		{
 			Verbs:     []string{"patch", "update"},
@@ -51,7 +46,7 @@ var CanUpdateWebhooks = &rbacv1.ClusterRole{
 var CoreCr = &rbacv1.ClusterRole{
 	TypeMeta: kubeutil.TypeClusterRoleV1,
 	ObjectMeta: metav1.ObjectMeta{
-		Name:   "karpenter-core",
+		Name:   AppName + "-core",
 		Labels: commonLabels,
 	},
 	Rules: []rbacv1.PolicyRule{
@@ -132,18 +127,19 @@ var CoreCr = &rbacv1.ClusterRole{
 		{
 			APIGroups: []string{"admissionregistration.k8s.io"},
 			ResourceNames: []string{
-				"validation.webhook.karpenter.sh",
-				"validation.webhook.config.karpenter.sh",
+				WebhookValidationKarpenter.Name,
+				WebhookValidationKarpenterConfig.Name,
 			},
 			Resources: []string{"validatingwebhookconfigurations"},
 			Verbs:     []string{"update"},
 		},
-		{
-			APIGroups:     []string{"admissionregistration.k8s.io"},
-			ResourceNames: []string{"defaulting.webhook.karpenter.sh"},
-			Resources:     []string{"mutatingwebhookconfigurations"},
-			Verbs:         []string{"update"},
-		},
+		// removed when updating to 0.27.5
+		// {
+		// 	APIGroups:     []string{"admissionregistration.k8s.io"},
+		// 	ResourceNames: []string{"defaulting.webhook.karpenter.sh"},
+		// 	Resources:     []string{"mutatingwebhookconfigurations"},
+		// 	Verbs:         []string{"update"},
+		// },
 	},
 }
 
@@ -154,7 +150,8 @@ var AdminCr = &rbacv1.ClusterRole{
 		Labels: appendCommonLabels(
 			map[string]string{
 				// Add these permissions to the "admin" default roles
-				"rbac.authorization.k8s.io/aggregate-to-admin": "true",
+				kubeutil.LabelRbacAggregateToAdmin: "true",
+				// "rbac.authorization.k8s.io/aggregate-to-admin": "true",
 			},
 		),
 	},

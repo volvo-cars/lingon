@@ -1,10 +1,11 @@
 // Copyright (c) 2023 Volvo Car Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-package karpenter
+package externalsecrets
 
 import (
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/volvo-cars/lingon/pkg/kube"
@@ -15,24 +16,16 @@ import (
 func TestExport(t *testing.T) {
 	_ = os.RemoveAll("out")
 
-	app := New(
-		Opts{
-			ClusterName:            "REPLACE_ME_CLUSTER_NAME",
-			ClusterEndpoint:        "REPLACE_ME_CLUSTER_ENDPOINT",
-			IAMRoleArn:             "REPLACE_ME_ROLE_ARN",
-			DefaultInstanceProfile: "REPLACE_ME_DEFAULT_INSTANCE_PROFILE",
-			InterruptQueue:         "REPLACE_ME_INTERRUPT_QUEUE",
-		},
-	)
+	app := New()
 	err := kube.Export(app, kube.WithExportOutputDirectory("out"))
 	tu.AssertNoError(t, err)
 
 	ly, err := ku.ListYAMLFiles("out")
 
 	err = kube.Import(
-		kube.WithImportAppName("karpenter"),
+		kube.WithImportAppName(AppName),
 		kube.WithImportManifestFiles(ly),
-		kube.WithImportPackageName("karpenter"),
+		kube.WithImportPackageName(strings.ReplaceAll(AppName, "-", "")),
 		kube.WithImportRemoveAppName(true),
 		kube.WithImportOutputDirectory("out/go"),
 	)
