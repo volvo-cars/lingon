@@ -7,11 +7,11 @@ replace github.com/volvo-cars/lingon => ../../
 require (
 	github.com/aws/karpenter v0.27.5
 	github.com/aws/karpenter-core v0.27.5
-	github.com/hashicorp/hcl/v2 v2.16.2
+	github.com/golingon/terraproviders/aws/5.0.1 v0.0.0-20230527224032-e3f7aec64712
+	github.com/golingon/terraproviders/tls/4.0.4 v0.0.0-20230527224032-e3f7aec64712
 	github.com/hashicorp/terraform-exec v0.18.1
 	github.com/hashicorp/terraform-json v0.16.0
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.65.1
-	github.com/stretchr/testify v1.8.2
 	github.com/volvo-cars/lingon v0.0.0-20230522071136-dca6a6fc5a39
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 	k8s.io/api v0.27.2
@@ -27,7 +27,6 @@ require (
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/aws/aws-sdk-go v1.44.270 // indirect
 	github.com/dave/jennifer v1.6.1 // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/eidolon/wordwrap v0.0.0-20161011182207-e0f54129b8bb // indirect
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
@@ -39,6 +38,7 @@ require (
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect
+	github.com/hashicorp/hcl/v2 v2.16.2 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/leodido/go-urn v1.2.4 // indirect
@@ -47,7 +47,6 @@ require (
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/samber/lo v1.38.1 // indirect
 	github.com/tidwall/gjson v1.14.4 // indirect

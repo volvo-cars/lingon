@@ -6,8 +6,8 @@ package infra
 import (
 	"fmt"
 
+	aws "github.com/golingon/terraproviders/aws/5.0.1"
 	"github.com/volvo-cars/lingon/pkg/terra"
-	aws "github.com/volvo-cars/lingoneks/providers/aws/4.66.1"
 )
 
 type Opts struct {
@@ -54,9 +54,10 @@ func NewAWSVPC(opts Opts) *AWSVPC {
 		name, aws.VpcArgs{
 			CidrBlock: S(opts.CIDR),
 			// Tags:             ttags(map[string]string{TagName: opts.Name}),
-			InstanceTenancy:  S("default"),
-			EnableDnsSupport: B(true),
-			Tags:             tags(opts.Name),
+			InstanceTenancy:    S("default"),
+			EnableDnsSupport:   B(true), // must be enabled for EFS
+			EnableDnsHostnames: B(true), // must be enabled for EFS
+			Tags:               tags(opts.Name),
 		},
 	)
 

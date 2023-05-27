@@ -4,10 +4,10 @@
 package infra
 
 import (
+	aws "github.com/golingon/terraproviders/aws/5.0.1"
+	"github.com/golingon/terraproviders/aws/5.0.1/s3bucketserversideencryptionconfiguration"
+	"github.com/golingon/terraproviders/aws/5.0.1/s3bucketversioning"
 	"github.com/volvo-cars/lingon/pkg/terra"
-	aws "github.com/volvo-cars/lingoneks/providers/aws/4.66.1"
-	"github.com/volvo-cars/lingoneks/providers/aws/4.66.1/s3bucketserversideencryptionconfiguration"
-	"github.com/volvo-cars/lingoneks/providers/aws/4.66.1/s3bucketversioning"
 )
 
 type Bucket struct {

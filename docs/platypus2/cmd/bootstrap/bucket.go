@@ -1,3 +1,6 @@
+// Copyright (c) 2023 Volvo Car Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 package main
 
 import (
@@ -6,11 +9,11 @@ import (
 	"fmt"
 	"os"
 
+	aws "github.com/golingon/terraproviders/aws/5.0.1"
+	"github.com/golingon/terraproviders/aws/5.0.1/provider"
 	"github.com/volvo-cars/lingon/pkg/terra"
 	"github.com/volvo-cars/lingoneks/pkg/infra"
 	"github.com/volvo-cars/lingoneks/pkg/terraclient"
-	aws "github.com/volvo-cars/lingoneks/providers/aws/4.66.1"
-	"github.com/volvo-cars/lingoneks/providers/aws/4.66.1/provider"
 	"golang.org/x/exp/slog"
 )
 

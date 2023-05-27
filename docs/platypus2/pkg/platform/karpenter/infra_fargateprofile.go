@@ -6,9 +6,9 @@ package karpenter
 import (
 	"fmt"
 
-	aws "github.com/volvo-cars/lingoneks/providers/aws/4.66.1"
-	"github.com/volvo-cars/lingoneks/providers/aws/4.66.1/dataiampolicydocument"
-	"github.com/volvo-cars/lingoneks/providers/aws/4.66.1/eksfargateprofile"
+	aws "github.com/golingon/terraproviders/aws/5.0.1"
+	"github.com/golingon/terraproviders/aws/5.0.1/dataiampolicydocument"
+	"github.com/golingon/terraproviders/aws/5.0.1/eksfargateprofile"
 
 	"github.com/volvo-cars/lingon/pkg/terra"
 )

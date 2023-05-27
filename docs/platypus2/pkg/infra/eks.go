@@ -6,11 +6,11 @@ package infra
 import (
 	"fmt"
 
+	aws "github.com/golingon/terraproviders/aws/5.0.1"
+	"github.com/golingon/terraproviders/aws/5.0.1/dataiampolicydocument"
+	"github.com/golingon/terraproviders/aws/5.0.1/ekscluster"
+	tls "github.com/golingon/terraproviders/tls/4.0.4"
 	"github.com/volvo-cars/lingon/pkg/terra"
-	aws "github.com/volvo-cars/lingoneks/providers/aws/4.66.1"
-	"github.com/volvo-cars/lingoneks/providers/aws/4.66.1/dataiampolicydocument"
-	"github.com/volvo-cars/lingoneks/providers/aws/4.66.1/ekscluster"
-	tls "github.com/volvo-cars/lingoneks/providers/tls/4.0.4"
 )
 
 var (
@@ -154,7 +154,7 @@ func NewCluster(opts ClusterOpts) *Cluster {
 	)
 	iamOIDCProvider := aws.NewIamOpenidConnectProvider(
 		"eks", aws.IamOpenidConnectProviderArgs{
-			ClientIdList: terra.List(terra.String("sts.amazonaws.com")),
+			ClientIdList: terra.Set(terra.String("sts.amazonaws.com")),
 			ThumbprintList: terra.CastAsList(
 				tlsCert.Attributes().
 					Certificates().
