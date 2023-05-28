@@ -18,6 +18,9 @@ var _ kube.Exporter = (*Karpenter)(nil)
 
 // KARPENTER
 //
+// to activate spot instance:
+//		aws --profile=XXX iam create-service-linked-role --aws-service-name spot.amazonaws.com
+//
 // to see the logs:
 // 		kubectl logs -f -n karpenter -l app.kubernetes.io/name=karpenter -c controller
 //
