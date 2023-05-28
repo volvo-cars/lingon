@@ -9,6 +9,7 @@ require (
 	github.com/aws/karpenter-core v0.27.5
 	github.com/golingon/terraproviders/aws/5.0.1 v0.0.0-20230527224032-e3f7aec64712
 	github.com/golingon/terraproviders/tls/4.0.4 v0.0.0-20230527224032-e3f7aec64712
+	github.com/hashicorp/hcl/v2 v2.16.2
 	github.com/hashicorp/terraform-exec v0.18.1
 	github.com/hashicorp/terraform-json v0.16.0
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.65.1
@@ -38,7 +39,6 @@ require (
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect
-	github.com/hashicorp/hcl/v2 v2.16.2 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/leodido/go-urn v1.2.4 // indirect
