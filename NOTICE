@@ -21,7 +21,7 @@ github.com/hashicorp/go-version v1.6.0 : MPL-2.0
 github.com/hashicorp/hcl/v2 v2.16.2 : MPL-2.0
 github.com/hashicorp/terraform-exec v0.18.1 : MPL-2.0
 github.com/hashicorp/terraform-json v0.16.0 : MPL-2.0
-github.com/imdario/mergo v0.3.15 : BSD-3-Clause
+github.com/imdario/mergo v0.3.16 : BSD-3-Clause
 github.com/json-iterator/go v1.1.12 : MIT
 github.com/leodido/go-urn v1.2.4 : MIT
 github.com/mattn/go-colorable v0.1.13 : MIT
@@ -35,7 +35,7 @@ github.com/tidwall/match v1.1.1 : MIT
 github.com/tidwall/pretty v1.2.1 : MIT
 github.com/tidwall/sjson v1.2.5 : MIT
 github.com/veggiemonk/strcase v0.0.0-20230521123733-cfc6c0b1ba22 : MIT
-github.com/zclconf/go-cty/cty v1.13.1 : MIT
+github.com/zclconf/go-cty/cty v1.13.2 : MIT
 github.com/zegl/kube-score v1.16.1 : MIT
 golang.org/x/crypto/sha3 v0.9.0 : BSD-3-Clause
 golang.org/x/exp v0.0.0-20230519143937-03e91628a987 : BSD-3-Clause
@@ -101,7 +101,7 @@ github.com/hashicorp/terraform-exec v0.18.1
 
 github.com/hashicorp/terraform-json v0.16.0
 
-github.com/imdario/mergo v0.3.15
+github.com/imdario/mergo v0.3.16
 
 github.com/json-iterator/go v1.1.12
 
@@ -129,7 +129,7 @@ github.com/tidwall/sjson v1.2.5
 
 github.com/veggiemonk/strcase v0.0.0-20230521123733-cfc6c0b1ba22
 
-github.com/zclconf/go-cty/cty v1.13.1
+github.com/zclconf/go-cty/cty v1.13.2
 
 github.com/zegl/kube-score v1.16.1
 
@@ -2692,7 +2692,7 @@ Exhibit B - "Incompatible With Secondary Licenses" Notice
 ---
 
 BSD-3-Clause
-(github.com/imdario/mergo v0.3.15)
+(github.com/imdario/mergo v0.3.16)
 
 Copyright (c) 2013 Dario Castañé. All rights reserved.
 Copyright (c) 2012 The Go Authors. All rights reserved.
@@ -3442,7 +3442,7 @@ SOFTWARE.
 ---
 
 MIT
-(github.com/zclconf/go-cty/cty v1.13.1)
+(github.com/zclconf/go-cty/cty v1.13.2)
 
 MIT License
 
