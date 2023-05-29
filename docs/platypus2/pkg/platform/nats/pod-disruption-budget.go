@@ -18,10 +18,8 @@ var PDB = &policyv1.PodDisruptionBudget{
 		Namespace: namespace,
 	},
 	Spec: policyv1.PodDisruptionBudgetSpec{
-		MaxUnavailable: &intstr.IntOrString{IntVal: int32(1)},
-		Selector: &metav1.LabelSelector{
-			MatchLabels: matchLabels,
-		},
+		MaxUnavailable: P(intstr.FromInt(1)),
+		Selector:       &metav1.LabelSelector{MatchLabels: matchLabels},
 	},
 	TypeMeta: metav1.TypeMeta{
 		APIVersion: "policy/v1",

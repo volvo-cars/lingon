@@ -75,7 +75,7 @@ var SVC = &corev1.Service{
 	Spec: corev1.ServiceSpec{
 		// Headless Services - no load balancing
 		// https://kubernetes.io/docs/concepts/services-networking/service/#headless-services
-		ClusterIP:                "None",
+		ClusterIP:                corev1.ClusterIPNone,
 		Ports:                    mapToSlice(ports),
 		PublishNotReadyAddresses: true,
 		Selector:                 matchLabels,

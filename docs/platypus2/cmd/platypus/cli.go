@@ -41,6 +41,7 @@ type runParams struct {
 	AWSParams      AWSParams
 	KubeconfigPath string
 	ManifestPath   string
+	ResumeFrom     string
 	ClusterParams  ClusterParams
 	TFLabels       map[string]string
 	KLabels        map[string]string
@@ -48,11 +49,13 @@ type runParams struct {
 	Destroy        bool
 	Plan           bool
 }
+
 type AWSParams struct {
 	BackendS3Key string
 	Region       string
 	Profile      string
 }
+
 type ClusterParams struct {
 	Name    string
 	Version string
@@ -182,7 +185,6 @@ func run(p runParams) error {
 	}
 
 	// EKS
-
 	StepSep("tf eks")
 
 	vpcID := vpcState.Id
@@ -499,6 +501,8 @@ func run(p runParams) error {
 		return finishAndDestroy(ctx, p, tf)
 	}
 
+	StepSep("end")
+
 	fmt.Printf("\nTerriyaki Summary:\n")
 	for _, mod := range tf.Stacks() {
 		diff := "no plan"
@@ -515,7 +519,6 @@ func run(p runParams) error {
 		)
 	}
 
-	StepSep("end")
 	return nil
 }
 

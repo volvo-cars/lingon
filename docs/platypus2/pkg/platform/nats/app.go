@@ -56,9 +56,9 @@ func New() *Nats {
 			StreamsNatsIoCRD:         jetstream.StreamsJetstreamNatsIoCRD,
 			StreamtemplatesNatsIoCRD: jetstream.StreamTemplatesJetstreamNatsIoCRD,
 		},
-		NS:                 NS,
 		Surveyor:           *surveyor.New(),
 		Benthos:            *benthos.New(),
+		NS:                 NS,
 		BoxDeploy:          BoxDeploy,
 		ConfigCM:           cm.ConfigMap(),
 		PDB:                PDB,
@@ -78,68 +78,19 @@ type CRD struct {
 }
 
 const (
-	appName   = "nats"
-	namespace = "nats"
-	version   = "2.9.16"
-	replicas  = 3
-)
-
-const (
+	appName           = "nats"
+	namespace         = "nats"
+	version           = "2.9.16"
+	replicas          = 3
 	ImgNats           = "nats:" + version + "-alpine"
-	ImgConfigReloader = "natsio/nats-server-config-reloader:0.10.1"
-	ImgPromExporter   = "natsio/prometheus-nats-exporter:0.10.1"
-)
-
-const (
-	PortClient     int32 = 4222
-	PortNameClient       = "client"
-
-	PortCluster     int32 = 6222
-	PortNameCluster       = "cluster"
-
-	PortMonitor     int32 = 8222
-	PortNameMonitor       = "monitor"
-
-	PortMetrics     int32 = 7777
-	PortNameMetrics       = "metrics"
-
-	PortLeafNodes     int32 = 7422
-	PortNameLeafNodes       = "leafnodes"
-
-	PortGateways     int32 = 7522
-	PortNameGateways       = "gateways"
-
-	PortProbe = 8222
+	sidecarVersion    = "0.10.1"
+	ImgConfigReloader = "natsio/nats-server-config-reloader:" + sidecarVersion
+	ImgPromExporter   = "natsio/prometheus-nats-exporter:" + sidecarVersion
 )
 
 var (
 	NS = ku.Namespace(namespace, BaseLabels(), nil)
-
 	SA = ku.ServiceAccount(appName, namespace, BaseLabels(), nil)
-
-	cmd = map[string][]string{
-		ImgNats: {
-			"nats-server",
-			"--config",
-			"/etc/nats-config/nats.conf",
-		},
-		ImgConfigReloader: {
-			"nats-server-config-reloader",
-			"-pid",
-			"/var/run/nats/nats.pid",
-			"-config",
-			"/etc/nats-config/nats.conf",
-		},
-		ImgPromExporter: {
-			"-connz",
-			"-routez",
-			"-subz",
-			"-varz",
-			"-prefix=nats",
-			"-use_internal_server_id",
-			"http://localhost:8222/",
-		},
-	}
 )
 
 var matchLabels = map[string]string{

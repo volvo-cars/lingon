@@ -72,8 +72,9 @@ func NewAWSVPC(opts Opts) *AWSVPC {
 	for i := 0; i < 3; i++ {
 		eipNats[i] = aws.NewEip(
 			fmt.Sprintf("nats_%d", i), aws.EipArgs{
-				Vpc:  B(true),
-				Tags: tags("nat-" + opts.AZs[i]),
+				// Vpc:    B(true), // deprecated
+				Domain: S("vpc"),
+				Tags:   tags("nat-" + opts.AZs[i]),
 			},
 		)
 	}

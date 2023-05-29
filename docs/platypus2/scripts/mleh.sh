@@ -32,12 +32,13 @@ pushd "$ROOT_DIR"
 
 # build a version of kygo with all possible CRDs
 function tool() {
-  pushd $TEMPD > /dev/null
+  pushd "$TEMPD" > /dev/null
   git clone --depth 1 "https://github.com/veggiemonk/lingonweb"
   popd > /dev/null
 
   pushd "$TEMPD"/lingonweb > /dev/null
   [ $DEBUG ] && printf  "\n replace github.com/volvo-cars/lingon => ../../ \n" >> go.mod
+  go mod tidy
   go build -o kygo ./cmd/kygo && mv kygo "$TEMPD"
   popd > /dev/null
   [ $DEBUG ] && rm -rf "$TEMPD"/lingonweb

@@ -44,21 +44,15 @@ func NewClient(opts ...func(*clientOpts)) *Client {
 }
 
 func WithDefaultPlan(b bool) func(o *clientOpts) {
-	return func(o *clientOpts) {
-		o.plan = b
-	}
+	return func(o *clientOpts) { o.plan = b }
 }
 
 func WithDefaultApply(b bool) func(o *clientOpts) {
-	return func(o *clientOpts) {
-		o.apply = b
-	}
+	return func(o *clientOpts) { o.apply = b }
 }
 
 func WithDefaultDestroy(b bool) func(o *clientOpts) {
-	return func(o *clientOpts) {
-		o.destroy = b
-	}
+	return func(o *clientOpts) { o.destroy = b }
 }
 
 type clientOpts struct {
@@ -76,21 +70,15 @@ type Client struct {
 }
 
 func WithRunPlan(b bool) func(o *runOpts) {
-	return func(o *runOpts) {
-		o.plan = b
-	}
+	return func(o *runOpts) { o.plan = b }
 }
 
 func WithRunApply(b bool) func(o *runOpts) {
-	return func(o *runOpts) {
-		o.apply = b
-	}
+	return func(o *runOpts) { o.apply = b }
 }
 
 func WithRunDestroy(b bool) func(o *runOpts) {
-	return func(o *runOpts) {
-		o.destroy = b
-	}
+	return func(o *runOpts) { o.destroy = b }
 }
 
 type runOpts struct {

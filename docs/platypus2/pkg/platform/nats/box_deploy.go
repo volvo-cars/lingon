@@ -6,9 +6,52 @@
 package nats
 
 import (
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+const (
+	natsBox        = "nats-box"
+	natsBoxVersion = "0.13.8"
+)
+
+var natsBoxLabel = map[string]string{"app": natsBox}
+
+var BoxDeploy = &appsv1.Deployment{
+	ObjectMeta: metav1.ObjectMeta{
+		Labels:    natsBoxLabel,
+		Name:      natsBox,
+		Namespace: namespace,
+	},
+	Spec: appsv1.DeploymentSpec{
+		Replicas: P(int32(1)),
+		Selector: &metav1.LabelSelector{MatchLabels: natsBoxLabel},
+		Template: corev1.PodTemplateSpec{
+			ObjectMeta: metav1.ObjectMeta{Labels: natsBoxLabel},
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{
+					{
+						Command: []string{"tail", "-f", "/dev/null"},
+						Env: []corev1.EnvVar{
+							{
+								Name:  "NATS_URL",
+								Value: "nats",
+							},
+						},
+						Image:           "natsio/" + natsBox + ":" + natsBoxVersion,
+						ImagePullPolicy: corev1.PullPolicy("IfNotPresent"),
+						Name:            natsBox,
+					},
+				},
+			},
+		},
+	},
+	TypeMeta: metav1.TypeMeta{
+		APIVersion: "apps/v1",
+		Kind:       "Deployment",
+	},
+}
 
 var TestRequestReplyPO = &corev1.Pod{
 	ObjectMeta: metav1.ObjectMeta{

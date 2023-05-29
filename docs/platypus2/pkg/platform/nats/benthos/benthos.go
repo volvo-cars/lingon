@@ -8,8 +8,11 @@ package benthos
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
+
+	"github.com/volvo-cars/lingoneks/pkg/platform/monitoring"
 
 	promoperatorv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/volvo-cars/lingon/pkg/kube"
@@ -172,7 +175,7 @@ var BenthosPodConnectionTest = &corev1.Pod{
 	Spec: corev1.PodSpec{
 		Containers: []corev1.Container{
 			{
-				Args:    []string{"benthos:/ping"},
+				Args:    []string{fmt.Sprintf("benthos:%d/ping", port)},
 				Command: []string{"wget"},
 				Image:   "busybox",
 				Name:    "wget",
@@ -196,8 +199,8 @@ var Deploy = &appsv1.Deployment{
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
 				// TODO: checksum
-				Annotations: map[string]string{"checksum/config": "7e15d5e49715ee49e7173b95dee1cc57ced6d3f26d4e19e056dbceb3ab4fd7c7"},
-				Labels:      matchLabels,
+				// Annotations: map[string]string{"checksum/config": "7e15d5e49715ee49e7173b95dee1cc57ced6d3f26d4e19e056dbceb3ab4fd7c7"},
+				Labels: matchLabels,
 			},
 			Spec: corev1.PodSpec{
 				ServiceAccountName: SA.Name,
@@ -249,7 +252,7 @@ func probe(path string) *corev1.Probe {
 var ServiceMonitor = &promoperatorv1.ServiceMonitor{
 	ObjectMeta: metav1.ObjectMeta{
 		Name:      appName,
-		Namespace: "monitoring",
+		Namespace: monitoring.Namespace,
 		Labels:    BaseLabels(),
 	},
 	Spec: promoperatorv1.ServiceMonitorSpec{

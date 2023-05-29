@@ -8,13 +8,14 @@ package nats
 import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
+	"github.com/volvo-cars/lingoneks/pkg/platform/monitoring"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var ServiceMonitor = &v1.ServiceMonitor{
 	ObjectMeta: metav1.ObjectMeta{
 		Name:      appName,
-		Namespace: "monitoring",
+		Namespace: monitoring.Namespace,
 		Labels:    BaseLabels(),
 	},
 	Spec: v1.ServiceMonitorSpec{
