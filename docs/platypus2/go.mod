@@ -7,13 +7,13 @@ replace github.com/volvo-cars/lingon => ../../
 require (
 	github.com/aws/karpenter v0.27.5
 	github.com/aws/karpenter-core v0.27.5
-	github.com/golingon/terraproviders/aws/5.0.1 v0.0.0-20230527224032-e3f7aec64712
-	github.com/golingon/terraproviders/tls/4.0.4 v0.0.0-20230527224032-e3f7aec64712
+	github.com/golingon/terraproviders/aws/5.0.1 v0.0.0-20230527233228-68663550bae0
+	github.com/golingon/terraproviders/tls/4.0.4 v0.0.0-20230527233228-68663550bae0
 	github.com/hashicorp/hcl/v2 v2.16.2
 	github.com/hashicorp/terraform-exec v0.18.1
 	github.com/hashicorp/terraform-json v0.16.0
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.65.1
-	github.com/volvo-cars/lingon v0.0.0-20230522071136-dca6a6fc5a39
+	github.com/volvo-cars/lingon v0.0.0-20230529113525-2f8eb8598205
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 	k8s.io/api v0.27.2
 	k8s.io/apiextensions-apiserver v0.27.2
@@ -26,7 +26,7 @@ require (
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
-	github.com/aws/aws-sdk-go v1.44.270 // indirect
+	github.com/aws/aws-sdk-go v1.44.271 // indirect
 	github.com/dave/jennifer v1.6.1 // indirect
 	github.com/eidolon/wordwrap v0.0.0-20161011182207-e0f54129b8bb // indirect
 	github.com/fatih/color v1.15.0 // indirect
@@ -53,7 +53,7 @@ require (
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/tidwall/sjson v1.2.5 // indirect
-	github.com/veggiemonk/strcase v0.0.0-20230521123733-cfc6c0b1ba22 // indirect
+	github.com/veggiemonk/strcase v0.0.0-20230526161048-ad38aa882cb5 // indirect
 	github.com/zclconf/go-cty v1.13.2 // indirect
 	github.com/zegl/kube-score v1.16.1 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
