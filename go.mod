@@ -16,7 +16,7 @@ require (
 	github.com/tidwall/gjson v1.14.4
 	github.com/tidwall/sjson v1.2.5
 	github.com/veggiemonk/strcase v0.0.0-20230521123733-cfc6c0b1ba22
-	github.com/zclconf/go-cty v1.13.1
+	github.com/zclconf/go-cty v1.13.2
 	github.com/zegl/kube-score v1.16.1
 	golang.org/x/exp v0.0.0-20230519143937-03e91628a987
 	gopkg.in/yaml.v3 v3.0.1
