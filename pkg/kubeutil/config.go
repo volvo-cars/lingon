@@ -64,19 +64,27 @@ func (m ConfigAndMount) VolumeAndMount() VolumeAndMount {
 func (m ConfigAndMount) HashEnv(name string) corev1.EnvVar {
 	h := sha256.New()
 	if err := json.NewEncoder(h).Encode(m.Data); err != nil {
-		panic(
-			fmt.Sprintf(
-				"failed to JSON encode & hash configMap data for %s, err: %v",
-				m.VolumeMount.Name,
-				err,
-			),
-		)
+		panic(fmt.Sprintf("failed to JSON encode & hash configMap data for %s, err: %v",
+			m.VolumeMount.Name,
+			err))
 	}
 
 	return corev1.EnvVar{
 		Name:  name,
 		Value: base64.URLEncoding.EncodeToString(h.Sum(nil)),
 	}
+}
+
+// Hash returns the hash of the ConfigMap data.
+func (m ConfigAndMount) Hash() string {
+	h := sha256.New()
+	if err := json.NewEncoder(h).Encode(m.Data); err != nil {
+		panic(fmt.Sprintf("failed to JSON encode & hash configMap data for %s, err: %v",
+			m.VolumeMount.Name,
+			err))
+	}
+
+	return base64.URLEncoding.EncodeToString(h.Sum(nil))
 }
 
 // VolumeAndMount is a helper struct to create a Volume and a VolumeSource

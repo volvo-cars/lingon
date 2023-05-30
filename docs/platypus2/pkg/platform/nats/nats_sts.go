@@ -65,7 +65,7 @@ func srvURLs(r int) string {
 var natsConfig = map[string]string{
 	natsConfigFile: `
 # NATS Clients Port
-port: ` + fmt.Sprintf("%d", PortClient) + `
+port: ` + d(PortClient) + `
 # PID file shared with configuration reloader.
 pid_file: "` + natsPIDPath + `"
 ###############
@@ -73,7 +73,7 @@ pid_file: "` + natsPIDPath + `"
 # Monitoring  #
 #             #
 ###############
-http: ` + fmt.Sprintf("%d", PortProbe) + `
+http: ` + d(PortProbe) + `
 server_name:$POD_NAME
 server_tags: [
     "4GiB",
@@ -84,6 +84,7 @@ server_tags: [
 #                                 #
 ###################################
 cluster {
+  name: natscluster
   port: ` + d(PortCluster) + `
   routes = [
 ` + srvURLs(replicas) + `
@@ -128,14 +129,7 @@ var STS = &appsv1.StatefulSet{
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
 				Annotations: ku.AnnotationPrometheus(ku.PathMetrics, PortMetrics),
-				// TODO: checksum/config
-				// Annotations: map[string]string{
-				// 	"checksum/config":      "7f38e14ac96d519ba71b7154f94978c89119ea52eb682d730406fcfa3eeee880",
-				// 	"prometheus.io/path":   ku.PathMetrics,
-				// 	"prometheus.io/port":   fmt.Sprintf("%d", PortMetrics),
-				// 	"prometheus.io/scrape": "true",
-				// },
-				Labels: matchLabels,
+				Labels:      matchLabels,
 			},
 			Spec: corev1.PodSpec{
 				Affinity: &corev1.Affinity{PodAntiAffinity: ku.AntiAffinityHostnameByLabel("app", appName)},
@@ -150,80 +144,36 @@ var STS = &appsv1.StatefulSet{
 							ku.EnvVarDownAPI("POD_NAME", "metadata.name"),
 							ku.EnvVarDownAPI("POD_NAMESPACE", "metadata.namespace"),
 							{Name: "SERVER_NAME", Value: "$(POD_NAME)"},
-							{
-								Name:  "CLUSTER_ADVERTISE",
-								Value: "$(POD_NAME).nats.$(POD_NAMESPACE).svc.cluster.local",
-							},
+							{Name: "CLUSTER_ADVERTISE", Value: "$(POD_NAME).nats.$(POD_NAMESPACE).svc.cluster.local"},
+							// cm.HashEnv("CONFIG_HASH_ENV"), // no need since we have the config-reloader
 						},
 
-						Lifecycle: &corev1.Lifecycle{
-							PreStop: &corev1.LifecycleHandler{
-								Exec: &corev1.ExecAction{
-									Command: []string{
-										"nats-server",
-										"-sl=ldm=" + natsPIDPath,
-									},
-								},
-							},
-						},
+						Lifecycle: preStop("nats-server", "-sl=ldm="+natsPIDPath),
 
 						LivenessProbe:  probe,
 						ReadinessProbe: probe,
 						StartupProbe:   startupProbe,
 
 						Ports: []corev1.ContainerPort{
-							{
-								ContainerPort: ports[PortNameClient].Port,
-								Name:          ports[PortNameClient].Name,
-							},
-							{
-								ContainerPort: ports[PortNameCluster].Port,
-								Name:          ports[PortNameCluster].Name,
-							},
-							{
-								ContainerPort: ports[PortNameMonitor].Port,
-								Name:          ports[PortNameMonitor].Name,
-							},
+							{ContainerPort: ports[PortNameClient].Port, Name: ports[PortNameClient].Name},
+							{ContainerPort: ports[PortNameCluster].Port, Name: ports[PortNameCluster].Name},
+							{ContainerPort: ports[PortNameMonitor].Port, Name: ports[PortNameMonitor].Name},
 						},
-						Resources: ku.Resources("2", "4Gi", "2", "4Gi"),
-						VolumeMounts: []corev1.VolumeMount{
-							cm.VolumeMount,
-							pidVolumeMount,
-						},
+
+						Resources:    ku.Resources("2", "4Gi", "2", "4Gi"),
+						VolumeMounts: []corev1.VolumeMount{cm.VolumeMount, pidVolumeMount},
 					}, {
-						Name:  "reloader",
-						Image: ImgConfigReloader,
-						Command: []string{
-							"nats-server-config-reloader",
-							"-pid",
-							natsPIDPath,
-							"-config",
-							natsConfigPath,
-						},
+						Name:            "reloader",
+						Image:           ImgConfigReloader,
+						Command:         []string{"nats-server-config-reloader", "-pid", natsPIDPath, "-config", natsConfigPath},
 						ImagePullPolicy: corev1.PullIfNotPresent,
-						VolumeMounts: []corev1.VolumeMount{
-							cm.VolumeMount,
-							pidVolumeMount,
-						},
+						VolumeMounts:    []corev1.VolumeMount{cm.VolumeMount, pidVolumeMount},
 					}, {
-						Name:  "promexporter",
-						Image: ImgPromExporter,
-						Args: []string{
-							"-connz",
-							"-routez",
-							"-subz",
-							"-varz",
-							"-prefix=nats",
-							"-use_internal_server_id",
-							"http://localhost:" + d(PortMonitor) + "/",
-						},
+						Name:            "promexporter",
+						Image:           ImgPromExporter,
+						Args:            []string{"-connz", "-routez", "-subz", "-varz", "-prefix=nats", "-use_internal_server_id", "http://localhost:" + d(PortMonitor) + "/"},
 						ImagePullPolicy: corev1.PullIfNotPresent,
-						Ports: []corev1.ContainerPort{
-							{
-								ContainerPort: PortMetrics,
-								Name:          PortNameMetrics,
-							},
-						},
+						Ports:           []corev1.ContainerPort{{ContainerPort: PortMetrics, Name: PortNameMetrics}},
 					},
 				},
 				DNSPolicy:                     corev1.DNSClusterFirst,
@@ -232,14 +182,17 @@ var STS = &appsv1.StatefulSet{
 				TerminationGracePeriodSeconds: P(int64(60)),
 				Volumes: []corev1.Volume{
 					cm.VolumeAndMount().Volume(),
-					{
-						Name:         pidVolumeMount.Name,
-						VolumeSource: corev1.VolumeSource{},
-					},
+					{Name: pidVolumeMount.Name, VolumeSource: corev1.VolumeSource{}},
 				},
 			},
 		},
 	},
+}
+
+func preStop(cmd ...string) *corev1.Lifecycle {
+	return &corev1.Lifecycle{
+		PreStop: &corev1.LifecycleHandler{Exec: &corev1.ExecAction{Command: cmd}},
+	}
 }
 
 var probe = &corev1.Probe{

@@ -27,12 +27,15 @@ import (
 var _ kube.Exporter = (*Benthos)(nil)
 
 const (
-	appName    = "benthos"
-	namespace  = "benthos" // TODO: could be in the same namespace as nats
-	version    = "4.11.0"
-	ImgBenthos = "jeffail/benthos:" + version
-	port       = 4195
-	portName   = "http"
+	appName               = "benthos"
+	namespace             = "benthos" // TODO: could be in the same namespace as nats
+	version               = "4.11.0"
+	ImgBenthos            = "jeffail/benthos:" + version
+	port                  = 4195
+	portName              = "http"
+	benthosConfigBasePath = "/etc/benthos-config"
+	benthosConfigFile     = "benthos.yaml"
+	benthosConfigPath     = benthosConfigBasePath + "/" + benthosConfigFile
 )
 
 var (
@@ -108,7 +111,21 @@ func New() *Benthos {
 // benthosConfig is a config for Benthos,
 // it can be generated with `benthos create "in/pipe/out"`.
 var benthosConfig = map[string]string{
-	"benthos.yaml": `
+	benthosConfigFile: `
+input:
+  generate:
+    interval: 1s
+    mapping: |
+      root.id = uuid_v4()
+output:
+  nats:
+    urls:
+      - nats://nats-0.nats.nats.svc.cluster.local:4222
+    subject: demo
+metrics:
+  prometheus: {}
+`,
+	"benthos2.yaml": `
 http:
   enabled: true
   address: 0.0.0.0:4195
@@ -158,7 +175,7 @@ var benthosCM = ku.ConfigAndMount{
 	},
 	VolumeMount: corev1.VolumeMount{
 		Name:      "config-volume",
-		MountPath: "/benthos.yaml",
+		MountPath: benthosConfigBasePath,
 	},
 }
 
@@ -197,34 +214,24 @@ var Deploy = &appsv1.Deployment{
 		Replicas: P(int32(1)),
 		Selector: &metav1.LabelSelector{MatchLabels: matchLabels},
 		Template: corev1.PodTemplateSpec{
-			ObjectMeta: metav1.ObjectMeta{
-				// TODO: checksum
-				// Annotations: map[string]string{"checksum/config": "7e15d5e49715ee49e7173b95dee1cc57ced6d3f26d4e19e056dbceb3ab4fd7c7"},
-				Labels: matchLabels,
-			},
+			ObjectMeta: metav1.ObjectMeta{Labels: matchLabels},
 			Spec: corev1.PodSpec{
 				ServiceAccountName: SA.Name,
 				Containers: []corev1.Container{
 					{
-						Name:  appName,
-						Image: ImgBenthos,
-						Args: []string{
-							"-c",
-							"/benthos.yaml",
-						},
-						Env:             []corev1.EnvVar{},
+						Name:            appName,
+						Image:           ImgBenthos,
+						Args:            []string{"-c", benthosConfigPath},
+						Env:             []corev1.EnvVar{benthosCM.HashEnv("CONFIG_HASH_ENV")},
 						ImagePullPolicy: corev1.PullIfNotPresent,
 						Ports:           []corev1.ContainerPort{containerPort(port)},
 						LivenessProbe:   probe("/ping"),
 						ReadinessProbe:  probe("/ready"),
-						Resources: ku.Resources(
-							"2",
-							"4Gi",
-							"2",
-							"4Gi",
-						),
+						Resources:       ku.Resources("2", "4Gi", "2", "4Gi"),
+						VolumeMounts:    []corev1.VolumeMount{benthosCM.VolumeMount},
 					},
 				},
+				Volumes: []corev1.Volume{benthosCM.VolumeAndMount().Volume()},
 			},
 		},
 	},
