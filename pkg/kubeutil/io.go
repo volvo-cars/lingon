@@ -20,6 +20,10 @@ func ListYAMLFiles(root string) ([]string, error) {
 	return listFiles(root, []string{".yaml", ".yml"})
 }
 
+func ListJSONFiles(root string) ([]string, error) {
+	return listFiles(root, []string{".json"})
+}
+
 func listFiles(root string, extensions []string) ([]string, error) {
 	var files []string
 

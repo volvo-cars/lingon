@@ -36,7 +36,7 @@ func main() {
 func run(log *slog.Logger) error {
 	cfg := struct {
 		conf.Version
-		NatsServers         []string      `conf:"default:nats://127.0.0.1:4222"` // "nats://localhost:1222, nats://localhost:1223, nats://localhost:1224"
+		NatsServers         []string      `conf:"default:nats://127.0.0.1:4222"`
 		GRPCPort            int           `conf:"default:7015"`
 		HTTPPort            int           `conf:"default:9000,env:PORT"`
 		HTTPHost            string        `conf:"default:0.0.0.0"`
@@ -65,7 +65,6 @@ func run(log *slog.Logger) error {
 	}
 
 	ctx := context.Background()
-	// Closing signal
 	ctx, cancel := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	defer cancel()
 
@@ -130,23 +129,12 @@ func makeLogger(w io.Writer) *slog.Logger {
 		w = os.Stderr
 	}
 	return slog.New(
-		slog.NewTextHandler(
-			w,
-			&slog.HandlerOptions{
-				AddSource:   true,
-				ReplaceAttr: logReplace,
-			},
-		).WithAttrs(
-			[]slog.Attr{slog.String("app", serviceName)},
-		),
+		slog.NewTextHandler(w, &slog.HandlerOptions{AddSource: true, ReplaceAttr: logReplace}).
+			WithAttrs([]slog.Attr{slog.String("app", serviceName)}),
 	)
 }
 
 func logReplace(_ []string, a slog.Attr) slog.Attr {
-	// // Remove time.
-	// if a.Key == slog.TimeKey && len(groups) == 0 {
-	// 	a.Key = ""
-	// }
 	// Remove the directory from the source's filename.
 	if a.Key == slog.SourceKey {
 		source := a.Value.Any().(*slog.Source)

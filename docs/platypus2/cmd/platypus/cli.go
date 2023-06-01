@@ -12,6 +12,8 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/volvo-cars/lingoneks/pkg/platform/benthos"
+
 	"github.com/volvo-cars/lingon/pkg/kube"
 	"github.com/volvo-cars/lingon/pkg/terra"
 	"github.com/volvo-cars/lingoneks/pkg/infra"
@@ -499,6 +501,20 @@ func run(p runParams) error {
 	// in case the state is in sync but destroy flag was passed
 	if p.Destroy {
 		return finishAndDestroy(ctx, p, tf)
+	}
+
+	// Benthos processing
+
+	StepSep("k8s benthos")
+
+	if err := kubeExportApply(
+		ctx,
+		benthos.New(benthos.BenthosArgs{}),
+		"benthos",
+		kctlOpts,
+		"apply", "-f", "-",
+	); err != nil {
+		return err
 	}
 
 	StepSep("end")
