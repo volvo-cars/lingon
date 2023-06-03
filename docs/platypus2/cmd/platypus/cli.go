@@ -462,10 +462,7 @@ func run(p runParams) error {
 	StepSep("k8s metrics-server")
 
 	if err := kubeExportApply(
-		ctx,
-		metricsserver.New(),
-		"metricsserver",
-		kctlOpts,
+		ctx, metricsserver.New(), "metricsserver", kctlOpts,
 		"apply", "-f", "-",
 	); err != nil {
 		return err
@@ -474,10 +471,7 @@ func run(p runParams) error {
 	StepSep("k8s kube-prometheus-stack")
 
 	if err := kubeExportApply(
-		ctx,
-		promstack.New(),
-		"promstack",
-		kctlOpts,
+		ctx, promstack.New(), "promstack", kctlOpts,
 		"apply", "-f", "-",
 	); err != nil {
 		return err
@@ -488,19 +482,10 @@ func run(p runParams) error {
 	StepSep("k8s nats")
 
 	if err := kubeExportApply(
-		ctx,
-		nats.New(),
-		"nats",
-		kctlOpts,
+		ctx, nats.New(), "nats", kctlOpts,
 		"apply", "-f", "-",
 	); err != nil {
 		return err
-	}
-
-	// This needs to come last,
-	// in case the state is in sync but destroy flag was passed
-	if p.Destroy {
-		return finishAndDestroy(ctx, p, tf)
 	}
 
 	// Benthos processing
@@ -508,16 +493,36 @@ func run(p runParams) error {
 	StepSep("k8s benthos")
 
 	if err := kubeExportApply(
-		ctx,
-		benthos.New(benthos.BenthosArgs{}),
-		"benthos",
-		kctlOpts,
+		ctx, benthos.New(benthos.BenthosArgs{}), "benthos", kctlOpts,
 		"apply", "-f", "-",
 	); err != nil {
 		return err
 	}
 
 	StepSep("end")
+
+	// This needs to come last,
+	// in case the state is in sync but destroy flag was passed
+	if p.Destroy {
+
+		if err := kubeExportApply(
+			ctx, nats.New(), "nats", kctlOpts,
+			"delete", "-f", "-",
+		); err != nil {
+			return err
+		}
+
+		// Benthos processing
+
+		if err := kubeExportApply(
+			ctx, benthos.New(benthos.BenthosArgs{}), "benthos", kctlOpts,
+			"delete", "-f", "-",
+		); err != nil {
+			return err
+		}
+
+		return finishAndDestroy(ctx, p, tf)
+	}
 
 	fmt.Printf("\nTerriyaki Summary:\n")
 	for _, mod := range tf.Stacks() {

@@ -35,8 +35,8 @@ func DataConfigMap(
 // ConfigAndMount is a helper struct to create a ConfigMap and a VolumeMount
 type ConfigAndMount struct {
 	metav1.ObjectMeta
-	corev1.VolumeMount //nolint:govet
-	Data               map[string]string
+	VolumeMount corev1.VolumeMount
+	Data        map[string]string
 }
 
 // ConfigMap creates a ConfigMap from the ConfigAndMount

@@ -14,15 +14,20 @@ echo '██      ██ ███████ ███████ ██   �
 echo '                                   '
 
 
-set -exuo pipefail
+set -e
+set -x
+set -u
+set -o pipefail
 
 command -v helm > /dev/null
+command -v kustomize > /dev/null
 command -v go > /dev/null
 command -v git > /dev/null
+command -v wget > /dev/null
 
 ROOT_DIR=$(git rev-parse --show-toplevel)
 VALUES_DIR="$ROOT_DIR"/docs/platypus2/scripts
-TEMPD="$ROOT_DIR"/out
+TEMPD="$VALUES_DIR"/out
 KYGO="$TEMPD"/kygo
 
 DEBUG=0
@@ -37,7 +42,7 @@ function tool() {
   popd > /dev/null
 
   pushd "$TEMPD"/lingonweb > /dev/null
-  [ $DEBUG ] && printf  "\n replace github.com/volvo-cars/lingon => ../../ \n" >> go.mod
+  [ $DEBUG ] && printf  "\n replace github.com/volvo-cars/lingon => ../../../../../ \n" >> go.mod
   go mod tidy
   go build -o kygo ./cmd/kygo && mv kygo "$TEMPD"
   popd > /dev/null
@@ -47,14 +52,18 @@ function tool() {
 
 function install_repo() {
   helm repo add external-secrets https://charts.external-secrets.io
-  helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+  helm repo add external-dns https://kubernetes-sigs.github.io/external-dns/
+  helm repo add eks https://aws.github.io/eks-charts
   helm repo add aws-ebs-csi-driver https://kubernetes-sigs.github.io/aws-ebs-csi-driver
+  helm repo add aws-efs-csi-driver https://kubernetes-sigs.github.io/aws-efs-csi-driver
   helm repo add kube-state-metrics https://kubernetes.github.io/kube-state-metrics
-  helm repo add vm https://victoriametrics.github.io/helm-charts/
+  helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
   helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server
+  helm repo add vm https://victoriametrics.github.io/helm-charts/
+  helm repo add autoscaler https://kubernetes.github.io/autoscaler
   helm repo add nats https://nats-io.github.io/k8s/helm/charts/
   helm repo add benthos https://benthosdev.github.io/benthos-helm-chart/
-  helm repo add autoscaler https://kubernetes.github.io/autoscaler
+
   helm repo update
 }
 
@@ -62,9 +71,43 @@ function manifests() {
   rm -rf "$TEMPD"/manifests
   mkdir -p $TEMPD/manifests && pushd $TEMPD/manifests > /dev/null
 
+  #
+  # EXTERNAL SECRET
+  #
   helm template external-secrets external-secrets/external-secrets \
     --namespace=external-secrets --create-namespace --set installCRDs=true | \
     $KYGO -out "externalsecrets" -app external-secrets -pkg externalsecrets
+
+  #
+  # EXTERNAL DNS
+  #
+  # docs: https://github.com/kubernetes-sigs/external-dns/blob/master/charts/external-dns/README.md
+  helm template external-dns external-dns/external-dns | \
+    $KYGO -out "externaldns" -app external-dns -pkg externaldns
+
+  #
+  # AWS LB
+  #
+  # using IAM Roles for service account
+  helm template aws-load-balancer-controller eks/aws-load-balancer-controller \
+    --set clusterName=my-cluster \
+    -n kube-system \
+    --set serviceAccount.create=false \
+    --set serviceAccount.name=aws-load-balancer-controller | \
+    $KYGO -out "awslb" -app awslb -pkg awslb
+
+  #
+  # CSI - AWS EFS & EBS
+  #
+  helm template aws-efs-csi-driver  aws-efs-csi-driver/aws-efs-csi-driver \
+    --namespace=kube-system \
+    --set image.repository=REPLACE_ME_602401143452.dkr.ecr.region-code.amazonaws.com/eks/aws-efs-csi-driver \
+    --set controller.serviceAccount.create=false \
+    --set controller.serviceAccount.name=efs-csi-controller-sa | \
+    $KYGO -out "csi/efs" -app efs -pkg efs
+
+  kustomize build "https://github.com/kubernetes-sigs/aws-ebs-csi-driver//deploy/kubernetes/overlays/stable/ecr-public/?ref=v1.19.0" | \
+    $KYGO -out "csi/ebs" -app ebs -pkg ebs
 
   #
   # MONITORING
@@ -109,14 +152,15 @@ function manifests() {
     --set controller.resources.requests.cpu=1 \
     --set controller.resources.requests.memory=1Gi \
     --set controller.resources.limits.cpu=1 \
-    --set controller.resources.limits.memory=1Gi \
-  | $KYGO -out "karpenter" -app karpenter -pkg karpenter
+    --set controller.resources.limits.memory=1Gi | \
+     $KYGO -out "karpenter" -app karpenter -pkg karpenter
 
-
-
-  wget https://raw.githubusercontent.com/aws/karpenter/main/pkg/apis/crds/karpenter.sh_provisioners.yaml -O - >> karpenter/mani.yaml
-  wget https://raw.githubusercontent.com/aws/karpenter/main/pkg/apis/crds/karpenter.sh_machines.yaml -O - >> karpenter/mani.yaml
-  wget https://raw.githubusercontent.com/aws/karpenter/main/pkg/apis/crds/karpenter.k8s.aws_awsnodetemplates.yaml -O -  >> karpenter/mani.yaml
+  # CRDs
+  {
+    wget https://raw.githubusercontent.com/aws/karpenter/main/pkg/apis/crds/karpenter.sh_provisioners.yaml -O -
+    wget https://raw.githubusercontent.com/aws/karpenter/main/pkg/apis/crds/karpenter.sh_machines.yaml -O -
+    wget https://raw.githubusercontent.com/aws/karpenter/main/pkg/apis/crds/karpenter.k8s.aws_awsnodetemplates.yaml -O -
+  } >> karpenter/mani.yaml
 
   $KYGO -in karpenter/mani.yaml -out "karpenter/crd" -pkg karpentercrd -app karpenter -group=false -clean-name=false
 
@@ -124,6 +168,17 @@ function manifests() {
     $KYGO -out "autoscaler" -pkg autoscaler -app autoscaler
 
   popd
+
+}
+
+function dashboards() {
+  pushd "$TEMPD" > /dev/null
+  git clone --depth 1 "https://github.com/nats-io/nats-surveyor"
+  cp -r nats-surveyor/docker-compose/grafana/provisioning/dashboards nats-dashboards
+  popd > /dev/null
+  [ $DEBUG ] && rm -rf "$TEMPD"/nats-surveyor
+  #  wget https://raw.githubusercontent.com/nats-io/nats-surveyor/master/docker-compose/grafana/provisioning/dashboards/nats-surveyor-dashboard.json
+
 }
 
 function step() {
@@ -142,12 +197,16 @@ function main {
 
   step "build kygo"
   [ ! -f "$KYGO" ] && tool
+  "$KYGO" -version
 
   step "install/update repo"
   install_repo || true
 
   step "generate manifests"
   manifests
+
+  step "dashboards"
+  dashboards
 
 }
 

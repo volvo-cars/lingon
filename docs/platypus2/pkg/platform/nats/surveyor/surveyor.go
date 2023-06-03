@@ -12,6 +12,9 @@ import (
 	"os"
 	"os/exec"
 
+	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/volvo-cars/lingoneks/pkg/platform/monitoring"
+
 	"github.com/volvo-cars/lingon/pkg/kube"
 	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
 	appsv1 "k8s.io/api/apps/v1"
@@ -62,6 +65,7 @@ type Surveyor struct {
 	Deploy *appsv1.Deployment
 	SA     *corev1.ServiceAccount
 	SVC    *corev1.Service
+	SM     *v1.ServiceMonitor
 }
 
 // New creates a new Surveyor
@@ -89,6 +93,7 @@ func New() *Surveyor {
 				Type:     corev1.ServiceTypeClusterIP,
 			},
 		},
+		SM: ServiceMonitor,
 	}
 }
 
@@ -113,7 +118,7 @@ var Deploy = &appsv1.Deployment{
 						Args: []string{
 							"-p",
 							fmt.Sprintf("%d", portSurveyor),
-							fmt.Sprintf("-s=nats://nats:%d", portNats),
+							fmt.Sprintf("-s=nats://nats.nats.svc.cluster.local:%d", portNats),
 							"--timeout=3s",
 							"-c=1",
 						},
@@ -138,6 +143,30 @@ var Deploy = &appsv1.Deployment{
 				},
 			},
 		},
+	},
+}
+
+var ServiceMonitor = &v1.ServiceMonitor{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      appName,
+		Namespace: monitoring.Namespace,
+		Labels:    BaseLabels(),
+	},
+	Spec: v1.ServiceMonitorSpec{
+		Endpoints: []v1.Endpoint{
+			{
+				Path: ku.PathMetrics,
+				Port: fmt.Sprintf("%d", portSurveyor),
+			},
+		},
+		NamespaceSelector: v1.NamespaceSelector{Any: true},
+		Selector: metav1.LabelSelector{
+			MatchLabels: matchLabels,
+		},
+	},
+	TypeMeta: metav1.TypeMeta{
+		APIVersion: "monitoring.coreos.com/v1",
+		Kind:       "ServiceMonitor",
 	},
 }
 

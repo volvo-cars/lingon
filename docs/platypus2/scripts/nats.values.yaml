@@ -27,7 +27,7 @@ nats:
   #
   # More info about the Go GC: https://go.dev/doc/gc-guide
   #
-   gomemlimit: "4GiB"
+  gomemlimit: "4GiB"
 
   # Toggle profiling.
   # This enables nats-server pprof (profiling) port, so you can see goroutines
@@ -248,13 +248,14 @@ nats:
   mappings: {}
 
   jetstream:
-    enabled: false
+    enabled: true
 
     # Jetstream Domain
     domain:
 
     # Jetstream Unique Tag prevent placing a stream in the same availability zone twice.
     uniqueTag:
+      natsaz: "uniqtag"
 
     max_outstanding_catchup:
 
@@ -300,11 +301,11 @@ nats:
       # Use below block to create new persistent volume
       # only used if existingClaim is not specified
       size: 10Gi
-      # storageClassName: ""
+      storageClassName: "gp2"
       accessModes:
         - ReadWriteOnce
       annotations:
-      # key: "value"
+        app: "nats"
 
     # Use below if fileStorage is not enabled but you are persisting
     # data using an alternative to PVC (e.g. hostPath)

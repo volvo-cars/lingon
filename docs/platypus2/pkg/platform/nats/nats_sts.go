@@ -9,6 +9,8 @@ import (
 	"bytes"
 	"fmt"
 
+	"k8s.io/apimachinery/pkg/api/resource"
+
 	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -24,33 +26,41 @@ const (
 	natsConfigFile     = "nats.conf"
 	natsConfigPath     = natsConfigBasePath + "/" + natsConfigFile
 
-	PortClient     int32 = 4222
-	PortNameClient       = "client"
+	// RESOURCES
 
-	PortCluster     int32 = 6222
-	PortNameCluster       = "cluster"
+	ResourceCPU     = 2
+	ResourceMemNum  = 4
+	ResourceMemUnit = "Gi"
+	ResourceJSMem   = "2G"
+	ResourceStorage = "10Gi"
+	storeDir        = "/data"
 
-	PortMonitor     int32 = 8222
-	PortNameMonitor       = "monitor"
+	// NETWORKING
 
-	PortMetrics     int32 = 7777
-	PortNameMetrics       = "metrics"
-
+	PortClient        int32 = 4222
+	PortNameClient          = "client"
+	PortCluster       int32 = 6222
+	PortNameCluster         = "cluster"
+	PortMonitor       int32 = 8222
+	PortNameMonitor         = "monitor"
+	PortMetrics       int32 = 7777
+	PortNameMetrics         = "metrics"
 	PortLeafNodes     int32 = 7422
 	PortNameLeafNodes       = "leafnodes"
-
-	PortGateways     int32 = 7522
-	PortNameGateways       = "gateways"
-
-	PortProbe = 8222
+	PortGateways      int32 = 7522
+	PortNameGateways        = "gateways"
+	PortProbe               = 8222
 )
 
-var d = func(i int32) string { return fmt.Sprintf("%d", i) }
+var (
+	d = func(i int32) string { return fmt.Sprintf("%d", i) }
 
-var pidVolumeMount = corev1.VolumeMount{
-	MountPath: natsPIDBasePath,
-	Name:      "pid",
-}
+	pidVolumeMount = corev1.VolumeMount{MountPath: natsPIDBasePath, Name: "pid"}
+
+	ResourceMemory = d(ResourceMemNum) + ResourceMemUnit
+
+	pvcName = appName + "-js-pvc"
+)
 
 func srvURLs(r int) string {
 	res := bytes.Buffer{}
@@ -76,8 +86,19 @@ pid_file: "` + natsPIDPath + `"
 http: ` + d(PortProbe) + `
 server_name:$POD_NAME
 server_tags: [
-    "4GiB",
+    "mem:` + ResourceMemory + `",
 ]
+###################################
+#                                 #
+# NATS JetStream                  #
+#                                 #
+###################################
+jetstream {
+  max_mem:` + ResourceJSMem + `
+  store_dir: "` + storeDir + `"
+  max_file:` + ResourceStorage + `
+  unique_tag: "natsuniquetag"
+}
 ###################################
 #                                 #
 # NATS Full Mesh Clustering Setup #
@@ -94,10 +115,6 @@ cluster {
 }
 lame_duck_grace_period: 10s
 lame_duck_duration: 30s
-
-jetstream: {
-	max_mem: 2GiB
-}
 `,
 }
 
@@ -126,11 +143,24 @@ var STS = &appsv1.StatefulSet{
 		Replicas:            P(int32(replicas)),
 		Selector:            &metav1.LabelSelector{MatchLabels: matchLabels},
 		ServiceName:         appName,
+		VolumeClaimTemplates: []corev1.PersistentVolumeClaim{{
+			ObjectMeta: metav1.ObjectMeta{Name: pvcName},
+			Spec: corev1.PersistentVolumeClaimSpec{
+				AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+				Resources: corev1.ResourceRequirements{
+					Requests: map[corev1.ResourceName]resource.Quantity{
+						corev1.ResourceName("storage"): resource.MustParse(ResourceStorage),
+					},
+				},
+				StorageClassName: P("gp2"),
+			},
+		}},
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
 				Annotations: ku.AnnotationPrometheus(ku.PathMetrics, PortMetrics),
 				Labels:      matchLabels,
 			},
+
 			Spec: corev1.PodSpec{
 				Affinity: &corev1.Affinity{PodAntiAffinity: ku.AntiAffinityHostnameByLabel("app", appName)},
 				Containers: []corev1.Container{
@@ -144,6 +174,7 @@ var STS = &appsv1.StatefulSet{
 							ku.EnvVarDownAPI("POD_NAME", "metadata.name"),
 							ku.EnvVarDownAPI("POD_NAMESPACE", "metadata.namespace"),
 							{Name: "SERVER_NAME", Value: "$(POD_NAME)"},
+							{Name: "GOMEMLIMIT", Value: ResourceMemory + "B"},
 							{Name: "CLUSTER_ADVERTISE", Value: "$(POD_NAME).nats.$(POD_NAMESPACE).svc.cluster.local"},
 							// cm.HashEnv("CONFIG_HASH_ENV"), // no need since we have the config-reloader
 						},
@@ -160,8 +191,12 @@ var STS = &appsv1.StatefulSet{
 							{ContainerPort: ports[PortNameMonitor].Port, Name: ports[PortNameMonitor].Name},
 						},
 
-						Resources:    ku.Resources("2", "4Gi", "2", "4Gi"),
-						VolumeMounts: []corev1.VolumeMount{cm.VolumeMount, pidVolumeMount},
+						Resources: ku.Resources(d(ResourceCPU), ResourceMemory, d(ResourceCPU), ResourceMemory),
+						VolumeMounts: []corev1.VolumeMount{
+							cm.VolumeMount,
+							pidVolumeMount,
+							{MountPath: storeDir, Name: pvcName}, // storage
+						},
 					}, {
 						Name:            "reloader",
 						Image:           ImgConfigReloader,
@@ -178,7 +213,7 @@ var STS = &appsv1.StatefulSet{
 				},
 				DNSPolicy:                     corev1.DNSClusterFirst,
 				ServiceAccountName:            SA.Name,
-				ShareProcessNamespace:         P(true),
+				ShareProcessNamespace:         P(true), // necessary for the config reloader
 				TerminationGracePeriodSeconds: P(int64(60)),
 				Volumes: []corev1.Volume{
 					cm.VolumeAndMount().Volume(),
@@ -208,10 +243,7 @@ var startupProbe = &corev1.Probe{
 	FailureThreshold:    int32(90),
 	InitialDelaySeconds: int32(10),
 	PeriodSeconds:       int32(10),
-	ProbeHandler: ku.ProbeHTTP(
-		ku.PathProbes,
-		PortProbe,
-	),
-	SuccessThreshold: int32(1),
-	TimeoutSeconds:   int32(5),
+	ProbeHandler:        ku.ProbeHTTP(ku.PathProbes, PortProbe),
+	SuccessThreshold:    int32(1),
+	TimeoutSeconds:      int32(5),
 }
