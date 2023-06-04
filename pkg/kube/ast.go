@@ -19,11 +19,7 @@ import (
 
 var commentSecret = "TODO: SECRETS SHOULD BE STORED ELSEWHERE THAN IN THE CODE!!!!" //nolint:gosec
 
-func returnTypeAlias(
-	v reflect.Value,
-	typename string,
-	stmt *jen.Statement,
-) *jen.Statement {
+func returnTypeAlias(v reflect.Value, typename string, stmt *jen.Statement) *jen.Statement {
 	if v.Type().String() != typename {
 		return jen.Qual(
 			v.Type().PkgPath(),
@@ -269,10 +265,7 @@ func isEmptyValue(v reflect.Value) bool {
 	return false
 }
 
-func (j *jamel) configMapComment(
-	obj *corev1.ConfigMap,
-	data []byte,
-) (*jen.Statement, error) {
+func (j *jamel) configMapComment(obj *corev1.ConfigMap, data []byte) (*jen.Statement, error) {
 	// parse YAML to extract comments
 	var d yaml.Node
 	err := yaml.Unmarshal(data, &d)
@@ -313,10 +306,7 @@ outer:
 	return j.convertConfigMap(rv, mc), nil
 }
 
-func (j *jamel) convertConfigMap(
-	v reflect.Value,
-	comment map[string]string,
-) *jen.Statement {
+func (j *jamel) convertConfigMap(v reflect.Value, comment map[string]string) *jen.Statement {
 	if v.IsZero() {
 		return jen.Nil()
 	}
@@ -344,10 +334,7 @@ func (j *jamel) convertConfigMap(
 	return jen.Op("&").Add(pk.Values(vf))
 }
 
-func convertConfigMapData(
-	field reflect.Value,
-	comment map[string]string,
-) *jen.Statement {
+func convertConfigMapData(field reflect.Value, comment map[string]string) *jen.Statement {
 	if field.IsZero() {
 		return jen.Nil()
 	}

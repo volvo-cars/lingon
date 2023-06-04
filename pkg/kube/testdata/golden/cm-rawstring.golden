@@ -1,0 +1,56 @@
+&v1.ConfigMap{
+	Data: map[string]string{
+		"nats.conf": `
+
+# NATS Clients Port
+port: 4222
+# PID file shared with configuration reloader.
+pid_file: "/var/run/nats/nats.pid"
+###############
+#             #
+# Monitoring  #
+#             #
+###############
+http: 8222
+server_name:$POD_NAME
+server_tags: [
+    "mem:4Gi",
+]
+###################################
+#                                 #
+# NATS JetStream                  #
+#                                 #
+###################################
+jetstream {
+  max_mem:2G
+  store_dir: "/data"
+  max_file:10Gi
+  unique_tag: "natsuniquetag"
+}
+###################################
+#                                 #
+# NATS Full Mesh Clustering Setup #
+#                                 #
+###################################
+cluster {
+  name: natscluster
+  port: 6222
+  routes = [
+    nats://nats-0.nats.nats.svc.cluster.local:6222
+    nats://nats-1.nats.nats.svc.cluster.local:6222
+    nats://nats-2.nats.nats.svc.cluster.local:6222
+
+  ]
+  cluster_advertise: $CLUSTER_ADVERTISE
+  connect_retries: 120
+}
+lame_duck_grace_period: 10s
+lame_duck_duration: 30s
+
+`},
+	ObjectMeta: v11.ObjectMeta{Name: "webapp-config"},
+	TypeMeta: v11.TypeMeta{
+		APIVersion: "v1",
+		Kind:       "ConfigMap",
+	},
+}

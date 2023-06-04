@@ -35,7 +35,7 @@ func ObjectMeta(
 type Metadata struct {
 	APIVersion string `json:"apiVersion"`
 	Kind       string `json:"kind"`
-	Meta       Meta   `json:"metadata"`
+	Meta       Meta   `json:"metadata,omitempty"`
 }
 
 func (m *Metadata) GVK() string {
@@ -57,6 +57,9 @@ func ExtractMetadata(data []byte) (*Metadata, error) {
 		return nil, fmt.Errorf("unmarshal: %w", err)
 	}
 
+	if m.Kind == "List" {
+		return &Metadata{APIVersion: "v1", Kind: "List"}, nil
+	}
 	if m.Meta.Name == "" || m.Kind == "" {
 		return nil, fmt.Errorf("name or kind in %+v: %w", m, ErrFieldMissing)
 	}
@@ -71,3 +74,5 @@ func ExtractMetadata(data []byte) (*Metadata, error) {
 	}
 	return &m, nil
 }
+
+//

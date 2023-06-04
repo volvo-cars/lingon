@@ -49,6 +49,11 @@ func TestKube2GoJen(t *testing.T) {
 			manifest: "testdata/golden/cm-comment.yaml",
 			golden:   "testdata/golden/cm-comment.golden",
 		},
+		{
+			name:     "configmap with raw string",
+			manifest: "testdata/golden/cm-rawstring.yaml",
+			golden:   "testdata/golden/cm-rawstring.golden",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(

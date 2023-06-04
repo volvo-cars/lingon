@@ -37,6 +37,8 @@ func TestFolder2Txtar(t *testing.T) {
 		"../kube/testdata/go/tekton/validating-webhook-configuration.go",
 		"../kube/testdata/golden/cm-comment.golden",
 		"../kube/testdata/golden/cm-comment.yaml",
+		"../kube/testdata/golden/cm-rawstring.golden",
+		"../kube/testdata/golden/cm-rawstring.yaml",
 		"../kube/testdata/golden/configmap.golden",
 		"../kube/testdata/golden/configmap.yaml",
 		"../kube/testdata/golden/deployment.golden",
@@ -58,6 +60,7 @@ func TestFolder2Txtar(t *testing.T) {
 		"../kube/testdata/golden/import_with_group_kind_and_clean_name.txt",
 		"../kube/testdata/golden/import_with_vanilla_serializer_and_add_methods.txt",
 		"../kube/testdata/golden/import_with_vanilla_serializer_and_remove_app_name_and_group_by_kind.txt",
+		"../kube/testdata/golden/import_list_object.txt",
 		"../kube/testdata/golden/empty.golden",
 		"../kube/testdata/golden/empty.yaml",
 		"../kube/testdata/golden/encode.txt",
@@ -73,6 +76,7 @@ func TestFolder2Txtar(t *testing.T) {
 		"../kube/testdata/spark.yaml",
 		"../kube/testdata/tekton-updated.yaml",
 		"../kube/testdata/tekton.yaml",
+		"../kube/testdata/velero.yaml",
 	}
 	filenames := make([]string, 0, len(ar.Files))
 	for _, f := range ar.Files {

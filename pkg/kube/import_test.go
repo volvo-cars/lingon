@@ -213,6 +213,27 @@ func TestImport(t *testing.T) {
 				"out/import/tekton/validating-webhook-configuration.go",
 			},
 		},
+		{
+			Name:   "import list object",
+			OutDir: filepath.Join(defaultImportOutputDir, "velero"),
+			Opts: []kube.ImportOption{
+				kube.WithImportAppName("velero"),
+				kube.WithImportPackageName("velero"),
+				kube.WithImportManifestFiles([]string{"testdata/velero.yaml"}),
+				kube.WithImportRemoveAppName(true),
+				kube.WithImportGroupByKind(true),
+				kube.WithImportAddMethods(true),
+				kube.WithImportCleanUp(true),
+			},
+			OutFiles: []string{
+				"out/import/velero/app.go",
+				"out/import/velero/cluster-role-binding.go",
+				"out/import/velero/custom-resource-definition.go",
+				"out/import/velero/deployment.go",
+				"out/import/velero/namespace.go",
+				"out/import/velero/service-account.go",
+			},
+		},
 	}
 
 	for _, tt := range TT {
@@ -239,10 +260,8 @@ func TestImport(t *testing.T) {
 
 				// compare content
 				golden, err := txtar.ParseFile(
-					filepath.Join(
-						"testdata", "golden",
-						strings.ReplaceAll(tc.Name, " ", "_")+".txt",
-					),
+					filepath.Join("testdata", "golden",
+						strings.ReplaceAll(tc.Name, " ", "_")+".txt"),
 				)
 				tu.AssertNoError(t, err, "reading golden file")
 				if diff := tu.DiffTxtarSort(ar, golden); diff != "" {

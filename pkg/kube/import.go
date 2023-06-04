@@ -165,6 +165,7 @@ func (j *jamel) generateGo() error {
 		if len(splitYaml) == 0 {
 			return fmt.Errorf("no manifest found")
 		}
+
 		err = j.convertToGo(splitYaml)
 		if err != nil {
 			return fmt.Errorf("stdin: %w", err)
@@ -173,10 +174,7 @@ func (j *jamel) generateGo() error {
 	}
 
 	if j.o.Verbose {
-		j.l.Info(
-			"importing from manifest",
-			slog.Any("files", j.o.ManifestFiles),
-		)
+		j.l.Info("importing from manifest", slog.Any("files", j.o.ManifestFiles))
 	}
 
 	for _, filePath := range j.o.ManifestFiles {
@@ -244,11 +242,7 @@ func (j *jamel) convertToGo(splitYaml []string) error {
 				)
 				continue
 			}
-			return fmt.Errorf(
-				"extract metadata of manifest %d: %w",
-				manifestNumber+1,
-				err,
-			)
+			return fmt.Errorf("extract metadata of manifest %d: %w", manifestNumber+1, err)
 		}
 
 		// ConfigMap are not cleanup as the comments will be lost.
@@ -273,6 +267,10 @@ func (j *jamel) convertToGo(splitYaml []string) error {
 				continue
 			}
 			return err
+		}
+		if jenCode == nil {
+			// List case
+			continue
 		}
 
 		nameVar := j.o.NameVarFunc(*m)
@@ -330,10 +328,7 @@ func (j *jamel) convertToGo(splitYaml []string) error {
 	return nil
 }
 
-func (j *jamel) yaml2GoJen(data []byte, m *kubeutil.Metadata) (
-	*jen.Statement,
-	error,
-) {
+func (j *jamel) yaml2GoJen(data []byte, m *kubeutil.Metadata) (*jen.Statement, error) {
 	decoded, _, err := j.o.Serializer.Decode(data, nil, nil)
 	if err != nil {
 		if runtime.IsNotRegisteredError(err) {
@@ -343,15 +338,19 @@ func (j *jamel) yaml2GoJen(data []byte, m *kubeutil.Metadata) (
 	}
 
 	var jenCode *jen.Statement
-	switch m.Kind {
-	case kindConfigMap:
+	switch dt := decoded.(type) {
+	case *corev1.List:
+		l := make([]string, 0, len(dt.Items))
+		for _, i := range dt.Items {
+			l = append(l, string(i.Raw))
+		}
+		if err = j.convertToGo(l); err != nil {
+			return nil, fmt.Errorf("convert list: %w", err)
+		}
+	case *corev1.ConfigMap:
 		// special case for ConfigMap
 		// we want to extract the comments from the YAML
-		cm, ok := decoded.(*corev1.ConfigMap)
-		if !ok {
-			return nil, fmt.Errorf("expected ConfigMap, got %T", decoded)
-		}
-		jenCode, err = j.configMapComment(cm, data)
+		jenCode, err = j.configMapComment(dt, data)
 		if err != nil {
 			return nil, fmt.Errorf("configmap comment: %w", err)
 		}
