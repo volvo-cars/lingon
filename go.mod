@@ -6,7 +6,7 @@ require (
 	github.com/dave/jennifer v1.6.1
 	github.com/eidolon/wordwrap v0.0.0-20161011182207-e0f54129b8bb
 	github.com/fatih/color v1.15.0
-	github.com/go-playground/validator/v10 v10.14.0
+	github.com/go-playground/validator/v10 v10.14.1
 	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/hcl/v2 v2.16.2
 	github.com/hashicorp/terraform-exec v0.18.1
