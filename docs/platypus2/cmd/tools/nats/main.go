@@ -128,7 +128,7 @@ outter:
 			log.Error("errCh", "err", e)
 		case <-ctx.Done():
 			log.Info("stopping service...")
-
+			s.Shutdown(ctx)
 			grpcServer.GracefulStop()
 			break outter
 		}
