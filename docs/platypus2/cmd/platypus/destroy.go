@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/volvo-cars/lingoneks/pkg/terraclient"
+	"github.com/volvo-cars/lingoneks/terraclient"
 	"golang.org/x/exp/slog"
 )
 

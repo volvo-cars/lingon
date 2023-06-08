@@ -8,7 +8,7 @@ package nats
 import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
-	"github.com/volvo-cars/lingoneks/pkg/platform/monitoring"
+	"github.com/volvo-cars/lingoneks/monitoring"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

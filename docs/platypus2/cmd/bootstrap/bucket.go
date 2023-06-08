@@ -12,8 +12,8 @@ import (
 	aws "github.com/golingon/terraproviders/aws/5.0.1"
 	"github.com/golingon/terraproviders/aws/5.0.1/provider"
 	"github.com/volvo-cars/lingon/pkg/terra"
-	"github.com/volvo-cars/lingoneks/pkg/infra"
-	"github.com/volvo-cars/lingoneks/pkg/terraclient"
+	"github.com/volvo-cars/lingoneks/infra"
+	"github.com/volvo-cars/lingoneks/terraclient"
 	"golang.org/x/exp/slog"
 )
 

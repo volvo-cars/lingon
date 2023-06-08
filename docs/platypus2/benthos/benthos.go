@@ -12,7 +12,7 @@ import (
 	"os/exec"
 	"reflect"
 
-	"github.com/volvo-cars/lingoneks/pkg/platform/monitoring"
+	"github.com/volvo-cars/lingoneks/monitoring"
 
 	promoperatorv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/volvo-cars/lingon/pkg/kube"
@@ -67,7 +67,10 @@ type BenthosArgs struct {
 }
 
 func (a *BenthosArgs) MatchLabels() map[string]string {
-	return map[string]string{ku.AppLabelName: a.Name, ku.AppLabelInstance: a.Name}
+	return map[string]string{
+		ku.AppLabelName:     a.Name,
+		ku.AppLabelInstance: a.Name,
+	}
 }
 
 func (a *BenthosArgs) BaseLabels() map[string]string {
@@ -122,22 +125,45 @@ func New(args BenthosArgs) *Benthos {
 	matchLabels := a.MatchLabels()
 	baseLabels := a.BaseLabels()
 	SA := ku.ServiceAccount(a.Name, a.Namespace, baseLabels, nil)
-	objMeta := metav1.ObjectMeta{Name: a.Name, Namespace: a.Namespace, Labels: baseLabels}
+	objMeta := metav1.ObjectMeta{
+		Name:      a.Name,
+		Namespace: a.Namespace,
+		Labels:    baseLabels,
+	}
 
 	ServiceMonitor := &promoperatorv1.ServiceMonitor{
-		TypeMeta:   metav1.TypeMeta{APIVersion: "monitoring.coreos.com/v1", Kind: "ServiceMonitor"},
-		ObjectMeta: metav1.ObjectMeta{Name: a.Name, Namespace: monitoring.Namespace, Labels: baseLabels},
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "monitoring.coreos.com/v1",
+			Kind:       "ServiceMonitor",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      a.Name,
+			Namespace: monitoring.Namespace,
+			Labels:    baseLabels,
+		},
 		Spec: promoperatorv1.ServiceMonitorSpec{
-			Endpoints:         []promoperatorv1.Endpoint{{Path: ku.PathMetrics, Port: a.Port.Name}},
+			Endpoints: []promoperatorv1.Endpoint{
+				{
+					Path: ku.PathMetrics,
+					Port: a.Port.Name,
+				},
+			},
 			NamespaceSelector: promoperatorv1.NamespaceSelector{Any: true},
 			Selector:          metav1.LabelSelector{MatchLabels: matchLabels},
 		},
 	}
 
 	benthosCM := ku.ConfigAndMount{
-		Data:        map[string]string{BenthosConfigFile: a.Config},
-		ObjectMeta:  metav1.ObjectMeta{Name: "benthos-config", Namespace: a.Namespace, Labels: baseLabels},
-		VolumeMount: corev1.VolumeMount{Name: "config-volume", MountPath: benthosConfigBasePath},
+		Data: map[string]string{BenthosConfigFile: a.Config},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "benthos-config",
+			Namespace: a.Namespace,
+			Labels:    baseLabels,
+		},
+		VolumeMount: corev1.VolumeMount{
+			Name:      "config-volume",
+			MountPath: benthosConfigBasePath,
+		},
 	}
 
 	evs := []corev1.EnvVar{benthosCM.HashEnv("CONFIG_HASH_ENV")}

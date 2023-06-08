@@ -1,7 +1,7 @@
 // Copyright (c) 2023 Volvo Car Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-package awsauth
+package infra
 
 import (
 	"fmt"

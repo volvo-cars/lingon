@@ -4,7 +4,6 @@
 package nats
 
 import (
-	"context"
 	"os"
 	"testing"
 
@@ -21,9 +20,9 @@ func TestNatsManifestExport(t *testing.T) {
 
 // TODO: THIS IS INTEGRATION and needs KWOK
 
-func TestNatsDeploy(t *testing.T) {
-	n := New()
-	if err := n.Apply(context.Background()); err != nil {
-		tu.AssertNoError(t, err, "nats")
-	}
-}
+// func TestNatsDeploy(t *testing.T) {
+// 	n := New()
+// 	if err := n.Apply(context.Background()); err != nil {
+// 		tu.AssertNoError(t, err, "nats")
+// 	}
+// }

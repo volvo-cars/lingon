@@ -3,10 +3,12 @@
 
 package karpenter
 
-import "github.com/volvo-cars/lingoneks/pkg/platform/awsauth"
+import (
+	"github.com/volvo-cars/lingoneks/infra"
+)
 
-func AWSAuthMapRoles(nodeRoleARN, fargateRoleARN string) []*awsauth.RolesAuth {
-	return []*awsauth.RolesAuth{
+func AWSAuthMapRoles(nodeRoleARN, fargateRoleARN string) []*infra.RolesAuth {
+	return []*infra.RolesAuth{
 		{
 			RoleARN:  nodeRoleARN,
 			Username: "system:node:{{EC2PrivateDNSName}}",

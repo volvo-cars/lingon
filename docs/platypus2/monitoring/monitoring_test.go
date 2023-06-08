@@ -4,14 +4,13 @@
 package monitoring
 
 import (
-	"context"
 	"os"
 	"testing"
 
 	tu "github.com/volvo-cars/lingon/pkg/testutil"
-	"github.com/volvo-cars/lingoneks/pkg/platform/monitoring/metricsserver"
-	"github.com/volvo-cars/lingoneks/pkg/platform/monitoring/promcrd"
-	"github.com/volvo-cars/lingoneks/pkg/platform/monitoring/promstack"
+	"github.com/volvo-cars/lingoneks/monitoring/metricsserver"
+	"github.com/volvo-cars/lingoneks/monitoring/promcrd"
+	"github.com/volvo-cars/lingoneks/monitoring/promstack"
 )
 
 func TestMonitoringExport(t *testing.T) {
@@ -41,20 +40,20 @@ func TestMonitoringExport(t *testing.T) {
 }
 
 // TODO: THIS IS INTEGRATION and needs KWOK
-func TestMonitoringDeploy(t *testing.T) {
-	ctx := context.Background()
-
-	pcrd := promcrd.New()
-	if err := pcrd.Apply(ctx); err != nil {
-		tu.AssertNoError(t, err, "prometheus crd")
-	}
-	ms := metricsserver.New()
-	if err := ms.Apply(ctx); err != nil {
-		tu.AssertNoError(t, err, "metrics-server")
-	}
-
-	ps := promstack.New()
-	if err := ps.Apply(ctx); err != nil {
-		tu.AssertNoError(t, err, "prometheus stack")
-	}
-}
+// func TestMonitoringDeploy(t *testing.T) {
+// 	ctx := context.Background()
+//
+// 	pcrd := promcrd.New()
+// 	if err := pcrd.Apply(ctx); err != nil {
+// 		tu.AssertNoError(t, err, "prometheus crd")
+// 	}
+// 	ms := metricsserver.New()
+// 	if err := ms.Apply(ctx); err != nil {
+// 		tu.AssertNoError(t, err, "metrics-server")
+// 	}
+//
+// 	ps := promstack.New()
+// 	if err := ps.Apply(ctx); err != nil {
+// 		tu.AssertNoError(t, err, "prometheus stack")
+// 	}
+// }

@@ -10,9 +10,9 @@ import (
 
 	aws "github.com/golingon/terraproviders/aws/5.0.1"
 	"github.com/golingon/terraproviders/aws/5.0.1/provider"
-	"github.com/volvo-cars/lingoneks/pkg/infra"
-	"github.com/volvo-cars/lingoneks/pkg/platform/karpenter"
-	"github.com/volvo-cars/lingoneks/pkg/terraclient"
+	"github.com/volvo-cars/lingoneks/infra"
+	"github.com/volvo-cars/lingoneks/karpenter"
+	"github.com/volvo-cars/lingoneks/terraclient"
 
 	"github.com/volvo-cars/lingon/pkg/terra"
 )

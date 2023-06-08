@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package natspb;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "github.com/volvo-cars/lingoneks/natspb";
+
+
+message Envelope {
+  string topic = 1;
+  Message msg = 2;
+}
+
+message Message {
+  string id = 1;
+  string author_id = 2;
+  string title = 3;
+  string content = 4;
+}
+
+message Ack {
+  string topic = 1;
+  string id = 2;
+}
+
+service EnvelopeService {
+  rpc Ingest(Envelope) returns (Ack);
+}

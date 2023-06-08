@@ -10,16 +10,20 @@ import (
 	"path/filepath"
 )
 
-// ListGoFiles returns a list of all go files in the root directory
+// ListGoFiles returns a list of all go files in the root directory and
+// its children directories
 func ListGoFiles(root string) ([]string, error) {
 	return listFiles(root, []string{".go"})
 }
 
-// ListYAMLFiles returns a list of all yaml files in the root directory
+// ListYAMLFiles returns a list of all yaml files in the root directory and
+// its children directories
 func ListYAMLFiles(root string) ([]string, error) {
 	return listFiles(root, []string{".yaml", ".yml"})
 }
 
+// ListJSONFiles returns a list of all json files in the root directory and
+// its children directories
 func ListJSONFiles(root string) ([]string, error) {
 	return listFiles(root, []string{".json"})
 }

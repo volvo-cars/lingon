@@ -12,19 +12,17 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/volvo-cars/lingoneks/pkg/platform/benthos"
-
 	"github.com/volvo-cars/lingon/pkg/kube"
 	"github.com/volvo-cars/lingon/pkg/terra"
-	"github.com/volvo-cars/lingoneks/pkg/infra"
-	"github.com/volvo-cars/lingoneks/pkg/platform/awsauth"
-	"github.com/volvo-cars/lingoneks/pkg/platform/karpenter"
-	karpentercrd "github.com/volvo-cars/lingoneks/pkg/platform/karpenter/crd"
-	"github.com/volvo-cars/lingoneks/pkg/platform/monitoring/metricsserver"
-	"github.com/volvo-cars/lingoneks/pkg/platform/monitoring/promcrd"
-	"github.com/volvo-cars/lingoneks/pkg/platform/monitoring/promstack"
-	"github.com/volvo-cars/lingoneks/pkg/platform/nats"
-	"github.com/volvo-cars/lingoneks/pkg/terraclient"
+	"github.com/volvo-cars/lingoneks/benthos"
+	"github.com/volvo-cars/lingoneks/infra"
+	"github.com/volvo-cars/lingoneks/karpenter"
+	karpentercrd "github.com/volvo-cars/lingoneks/karpenter/crd"
+	"github.com/volvo-cars/lingoneks/monitoring/metricsserver"
+	"github.com/volvo-cars/lingoneks/monitoring/promcrd"
+	"github.com/volvo-cars/lingoneks/monitoring/promstack"
+	"github.com/volvo-cars/lingoneks/nats"
+	"github.com/volvo-cars/lingoneks/terraclient"
 	"golang.org/x/exp/slog"
 )
 
@@ -395,8 +393,8 @@ func run(p runParams) error {
 	kmNodeRoleARN := ks.InstanceProfile.IAMRole.StateMust().Arn
 	kmFargateRoleARN := ks.FargateProfile.IAMRole.StateMust().Arn
 	// Apply the aws-auth configmap
-	awsAuth, err := awsauth.NewConfigMap(
-		&awsauth.Data{
+	awsAuth, err := infra.NewConfigMap(
+		&infra.Data{
 			MapRoles: karpenter.AWSAuthMapRoles(
 				kmNodeRoleARN,
 				kmFargateRoleARN,
@@ -418,20 +416,6 @@ func run(p runParams) error {
 	); err != nil {
 		return err
 	}
-
-	// EXTERNAL SECRETS
-
-	// StepSep("k8s external secret")
-	//
-	// if err := kubeExportApply(
-	// 	ctx,
-	// 	externalsecrets.New(),
-	// 	"externalsecret",
-	// 	kctlOpts,
-	// 	"apply", "-f", "-",
-	// ); err != nil {
-	// 	return err
-	// }
 
 	// CSI EBS INFRA
 

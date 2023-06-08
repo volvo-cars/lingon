@@ -14,8 +14,7 @@ import (
 	promoperatorv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/volvo-cars/lingon/pkg/kube"
 	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
-	"github.com/volvo-cars/lingoneks/pkg/platform/nats/jetstream"
-	"github.com/volvo-cars/lingoneks/pkg/platform/nats/surveyor"
+	"github.com/volvo-cars/lingoneks/nats/jetstream"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	policyv1 "k8s.io/api/policy/v1"
@@ -31,7 +30,7 @@ type Nats struct {
 
 	// embedded struct
 	CRD
-	surveyor.Surveyor
+	Surveyor
 
 	NS *corev1.Namespace
 
@@ -54,7 +53,7 @@ func New() *Nats {
 			StreamsNatsIoCRD:         jetstream.StreamsJetstreamNatsIoCRD,
 			StreamtemplatesNatsIoCRD: jetstream.StreamTemplatesJetstreamNatsIoCRD,
 		},
-		Surveyor:           *surveyor.New(),
+		Surveyor:           *NewSurveyor(),
 		NS:                 NS,
 		BoxDeploy:          BoxDeploy,
 		ConfigCM:           cm.ConfigMap(),

@@ -87,10 +87,7 @@ func TestDiff2YAML(t *testing.T) {
 
 	// #nosec G204 - we are not passing any user input to the command
 	err := exec.CommandContext(
-		ctx,
-		"go",
-		"run",
-		filepath.Join(diffOutputDir, "main.go"),
+		ctx, "go", "run", filepath.Join(diffOutputDir, "main.go"),
 	).Run()
 	if err != nil {
 		m, err := os.ReadFile(filepath.Join(diffOutputDir, "main.go"))

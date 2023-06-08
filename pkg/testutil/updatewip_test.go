@@ -74,6 +74,8 @@ func diffLatest(
 		return "", fmt.Errorf("export: %w", err)
 	}
 
+	// TODO: remove all labels as an option
+
 	// IMPORT BACK TO GO
 	currManifests, err := kubeutil.ListYAMLFiles(tmpdir)
 	if err != nil {
