@@ -57,8 +57,10 @@ const (
 
 var mod = func() string {
 	if isUpdatingGoModOnly() {
+		slog.Info("updating go.mod")
 		return "-mod=mod"
 	} else {
+		slog.Info("readonly go.mod")
 		return "-mod=readonly"
 	}
 }()
