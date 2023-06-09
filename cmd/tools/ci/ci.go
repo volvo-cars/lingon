@@ -55,6 +55,14 @@ const (
 	recDir = "./..."
 )
 
+var mod = func() string {
+	if isUpdatingGoModOnly() {
+		return "-mod=mod"
+	} else {
+		return "-mod=readonly"
+	}
+}()
+
 func main() {
 	var cover, lint, doc, examples, fix, nodiff, pr, scan, release bool
 	flag.BoolVar(&cover, "cover", false, "tests with coverage")
@@ -62,18 +70,21 @@ func main() {
 		&lint,
 		"lint",
 		false,
-		"linting and formatting code (gofumpt, golangci-lint)")
+		"linting and formatting code (gofumpt, golangci-lint)",
+	)
 	flag.BoolVar(&doc, "doc", false, "generate all docs and readme")
 	flag.BoolVar(
 		&examples,
 		"examples",
 		false,
-		"tests all docs examples /!\\ slow without build cache")
+		"tests all docs examples /!\\ slow without build cache",
+	)
 	flag.BoolVar(
 		&fix,
 		"fix",
 		false,
-		"same as -lint + generating notice and licenses headers")
+		"same as -lint + generating notice and licenses headers",
+	)
 	flag.BoolVar(&nodiff, "nodiff", false, "error if git diff is not empty")
 	flag.BoolVar(&pr, "pr", false, "run pull request checks: -fix + go test")
 	flag.BoolVar(&scan, "scan", false, "scan for vulnerabilities")
@@ -152,7 +163,8 @@ func Cover() {
 			recDir,
 			"-coverprofile="+coverOutput,
 			"-covermode="+coverMode,
-		))
+		),
+	)
 	iferr(
 		Go(
 			"tool",
@@ -161,7 +173,8 @@ func Cover() {
 			// "-html="+coverOutput,
 			// "-o",
 			// "cover.html",
-		))
+		),
+	)
 	fmt.Println("✅ coverage generated: open cover.html to see results")
 }
 
@@ -197,7 +210,7 @@ func Scan() {
 
 func Doc() {
 	fmt.Println("📝 generating docs")
-	docRun("go", "generate", "-mod=readonly", recDir)
+	docRun("go", "generate", mod, recDir)
 	docRun("go", "mod", "tidy")
 	fmt.Println("✅ docs generated")
 }
@@ -205,7 +218,7 @@ func Doc() {
 func DocExamples() {
 	Doc()
 	fmt.Println("📝 testing examples")
-	docRun("go", "test", "-mod=readonly", "-v", recDir)
+	docRun("go", "test", mod, "-v", recDir)
 	fmt.Println("✅ docs generated and examples tested")
 }
 
@@ -230,7 +243,7 @@ func Go(args ...string) error {
 }
 
 func GoRun(args ...string) error {
-	return Go(append([]string{"run", "-mod=readonly"}, args...)...)
+	return Go(append([]string{"run", mod}, args...)...)
 }
 
 // CopyWriteFix is hashicorp/copywrite to fix license headers
