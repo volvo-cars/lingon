@@ -5,7 +5,6 @@ syntax = "proto3";
 
 package natspb;
 
-import "google/protobuf/empty.proto";
 
 option go_package = "github.com/volvo-cars/lingoneks/natspb";
 
