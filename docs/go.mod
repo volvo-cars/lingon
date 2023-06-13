@@ -8,13 +8,13 @@ require (
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/aws/karpenter v0.27.5
 	github.com/aws/karpenter-core v0.27.5
-	github.com/go-playground/validator/v10 v10.14.0
+	github.com/go-playground/validator/v10 v10.14.1
 	github.com/golingon/terraproviders/aws/4.60.0 v0.0.0-20230527233228-68663550bae0
 	github.com/golingon/terraproviders/tls/4.0.4 v0.0.0-20230527233228-68663550bae0
 	github.com/google/go-containerregistry v0.15.2
-	github.com/hashicorp/hcl/v2 v2.16.2
+	github.com/hashicorp/hcl/v2 v2.17.0
 	github.com/hashicorp/terraform-exec v0.18.1
-	github.com/hashicorp/terraform-json v0.16.0
+	github.com/hashicorp/terraform-json v0.17.0
 	github.com/hexops/valast v1.4.3
 	github.com/invopop/yaml v0.2.0
 	github.com/rogpeppe/go-internal v1.10.0

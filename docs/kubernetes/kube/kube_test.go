@@ -11,7 +11,9 @@ import (
 	"strings"
 
 	"github.com/rogpeppe/go-internal/txtar"
-	"github.com/volvo-cars/lingon/docs/kubernetes/kube/out/tekton"
+	"github.com/volvo-cars/lingon/pkg/kube/testdata/go/tekton"
+
+	// "github.com/volvo-cars/lingon/docs/kubernetes/kube/out/tekton"
 	"github.com/volvo-cars/lingon/pkg/kube"
 )
 
