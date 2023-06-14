@@ -72,7 +72,7 @@ var exportDefaultOpts = exportOption{
 //
 // Usage:
 //
-//	WithExportNameFileFunc(func(m metav1.Metadata) string {
+//	WithExportNameFileFunc(func(m *kubeutil.Metadata) string {
 //		return fmt.Sprintf("%s-%s.yaml", strings.ToLower(m.Kind), m.Meta.Name)
 //	})
 func WithExportNameFileFunc(f func(m *kubeutil.Metadata) string) ExportOption {
@@ -168,7 +168,8 @@ func WithExportOutputDirectory(dir string) ExportOption {
 
 // WithExportSecretHook is used to process the secrets before they are exported.
 // The hook is called for each secret.
-// This is useful to send secret to a vault (pun intended) and not to save them in plain text.
+// This is useful to send secret to a vault (pun intended)
+// and not to save them in plain text.
 // Base64 encoded secrets are not secure.
 //
 // NOTE: the secrets will *NOT* be written to the output directory or [io.Writer]

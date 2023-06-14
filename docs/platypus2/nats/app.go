@@ -42,6 +42,7 @@ type Nats struct {
 	SVC                *corev1.Service
 	ServiceMonitor     *promoperatorv1.ServiceMonitor
 	TestRequestReplyPO *corev1.Pod
+	DashboardCM        *corev1.ConfigMap
 }
 
 // New creates a new Nats
@@ -63,6 +64,7 @@ func New() *Nats {
 		SVC:                SVC,
 		ServiceMonitor:     ServiceMonitor,
 		TestRequestReplyPO: TestRequestReplyPO,
+		DashboardCM:        DashboardNatsCM,
 	}
 }
 
@@ -75,9 +77,11 @@ type CRD struct {
 
 const (
 	appName           = "nats"
+	defaultContainer  = appName
 	namespace         = "nats"
 	version           = "2.9.16"
 	replicas          = 3
+	storageClass      = "gp2"
 	ImgNats           = "nats:" + version + "-alpine"
 	sidecarVersion    = "0.10.1"
 	ImgConfigReloader = "natsio/nats-server-config-reloader:" + sidecarVersion

@@ -174,7 +174,10 @@ func (j *jamel) generateGo() error {
 	}
 
 	if j.o.Verbose {
-		j.l.Info("importing from manifest", slog.Any("files", j.o.ManifestFiles))
+		j.l.Info(
+			"importing from manifest",
+			slog.Any("files", j.o.ManifestFiles),
+		)
 	}
 
 	for _, filePath := range j.o.ManifestFiles {
@@ -242,7 +245,11 @@ func (j *jamel) convertToGo(splitYaml []string) error {
 				)
 				continue
 			}
-			return fmt.Errorf("extract metadata of manifest %d: %w", manifestNumber+1, err)
+			return fmt.Errorf(
+				"extract metadata of manifest %d: %w",
+				manifestNumber+1,
+				err,
+			)
 		}
 
 		// ConfigMap are not cleanup as the comments will be lost.
@@ -328,7 +335,10 @@ func (j *jamel) convertToGo(splitYaml []string) error {
 	return nil
 }
 
-func (j *jamel) yaml2GoJen(data []byte, m *kubeutil.Metadata) (*jen.Statement, error) {
+func (j *jamel) yaml2GoJen(data []byte, m *kubeutil.Metadata) (
+	*jen.Statement,
+	error,
+) {
 	decoded, _, err := j.o.Serializer.Decode(data, nil, nil)
 	if err != nil {
 		if runtime.IsNotRegisteredError(err) {

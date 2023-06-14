@@ -8,6 +8,8 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"net/http"
+	"net/http/pprof"
 	"os"
 	"os/signal"
 	"runtime"
@@ -16,6 +18,8 @@ import (
 
 	"github.com/ardanlabs/conf/v3"
 	"github.com/nats-io/nats.go"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/volvo-cars/lingoneks/cmd/tools/nats/natspb"
 	_ "go.uber.org/automaxprocs"
 	"golang.org/x/exp/slog"
@@ -39,6 +43,7 @@ func run(log *slog.Logger) error {
 		conf.Version
 		NatsServers []string `conf:"default:nats://0.0.0.0:4222"`
 		GRPCPort    int      `conf:"default:7015"`
+		MetricsPort int      `conf:"default:7016"`
 		// HTTPPort            int           `conf:"default:9000,env:PORT"`
 		// HTTPHost            string        `conf:"default:0.0.0.0"`
 		// PathHealth          string        `conf:"default:/healthz"`
@@ -90,6 +95,25 @@ func run(log *slog.Logger) error {
 	)
 	defer log.Info("Service stopped")
 
+	errCh := make(chan error, 1)
+
+	// pprof endpoints
+	mux := http.NewServeMux()
+	mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
+	mux.HandleFunc("/debug/pprof", pprof.Index)
+
+	// metrics
+	reg := prometheus.NewRegistry()
+	promHandler := promhttp.HandlerFor(reg, promhttp.HandlerOpts{})
+	mux.Handle("/metrics", promHandler)
+	srv := &http.Server{Addr: fmt.Sprintf(":%d", cfg.MetricsPort), Handler: mux}
+	go func(srv *http.Server) {
+		errCh <- srv.ListenAndServe()
+	}(srv)
+
 	// NATS
 	no := nats.GetDefaultOptions()
 	no.Servers = cfg.NatsServers
@@ -103,10 +127,8 @@ func run(log *slog.Logger) error {
 	log.Info("connecting to NATS")
 	nc, err := no.Connect()
 	if err != nil {
-		log.Error("connect to NATS", "err", err)
+		return fmt.Errorf("connect to NATS: %w", err)
 	}
-
-	errCh := make(chan error, 1)
 
 	lis, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", cfg.GRPCPort))
 	if err != nil {
@@ -128,6 +150,9 @@ outter:
 			log.Error("errCh", "err", e)
 		case <-ctx.Done():
 			log.Info("stopping service...")
+			if err := srv.Close(); err != nil {
+				log.Error("closing server", "err", err)
+			}
 			s.Shutdown(ctx)
 			grpcServer.GracefulStop()
 			break outter

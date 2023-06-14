@@ -37,6 +37,7 @@ const (
 	LabelOSStable           = "kubernetes.io/os"
 	LabelArchStable         = "kubernetes.io/arch"
 	LabelHostname           = "kubernetes.io/hostname"
+	LabelDefaultContainer   = "kubectl.kubernetes.io/default-container"
 	LabelTopologyZone       = "topology.kubernetes.io/zone"
 	LabelTopologyRegion     = "topology.kubernetes.io/region"
 )
@@ -70,4 +71,11 @@ func MergeLabels(labels ...map[string]string) map[string]string {
 		}
 	}
 	return result
+}
+
+func SetDefaultContainer(
+	labels map[string]string,
+	name string,
+) map[string]string {
+	return MergeLabels(labels, map[string]string{LabelDefaultContainer: name})
 }
