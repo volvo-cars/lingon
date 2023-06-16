@@ -260,12 +260,15 @@ var STS = &appsv1.StatefulSet{
 						Name:  "promexporter",
 						Image: ImgPromExporter,
 						Args: []string{
-							"-connz",
-							"-routez",
-							"-subz",
-							"-varz",
-							"-prefix=nats",
-							"-use_internal_server_id",
+							// see https://github.com/nats-io/prometheus-nats-exporter/blob/main/main.go#L87
+							// "-connz",               // connection metrics
+							"-connz_detailed",         // advanced connection metrics
+							"-jsz",                    // jetstream metrics
+							"-routez",                 // route metrics
+							"-subz",                   // subscription metrics
+							"-varz",                   // general metrics
+							"-prefix=nats",            // prefix for all metrics
+							"-use_internal_server_id", // using serverID from /varz
 							"http://localhost:" + d(PortMonitor) + "/",
 						},
 						ImagePullPolicy: corev1.PullIfNotPresent,

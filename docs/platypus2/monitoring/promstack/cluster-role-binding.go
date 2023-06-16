@@ -46,67 +46,6 @@ var AdmissionCRB = &rbacv1.ClusterRoleBinding{
 	},
 }
 
-var GrafanaCRB = &rbacv1.ClusterRoleBinding{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "kube-prometheus-stack",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "grafana",
-			"app.kubernetes.io/version":    "9.5.1",
-			"helm.sh/chart":                "grafana-6.56.2",
-		},
-		Name: "kube-prometheus-stack-grafana-clusterrolebinding",
-	},
-	RoleRef: rbacv1.RoleRef{
-		APIGroup: "rbac.authorization.k8s.io",
-		Kind:     "ClusterRole",
-		Name:     "kube-prometheus-stack-grafana-clusterrole",
-	},
-	Subjects: []rbacv1.Subject{
-		{
-			Kind:      "ServiceAccount",
-			Name:      "kube-prometheus-stack-grafana",
-			Namespace: namespace,
-		},
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "rbac.authorization.k8s.io/v1",
-		Kind:       "ClusterRoleBinding",
-	},
-}
-
-var KubeStateMetricsCRB = &rbacv1.ClusterRoleBinding{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/component":  "metrics",
-			"app.kubernetes.io/instance":   "kube-prometheus-stack",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "kube-state-metrics",
-			"app.kubernetes.io/part-of":    "kube-state-metrics",
-			"app.kubernetes.io/version":    "2.8.2",
-			"helm.sh/chart":                "kube-state-metrics-5.5.0",
-			"release":                      "kube-prometheus-stack",
-		},
-		Name: "kube-prometheus-stack-kube-state-metrics",
-	},
-	RoleRef: rbacv1.RoleRef{
-		APIGroup: "rbac.authorization.k8s.io",
-		Kind:     "ClusterRole",
-		Name:     "kube-prometheus-stack-kube-state-metrics",
-	},
-	Subjects: []rbacv1.Subject{
-		{
-			Kind:      "ServiceAccount",
-			Name:      "kube-prometheus-stack-kube-state-metrics",
-			Namespace: namespace,
-		},
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "rbac.authorization.k8s.io/v1",
-		Kind:       "ClusterRoleBinding",
-	},
-}
-
 var OperatorCRB = &rbacv1.ClusterRoleBinding{
 	ObjectMeta: metav1.ObjectMeta{
 		Labels: map[string]string{

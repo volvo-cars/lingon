@@ -59,10 +59,11 @@ function install_repo() {
   helm repo add kube-state-metrics https://kubernetes.github.io/kube-state-metrics
   helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
   helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server
-  helm repo add vm https://victoriametrics.github.io/helm-charts/
   helm repo add autoscaler https://kubernetes.github.io/autoscaler
   helm repo add nats https://nats-io.github.io/k8s/helm/charts/
   helm repo add benthos https://benthosdev.github.io/benthos-helm-chart/
+  helm repo add vm https://victoriametrics.github.io/helm-charts/
+  helm repo add grafana https://grafana.github.io/helm-charts
 
   helm repo update
 }
@@ -89,12 +90,12 @@ function manifests() {
   # AWS LB
   #
   # using IAM Roles for service account
-  helm template aws-load-balancer-controller eks/aws-load-balancer-controller \
-    --set clusterName=my-cluster \
-    -n kube-system \
-    --set serviceAccount.create=false \
-    --set serviceAccount.name=aws-load-balancer-controller | \
-    $KYGO -out "awslb" -app awslb -pkg awslb
+#  helm template aws-load-balancer-controller eks/aws-load-balancer-controller \
+#    --set clusterName=my-cluster \
+#    -n kube-system \
+#    --set serviceAccount.create=false \
+#    --set serviceAccount.name=aws-load-balancer-controller | \
+#    $KYGO -out "awslb" -app awslb -pkg awslb
 
   #
   # CSI - AWS EFS & EBS
@@ -123,6 +124,12 @@ function manifests() {
 
   helm template vm vm/victoria-metrics-single --namespace=monitoring --values "$VALUES_DIR"/victoriametrics-single.values.yaml | \
     $KYGO -out "monitoring/victoriametrics" -app victoria-metrics -pkg victoriametrics
+
+  helm template vmk8s vm/victoria-metrics-k8s-stack --namespace=monitoring --values "$VALUES_DIR"/vmk8s.values.yaml | \
+    $KYGO -out "monitoring/vmk8s" -app victoria-metrics -pkg victoria
+
+  helm template grafana grafana/grafana --namespace=monitoring | \
+    $KYGO -out "monitoring/grafana" -app grafana -pkg grafana
 
   #
   # NATS
@@ -171,15 +178,7 @@ function manifests() {
 
 }
 
-function dashboards() {
-  pushd "$TEMPD" > /dev/null
-  git clone --depth 1 "https://github.com/nats-io/nats-surveyor"
-  cp -r nats-surveyor/docker-compose/grafana/provisioning/dashboards nats-dashboards
-  popd > /dev/null
-  [ $DEBUG ] && rm -rf "$TEMPD"/nats-surveyor
-  #  wget https://raw.githubusercontent.com/nats-io/nats-surveyor/master/docker-compose/grafana/provisioning/dashboards/nats-surveyor-dashboard.json
 
-}
 
 function step() {
   set +x
@@ -205,8 +204,6 @@ function main {
   step "generate manifests"
   manifests
 
-  step "dashboards"
-  dashboards
 
 }
 

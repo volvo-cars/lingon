@@ -6,6 +6,7 @@
 package promstack
 
 import (
+	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -162,5 +163,102 @@ var PrometheusNodeExporterDS = &appsv1.DaemonSet{
 	TypeMeta: metav1.TypeMeta{
 		APIVersion: "apps/v1",
 		Kind:       "DaemonSet",
+	},
+}
+
+var PrometheusNodeExporterSA = &corev1.ServiceAccount{
+	ObjectMeta: metav1.ObjectMeta{
+		Labels: map[string]string{
+			"app.kubernetes.io/component":  "metrics",
+			"app.kubernetes.io/instance":   "kube-prometheus-stack",
+			"app.kubernetes.io/managed-by": "Helm",
+			"app.kubernetes.io/name":       "prometheus-node-exporter",
+			"app.kubernetes.io/part-of":    "prometheus-node-exporter",
+			"app.kubernetes.io/version":    "1.5.0",
+			"helm.sh/chart":                "prometheus-node-exporter-4.16.0",
+			"jobLabel":                     "node-exporter",
+			"release":                      "kube-prometheus-stack",
+		},
+		Name:      "kube-prometheus-stack-prometheus-node-exporter",
+		Namespace: namespace,
+	},
+	TypeMeta: metav1.TypeMeta{
+		APIVersion: "v1",
+		Kind:       "ServiceAccount",
+	},
+}
+
+var PrometheusNodeExporterSVC = &corev1.Service{
+	ObjectMeta: metav1.ObjectMeta{
+		Annotations: map[string]string{"prometheus.io/scrape": "true"},
+		Labels: map[string]string{
+			"app.kubernetes.io/component":  "metrics",
+			"app.kubernetes.io/instance":   "kube-prometheus-stack",
+			"app.kubernetes.io/managed-by": "Helm",
+			"app.kubernetes.io/name":       "prometheus-node-exporter",
+			"app.kubernetes.io/part-of":    "prometheus-node-exporter",
+			"app.kubernetes.io/version":    "1.5.0",
+			"helm.sh/chart":                "prometheus-node-exporter-4.16.0",
+			"jobLabel":                     "node-exporter",
+			"release":                      "kube-prometheus-stack",
+		},
+		Name:      "kube-prometheus-stack-prometheus-node-exporter",
+		Namespace: namespace,
+	},
+	Spec: corev1.ServiceSpec{
+		Ports: []corev1.ServicePort{
+			{
+				Name:       "http-metrics",
+				Port:       int32(9100),
+				Protocol:   corev1.Protocol("TCP"),
+				TargetPort: intstr.IntOrString{IntVal: int32(9100)},
+			},
+		},
+		Selector: map[string]string{
+			"app.kubernetes.io/instance": "kube-prometheus-stack",
+			"app.kubernetes.io/name":     "prometheus-node-exporter",
+		},
+		Type: corev1.ServiceType("ClusterIP"),
+	},
+	TypeMeta: metav1.TypeMeta{
+		APIVersion: "v1",
+		Kind:       "Service",
+	},
+}
+
+var PrometheusNodeExporterServiceMonitor = &v1.ServiceMonitor{
+	ObjectMeta: metav1.ObjectMeta{
+		Labels: map[string]string{
+			"app.kubernetes.io/component":  "metrics",
+			"app.kubernetes.io/instance":   "kube-prometheus-stack",
+			"app.kubernetes.io/managed-by": "Helm",
+			"app.kubernetes.io/name":       "prometheus-node-exporter",
+			"app.kubernetes.io/part-of":    "prometheus-node-exporter",
+			"app.kubernetes.io/version":    "1.5.0",
+			"helm.sh/chart":                "prometheus-node-exporter-4.16.0",
+			"jobLabel":                     "node-exporter",
+			"release":                      "kube-prometheus-stack",
+		},
+		Name:      "kube-prometheus-stack-prometheus-node-exporter",
+		Namespace: namespace,
+	},
+	Spec: v1.ServiceMonitorSpec{
+		Endpoints: []v1.Endpoint{
+			{
+				Port:   "http-metrics",
+				Scheme: "http",
+			},
+		},
+		JobLabel: "jobLabel",
+		Selector: metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				"app.kubernetes.io/instance": "kube-prometheus-stack",
+				"app.kubernetes.io/name":     "prometheus-node-exporter",
+			},
+		},
+	},
+	TypeMeta: metav1.TypeMeta{
+		APIVersion: "monitoring.coreos.com/v1",
+		Kind:       "ServiceMonitor",
 	},
 }

@@ -41,22 +41,3 @@ var AdmissionRole = &rbacv1.Role{
 		Kind:       "Role",
 	},
 }
-
-var GrafanaRole = &rbacv1.Role{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "kube-prometheus-stack",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "grafana",
-			"app.kubernetes.io/version":    "9.5.1",
-			"helm.sh/chart":                "grafana-6.56.2",
-		},
-		Name:      "kube-prometheus-stack-grafana",
-		Namespace: namespace,
-	},
-	Rules: []rbacv1.PolicyRule{},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "rbac.authorization.k8s.io/v1",
-		Kind:       "Role",
-	},
-}

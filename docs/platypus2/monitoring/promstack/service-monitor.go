@@ -138,43 +138,6 @@ var CorednsServiceMonitor = &v1.ServiceMonitor{
 	},
 }
 
-var GrafanaServiceMonitor = &v1.ServiceMonitor{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "kube-prometheus-stack",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "grafana",
-			"app.kubernetes.io/version":    "9.5.1",
-			"helm.sh/chart":                "grafana-6.56.2",
-		},
-		Name:      "kube-prometheus-stack-grafana",
-		Namespace: namespace,
-	},
-	Spec: v1.ServiceMonitorSpec{
-		Endpoints: []v1.Endpoint{
-			{
-				HonorLabels:   true,
-				Path:          "/metrics",
-				Port:          "http-web",
-				Scheme:        "http",
-				ScrapeTimeout: v1.Duration("30s"),
-			},
-		},
-		JobLabel:          "kube-prometheus-stack",
-		NamespaceSelector: v1.NamespaceSelector{MatchNames: []string{"monitoring"}},
-		Selector: metav1.LabelSelector{
-			MatchLabels: map[string]string{
-				"app.kubernetes.io/instance": "kube-prometheus-stack",
-				"app.kubernetes.io/name":     "grafana",
-			},
-		},
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "monitoring.coreos.com/v1",
-		Kind:       "ServiceMonitor",
-	},
-}
-
 var KubeControllerManagerServiceMonitor = &v1.ServiceMonitor{
 	ObjectMeta: metav1.ObjectMeta{
 		Labels: map[string]string{
@@ -324,42 +287,6 @@ var KubeSchedulerServiceMonitor = &v1.ServiceMonitor{
 			MatchLabels: map[string]string{
 				"app":     "kube-prometheus-stack-kube-scheduler",
 				"release": "kube-prometheus-stack",
-			},
-		},
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "monitoring.coreos.com/v1",
-		Kind:       "ServiceMonitor",
-	},
-}
-
-var KubeStateMetricsServiceMonitor = &v1.ServiceMonitor{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/component":  "metrics",
-			"app.kubernetes.io/instance":   "kube-prometheus-stack",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "kube-state-metrics",
-			"app.kubernetes.io/part-of":    "kube-state-metrics",
-			"app.kubernetes.io/version":    "2.8.2",
-			"helm.sh/chart":                "kube-state-metrics-5.5.0",
-			"release":                      "kube-prometheus-stack",
-		},
-		Name:      "kube-prometheus-stack-kube-state-metrics",
-		Namespace: namespace,
-	},
-	Spec: v1.ServiceMonitorSpec{
-		Endpoints: []v1.Endpoint{
-			{
-				HonorLabels: true,
-				Port:        "http",
-			},
-		},
-		JobLabel: "app.kubernetes.io/name",
-		Selector: metav1.LabelSelector{
-			MatchLabels: map[string]string{
-				"app.kubernetes.io/instance": "kube-prometheus-stack",
-				"app.kubernetes.io/name":     "kube-state-metrics",
 			},
 		},
 	},
@@ -522,43 +449,6 @@ var OperatorServiceMonitor = &v1.ServiceMonitor{
 			MatchLabels: map[string]string{
 				"app":     "kube-prometheus-stack-operator",
 				"release": "kube-prometheus-stack",
-			},
-		},
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "monitoring.coreos.com/v1",
-		Kind:       "ServiceMonitor",
-	},
-}
-
-var PrometheusNodeExporterServiceMonitor = &v1.ServiceMonitor{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/component":  "metrics",
-			"app.kubernetes.io/instance":   "kube-prometheus-stack",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "prometheus-node-exporter",
-			"app.kubernetes.io/part-of":    "prometheus-node-exporter",
-			"app.kubernetes.io/version":    "1.5.0",
-			"helm.sh/chart":                "prometheus-node-exporter-4.16.0",
-			"jobLabel":                     "node-exporter",
-			"release":                      "kube-prometheus-stack",
-		},
-		Name:      "kube-prometheus-stack-prometheus-node-exporter",
-		Namespace: namespace,
-	},
-	Spec: v1.ServiceMonitorSpec{
-		Endpoints: []v1.Endpoint{
-			{
-				Port:   "http-metrics",
-				Scheme: "http",
-			},
-		},
-		JobLabel: "jobLabel",
-		Selector: metav1.LabelSelector{
-			MatchLabels: map[string]string{
-				"app.kubernetes.io/instance": "kube-prometheus-stack",
-				"app.kubernetes.io/name":     "prometheus-node-exporter",
 			},
 		},
 	},

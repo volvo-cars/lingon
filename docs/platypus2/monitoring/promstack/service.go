@@ -11,43 +11,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-var AlertmanagerSVC = &corev1.Service{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "kube-prometheus-stack-alertmanager",
-			"app.kubernetes.io/instance":   "kube-prometheus-stack",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/part-of":    "kube-prometheus-stack",
-			"app.kubernetes.io/version":    "45.27.2",
-			"chart":                        "kube-prometheus-stack-45.27.2",
-			"heritage":                     "Helm",
-			"release":                      "kube-prometheus-stack",
-			"self-monitor":                 "true",
-		},
-		Name:      "kube-prometheus-stack-alertmanager",
-		Namespace: namespace,
-	},
-	Spec: corev1.ServiceSpec{
-		Ports: []corev1.ServicePort{
-			{
-				Name:       "http-web",
-				Port:       int32(9093),
-				Protocol:   corev1.Protocol("TCP"),
-				TargetPort: intstr.IntOrString{IntVal: int32(9093)},
-			},
-		},
-		Selector: map[string]string{
-			"alertmanager":           "kube-prometheus-stack-alertmanager",
-			"app.kubernetes.io/name": "alertmanager",
-		},
-		Type: corev1.ServiceType("ClusterIP"),
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "Service",
-	},
-}
-
 var CorednsSVC = &corev1.Service{
 	ObjectMeta: metav1.ObjectMeta{
 		Labels: map[string]string{
@@ -75,39 +38,6 @@ var CorednsSVC = &corev1.Service{
 			},
 		},
 		Selector: map[string]string{"k8s-app": "kube-dns"},
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "Service",
-	},
-}
-
-var GrafanaSVC = &corev1.Service{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "kube-prometheus-stack",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "grafana",
-			"app.kubernetes.io/version":    "9.5.1",
-			"helm.sh/chart":                "grafana-6.56.2",
-		},
-		Name:      "kube-prometheus-stack-grafana",
-		Namespace: namespace,
-	},
-	Spec: corev1.ServiceSpec{
-		Ports: []corev1.ServicePort{
-			{
-				Name:       "http-web",
-				Port:       int32(80),
-				Protocol:   corev1.Protocol("TCP"),
-				TargetPort: intstr.IntOrString{IntVal: int32(3000)},
-			},
-		},
-		Selector: map[string]string{
-			"app.kubernetes.io/instance": "kube-prometheus-stack",
-			"app.kubernetes.io/name":     "grafana",
-		},
-		Type: corev1.ServiceType("ClusterIP"),
 	},
 	TypeMeta: metav1.TypeMeta{
 		APIVersion: "v1",
@@ -255,43 +185,6 @@ var KubeSchedulerSVC = &corev1.Service{
 	},
 }
 
-var KubeStateMetricsSVC = &corev1.Service{
-	ObjectMeta: metav1.ObjectMeta{
-		Annotations: map[string]string{"prometheus.io/scrape": "true"},
-		Labels: map[string]string{
-			"app.kubernetes.io/component":  "metrics",
-			"app.kubernetes.io/instance":   "kube-prometheus-stack",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "kube-state-metrics",
-			"app.kubernetes.io/part-of":    "kube-state-metrics",
-			"app.kubernetes.io/version":    "2.8.2",
-			"helm.sh/chart":                "kube-state-metrics-5.5.0",
-			"release":                      "kube-prometheus-stack",
-		},
-		Name:      "kube-prometheus-stack-kube-state-metrics",
-		Namespace: namespace,
-	},
-	Spec: corev1.ServiceSpec{
-		Ports: []corev1.ServicePort{
-			{
-				Name:       "http",
-				Port:       int32(8080),
-				Protocol:   corev1.Protocol("TCP"),
-				TargetPort: intstr.IntOrString{IntVal: int32(8080)},
-			},
-		},
-		Selector: map[string]string{
-			"app.kubernetes.io/instance": "kube-prometheus-stack",
-			"app.kubernetes.io/name":     "kube-state-metrics",
-		},
-		Type: corev1.ServiceType("ClusterIP"),
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "Service",
-	},
-}
-
 var OperatorSVC = &corev1.Service{
 	ObjectMeta: metav1.ObjectMeta{
 		Labels: map[string]string{
@@ -321,44 +214,6 @@ var OperatorSVC = &corev1.Service{
 		Selector: map[string]string{
 			"app":     "kube-prometheus-stack-operator",
 			"release": "kube-prometheus-stack",
-		},
-		Type: corev1.ServiceType("ClusterIP"),
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "Service",
-	},
-}
-
-var PrometheusNodeExporterSVC = &corev1.Service{
-	ObjectMeta: metav1.ObjectMeta{
-		Annotations: map[string]string{"prometheus.io/scrape": "true"},
-		Labels: map[string]string{
-			"app.kubernetes.io/component":  "metrics",
-			"app.kubernetes.io/instance":   "kube-prometheus-stack",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "prometheus-node-exporter",
-			"app.kubernetes.io/part-of":    "prometheus-node-exporter",
-			"app.kubernetes.io/version":    "1.5.0",
-			"helm.sh/chart":                "prometheus-node-exporter-4.16.0",
-			"jobLabel":                     "node-exporter",
-			"release":                      "kube-prometheus-stack",
-		},
-		Name:      "kube-prometheus-stack-prometheus-node-exporter",
-		Namespace: namespace,
-	},
-	Spec: corev1.ServiceSpec{
-		Ports: []corev1.ServicePort{
-			{
-				Name:       "http-metrics",
-				Port:       int32(9100),
-				Protocol:   corev1.Protocol("TCP"),
-				TargetPort: intstr.IntOrString{IntVal: int32(9100)},
-			},
-		},
-		Selector: map[string]string{
-			"app.kubernetes.io/instance": "kube-prometheus-stack",
-			"app.kubernetes.io/name":     "prometheus-node-exporter",
 		},
 		Type: corev1.ServiceType("ClusterIP"),
 	},
