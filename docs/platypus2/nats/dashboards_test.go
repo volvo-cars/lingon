@@ -1,3 +1,6 @@
+// Copyright (c) 2023 Volvo Car Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 package nats
 
 import (
@@ -13,6 +16,10 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+//
+// Test for dashboard as code
+//
 
 var (
 	DashboardNatsCM = &corev1.ConfigMap{

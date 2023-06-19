@@ -42,7 +42,7 @@ type Nats struct {
 	SVC                *corev1.Service
 	ServiceMonitor     *promoperatorv1.ServiceMonitor
 	TestRequestReplyPO *corev1.Pod
-	DashboardCM        *corev1.ConfigMap
+	// DashboardCM        *corev1.ConfigMap
 }
 
 // New creates a new Nats
@@ -64,7 +64,7 @@ func New() *Nats {
 		SVC:                SVC,
 		ServiceMonitor:     ServiceMonitor,
 		TestRequestReplyPO: TestRequestReplyPO,
-		DashboardCM:        DashboardNatsCM,
+		// DashboardCM:        DashboardNatsCM,
 	}
 }
 
