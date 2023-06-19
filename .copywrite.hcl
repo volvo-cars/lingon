@@ -15,6 +15,7 @@ project {
     "**/.terra/**",
     "**/testdata/**",
     "**/out/**",
-     "vendors/**",
+    "vendors/**",
+    "docs/platypus/gen/**"
   ]
 }

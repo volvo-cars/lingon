@@ -47,11 +47,11 @@ golang.org/x/tools v0.9.1 : BSD-3-Clause
 gopkg.in/inf.v0 v0.9.1 : BSD-3-Clause
 gopkg.in/yaml.v2 v2.4.0 : Apache-2.0
 gopkg.in/yaml.v3 v3.0.1 : MIT
-k8s.io/api v0.27.2 : Apache-2.0
-k8s.io/apiextensions-apiserver/pkg/apis/apiextensions v0.27.2 : Apache-2.0
-k8s.io/apimachinery/pkg v0.27.2 : Apache-2.0
-k8s.io/apimachinery/third_party/forked/golang/reflect v0.27.2 : BSD-3-Clause
-k8s.io/client-go/kubernetes/scheme v0.27.2 : Apache-2.0
+k8s.io/api v0.27.3 : Apache-2.0
+k8s.io/apiextensions-apiserver/pkg/apis/apiextensions v0.27.3 : Apache-2.0
+k8s.io/apimachinery/pkg v0.27.3 : Apache-2.0
+k8s.io/apimachinery/third_party/forked/golang/reflect v0.27.3 : BSD-3-Clause
+k8s.io/client-go/kubernetes/scheme v0.27.3 : Apache-2.0
 k8s.io/klog/v2 v2.100.1 : Apache-2.0
 k8s.io/utils v0.0.0-20230505201702-9f6742963106 : Apache-2.0
 k8s.io/utils/internal/third_party/forked/golang/net v0.0.0-20230505201702-9f6742963106 : BSD-3-Clause
@@ -179,15 +179,15 @@ gopkg.in/yaml.v3 v3.0.1
 	See the License for the specific language governing permissions and
 	limitations under the License.
 
-k8s.io/api v0.27.2
+k8s.io/api v0.27.3
 
-k8s.io/apiextensions-apiserver/pkg/apis/apiextensions v0.27.2
+k8s.io/apiextensions-apiserver/pkg/apis/apiextensions v0.27.3
 
-k8s.io/apimachinery/pkg v0.27.2
+k8s.io/apimachinery/pkg v0.27.3
 
-k8s.io/apimachinery/third_party/forked/golang/reflect v0.27.2
+k8s.io/apimachinery/third_party/forked/golang/reflect v0.27.3
 
-k8s.io/client-go/kubernetes/scheme v0.27.2
+k8s.io/client-go/kubernetes/scheme v0.27.3
 
 k8s.io/klog/v2 v2.100.1
 
@@ -4036,7 +4036,7 @@ limitations under the License.
 ---
 
 Apache-2.0
-(k8s.io/api v0.27.2)
+(k8s.io/api v0.27.3)
 
 
                                  Apache License
@@ -4245,7 +4245,7 @@ Apache-2.0
 ---
 
 Apache-2.0
-(k8s.io/apiextensions-apiserver/pkg/apis/apiextensions v0.27.2)
+(k8s.io/apiextensions-apiserver/pkg/apis/apiextensions v0.27.3)
 
 
                                  Apache License
@@ -4454,7 +4454,7 @@ Apache-2.0
 ---
 
 Apache-2.0
-(k8s.io/apimachinery/pkg v0.27.2)
+(k8s.io/apimachinery/pkg v0.27.3)
 
 
                                  Apache License
@@ -4663,7 +4663,7 @@ Apache-2.0
 ---
 
 BSD-3-Clause
-(k8s.io/apimachinery/third_party/forked/golang/reflect v0.27.2)
+(k8s.io/apimachinery/third_party/forked/golang/reflect v0.27.3)
 
 Copyright (c) 2009 The Go Authors. All rights reserved.
 
@@ -4697,7 +4697,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---
 
 Apache-2.0
-(k8s.io/client-go/kubernetes/scheme v0.27.2)
+(k8s.io/client-go/kubernetes/scheme v0.27.3)
 
 
                                  Apache License
