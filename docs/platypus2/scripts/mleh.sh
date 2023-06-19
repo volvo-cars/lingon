@@ -64,6 +64,8 @@ function install_repo() {
   helm repo add benthos https://benthosdev.github.io/benthos-helm-chart/
   helm repo add vm https://victoriametrics.github.io/helm-charts/
   helm repo add grafana https://grafana.github.io/helm-charts
+  helm repo add vector https://helm.vector.dev
+
 
   helm repo update
 }
@@ -120,16 +122,22 @@ function manifests() {
     $KYGO -out "monitoring/promcrd" -app prometheus -pkg promcrd -group=false -clean-name=false
 
   helm template kube-promtheus-stack prometheus-community/kube-prometheus-stack --namespace=monitoring | \
-    $KYGO -out "monitoring/promstack" -app kube-prometheus-stack -pkg promstack
+    $KYGO -out "monitoring/promstack" -app kubeprometheusstack -pkg promstack
 
   helm template vm vm/victoria-metrics-single --namespace=monitoring --values "$VALUES_DIR"/victoriametrics-single.values.yaml | \
     $KYGO -out "monitoring/victoriametrics" -app victoria-metrics -pkg victoriametrics
 
+  wget https://raw.githubusercontent.com/VictoriaMetrics/helm-charts/master/charts/victoria-metrics-k8s-stack/crds/crd.yaml -O - | \
+    $KYGO -out "monitoring/vmcrd" -app victoriametrics -pkg vmcrd -group=false -clean-name=false
+
   helm template vmk8s vm/victoria-metrics-k8s-stack --namespace=monitoring --values "$VALUES_DIR"/vmk8s.values.yaml | \
-    $KYGO -out "monitoring/vmk8s" -app victoria-metrics -pkg victoria
+    $KYGO -out "monitoring/vmk8s" -app vmk8s -pkg vmk8s
 
   helm template grafana grafana/grafana --namespace=monitoring | \
     $KYGO -out "monitoring/grafana" -app grafana -pkg grafana
+
+  helm template vector vector/vector --namespace=monitoring | \
+    $KYGO -out "monitoring/vector" -app vector -pkg vector
 
   #
   # NATS

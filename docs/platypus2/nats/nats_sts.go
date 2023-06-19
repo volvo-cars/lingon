@@ -176,8 +176,7 @@ var STS = &appsv1.StatefulSet{
 			Spec: corev1.PodSpec{
 				Affinity: &corev1.Affinity{
 					PodAntiAffinity: ku.AntiAffinityHostnameByLabel(
-						"app",
-						appName,
+						"app", appName,
 					),
 				},
 				Containers: []corev1.Container{
@@ -185,9 +184,7 @@ var STS = &appsv1.StatefulSet{
 						Name:  defaultContainer,
 						Image: ImgNats,
 						Command: []string{
-							"nats-server",
-							"--config",
-							natsConfigPath,
+							"nats-server", "--config", natsConfigPath,
 						},
 						ImagePullPolicy: corev1.PullIfNotPresent,
 
@@ -207,8 +204,7 @@ var STS = &appsv1.StatefulSet{
 						},
 
 						Lifecycle: preStop(
-							"nats-server",
-							"-sl=ldm="+natsPIDPath,
+							"nats-server", "-sl=ldm="+natsPIDPath,
 						),
 
 						LivenessProbe:  probe,
@@ -231,11 +227,10 @@ var STS = &appsv1.StatefulSet{
 						},
 
 						Resources: ku.Resources(
-							d(ResourceCPU),
-							ResourceMemory,
-							d(ResourceCPU),
-							ResourceMemory,
+							d(ResourceCPU), ResourceMemory,
+							d(ResourceCPU), ResourceMemory,
 						),
+
 						VolumeMounts: []corev1.VolumeMount{
 							cm.VolumeMount,
 							pidVolumeMount,
@@ -246,10 +241,8 @@ var STS = &appsv1.StatefulSet{
 						Image: ImgConfigReloader,
 						Command: []string{
 							"nats-server-config-reloader",
-							"-pid",
-							natsPIDPath,
-							"-config",
-							natsConfigPath,
+							"-pid", natsPIDPath,
+							"-config", natsConfigPath,
 						},
 						ImagePullPolicy: corev1.PullIfNotPresent,
 						VolumeMounts: []corev1.VolumeMount{

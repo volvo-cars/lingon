@@ -21,7 +21,7 @@ command -v go > /dev/null
 command -v git > /dev/null
 
 ROOT_DIR=$(git rev-parse --show-toplevel)
-TMP="$ROOT_DIR"/out/kwok
+TMP="$ROOT_DIR"/docs/platypus2/scripts/out/kwok
 KUBE_VERSION="v1.27.2"
 KUBE_BIN="$TMP/bin"
 DEBUG=0

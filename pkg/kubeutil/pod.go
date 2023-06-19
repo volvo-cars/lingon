@@ -61,6 +61,11 @@ func EnvVarDownAPI(name, fieldPath string) corev1.EnvVar {
 	}
 }
 
+//	AnnotationPrometheus returns map[string]string{
+//		"prometheus.io/path":   path,
+//		"prometheus.io/port":   fmt.Sprintf("%d", port),
+//		"prometheus.io/scrape": "true",
+//	}
 func AnnotationPrometheus(path string, port int32) map[string]string {
 	return map[string]string{
 		"prometheus.io/path":   path,
