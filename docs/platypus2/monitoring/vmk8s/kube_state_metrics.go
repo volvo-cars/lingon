@@ -5,6 +5,7 @@ package vmk8s
 
 import (
 	"github.com/VictoriaMetrics/operator/api/victoriametrics/v1beta1"
+	"github.com/volvo-cars/lingon/pkg/kube"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -13,6 +14,8 @@ import (
 )
 
 type KubeStateMetrics struct {
+	kube.App
+
 	CR     *rbacv1.ClusterRole
 	CRB    *rbacv1.ClusterRoleBinding
 	Deploy *appsv1.Deployment
@@ -76,7 +79,7 @@ var KubeStateMetricsDeploy = &appsv1.Deployment{
 							"--resources=certificatesigningrequests,configmaps,cronjobs,daemonsets,deployments,endpoints,horizontalpodautoscalers,ingresses,jobs,leases,limitranges,mutatingwebhookconfigurations,namespaces,networkpolicies,nodes,persistentvolumeclaims,persistentvolumes,poddisruptionbudgets,pods,replicasets,replicationcontrollers,resourcequotas,secrets,services,statefulsets,storageclasses,validatingwebhookconfigurations,volumeattachments",
 						},
 						Image:           "registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.7.0",
-						ImagePullPolicy: corev1.PullPolicy("IfNotPresent"),
+						ImagePullPolicy: corev1.PullIfNotPresent,
 						LivenessProbe: &corev1.Probe{
 							InitialDelaySeconds: int32(5),
 							ProbeHandler: corev1.ProbeHandler{

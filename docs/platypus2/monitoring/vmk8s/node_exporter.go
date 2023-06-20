@@ -7,6 +7,7 @@ package vmk8s
 
 import (
 	"github.com/VictoriaMetrics/operator/api/victoriametrics/v1beta1"
+	"github.com/volvo-cars/lingon/pkg/kube"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -14,6 +15,8 @@ import (
 )
 
 type NodeExporter struct {
+	kube.App
+
 	DS         *appsv1.DaemonSet
 	SA         *corev1.ServiceAccount
 	SVC        *corev1.Service
@@ -87,7 +90,7 @@ var NodeExporterDS = &appsv1.DaemonSet{
 							},
 						},
 						Image:           "quay.io/prometheus/node-exporter:v1.4.0",
-						ImagePullPolicy: corev1.PullPolicy("IfNotPresent"),
+						ImagePullPolicy: corev1.PullIfNotPresent,
 						LivenessProbe: &corev1.Probe{
 							FailureThreshold: int32(3),
 							PeriodSeconds:    int32(10),

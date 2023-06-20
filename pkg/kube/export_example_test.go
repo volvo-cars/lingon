@@ -7,11 +7,9 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/rogpeppe/go-internal/txtar"
 	"github.com/volvo-cars/lingon/pkg/kube"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/yaml"
 )
 
 // validate the struct implements the interface
@@ -48,30 +46,16 @@ func ExampleExport() {
 	var buf bytes.Buffer
 	_ = kube.Export(tk, kube.WithExportWriter(&buf))
 
-	ar := txtar.Parse(buf.Bytes())
-
-	if len(ar.Files) > 0 {
-		ns := &corev1.Namespace{}
-		_ = yaml.Unmarshal(ar.Files[0].Data, ns)
-		// print line by line to avoid trailing whitespace
-		fmt.Println("apiVersion:", ns.APIVersion)
-		fmt.Println("kind:", ns.Kind)
-		fmt.Println("metadata:")
-		fmt.Println("  labels:")
-		fmt.Println(
-			"    app.kubernetes.io/name:",
-			ns.Labels["app.kubernetes.io/name"],
-		)
-		fmt.Println("name:", ns.Name)
-	}
+	fmt.Printf("%s\n", buf.String())
 
 	// Output:
 	//
+	// -- out/0_pipelines_ns.yaml --
 	// apiVersion: v1
 	// kind: Namespace
 	// metadata:
 	//   labels:
 	//     app.kubernetes.io/name: tekton-pipelines
-	// name: tekton-pipelines
-	//
+	//   name: tekton-pipelines
+	// spec: {}
 }

@@ -5,6 +5,7 @@ package vmk8s
 
 import (
 	"github.com/VictoriaMetrics/operator/api/victoriametrics/v1beta1"
+	"github.com/volvo-cars/lingon/pkg/kube"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -13,6 +14,8 @@ import (
 )
 
 type Grafana struct {
+	kube.App
+
 	CM                 *corev1.ConfigMap
 	CR                 *rbacv1.ClusterRole
 	CRB                *rbacv1.ClusterRoleBinding
@@ -120,7 +123,7 @@ var GrafanaDeploy = &appsv1.Deployment{
 							},
 						},
 						Image:           "quay.io/kiwigrid/k8s-sidecar:1.19.2",
-						ImagePullPolicy: corev1.PullPolicy("IfNotPresent"),
+						ImagePullPolicy: corev1.PullIfNotPresent,
 						Name:            "grafana-sc-dashboard",
 						VolumeMounts: []corev1.VolumeMount{
 							{
@@ -167,7 +170,7 @@ var GrafanaDeploy = &appsv1.Deployment{
 							},
 						},
 						Image:           "quay.io/kiwigrid/k8s-sidecar:1.19.2",
-						ImagePullPolicy: corev1.PullPolicy("IfNotPresent"),
+						ImagePullPolicy: corev1.PullIfNotPresent,
 						Name:            "grafana-sc-datasources",
 						VolumeMounts: []corev1.VolumeMount{
 							{
@@ -208,7 +211,7 @@ var GrafanaDeploy = &appsv1.Deployment{
 							},
 						},
 						Image:           "grafana/grafana:9.3.0",
-						ImagePullPolicy: corev1.PullPolicy("IfNotPresent"),
+						ImagePullPolicy: corev1.PullIfNotPresent,
 						LivenessProbe: &corev1.Probe{
 							FailureThreshold:    int32(10),
 							InitialDelaySeconds: int32(60),
@@ -272,7 +275,7 @@ var GrafanaDeploy = &appsv1.Deployment{
 						},
 						Command:         []string{"/bin/sh"},
 						Image:           "curlimages/curl:7.85.0",
-						ImagePullPolicy: corev1.PullPolicy("IfNotPresent"),
+						ImagePullPolicy: corev1.PullIfNotPresent,
 						Name:            "download-dashboards",
 						VolumeMounts: []corev1.VolumeMount{
 							{
@@ -778,7 +781,7 @@ var GrafanaTestPO = &corev1.Pod{
 					"/tests/run.sh",
 				},
 				Image:           "bats/bats:v1.4.1",
-				ImagePullPolicy: corev1.PullPolicy("IfNotPresent"),
+				ImagePullPolicy: corev1.PullIfNotPresent,
 				Name:            "vmk8s-test",
 				VolumeMounts: []corev1.VolumeMount{
 					{

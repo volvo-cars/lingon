@@ -6,6 +6,7 @@
 package vmk8s
 
 import (
+	"github.com/volvo-cars/lingon/pkg/kube"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -14,6 +15,8 @@ import (
 )
 
 type CleanUp struct {
+	kube.App
+
 	VMK8sCleanupHookCR   *rbacv1.ClusterRole
 	VMK8sCleanupHookCRB  *rbacv1.ClusterRoleBinding
 	VMK8sCleanupHookJOBS *batchv1.Job
@@ -142,7 +145,7 @@ var VMK8sCleanupHookJOBS = &batchv1.Job{
 								`kubectl delete vmclusters --all --ignore-not-found=true;`,
 						},
 						Image:           "gcr.io/google_containers/hyperkube:v1.18.0",
-						ImagePullPolicy: corev1.PullPolicy("IfNotPresent"),
+						ImagePullPolicy: corev1.PullIfNotPresent,
 						Name:            "kubectl",
 						Resources: corev1.ResourceRequirements{
 							Limits: map[corev1.ResourceName]resource.Quantity{

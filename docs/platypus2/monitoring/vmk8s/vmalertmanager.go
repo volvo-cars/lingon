@@ -7,11 +7,14 @@ package vmk8s
 
 import (
 	"github.com/VictoriaMetrics/operator/api/victoriametrics/v1beta1"
+	"github.com/volvo-cars/lingon/pkg/kube"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type VMAlertManager struct {
+	kube.App
+
 	VMK8sVmalertmanager         *v1beta1.VMAlertmanager
 	VMK8sVmalert                *v1beta1.VMAlert
 	VMK8sAlertmanagerMonzoTplCM *corev1.ConfigMap

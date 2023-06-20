@@ -5,6 +5,7 @@ package vmk8s
 
 import (
 	"github.com/VictoriaMetrics/operator/api/victoriametrics/v1beta1"
+	"github.com/volvo-cars/lingon/pkg/kube"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -13,6 +14,8 @@ import (
 )
 
 type Operator struct {
+	kube.App
+
 	CR          *rbacv1.ClusterRole
 	CRB         *rbacv1.ClusterRoleBinding
 	Deploy      *appsv1.Deployment
@@ -112,7 +115,7 @@ var OperatorDeploy = &appsv1.Deployment{
 							},
 						},
 						Image:           "victoriametrics/operator:v0.34.1",
-						ImagePullPolicy: corev1.PullPolicy("IfNotPresent"),
+						ImagePullPolicy: corev1.PullIfNotPresent,
 						Name:            "victoria-metrics-operator",
 						Ports: []corev1.ContainerPort{
 							{

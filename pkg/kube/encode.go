@@ -44,6 +44,14 @@ func (g *goky) encodeStruct(
 
 		fieldVal := rv.FieldByName(sf.Name)
 		switch t := fieldVal.Interface().(type) {
+		case Exporter:
+			if fv.Kind() == reflect.Ptr {
+				fv = fv.Elem()
+			}
+			if err := g.encodeStruct(fv, sf.Name); err != nil {
+				return err
+			}
+			continue
 		case runtime.Object:
 			v := reflect.ValueOf(t)
 			// TODO: should we continue instead ? Should it be an option ?

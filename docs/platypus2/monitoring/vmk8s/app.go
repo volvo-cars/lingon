@@ -23,16 +23,16 @@ var _ kube.Exporter = (*Vmk8S)(nil)
 type Vmk8S struct {
 	kube.App
 
-	Operator         // *Operator
-	Grafana          // *Grafana
-	KubeStateMetrics // *KubeStateMetrics
-	NodeExporter     // *NodeExporter
-	VMAlertManager   // *VMAlertManager
+	Operator         *Operator
+	Grafana          *Grafana
+	KubeStateMetrics *KubeStateMetrics
+	NodeExporter     *NodeExporter
+	VMAlertManager   *VMAlertManager
 
-	MonKubeScheduler // *MonKubeScheduler
-	MonAPIServer     // *MonAPIServer
-	MonCoreDNS       // *MonCoreDNS
-	MonETCD          // *MonETCD
+	MonKubeScheduler *MonKubeScheduler
+	MonAPIServer     *MonAPIServer
+	MonCoreDNS       *MonCoreDNS
+	MonETCD          *MonETCD
 
 	K8SRules // *K8SRules
 
@@ -58,16 +58,16 @@ type Vmk8S struct {
 // New creates a new Vmk8S
 func New() *Vmk8S {
 	return &Vmk8S{
-		Operator:         *NewOperator(),
-		Grafana:          *NewGrafana(),
-		KubeStateMetrics: *NewKubeStateMetrics(),
-		NodeExporter:     *NewNodeExporter(),
-		VMAlertManager:   *NewVMAlertManager(),
+		Operator:         NewOperator(),
+		Grafana:          NewGrafana(),
+		KubeStateMetrics: NewKubeStateMetrics(),
+		NodeExporter:     NewNodeExporter(),
+		VMAlertManager:   NewVMAlertManager(),
 
-		MonAPIServer:     *NewMonAPIServer(),
-		MonKubeScheduler: *NewMonKubeScheduler(),
-		MonCoreDNS:       *NewMonCoreDNS(),
-		MonETCD:          *NewMonETCD(),
+		MonAPIServer:     NewMonAPIServer(),
+		MonKubeScheduler: NewMonKubeScheduler(),
+		MonCoreDNS:       NewMonCoreDNS(),
+		MonETCD:          NewMonETCD(),
 
 		K8SRules: *NewK8SRules(),
 

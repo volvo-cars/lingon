@@ -5,12 +5,15 @@ package vmk8s
 
 import (
 	"github.com/VictoriaMetrics/operator/api/victoriametrics/v1beta1"
+	"github.com/volvo-cars/lingon/pkg/kube"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 type MonKubeProxy struct {
+	kube.App
+
 	KubeProxySVC    *corev1.Service
 	KubeProxyScrape *v1beta1.VMServiceScrape
 }

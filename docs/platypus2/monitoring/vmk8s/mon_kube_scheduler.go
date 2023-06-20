@@ -5,12 +5,15 @@ package vmk8s
 
 import (
 	"github.com/VictoriaMetrics/operator/api/victoriametrics/v1beta1"
+	"github.com/volvo-cars/lingon/pkg/kube"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 type MonKubeScheduler struct {
+	kube.App
+
 	KubeSchedulerRules      *v1beta1.VMRule
 	KubeSchedulerAlertRules *v1beta1.VMRule
 	KubeSchedulerSVC        *corev1.Service
