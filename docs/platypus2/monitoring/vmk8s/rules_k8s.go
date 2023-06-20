@@ -7,10 +7,13 @@ package vmk8s
 
 import (
 	"github.com/VictoriaMetrics/operator/api/victoriametrics/v1beta1"
+	"github.com/volvo-cars/lingon/pkg/kube"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type K8SRules struct {
+	kube.App
+
 	K8SRecordingRules             *v1beta1.VMRule
 	K8SGeneralAlertRules          *v1beta1.VMRule
 	PromGeneralRules              *v1beta1.VMRule

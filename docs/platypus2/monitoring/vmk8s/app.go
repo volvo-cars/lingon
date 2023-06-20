@@ -34,7 +34,7 @@ type Vmk8S struct {
 	MonCoreDNS       *MonCoreDNS
 	MonETCD          *MonETCD
 
-	K8SRules // *K8SRules
+	K8SRules *K8SRules
 
 	DashboardK8SGlobalCM     *corev1.ConfigMap
 	DashboardK8SNamespacesCM *corev1.ConfigMap
@@ -69,7 +69,7 @@ func New() *Vmk8S {
 		MonCoreDNS:       NewMonCoreDNS(),
 		MonETCD:          NewMonETCD(),
 
-		K8SRules: *NewK8SRules(),
+		K8SRules: NewK8SRules(),
 
 		CadvisorNodeScrape: CadvisorNodeScrape,
 		ProbesNodeScrape:   ProbesNodeScrape,
