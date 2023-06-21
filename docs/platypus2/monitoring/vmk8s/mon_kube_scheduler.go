@@ -189,7 +189,7 @@ var KubeSchedulerSVC = &corev1.Service{
 			{
 				Name:       "http-metrics",
 				Port:       int32(10251),
-				Protocol:   corev1.Protocol("TCP"),
+				Protocol:   corev1.ProtocolTCP,
 				TargetPort: intstr.IntOrString{IntVal: int32(10251)},
 			},
 		},

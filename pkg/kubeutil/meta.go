@@ -11,6 +11,7 @@ package kubeutil
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
@@ -75,4 +76,11 @@ func ExtractMetadata(data []byte) (*Metadata, error) {
 	return &m, nil
 }
 
-//
+func (m *Metadata) String() string {
+	var buf strings.Builder
+	sep := ", "
+	buf.WriteString(m.GVK())
+	buf.WriteString(sep + "NS=" + m.Meta.Namespace)
+	buf.WriteString(sep + "Name=" + m.Meta.Name)
+	return buf.String()
+}

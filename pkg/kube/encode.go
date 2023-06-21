@@ -19,7 +19,10 @@ import (
 	kyaml "sigs.k8s.io/yaml"
 )
 
-var ErrFieldMissing = errors.New("missing")
+var (
+	ErrFieldMissing      = errors.New("missing")
+	ErrDuplicateDetected = errors.New("duplicate detected")
+)
 
 // encodeStruct encodes [kube.App] struct to a [txtar.Archive].
 func (g *goky) encodeStruct(
@@ -57,10 +60,11 @@ func (g *goky) encodeStruct(
 			// TODO: should we continue instead ? Should it be an option ?
 			if v.IsZero() || v.IsNil() {
 				return fmt.Errorf(
-					"%w: %q of type %q",
+					"%w: %q of type %q in %q",
 					ErrFieldMissing,
 					sf.Name,
 					sf.Type,
+					rv.Type(),
 				)
 			}
 
@@ -86,6 +90,12 @@ func (g *goky) encodeStruct(
 			if err != nil {
 				return fmt.Errorf("extract metadata: %w", err)
 			}
+
+			id := m.String()
+			if _, ok := g.kn[id]; ok {
+				return fmt.Errorf("%w: %s", ErrDuplicateDetected, id)
+			}
+			g.kn[m.String()] = struct{}{}
 
 			kj, err = kyaml.YAMLToJSON(kj)
 			if err != nil {

@@ -141,7 +141,7 @@ var cm = ku.ConfigAndMount{
 var STS = &appsv1.StatefulSet{
 	TypeMeta: ku.TypeStatefulSetV1,
 	ObjectMeta: metav1.ObjectMeta{
-		Labels:    ku.SetDefaultContainer(BaseLabels(), defaultContainer),
+		Labels:    ku.SetLabelDefaultContainer(BaseLabels(), defaultContainer),
 		Name:      appName,
 		Namespace: namespace,
 	},

@@ -188,7 +188,7 @@ var VMAgentAlertRules = &v1beta1.VMRule{
 	},
 }
 
-var VMAgentCM = &corev1.ConfigMap{
+var DashboardAgentCM = &corev1.ConfigMap{
 	Data: map[string]string{
 		"vmagent.json": `
 {

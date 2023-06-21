@@ -13,11 +13,21 @@ import (
 
 	"github.com/VictoriaMetrics/operator/api/victoriametrics/v1beta1"
 	"github.com/volvo-cars/lingon/pkg/kube"
+	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
 	corev1 "k8s.io/api/core/v1"
 )
 
 // validate the struct implements the interface
 var _ kube.Exporter = (*Vmk8S)(nil)
+
+const (
+	namespace = "monitoring"
+	version   = "1.91.2"
+	appName   = "victoriametrics"
+
+	OperatorVersion = "0.34.1"
+	OperatorImg     = "victoriametrics/operator:v" + OperatorVersion
+)
 
 // Vmk8S contains kubernetes manifests
 type Vmk8S struct {
@@ -48,7 +58,7 @@ type Vmk8S struct {
 	DashboardBackupManagerCM   *corev1.ConfigMap
 	VMHealthAlertRules         *v1beta1.VMRule
 	VMAgent                    *v1beta1.VMAgent
-	VMAgentCM                  *corev1.ConfigMap
+	DashboardAgentCM           *corev1.ConfigMap
 	VMAgentAlertRules          *v1beta1.VMRule
 	VMK8sSA                    *corev1.ServiceAccount
 	VMSingleAlertRules         *v1beta1.VMRule
@@ -79,17 +89,24 @@ func New() *Vmk8S {
 		DashboardK8SNamespacesCM: DashboardK8SNamespacesCM,
 		DashboardK8SPodsCM:       DashboardK8SPodsCM,
 
-		VMK8sSA:                    VMSA,
+		VMK8sSA:                    VictoriaMetricsSA,
 		DashboardVictoriaMetricsCM: DashboardVictoriaMetricsCM,
 		DashboardBackupManagerCM:   DashboardBackupManagerCM,
+		DashboardAgentCM:           DashboardAgentCM,
 		VMAgent:                    VMAgent,
-		VMAgentCM:                  VMAgentCM,
 		VMAgentAlertRules:          VMAgentAlertRules,
-		VMSingle:                   VMSingle,
+		VMSingle:                   VMDB,
 		VMHealthAlertRules:         VMHealthAlertRules,
 		VMSingleAlertRules:         VMSingleAlertRules,
 	}
 }
+
+var VictoriaMetricsSA = ku.ServiceAccount(
+	"victoria-metrics",
+	namespace,
+	nil,
+	nil,
+)
 
 // Apply applies the kubernetes objects to the cluster
 func (a *Vmk8S) Apply(ctx context.Context) error {

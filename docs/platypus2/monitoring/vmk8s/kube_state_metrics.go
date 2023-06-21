@@ -175,7 +175,7 @@ var KubeStateMetricsSVC = &corev1.Service{
 			{
 				Name:       "http",
 				Port:       int32(8080),
-				Protocol:   corev1.Protocol("TCP"),
+				Protocol:   corev1.ProtocolTCP,
 				TargetPort: intstr.IntOrString{IntVal: int32(8080)},
 			},
 		},

@@ -185,7 +185,7 @@ var ETCDSvc = &corev1.Service{
 			{
 				Name:       "http-metrics",
 				Port:       int32(2379),
-				Protocol:   corev1.Protocol("TCP"),
+				Protocol:   corev1.ProtocolTCP,
 				TargetPort: intstr.IntOrString{IntVal: int32(2379)},
 			},
 		},

@@ -109,7 +109,7 @@ var NodeExporterDS = &appsv1.DaemonSet{
 							{
 								ContainerPort: int32(9100),
 								Name:          "metrics",
-								Protocol:      corev1.Protocol("TCP"),
+								Protocol:      corev1.ProtocolTCP,
 							},
 						},
 						ReadinessProbe: &corev1.Probe{
@@ -204,7 +204,7 @@ var NodeExporterSVC = &corev1.Service{
 			{
 				Name:       "metrics",
 				Port:       int32(9100),
-				Protocol:   corev1.Protocol("TCP"),
+				Protocol:   corev1.ProtocolTCP,
 				TargetPort: intstr.IntOrString{IntVal: int32(9100)},
 			},
 		},

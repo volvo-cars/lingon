@@ -31,6 +31,7 @@ const (
 
 const (
 	// LabelServiceName is used to indicate the name of a Kubernetes service.
+	// See https://kubernetes.io/docs/concepts/services-networking/service/#custom-endpointslices
 	LabelServiceName = "kubernetes.io/service-name"
 
 	LabelInstanceTypeStable = "node.kubernetes.io/instance-type"
@@ -73,7 +74,7 @@ func MergeLabels(labels ...map[string]string) map[string]string {
 	return result
 }
 
-func SetDefaultContainer(
+func SetLabelDefaultContainer(
 	labels map[string]string,
 	name string,
 ) map[string]string {

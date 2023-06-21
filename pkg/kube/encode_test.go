@@ -34,6 +34,7 @@ func TestEncode_EmptyField(t *testing.T) {
 			Kustomize:      false,
 			Explode:        false,
 		},
+		kn: map[string]struct{}{},
 	}
 
 	rv := reflect.ValueOf(ebd)
@@ -77,6 +78,7 @@ func TestEncode_EmbeddedStruct(t *testing.T) {
 			Kustomize:      false,
 			Explode:        false,
 		},
+		kn: map[string]struct{}{},
 	}
 
 	rv := reflect.ValueOf(ebd)
@@ -110,6 +112,34 @@ func TestEncode_EmbeddedStruct(t *testing.T) {
 
 	if diff := tu.DiffTxtar(ar, expected); diff != "" {
 		t.Error(tu.Callers(), diff)
+	}
+}
+
+func TestEncode_DuplicateNames(t *testing.T) {
+	ebd := struct {
+		NS1 *corev1.Namespace
+		NS2 *corev1.Namespace
+	}{
+		NS1: kubeutil.Namespace("same-ns", nil, nil),
+		NS2: kubeutil.Namespace("same-ns", nil, nil),
+	}
+	g := goky{
+		ar: &txtar.Archive{},
+		o:  exportOption{},
+		kn: map[string]struct{}{},
+	}
+
+	rv := reflect.ValueOf(ebd)
+
+	if rv.Kind() == reflect.Ptr {
+		rv = rv.Elem()
+	}
+	if rv.Type().Kind() != reflect.Struct {
+		t.Errorf("cannot encode non-struct type: %v", rv)
+	}
+	err := g.encodeStruct(rv, "")
+	if !errors.Is(err, ErrDuplicateDetected) {
+		t.Error(tu.Callers(), "duplicate not detected")
 	}
 }
 

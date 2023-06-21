@@ -23,7 +23,6 @@ type K8SRules struct {
 	KubernetesResourcesAlertRules *v1beta1.VMRule
 	KubernetesStorageAlertRules   *v1beta1.VMRule
 	KubeletAlertRules             *v1beta1.VMRule
-	KubeSchedulerAlertRules       *v1beta1.VMRule
 	KubernetesSystemAlertRules    *v1beta1.VMRule
 	NodeNetworkAlertRules         *v1beta1.VMRule
 	K8SNodeRules                  *v1beta1.VMRule
@@ -40,7 +39,6 @@ func NewK8SRules() *K8SRules {
 		KubernetesResourcesAlertRules: KubernetesResourcesAlertRules,
 		KubernetesStorageAlertRules:   KubernetesStorageAlertRules,
 		KubeletAlertRules:             KubeletAlertRules,
-		KubeSchedulerAlertRules:       KubeSchedulerAlertRules,
 		KubernetesSystemAlertRules:    KubernetesSystemAlertRules,
 		NodeNetworkAlertRules:         NodeNetworkAlertRules,
 		K8SNodeRules:                  K8SNodeRules,

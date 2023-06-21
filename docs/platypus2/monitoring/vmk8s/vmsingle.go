@@ -6,32 +6,44 @@
 package vmk8s
 
 import (
+	"fmt"
+
 	"github.com/VictoriaMetrics/operator/api/victoriametrics/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var VMSingle = &v1beta1.VMSingle{
+// VMDB is a single instance of Victoria Metrics DB.
+// Note that a "vmsingle-" prefix is added to the name.
+// See https://github.com/VictoriaMetrics/operator/blob/4c97f70c9a775d2bfff401862acabd5452ef0cf8/api/v1beta1/vmsingle_types.go#L326
+var VMDB = &v1beta1.VMSingle{
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack",
-		Namespace: "monitoring",
+		Labels: Single.Labels(),
+		// Name: "vmk8s-victoria-metrics-k8s-stack",
+		Name:      Single.Name,
+		Namespace: namespace,
 	},
 	Spec: v1beta1.VMSingleSpec{
-		ExtraArgs:       map[string]string{"vmalert.proxyURL": "http://vmalert-vmk8s-victoria-metrics-k8s-stack.monitoring.svc:8080"},
-		Image:           v1beta1.Image{Tag: "v1.91.2"},
+		ExtraArgs: map[string]string{
+			"vmalert.proxyURL": fmt.Sprintf(
+				"%s.%s.svc:8080", // TODO: extract port
+				AlertManager.PrefixedName(),
+				namespace,
+			),
+		},
+		Image:           v1beta1.Image{Tag: "v" + Single.Version},
 		ReplicaCount:    P(int32(1)),
 		RetentionPeriod: "14",
 		Storage: &corev1.PersistentVolumeClaimSpec{
-			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.PersistentVolumeAccessMode("ReadWriteOnce")},
-			Resources:   corev1.ResourceRequirements{Requests: map[corev1.ResourceName]resource.Quantity{corev1.ResourceName("storage"): resource.MustParse("20Gi")}},
+			AccessModes: []corev1.PersistentVolumeAccessMode{
+				corev1.ReadWriteOnce,
+			},
+			Resources: corev1.ResourceRequirements{
+				Requests: map[corev1.ResourceName]resource.Quantity{
+					corev1.ResourceName("storage"): resource.MustParse("20Gi"),
+				},
+			},
 		},
 	},
 	TypeMeta: metav1.TypeMeta{
@@ -42,23 +54,18 @@ var VMSingle = &v1beta1.VMSingle{
 
 var VMSingleAlertRules = &v1beta1.VMRule{
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-vmsingle",
-		Namespace: "monitoring",
+		Labels: Single.Labels(),
+		// Name:      "vmk8s-victoria-metrics-k8s-stack-vmsingle",
+		Name:      Single.Name + "-alerting-rules",
+		Namespace: namespace,
 	},
 	Spec: v1beta1.VMRuleSpec{
 		Groups: []v1beta1.RuleGroup{
 			{
 				Concurrency: 2,
 				Interval:    "30s",
-				Name:        "vmsingle",
+				// Name:        "vmsingle",
+				Name: Single.Name,
 				Rules: []v1beta1.Rule{
 					{
 						Alert: "DiskRunsOutOfSpaceIn3Days",
@@ -220,21 +227,16 @@ var VMSingleAlertRules = &v1beta1.VMRule{
 
 var VMHealthAlertRules = &v1beta1.VMRule{
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-vm-health",
-		Namespace: "monitoring",
+		Labels: Single.Labels(),
+		// Name:      "vmk8s-victoria-metrics-k8s-stack-vm-health",
+		Name:      Single.Name + "-health",
+		Namespace: namespace,
 	},
 	Spec: v1beta1.VMRuleSpec{
 		Groups: []v1beta1.RuleGroup{
 			{
-				Name: "vm-health",
+				// Name: "vm-health",
+				Name: Single.Name + "-health",
 				Rules: []v1beta1.Rule{
 					{
 						Alert: "TooManyRestarts",

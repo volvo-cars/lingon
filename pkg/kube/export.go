@@ -16,6 +16,7 @@ import (
 type goky struct {
 	ar        *txtar.Archive
 	o         exportOption
+	kn        map[string]struct{} // kind/name  for duplicate detection
 	useWriter bool
 }
 
@@ -23,6 +24,7 @@ func Export(km Exporter, opts ...ExportOption) error {
 	g := goky{
 		ar: &txtar.Archive{},
 		o:  exportDefaultOpts,
+		kn: make(map[string]struct{}, 0),
 	}
 	for _, o := range opts {
 		o(&g)

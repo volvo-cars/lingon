@@ -64,9 +64,13 @@ func (m ConfigAndMount) VolumeAndMount() VolumeAndMount {
 func (m ConfigAndMount) HashEnv(name string) corev1.EnvVar {
 	h := sha256.New()
 	if err := json.NewEncoder(h).Encode(m.Data); err != nil {
-		panic(fmt.Sprintf("failed to JSON encode & hash configMap data for %s, err: %v",
-			m.VolumeMount.Name,
-			err))
+		panic(
+			fmt.Sprintf(
+				"failed to JSON encode & hash configMap data for %s, err: %v",
+				m.VolumeMount.Name,
+				err,
+			),
+		)
 	}
 
 	return corev1.EnvVar{
@@ -79,9 +83,28 @@ func (m ConfigAndMount) HashEnv(name string) corev1.EnvVar {
 func (m ConfigAndMount) Hash() string {
 	h := sha256.New()
 	if err := json.NewEncoder(h).Encode(m.Data); err != nil {
-		panic(fmt.Sprintf("failed to JSON encode & hash configMap data for %s, err: %v",
-			m.VolumeMount.Name,
-			err))
+		panic(
+			fmt.Sprintf(
+				"failed to JSON encode & hash configMap data for %s, err: %v",
+				m.VolumeMount.Name,
+				err,
+			),
+		)
+	}
+
+	return base64.URLEncoding.EncodeToString(h.Sum(nil))
+}
+
+// HashConfig returns the hash of the ConfigMap data.
+func HashConfig(c *corev1.ConfigMap) string {
+	h := sha256.New()
+	if err := json.NewEncoder(h).Encode(c.Data); err != nil {
+		panic(
+			fmt.Sprintf(
+				"failed to JSON encode & hash configMap data for %s, err: %v",
+				c.Name, err,
+			),
+		)
 	}
 
 	return base64.URLEncoding.EncodeToString(h.Sum(nil))
