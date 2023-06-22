@@ -1,3 +1,6 @@
+// Copyright (c) 2023 Volvo Car Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 package bla
 
 import (
@@ -50,7 +53,6 @@ func SyncUser(
 	user *User,
 	req UserRequest,
 ) (*User, error) {
-
 	// If user is nil, we need to create a new user
 	if user == nil {
 		user, err := newUser(accountNKey, req)

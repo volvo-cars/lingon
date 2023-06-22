@@ -1,3 +1,6 @@
+// Copyright (c) 2023 Volvo Car Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 package samples_test
 
 import (
@@ -13,7 +16,6 @@ import (
 )
 
 func TestExport(t *testing.T) {
-
 	outDir := "out"
 
 	rmErr := os.RemoveAll(outDir)

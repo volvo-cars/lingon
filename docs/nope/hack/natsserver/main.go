@@ -1,3 +1,6 @@
+// Copyright (c) 2023 Volvo Car Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 package main
 
 import (
@@ -16,7 +19,7 @@ func main() {
 	}
 
 	slog.Info("writing operator NKey", "file", "./operator.nk")
-	if err := os.WriteFile("./operator.nk", ts.Auth.OperatorNKey, 0600); err != nil {
+	if err := os.WriteFile("./operator.nk", ts.Auth.OperatorNKey, 0o600); err != nil {
 		slog.Error("writing operator nk: ", "error", err)
 		os.Exit(1)
 	}
@@ -27,7 +30,7 @@ func main() {
 		slog.Error("formatting sys user creds: ", "error", err)
 		os.Exit(1)
 	}
-	if err := os.WriteFile("./sys_user.creds", userCreds, 0600); err != nil {
+	if err := os.WriteFile("./sys_user.creds", userCreds, 0o600); err != nil {
 		slog.Error("writing sys user creds: ", "error", err)
 		os.Exit(1)
 	}

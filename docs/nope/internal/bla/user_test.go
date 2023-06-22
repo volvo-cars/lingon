@@ -1,3 +1,6 @@
+// Copyright (c) 2023 Volvo Car Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 package bla_test
 
 import (
@@ -51,7 +54,7 @@ func TestCreateUser(t *testing.T) {
 	}
 }
 
-func checkUserAuth(url string, userJWT string, userNKey []byte) error {
+func checkUserAuth(url, userJWT string, userNKey []byte) error {
 	userKeyPair, err := nkeys.FromSeed(userNKey)
 	if err != nil {
 		return fmt.Errorf("getting user key pair from nkey: %w", err)
