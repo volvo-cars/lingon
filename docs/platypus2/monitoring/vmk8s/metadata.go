@@ -1,29 +1,14 @@
+// Copyright (c) 2023 Volvo Car Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 package vmk8s
 
 import (
 	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
-
-var Single = &Metadata{
-	Name:      "victoria-metrics",
-	Namespace: namespace,
-	Instance:  "victoria-metrics-" + namespace,
-	Component: "tsmdb",
-	PartOf:    appName,
-	Version:   version,
-	ManagedBy: "lingon",
-}
-
-var VMOp = &Metadata{
-	Name:      "victoria-metrics-operator",
-	Namespace: namespace,
-	Instance:  "victoria-metrics-operator-" + namespace,
-	Component: "operator",
-	PartOf:    appName,
-	Version:   OperatorVersion,
-	ManagedBy: "lingon",
-}
 
 type Metadata struct {
 	Name      string
@@ -33,6 +18,9 @@ type Metadata struct {
 	PartOf    string
 	Version   string
 	ManagedBy string
+	Registry  string
+	Image     string
+	Tag       string
 }
 
 func (b *Metadata) Labels() map[string]string {
@@ -54,23 +42,23 @@ func (b *Metadata) MatchLabels() map[string]string {
 	}
 }
 
-func (b *Metadata) ObjectMeta() v1.ObjectMeta {
-	return v1.ObjectMeta{
+func (b *Metadata) ObjectMeta() metav1.ObjectMeta {
+	return metav1.ObjectMeta{
 		Name:      b.Name,
 		Namespace: b.Namespace,
 		Labels:    b.Labels(),
 	}
 }
 
-func (b *Metadata) ObjectMetaNoNS() v1.ObjectMeta {
-	return v1.ObjectMeta{
+func (b *Metadata) ObjectMetaNoNS() metav1.ObjectMeta {
+	return metav1.ObjectMeta{
 		Name:   b.Name,
 		Labels: b.Labels(),
 	}
 }
 
-func (b *Metadata) ObjectMetaAnnotations(annotations map[string]string) v1.ObjectMeta {
-	return v1.ObjectMeta{
+func (b *Metadata) ObjectMetaAnnotations(annotations map[string]string) metav1.ObjectMeta {
+	return metav1.ObjectMeta{
 		Name:        b.Name,
 		Namespace:   b.Namespace,
 		Labels:      b.Labels(),
@@ -78,17 +66,69 @@ func (b *Metadata) ObjectMetaAnnotations(annotations map[string]string) v1.Objec
 	}
 }
 
-func (b *Metadata) ObjectMetaNameSuffix(s string) v1.ObjectMeta {
-	return v1.ObjectMeta{
+func (b *Metadata) ObjectMetaNameSuffix(s string) metav1.ObjectMeta {
+	return metav1.ObjectMeta{
 		Name:      b.Name + "-" + s,
 		Namespace: b.Namespace,
 		Labels:    b.Labels(),
 	}
 }
 
-func (b *Metadata) ObjectMetaNameSuffixNoNS(s string) v1.ObjectMeta {
-	return v1.ObjectMeta{
+func (b *Metadata) ObjectMetaNameSuffixNoNS(s string) metav1.ObjectMeta {
+	return metav1.ObjectMeta{
 		Name:   b.Name + "-" + s,
 		Labels: b.Labels(),
+	}
+}
+
+func (b *Metadata) NS() *corev1.Namespace {
+	return &corev1.Namespace{
+		TypeMeta:   ku.TypeNamespaceV1,
+		ObjectMeta: b.ObjectMetaNoNS(),
+		Spec:       corev1.NamespaceSpec{},
+	}
+}
+
+func (b *Metadata) ServiceAccount() *corev1.ServiceAccount {
+	return &corev1.ServiceAccount{
+		TypeMeta:   ku.TypeServiceAccountV1,
+		ObjectMeta: b.ObjectMeta(),
+	}
+}
+
+func (b *Metadata) ContainerURL() string {
+	if b.Image == "" {
+		panic("missing container image for: " + b.Name)
+	}
+	s := b.Image
+	if b.Registry != "" {
+		s = b.Registry + "/" + s
+	}
+	if b.Tag != "" {
+		s = s + ":" + b.Tag
+	}
+
+	return s
+}
+
+func (b *Metadata) Service(
+	port, targetPort int,
+	portName string,
+) *corev1.Service {
+	return &corev1.Service{
+		TypeMeta:   ku.TypeServiceV1,
+		ObjectMeta: b.ObjectMeta(),
+		Spec: corev1.ServiceSpec{
+			Ports: []corev1.ServicePort{
+				{
+					Name:       portName,
+					Port:       int32(port),
+					Protocol:   corev1.ProtocolTCP,
+					TargetPort: intstr.FromInt(targetPort),
+				},
+			},
+			Selector: b.MatchLabels(),
+			Type:     corev1.ServiceTypeClusterIP,
+		},
 	}
 }

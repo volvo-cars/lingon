@@ -6,58 +6,62 @@
 package vmk8s
 
 import (
+	"fmt"
+
 	"github.com/VictoriaMetrics/operator/api/victoriametrics/v1beta1"
 	"github.com/volvo-cars/lingon/pkg/kube"
+	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+var AM = &Metadata{
+	Name:      "alert-manager",
+	Namespace: namespace,
+	Instance:  "alert-manager-" + namespace,
+	Component: "alert",
+	PartOf:    appName,
+	Version:   AlertManagerVersion,
+	ManagedBy: "lingon",
+}
+
+const AlertManagerVersion = "v0.25.0"
+
 type VMAlertManager struct {
 	kube.App
 
-	VMK8sVmalertmanager         *v1beta1.VMAlertmanager
-	VMK8sVmalert                *v1beta1.VMAlert
-	VMK8sAlertmanagerMonzoTplCM *corev1.ConfigMap
-	AlertManagerOverviewDashCM  *corev1.ConfigMap
-	AlertManagerRules           *v1beta1.VMRule
-	VMK8sAlertmanagerSecrets    *corev1.Secret
-	VMK8sVmalertDashCM          *corev1.ConfigMap
+	AlertManager        *v1beta1.VMAlertmanager
+	Alert               *v1beta1.VMAlert
+	SlackMonzoTplCM     *corev1.ConfigMap
+	OverviewDashboardCM *corev1.ConfigMap
+	Rules               *v1beta1.VMRule
+	Secrets             *corev1.Secret
+	DashboardCM         *corev1.ConfigMap
 }
 
 func NewVMAlertManager() *VMAlertManager {
 	return &VMAlertManager{
-		VMK8sVmalertmanager:         AlertManager,
-		VMK8sAlertmanagerMonzoTplCM: VMK8sAlertmanagerMonzoTplCM,
-		AlertManagerOverviewDashCM:  AlertManagerOverviewDashCM,
-		AlertManagerRules:           AlertManagerRules,
-		VMK8sAlertmanagerSecrets:    VMK8sAlertmanagerSecrets,
-		VMK8sVmalertDashCM:          VMK8sVMalertDashCM,
-		VMK8sVmalert:                VMK8sVmalert,
+		AlertManager:        AlertManager,
+		SlackMonzoTplCM:     SlackMonzoTplCM,
+		OverviewDashboardCM: AlertManagerOverviewDashCM,
+		Rules:               AlertManagerRules,
+		Secrets:             AlertManagerSecrets,
+		DashboardCM:         AlertManagerDashboardCM,
+		Alert:               Alert,
 	}
 }
 
 var AlertManager = &v1beta1.VMAlertmanager{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/component":  "victoria-metrics-k8s-stack-alertmanager",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack",
-		Namespace: "monitoring",
-	},
+	ObjectMeta: AM.ObjectMeta(),
 	Spec: v1beta1.VMAlertmanagerSpec{
-		ConfigSecret:       "vmk8s-victoria-metrics-k8s-stack-alertmanager",
-		Image:              v1beta1.Image{Tag: "v0.25.0"},
+		ConfigSecret:       AlertManagerSecrets.Name,
+		Image:              v1beta1.Image{Tag: AlertManagerVersion},
 		RoutePrefix:        "/",
 		SelectAllByDefault: true,
 		Templates: []v1beta1.ConfigMapKeyReference{
 			{
 				Key:                  "monzo.tmpl",
-				LocalObjectReference: corev1.LocalObjectReference{Name: "vmk8s-victoria-metrics-k8s-stack-alertmanager-monzo-tpl"},
+				LocalObjectReference: corev1.LocalObjectReference{Name: SlackMonzoTplCM.Name},
 			},
 		},
 	},
@@ -67,27 +71,41 @@ var AlertManager = &v1beta1.VMAlertmanager{
 	},
 }
 
-var VMK8sVmalert = &v1beta1.VMAlert{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack",
-		Namespace: "monitoring",
-	},
+var Alert = &v1beta1.VMAlert{
+	ObjectMeta: AM.ObjectMeta(),
 	Spec: v1beta1.VMAlertSpec{
-		Datasource:         v1beta1.VMAlertDatasourceSpec{URL: "http://vmsingle-vmk8s-victoria-metrics-k8s-stack.monitoring.svc:8429/"},
+		Datasource: v1beta1.VMAlertDatasourceSpec{
+			URL: fmt.Sprintf(
+				"http://%s.%s.svc:%d/",
+				VMDB.PrefixedName(), VMDB.Namespace, VMSinglePort,
+			),
+		},
 		EvaluationInterval: "15s",
 		ExternalLabels:     map[string]string{},
 		ExtraArgs:          map[string]string{"remoteWrite.disablePathAppend": "true"},
-		Image:              v1beta1.Image{Tag: "v1.91.2"},
-		Notifiers:          []v1beta1.VMAlertNotifierSpec{{URL: "http://vmalertmanager-vmk8s-victoria-metrics-k8s-stack.monitoring.svc:9093"}},
-		RemoteRead:         &v1beta1.VMAlertRemoteReadSpec{URL: "http://vmsingle-vmk8s-victoria-metrics-k8s-stack.monitoring.svc:8429/"},
-		RemoteWrite:        &v1beta1.VMAlertRemoteWriteSpec{URL: "http://vmsingle-vmk8s-victoria-metrics-k8s-stack.monitoring.svc:8429/api/v1/write"},
+		Image:              v1beta1.Image{Tag: Single.Version},
+		Notifiers: []v1beta1.VMAlertNotifierSpec{
+			{
+				URL: fmt.Sprintf(
+					"http://%s.%s.svc:%d",
+					AlertManager.PrefixedName(),
+					AlertManager.Namespace,
+					VMAlertManagerPort,
+				),
+			},
+		},
+		RemoteRead: &v1beta1.VMAlertRemoteReadSpec{
+			URL: fmt.Sprintf(
+				"http://%s.%s.svc:%d/",
+				VMDB.PrefixedName(), VMDB.Namespace, VMSinglePort,
+			),
+		},
+		RemoteWrite: &v1beta1.VMAlertRemoteWriteSpec{
+			URL: fmt.Sprintf(
+				"http://%s.%s.svc:%d/api/v1/write",
+				VMDB.PrefixedName(), VMDB.Namespace, VMSinglePort,
+			),
+		},
 		SelectAllByDefault: true,
 	},
 	TypeMeta: metav1.TypeMeta{
@@ -96,20 +114,8 @@ var VMK8sVmalert = &v1beta1.VMAlert{
 	},
 }
 
-var VMK8sAlertmanagerSecrets = &corev1.Secret{
-	Data: nil,
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/component":  "victoria-metrics-k8s-stack-alertmanager",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-alertmanager",
-		Namespace: "monitoring",
-	},
+var AlertManagerSecrets = &corev1.Secret{
+	ObjectMeta: AM.ObjectMeta(),
 	StringData: map[string]string{
 		"alertmanager.yaml": `
 global:
@@ -213,25 +219,11 @@ templates:
 - /etc/vm/configs/**/*.tmpl
 `,
 	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "Secret",
-	},
+	TypeMeta: ku.TypeSecretV1,
 } // TODO: SECRETS SHOULD BE STORED ELSEWHERE THAN IN THE CODE!!!!
 
 var AlertManagerRules = &v1beta1.VMRule{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-alertmanager.rules",
-		Namespace: "monitoring",
-	},
+	ObjectMeta: AM.ObjectMetaNameSuffix("-rules"),
 	Spec: v1beta1.VMRuleSpec{
 		Groups: []v1beta1.RuleGroup{
 			{
@@ -245,10 +237,10 @@ var AlertManagerRules = &v1beta1.VMRule{
 							"summary":     "Reloading an Alertmanager configuration has failed.",
 						},
 						Expr: `
-								# Without max_over_time, failed scrapes could create false negatives, see
-								# https://www.robustperception.io/alerting-on-gauges-in-prometheus-2-0 for details.
-								max_over_time(alertmanager_config_last_reload_successful{job="vmalertmanager-vmk8s-victoria-metrics-k8s-stack",namespace="monitoring"}[5m]) == 0
-								`,
+# Without max_over_time, failed scrapes could create false negatives, see
+# https://www.robustperception.io/alerting-on-gauges-in-prometheus-2-0 for details.
+max_over_time(alertmanager_config_last_reload_successful{job="vmalertmanager-vmk8s-victoria-metrics-k8s-stack",namespace="monitoring"}[5m]) == 0
+`,
 						For:    "10m",
 						Labels: map[string]string{"severity": "critical"},
 					}, {
@@ -259,12 +251,12 @@ var AlertManagerRules = &v1beta1.VMRule{
 							"summary":     "A member of an Alertmanager cluster has not found all other cluster members.",
 						},
 						Expr: `
-								# Without max_over_time, failed scrapes could create false negatives, see
-								# https://www.robustperception.io/alerting-on-gauges-in-prometheus-2-0 for details.
-								  max_over_time(alertmanager_cluster_members{job="vmalertmanager-vmk8s-victoria-metrics-k8s-stack",namespace="monitoring"}[5m])
-								< on (namespace,service) group_left
-								  count by (namespace,service) (max_over_time(alertmanager_cluster_members{job="vmalertmanager-vmk8s-victoria-metrics-k8s-stack",namespace="monitoring"}[5m]))
-								`,
+# Without max_over_time, failed scrapes could create false negatives, see
+# https://www.robustperception.io/alerting-on-gauges-in-prometheus-2-0 for details.
+  max_over_time(alertmanager_cluster_members{job="vmalertmanager-vmk8s-victoria-metrics-k8s-stack",namespace="monitoring"}[5m])
+< on (namespace,service) group_left
+  count by (namespace,service) (max_over_time(alertmanager_cluster_members{job="vmalertmanager-vmk8s-victoria-metrics-k8s-stack",namespace="monitoring"}[5m]))
+`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "critical"},
 					}, {
@@ -275,13 +267,13 @@ var AlertManagerRules = &v1beta1.VMRule{
 							"summary":     "An Alertmanager instance failed to send notifications.",
 						},
 						Expr: `
-								(
-								  rate(alertmanager_notifications_failed_total{job="vmalertmanager-vmk8s-victoria-metrics-k8s-stack",namespace="monitoring"}[5m])
-								/
-								  rate(alertmanager_notifications_total{job="vmalertmanager-vmk8s-victoria-metrics-k8s-stack",namespace="monitoring"}[5m])
-								)
-								> 0.01
-								`,
+(
+  rate(alertmanager_notifications_failed_total{job="vmalertmanager-vmk8s-victoria-metrics-k8s-stack",namespace="monitoring"}[5m])
+/
+  rate(alertmanager_notifications_total{job="vmalertmanager-vmk8s-victoria-metrics-k8s-stack",namespace="monitoring"}[5m])
+)
+> 0.01
+`,
 						For:    "5m",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
@@ -291,14 +283,7 @@ var AlertManagerRules = &v1beta1.VMRule{
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/alertmanager/alertmanagerclusterfailedtosendalerts",
 							"summary":     "All Alertmanager instances in a cluster failed to send notifications to a critical integration.",
 						},
-						Expr: `
-								min by (namespace,service, integration) (
-								  rate(alertmanager_notifications_failed_total{job="vmalertmanager-vmk8s-victoria-metrics-k8s-stack",namespace="monitoring", integration=~".*"}[5m])
-								/
-								  rate(alertmanager_notifications_total{job="vmalertmanager-vmk8s-victoria-metrics-k8s-stack",namespace="monitoring", integration=~".*"}[5m])
-								)
-								> 0.01
-								`,
+						Expr:   "min by (namespace,service, integration) (\n  rate(alertmanager_notifications_failed_total{job=\"vmalertmanager-vmk8s-victoria-metrics-k8s-stack\",namespace=\"monitoring\", integration=~`.*`}[5m])\n/\n  rate(alertmanager_notifications_total{job=\"vmalertmanager-vmk8s-victoria-metrics-k8s-stack\",namespace=\"monitoring\", integration=~`.*`}[5m])\n)\n> 0.01",
 						For:    "5m",
 						Labels: map[string]string{"severity": "critical"},
 					}, {
@@ -308,14 +293,7 @@ var AlertManagerRules = &v1beta1.VMRule{
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/alertmanager/alertmanagerclusterfailedtosendalerts",
 							"summary":     "All Alertmanager instances in a cluster failed to send notifications to a non-critical integration.",
 						},
-						Expr: `
-								min by (namespace,service, integration) (
-								  rate(alertmanager_notifications_failed_total{job="vmalertmanager-vmk8s-victoria-metrics-k8s-stack",namespace="monitoring", integration!~".*"}[5m])
-								/
-								  rate(alertmanager_notifications_total{job="vmalertmanager-vmk8s-victoria-metrics-k8s-stack",namespace="monitoring", integration!~".*"}[5m])
-								)
-								> 0.01
-								`,
+						Expr:   "min by (namespace,service, integration) (\n  rate(alertmanager_notifications_failed_total{job=\"vmalertmanager-vmk8s-victoria-metrics-k8s-stack\",namespace=\"monitoring\", integration!~`.*`}[5m])\n/\n  rate(alertmanager_notifications_total{job=\"vmalertmanager-vmk8s-victoria-metrics-k8s-stack\",namespace=\"monitoring\", integration!~`.*`}[5m])\n)\n> 0.01",
 						For:    "5m",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
@@ -326,11 +304,11 @@ var AlertManagerRules = &v1beta1.VMRule{
 							"summary":     "Alertmanager instances within the same cluster have different configurations.",
 						},
 						Expr: `
-								count by (namespace,service) (
-								  count_values by (namespace,service) ("config_hash", alertmanager_config_hash{job="vmalertmanager-vmk8s-victoria-metrics-k8s-stack",namespace="monitoring"})
-								)
-								!= 1
-								`,
+count by (namespace,service) (
+  count_values by (namespace,service) ("config_hash", alertmanager_config_hash{job="vmalertmanager-vmk8s-victoria-metrics-k8s-stack",namespace="monitoring"})
+)
+!= 1
+`,
 						For:    "20m",
 						Labels: map[string]string{"severity": "critical"},
 					}, {
@@ -341,17 +319,17 @@ var AlertManagerRules = &v1beta1.VMRule{
 							"summary":     "Half or more of the Alertmanager instances within the same cluster are down.",
 						},
 						Expr: `
-								(
-								  count by (namespace,service) (
-									avg_over_time(up{job="vmalertmanager-vmk8s-victoria-metrics-k8s-stack",namespace="monitoring"}[5m]) < 0.5
-								  )
-								/
-								  count by (namespace,service) (
-									up{job="vmalertmanager-vmk8s-victoria-metrics-k8s-stack",namespace="monitoring"}
-								  )
-								)
-								>= 0.5
-								`,
+(
+  count by (namespace,service) (
+    avg_over_time(up{job="vmalertmanager-vmk8s-victoria-metrics-k8s-stack",namespace="monitoring"}[5m]) < 0.5
+  )
+/
+  count by (namespace,service) (
+    up{job="vmalertmanager-vmk8s-victoria-metrics-k8s-stack",namespace="monitoring"}
+  )
+)
+>= 0.5
+`,
 						For:    "5m",
 						Labels: map[string]string{"severity": "critical"},
 					}, {
@@ -362,17 +340,17 @@ var AlertManagerRules = &v1beta1.VMRule{
 							"summary":     "Half or more of the Alertmanager instances within the same cluster are crashlooping.",
 						},
 						Expr: `
-								(
-								  count by (namespace,service) (
-									changes(process_start_time_seconds{job="vmalertmanager-vmk8s-victoria-metrics-k8s-stack",namespace="monitoring"}[10m]) > 4
-								  )
-								/
-								  count by (namespace,service) (
-									up{job="vmalertmanager-vmk8s-victoria-metrics-k8s-stack",namespace="monitoring"}
-								  )
-								)
-								>= 0.5
-								`,
+(
+  count by (namespace,service) (
+    changes(process_start_time_seconds{job="vmalertmanager-vmk8s-victoria-metrics-k8s-stack",namespace="monitoring"}[10m]) > 4
+  )
+/
+  count by (namespace,service) (
+    up{job="vmalertmanager-vmk8s-victoria-metrics-k8s-stack",namespace="monitoring"}
+  )
+)
+>= 0.5
+`,
 						For:    "5m",
 						Labels: map[string]string{"severity": "critical"},
 					},
@@ -386,7 +364,7 @@ var AlertManagerRules = &v1beta1.VMRule{
 	},
 }
 
-var VMK8sAlertmanagerMonzoTplCM = &corev1.ConfigMap{
+var SlackMonzoTplCM = &corev1.ConfigMap{
 	Data: map[string]string{
 		"monzo.tmpl": `
 # This builds the silence URL.  We exclude the alertname in the range
@@ -467,22 +445,8 @@ var VMK8sAlertmanagerMonzoTplCM = &corev1.ConfigMap{
 {{- end }}
 `,
 	},
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/component":  "victoria-metrics-k8s-stack-alertmanager",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-alertmanager-monzo-tpl",
-		Namespace: "monitoring",
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "ConfigMap",
-	},
+	TypeMeta:   ku.TypeConfigMapV1,
+	ObjectMeta: AM.ObjectMetaNameSuffix("-monzo-tpl"),
 }
 
 var AlertManagerOverviewDashCM = &corev1.ConfigMap{
@@ -1047,26 +1011,28 @@ var AlertManagerOverviewDashCM = &corev1.ConfigMap{
 }
 `,
 	},
+	TypeMeta: ku.TypeConfigMapV1,
+
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "victoria-metrics-k8s-stack-grafana",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"grafana_dashboard":            "1",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-alertmanager-overview",
-		Namespace: "monitoring",
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "ConfigMap",
+		// Labels: map[string]string{
+		// 	"app":                          "victoria-metrics-k8s-stack-grafana",
+		// 	"app.kubernetes.io/instance":   "vmk8s",
+		// 	"app.kubernetes.io/managed-by": "Helm",
+		// 	"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
+		// 	"app.kubernetes.io/version":    "v1.91.2",
+		// 	"grafana_dashboard":            "1",
+		// 	"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
+		// },
+		Labels: ku.MergeLabels(
+			AM.Labels(),
+			map[string]string{DashboardLabel: "1"},
+		),
+		Name:      AM.Name + "-dash-overview",
+		Namespace: AM.Namespace,
 	},
 }
 
-var VMK8sVMalertDashCM = &corev1.ConfigMap{
+var AlertManagerDashboardCM = &corev1.ConfigMap{
 	Data: map[string]string{
 		"vmalert.json": `
 {
@@ -3992,21 +3958,22 @@ var VMK8sVMalertDashCM = &corev1.ConfigMap{
 }
 `,
 	},
+	TypeMeta: ku.TypeConfigMapV1,
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "victoria-metrics-k8s-stack-grafana",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"grafana_dashboard":            "1",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-vmalert",
-		Namespace: "monitoring",
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "ConfigMap",
+		// Labels: map[string]string{
+		// 	"app":                          "victoria-metrics-k8s-stack-grafana",
+		// 	"app.kubernetes.io/instance":   "vmk8s",
+		// 	"app.kubernetes.io/managed-by": "Helm",
+		// 	"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
+		// 	"app.kubernetes.io/version":    "v1.91.2",
+		// 	"grafana_dashboard":            "1",
+		// 	"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
+		// },
+		Labels: ku.MergeLabels(
+			AM.Labels(),
+			map[string]string{DashboardLabel: "1"},
+		),
+		Name:      AM.Name + "-dash-vmalert",
+		Namespace: AM.Namespace,
 	},
 }

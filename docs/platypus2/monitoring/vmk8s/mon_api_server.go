@@ -6,8 +6,19 @@ package vmk8s
 import (
 	"github.com/VictoriaMetrics/operator/api/victoriametrics/v1beta1"
 	"github.com/volvo-cars/lingon/pkg/kube"
+	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+var AS = &Metadata{
+	Name:      "apiserver", // name linked to the job name in queries
+	Namespace: namespace,
+	Instance:  "apiserver" + namespace,
+	Component: "monitoring",
+	PartOf:    appName,
+	Version:   version,
+	ManagedBy: "lingon",
+}
 
 type MonAPIServer struct {
 	kube.App
@@ -32,31 +43,22 @@ func NewMonAPIServer() *MonAPIServer {
 }
 
 var APIServerScrape = &v1beta1.VMServiceScrape{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-apiserver",
-		Namespace: "monitoring",
-	},
+	ObjectMeta: AS.ObjectMeta(),
 	Spec: v1beta1.VMServiceScrapeSpec{
 		Endpoints: []v1beta1.Endpoint{
 			{
-				BearerTokenFile: "/var/run/secrets/kubernetes.io/serviceaccount/token",
+				BearerTokenFile: PathSA + "/token",
 				Port:            "https",
 				Scheme:          "https",
 				TLSConfig: &v1beta1.TLSConfig{
-					CAFile:     "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
+					CAFile:     PathSA + "/ca.crt",
 					ServerName: "kubernetes",
 				},
 			},
 		},
-		JobLabel:          "component",
-		NamespaceSelector: v1beta1.NamespaceSelector{MatchNames: []string{"default"}},
+		// JobLabel:          "component",
+		JobLabel:          ku.AppLabelName,
+		NamespaceSelector: v1beta1.NamespaceSelector{MatchNames: []string{ku.NSDefault}},
 		Selector: metav1.LabelSelector{
 			MatchLabels: map[string]string{
 				"component": "apiserver",
@@ -64,25 +66,11 @@ var APIServerScrape = &v1beta1.VMServiceScrape{
 			},
 		},
 	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "operator.victoriametrics.com/v1beta1",
-		Kind:       "VMServiceScrape",
-	},
+	TypeMeta: TypeVMServiceScrapeV1Beta1,
 }
 
 var APIServerAvailabilityRules = &v1beta1.VMRule{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-kube-apiserver-availability.ru",
-		Namespace: "monitoring",
-	},
+	ObjectMeta: AS.ObjectMetaNameSuffix("rules"),
 	Spec: v1beta1.VMRuleSpec{
 		Groups: []v1beta1.RuleGroup{
 			{
@@ -93,11 +81,11 @@ var APIServerAvailabilityRules = &v1beta1.VMRule{
 						Expr:   "avg_over_time(code_verb:apiserver_request_total:increase1h[30d]) * 24 * 30",
 						Record: "code_verb:apiserver_request_total:increase30d",
 					}, {
-						Expr:   "sum by (cluster, code) (code_verb:apiserver_request_total:increase30d{verb=~\"LIST|GET\"})",
+						Expr:   `sum by (cluster, code) (code_verb:apiserver_request_total:increase30d{verb=~"LIST|GET"})`,
 						Labels: map[string]string{"verb": "read"},
 						Record: "code:apiserver_request_total:increase30d",
 					}, {
-						Expr:   "sum by (cluster, code) (code_verb:apiserver_request_total:increase30d{verb=~\"POST|PUT|PATCH|DELETE\"})",
+						Expr:   `sum by (cluster, code) (code_verb:apiserver_request_total:increase30d{verb=~"POST|PUT|PATCH|DELETE"})`,
 						Labels: map[string]string{"verb": "write"},
 						Record: "code:apiserver_request_total:increase30d",
 					}, {
@@ -114,483 +102,204 @@ var APIServerAvailabilityRules = &v1beta1.VMRule{
 						Record: "cluster_verb_scope_le:apiserver_request_slo_duration_seconds_bucket:increase30d",
 					}, {
 						Expr: `
-								1 - (
-								  (
-									# write too slow
-									sum by (cluster) (cluster_verb_scope:apiserver_request_slo_duration_seconds_count:increase30d{verb=~"POST|PUT|PATCH|DELETE"})
-									-
-									sum by (cluster) (cluster_verb_scope_le:apiserver_request_slo_duration_seconds_bucket:increase30d{verb=~"POST|PUT|PATCH|DELETE",le="1"})
-								  ) +
-								  (
-									# read too slow
-									sum by (cluster) (cluster_verb_scope:apiserver_request_slo_duration_seconds_count:increase30d{verb=~"LIST|GET"})
-									-
-									(
-									  (
-										sum by (cluster) (cluster_verb_scope_le:apiserver_request_slo_duration_seconds_bucket:increase30d{verb=~"LIST|GET",scope=~"resource|",le="1"})
-										or
-										vector(0)
-									  )
-									  +
-									  sum by (cluster) (cluster_verb_scope_le:apiserver_request_slo_duration_seconds_bucket:increase30d{verb=~"LIST|GET",scope="namespace",le="5"})
-									  +
-									  sum by (cluster) (cluster_verb_scope_le:apiserver_request_slo_duration_seconds_bucket:increase30d{verb=~"LIST|GET",scope="cluster",le="30"})
-									)
-								  ) +
-								  # errors
-								  sum by (cluster) (code:apiserver_request_total:increase30d{code=~"5.."} or vector(0))
-								)
-								/
-								sum by (cluster) (code:apiserver_request_total:increase30d)
-								`,
+1 - (
+  (
+    # write too slow
+    sum by (cluster) (cluster_verb_scope:apiserver_request_slo_duration_seconds_count:increase30d{verb=~"POST|PUT|PATCH|DELETE"})
+    -
+    sum by (cluster) (cluster_verb_scope_le:apiserver_request_slo_duration_seconds_bucket:increase30d{verb=~"POST|PUT|PATCH|DELETE",le="1"})
+  ) +
+  (
+    # read too slow
+    sum by (cluster) (cluster_verb_scope:apiserver_request_slo_duration_seconds_count:increase30d{verb=~"LIST|GET"})
+    -
+    (
+      (
+        sum by (cluster) (cluster_verb_scope_le:apiserver_request_slo_duration_seconds_bucket:increase30d{verb=~"LIST|GET",scope=~"resource|",le="1"})
+        or
+        vector(0)
+      )
+      +
+      sum by (cluster) (cluster_verb_scope_le:apiserver_request_slo_duration_seconds_bucket:increase30d{verb=~"LIST|GET",scope="namespace",le="5"})
+      +
+      sum by (cluster) (cluster_verb_scope_le:apiserver_request_slo_duration_seconds_bucket:increase30d{verb=~"LIST|GET",scope="cluster",le="30"})
+    )
+  ) +
+  # errors
+  sum by (cluster) (code:apiserver_request_total:increase30d{code=~"5.."} or vector(0))
+)
+/
+sum by (cluster) (code:apiserver_request_total:increase30d)
+`,
 						Labels: map[string]string{"verb": "all"},
 						Record: "apiserver_request:availability30d",
 					}, {
 						Expr: `
-								1 - (
-								  sum by (cluster) (cluster_verb_scope:apiserver_request_slo_duration_seconds_count:increase30d{verb=~"LIST|GET"})
-								  -
-								  (
-									# too slow
-									(
-									  sum by (cluster) (cluster_verb_scope_le:apiserver_request_slo_duration_seconds_bucket:increase30d{verb=~"LIST|GET",scope=~"resource|",le="1"})
-									  or
-									  vector(0)
-									)
-									+
-									sum by (cluster) (cluster_verb_scope_le:apiserver_request_slo_duration_seconds_bucket:increase30d{verb=~"LIST|GET",scope="namespace",le="5"})
-									+
-									sum by (cluster) (cluster_verb_scope_le:apiserver_request_slo_duration_seconds_bucket:increase30d{verb=~"LIST|GET",scope="cluster",le="30"})
-								  )
-								  +
-								  # errors
-								  sum by (cluster) (code:apiserver_request_total:increase30d{verb="read",code=~"5.."} or vector(0))
-								)
-								/
-								sum by (cluster) (code:apiserver_request_total:increase30d{verb="read"})
-								`,
+1 - (
+  sum by (cluster) (cluster_verb_scope:apiserver_request_slo_duration_seconds_count:increase30d{verb=~"LIST|GET"})
+  -
+  (
+    # too slow
+    (
+      sum by (cluster) (cluster_verb_scope_le:apiserver_request_slo_duration_seconds_bucket:increase30d{verb=~"LIST|GET",scope=~"resource|",le="1"})
+      or
+      vector(0)
+    )
+    +
+    sum by (cluster) (cluster_verb_scope_le:apiserver_request_slo_duration_seconds_bucket:increase30d{verb=~"LIST|GET",scope="namespace",le="5"})
+    +
+    sum by (cluster) (cluster_verb_scope_le:apiserver_request_slo_duration_seconds_bucket:increase30d{verb=~"LIST|GET",scope="cluster",le="30"})
+  )
+  +
+  # errors
+  sum by (cluster) (code:apiserver_request_total:increase30d{verb="read",code=~"5.."} or vector(0))
+)
+/
+sum by (cluster) (code:apiserver_request_total:increase30d{verb="read"})
+`,
 						Labels: map[string]string{"verb": "read"},
 						Record: "apiserver_request:availability30d",
 					}, {
 						Expr: `
-								1 - (
-								  (
-									# too slow
-									sum by (cluster) (cluster_verb_scope:apiserver_request_slo_duration_seconds_count:increase30d{verb=~"POST|PUT|PATCH|DELETE"})
-									-
-									sum by (cluster) (cluster_verb_scope_le:apiserver_request_slo_duration_seconds_bucket:increase30d{verb=~"POST|PUT|PATCH|DELETE",le="1"})
-								  )
-								  +
-								  # errors
-								  sum by (cluster) (code:apiserver_request_total:increase30d{verb="write",code=~"5.."} or vector(0))
-								)
-								/
-								sum by (cluster) (code:apiserver_request_total:increase30d{verb="write"})
-								`,
+1 - (
+  (
+    # too slow
+    sum by (cluster) (cluster_verb_scope:apiserver_request_slo_duration_seconds_count:increase30d{verb=~"POST|PUT|PATCH|DELETE"})
+    -
+    sum by (cluster) (cluster_verb_scope_le:apiserver_request_slo_duration_seconds_bucket:increase30d{verb=~"POST|PUT|PATCH|DELETE",le="1"})
+  )
+  +
+  # errors
+  sum by (cluster) (code:apiserver_request_total:increase30d{verb="write",code=~"5.."} or vector(0))
+)
+/
+sum by (cluster) (code:apiserver_request_total:increase30d{verb="write"})
+`,
 						Labels: map[string]string{"verb": "write"},
 						Record: "apiserver_request:availability30d",
 					}, {
-						Expr:   "sum by (cluster,code,resource) (rate(apiserver_request_total{job=\"apiserver\",verb=~\"LIST|GET\"}[5m]))",
+						Expr:   `sum by (cluster,code,resource) (rate(apiserver_request_total{job="` + AS.Name + `",verb=~"LIST|GET"}[5m]))`,
 						Labels: map[string]string{"verb": "read"},
 						Record: "code_resource:apiserver_request_total:rate5m",
 					}, {
-						Expr:   "sum by (cluster,code,resource) (rate(apiserver_request_total{job=\"apiserver\",verb=~\"POST|PUT|PATCH|DELETE\"}[5m]))",
+						Expr:   `sum by (cluster,code,resource) (rate(apiserver_request_total{job="` + AS.Name + `",verb=~"POST|PUT|PATCH|DELETE"}[5m]))`,
 						Labels: map[string]string{"verb": "write"},
 						Record: "code_resource:apiserver_request_total:rate5m",
 					}, {
-						Expr:   "sum by (cluster, code, verb) (increase(apiserver_request_total{job=\"apiserver\",verb=~\"LIST|GET|POST|PUT|PATCH|DELETE\",code=~\"2..\"}[1h]))",
+						Expr:   `sum by (cluster, code, verb) (increase(apiserver_request_total{job="` + AS.Name + `",verb=~"LIST|GET|POST|PUT|PATCH|DELETE",code=~"2.."}[1h]))`,
 						Record: "code_verb:apiserver_request_total:increase1h",
 					}, {
-						Expr:   "sum by (cluster, code, verb) (increase(apiserver_request_total{job=\"apiserver\",verb=~\"LIST|GET|POST|PUT|PATCH|DELETE\",code=~\"3..\"}[1h]))",
+						Expr:   `sum by (cluster, code, verb) (increase(apiserver_request_total{job="` + AS.Name + `",verb=~"LIST|GET|POST|PUT|PATCH|DELETE",code=~"3.."}[1h]))`,
 						Record: "code_verb:apiserver_request_total:increase1h",
 					}, {
-						Expr:   "sum by (cluster, code, verb) (increase(apiserver_request_total{job=\"apiserver\",verb=~\"LIST|GET|POST|PUT|PATCH|DELETE\",code=~\"4..\"}[1h]))",
+						Expr:   `sum by (cluster, code, verb) (increase(apiserver_request_total{job="` + AS.Name + `",verb=~"LIST|GET|POST|PUT|PATCH|DELETE",code=~"4.."}[1h]))`,
 						Record: "code_verb:apiserver_request_total:increase1h",
 					}, {
-						Expr:   "sum by (cluster, code, verb) (increase(apiserver_request_total{job=\"apiserver\",verb=~\"LIST|GET|POST|PUT|PATCH|DELETE\",code=~\"5..\"}[1h]))",
+						Expr:   `sum by (cluster, code, verb) (increase(apiserver_request_total{job="` + AS.Name + `",verb=~"LIST|GET|POST|PUT|PATCH|DELETE",code=~"5.."}[1h]))`,
 						Record: "code_verb:apiserver_request_total:increase1h",
 					},
 				},
 			},
 		},
 	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "operator.victoriametrics.com/v1beta1",
-		Kind:       "VMRule",
-	},
+	TypeMeta: TypeVMRuleV1Beta1,
+}
+
+func burnrateRead(name, dur string) string {
+	return `
+(
+  (
+    # too slow
+    sum by (cluster) (rate(apiserver_request_slo_duration_seconds_count{job="` + name + `",verb=~"LIST|GET",subresource!~"proxy|attach|log|exec|portforward"}[` + dur + `]))
+    -
+    (
+      (
+        sum by (cluster) (rate(apiserver_request_slo_duration_seconds_bucket{job="` + name + `",verb=~"LIST|GET",subresource!~"proxy|attach|log|exec|portforward",scope=~"resource|",le="1"}[` + dur + `]))
+        or
+        vector(0)
+      )
+      +
+      sum by (cluster) (rate(apiserver_request_slo_duration_seconds_bucket{job="` + name + `",verb=~"LIST|GET",subresource!~"proxy|attach|log|exec|portforward",scope="namespace",le="5"}[` + dur + `]))
+      +
+      sum by (cluster) (rate(apiserver_request_slo_duration_seconds_bucket{job="` + name + `",verb=~"LIST|GET",subresource!~"proxy|attach|log|exec|portforward",scope="cluster",le="30"}[` + dur + `]))
+    )
+  )
+  +
+  # errors
+  sum by (cluster) (rate(apiserver_request_total{job="` + name + `",verb=~"LIST|GET",code=~"5.."}[` + dur + `]))
+)
+/
+sum by (cluster) (rate(apiserver_request_total{job="` + name + `",verb=~"LIST|GET"}[` + dur + `]))
+`
+}
+
+func burnrateWrite(name, dur string) string {
+	return `
+(
+  (
+    # too slow
+    sum by (cluster) (rate(apiserver_request_slo_duration_seconds_count{job="` + name + `",verb=~"POST|PUT|PATCH|DELETE",subresource!~"proxy|attach|log|exec|portforward"}[` + dur + `]))
+    -
+    sum by (cluster) (rate(apiserver_request_slo_duration_seconds_bucket{job="` + name + `",verb=~"POST|PUT|PATCH|DELETE",subresource!~"proxy|attach|log|exec|portforward",le="1"}[` + dur + `]))
+  )
+  +
+  sum by (cluster) (rate(apiserver_request_total{job="` + name + `",verb=~"POST|PUT|PATCH|DELETE",code=~"5.."}[` + dur + `]))
+)
+/
+sum by (cluster) (rate(apiserver_request_total{job="` + name + `",verb=~"POST|PUT|PATCH|DELETE"}[` + dur + `]))
+`
+}
+
+func burnRateRules(name string, windows []string) []v1beta1.Rule {
+	size := len(windows)
+	res := make([]v1beta1.Rule, 2*size)
+	for i, w := range windows {
+		res[i] = v1beta1.Rule{
+			Expr:   burnrateRead(name, w),
+			Labels: map[string]string{"verb": "read"},
+			Record: "apiserver_request:burnrate" + w,
+		}
+		res[i+size] = v1beta1.Rule{
+			Expr:   burnrateWrite(name, w),
+			Labels: map[string]string{"verb": "write"},
+			Record: "apiserver_request:burnrate" + w,
+		}
+	}
+	return res
 }
 
 var APIServerBurnRateRules = &v1beta1.VMRule{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-kube-apiserver-burnrate.rules",
-		Namespace: "monitoring",
-	},
+	ObjectMeta: AS.ObjectMetaNameSuffix("burnrate"),
 	Spec: v1beta1.VMRuleSpec{
 		Groups: []v1beta1.RuleGroup{
 			{
 				Name: "kube-apiserver-burnrate.rules",
-				Rules: []v1beta1.Rule{
-					{
-						Expr: `
-								(
-								  (
-									# too slow
-									sum by (cluster) (rate(apiserver_request_slo_duration_seconds_count{job="apiserver",verb=~"LIST|GET",subresource!~"proxy|attach|log|exec|portforward"}[1d]))
-									-
-									(
-									  (
-										sum by (cluster) (rate(apiserver_request_slo_duration_seconds_bucket{job="apiserver",verb=~"LIST|GET",subresource!~"proxy|attach|log|exec|portforward",scope=~"resource|",le="1"}[1d]))
-										or
-										vector(0)
-									  )
-									  +
-									  sum by (cluster) (rate(apiserver_request_slo_duration_seconds_bucket{job="apiserver",verb=~"LIST|GET",subresource!~"proxy|attach|log|exec|portforward",scope="namespace",le="5"}[1d]))
-									  +
-									  sum by (cluster) (rate(apiserver_request_slo_duration_seconds_bucket{job="apiserver",verb=~"LIST|GET",subresource!~"proxy|attach|log|exec|portforward",scope="cluster",le="30"}[1d]))
-									)
-								  )
-								  +
-								  # errors
-								  sum by (cluster) (rate(apiserver_request_total{job="apiserver",verb=~"LIST|GET",code=~"5.."}[1d]))
-								)
-								/
-								sum by (cluster) (rate(apiserver_request_total{job="apiserver",verb=~"LIST|GET"}[1d]))
-								`,
-						Labels: map[string]string{"verb": "read"},
-						Record: "apiserver_request:burnrate1d",
-					}, {
-						Expr: `
-								(
-								  (
-									# too slow
-									sum by (cluster) (rate(apiserver_request_slo_duration_seconds_count{job="apiserver",verb=~"LIST|GET",subresource!~"proxy|attach|log|exec|portforward"}[1h]))
-									-
-									(
-									  (
-										sum by (cluster) (rate(apiserver_request_slo_duration_seconds_bucket{job="apiserver",verb=~"LIST|GET",subresource!~"proxy|attach|log|exec|portforward",scope=~"resource|",le="1"}[1h]))
-										or
-										vector(0)
-									  )
-									  +
-									  sum by (cluster) (rate(apiserver_request_slo_duration_seconds_bucket{job="apiserver",verb=~"LIST|GET",subresource!~"proxy|attach|log|exec|portforward",scope="namespace",le="5"}[1h]))
-									  +
-									  sum by (cluster) (rate(apiserver_request_slo_duration_seconds_bucket{job="apiserver",verb=~"LIST|GET",subresource!~"proxy|attach|log|exec|portforward",scope="cluster",le="30"}[1h]))
-									)
-								  )
-								  +
-								  # errors
-								  sum by (cluster) (rate(apiserver_request_total{job="apiserver",verb=~"LIST|GET",code=~"5.."}[1h]))
-								)
-								/
-								sum by (cluster) (rate(apiserver_request_total{job="apiserver",verb=~"LIST|GET"}[1h]))
-								`,
-						Labels: map[string]string{"verb": "read"},
-						Record: "apiserver_request:burnrate1h",
-					}, {
-						Expr: `
-								(
-								  (
-									# too slow
-									sum by (cluster) (rate(apiserver_request_slo_duration_seconds_count{job="apiserver",verb=~"LIST|GET",subresource!~"proxy|attach|log|exec|portforward"}[2h]))
-									-
-									(
-									  (
-										sum by (cluster) (rate(apiserver_request_slo_duration_seconds_bucket{job="apiserver",verb=~"LIST|GET",subresource!~"proxy|attach|log|exec|portforward",scope=~"resource|",le="1"}[2h]))
-										or
-										vector(0)
-									  )
-									  +
-									  sum by (cluster) (rate(apiserver_request_slo_duration_seconds_bucket{job="apiserver",verb=~"LIST|GET",subresource!~"proxy|attach|log|exec|portforward",scope="namespace",le="5"}[2h]))
-									  +
-									  sum by (cluster) (rate(apiserver_request_slo_duration_seconds_bucket{job="apiserver",verb=~"LIST|GET",subresource!~"proxy|attach|log|exec|portforward",scope="cluster",le="30"}[2h]))
-									)
-								  )
-								  +
-								  # errors
-								  sum by (cluster) (rate(apiserver_request_total{job="apiserver",verb=~"LIST|GET",code=~"5.."}[2h]))
-								)
-								/
-								sum by (cluster) (rate(apiserver_request_total{job="apiserver",verb=~"LIST|GET"}[2h]))
-								`,
-						Labels: map[string]string{"verb": "read"},
-						Record: "apiserver_request:burnrate2h",
-					}, {
-						Expr: `
-								(
-								  (
-									# too slow
-									sum by (cluster) (rate(apiserver_request_slo_duration_seconds_count{job="apiserver",verb=~"LIST|GET",subresource!~"proxy|attach|log|exec|portforward"}[30m]))
-									-
-									(
-									  (
-										sum by (cluster) (rate(apiserver_request_slo_duration_seconds_bucket{job="apiserver",verb=~"LIST|GET",subresource!~"proxy|attach|log|exec|portforward",scope=~"resource|",le="1"}[30m]))
-										or
-										vector(0)
-									  )
-									  +
-									  sum by (cluster) (rate(apiserver_request_slo_duration_seconds_bucket{job="apiserver",verb=~"LIST|GET",subresource!~"proxy|attach|log|exec|portforward",scope="namespace",le="5"}[30m]))
-									  +
-									  sum by (cluster) (rate(apiserver_request_slo_duration_seconds_bucket{job="apiserver",verb=~"LIST|GET",subresource!~"proxy|attach|log|exec|portforward",scope="cluster",le="30"}[30m]))
-									)
-								  )
-								  +
-								  # errors
-								  sum by (cluster) (rate(apiserver_request_total{job="apiserver",verb=~"LIST|GET",code=~"5.."}[30m]))
-								)
-								/
-								sum by (cluster) (rate(apiserver_request_total{job="apiserver",verb=~"LIST|GET"}[30m]))
-								`,
-						Labels: map[string]string{"verb": "read"},
-						Record: "apiserver_request:burnrate30m",
-					}, {
-						Expr: `
-								(
-								  (
-									# too slow
-									sum by (cluster) (rate(apiserver_request_slo_duration_seconds_count{job="apiserver",verb=~"LIST|GET",subresource!~"proxy|attach|log|exec|portforward"}[3d]))
-									-
-									(
-									  (
-										sum by (cluster) (rate(apiserver_request_slo_duration_seconds_bucket{job="apiserver",verb=~"LIST|GET",subresource!~"proxy|attach|log|exec|portforward",scope=~"resource|",le="1"}[3d]))
-										or
-										vector(0)
-									  )
-									  +
-									  sum by (cluster) (rate(apiserver_request_slo_duration_seconds_bucket{job="apiserver",verb=~"LIST|GET",subresource!~"proxy|attach|log|exec|portforward",scope="namespace",le="5"}[3d]))
-									  +
-									  sum by (cluster) (rate(apiserver_request_slo_duration_seconds_bucket{job="apiserver",verb=~"LIST|GET",subresource!~"proxy|attach|log|exec|portforward",scope="cluster",le="30"}[3d]))
-									)
-								  )
-								  +
-								  # errors
-								  sum by (cluster) (rate(apiserver_request_total{job="apiserver",verb=~"LIST|GET",code=~"5.."}[3d]))
-								)
-								/
-								sum by (cluster) (rate(apiserver_request_total{job="apiserver",verb=~"LIST|GET"}[3d]))
-								`,
-						Labels: map[string]string{"verb": "read"},
-						Record: "apiserver_request:burnrate3d",
-					}, {
-						Expr: `
-								(
-								  (
-									# too slow
-									sum by (cluster) (rate(apiserver_request_slo_duration_seconds_count{job="apiserver",verb=~"LIST|GET",subresource!~"proxy|attach|log|exec|portforward"}[5m]))
-									-
-									(
-									  (
-										sum by (cluster) (rate(apiserver_request_slo_duration_seconds_bucket{job="apiserver",verb=~"LIST|GET",subresource!~"proxy|attach|log|exec|portforward",scope=~"resource|",le="1"}[5m]))
-										or
-										vector(0)
-									  )
-									  +
-									  sum by (cluster) (rate(apiserver_request_slo_duration_seconds_bucket{job="apiserver",verb=~"LIST|GET",subresource!~"proxy|attach|log|exec|portforward",scope="namespace",le="5"}[5m]))
-									  +
-									  sum by (cluster) (rate(apiserver_request_slo_duration_seconds_bucket{job="apiserver",verb=~"LIST|GET",subresource!~"proxy|attach|log|exec|portforward",scope="cluster",le="30"}[5m]))
-									)
-								  )
-								  +
-								  # errors
-								  sum by (cluster) (rate(apiserver_request_total{job="apiserver",verb=~"LIST|GET",code=~"5.."}[5m]))
-								)
-								/
-								sum by (cluster) (rate(apiserver_request_total{job="apiserver",verb=~"LIST|GET"}[5m]))
-								`,
-						Labels: map[string]string{"verb": "read"},
-						Record: "apiserver_request:burnrate5m",
-					}, {
-						Expr: `
-								(
-								  (
-									# too slow
-									sum by (cluster) (rate(apiserver_request_slo_duration_seconds_count{job="apiserver",verb=~"LIST|GET",subresource!~"proxy|attach|log|exec|portforward"}[6h]))
-									-
-									(
-									  (
-										sum by (cluster) (rate(apiserver_request_slo_duration_seconds_bucket{job="apiserver",verb=~"LIST|GET",subresource!~"proxy|attach|log|exec|portforward",scope=~"resource|",le="1"}[6h]))
-										or
-										vector(0)
-									  )
-									  +
-									  sum by (cluster) (rate(apiserver_request_slo_duration_seconds_bucket{job="apiserver",verb=~"LIST|GET",subresource!~"proxy|attach|log|exec|portforward",scope="namespace",le="5"}[6h]))
-									  +
-									  sum by (cluster) (rate(apiserver_request_slo_duration_seconds_bucket{job="apiserver",verb=~"LIST|GET",subresource!~"proxy|attach|log|exec|portforward",scope="cluster",le="30"}[6h]))
-									)
-								  )
-								  +
-								  # errors
-								  sum by (cluster) (rate(apiserver_request_total{job="apiserver",verb=~"LIST|GET",code=~"5.."}[6h]))
-								)
-								/
-								sum by (cluster) (rate(apiserver_request_total{job="apiserver",verb=~"LIST|GET"}[6h]))
-								`,
-						Labels: map[string]string{"verb": "read"},
-						Record: "apiserver_request:burnrate6h",
-					}, {
-						Expr: `
-								(
-								  (
-									# too slow
-									sum by (cluster) (rate(apiserver_request_slo_duration_seconds_count{job="apiserver",verb=~"POST|PUT|PATCH|DELETE",subresource!~"proxy|attach|log|exec|portforward"}[1d]))
-									-
-									sum by (cluster) (rate(apiserver_request_slo_duration_seconds_bucket{job="apiserver",verb=~"POST|PUT|PATCH|DELETE",subresource!~"proxy|attach|log|exec|portforward",le="1"}[1d]))
-								  )
-								  +
-								  sum by (cluster) (rate(apiserver_request_total{job="apiserver",verb=~"POST|PUT|PATCH|DELETE",code=~"5.."}[1d]))
-								)
-								/
-								sum by (cluster) (rate(apiserver_request_total{job="apiserver",verb=~"POST|PUT|PATCH|DELETE"}[1d]))
-								`,
-						Labels: map[string]string{"verb": "write"},
-						Record: "apiserver_request:burnrate1d",
-					}, {
-						Expr: `
-								(
-								  (
-									# too slow
-									sum by (cluster) (rate(apiserver_request_slo_duration_seconds_count{job="apiserver",verb=~"POST|PUT|PATCH|DELETE",subresource!~"proxy|attach|log|exec|portforward"}[1h]))
-									-
-									sum by (cluster) (rate(apiserver_request_slo_duration_seconds_bucket{job="apiserver",verb=~"POST|PUT|PATCH|DELETE",subresource!~"proxy|attach|log|exec|portforward",le="1"}[1h]))
-								  )
-								  +
-								  sum by (cluster) (rate(apiserver_request_total{job="apiserver",verb=~"POST|PUT|PATCH|DELETE",code=~"5.."}[1h]))
-								)
-								/
-								sum by (cluster) (rate(apiserver_request_total{job="apiserver",verb=~"POST|PUT|PATCH|DELETE"}[1h]))
-								`,
-						Labels: map[string]string{"verb": "write"},
-						Record: "apiserver_request:burnrate1h",
-					}, {
-						Expr: `
-								(
-								  (
-									# too slow
-									sum by (cluster) (rate(apiserver_request_slo_duration_seconds_count{job="apiserver",verb=~"POST|PUT|PATCH|DELETE",subresource!~"proxy|attach|log|exec|portforward"}[2h]))
-									-
-									sum by (cluster) (rate(apiserver_request_slo_duration_seconds_bucket{job="apiserver",verb=~"POST|PUT|PATCH|DELETE",subresource!~"proxy|attach|log|exec|portforward",le="1"}[2h]))
-								  )
-								  +
-								  sum by (cluster) (rate(apiserver_request_total{job="apiserver",verb=~"POST|PUT|PATCH|DELETE",code=~"5.."}[2h]))
-								)
-								/
-								sum by (cluster) (rate(apiserver_request_total{job="apiserver",verb=~"POST|PUT|PATCH|DELETE"}[2h]))
-								`,
-						Labels: map[string]string{"verb": "write"},
-						Record: "apiserver_request:burnrate2h",
-					}, {
-						Expr: `
-								(
-								  (
-									# too slow
-									sum by (cluster) (rate(apiserver_request_slo_duration_seconds_count{job="apiserver",verb=~"POST|PUT|PATCH|DELETE",subresource!~"proxy|attach|log|exec|portforward"}[30m]))
-									-
-									sum by (cluster) (rate(apiserver_request_slo_duration_seconds_bucket{job="apiserver",verb=~"POST|PUT|PATCH|DELETE",subresource!~"proxy|attach|log|exec|portforward",le="1"}[30m]))
-								  )
-								  +
-								  sum by (cluster) (rate(apiserver_request_total{job="apiserver",verb=~"POST|PUT|PATCH|DELETE",code=~"5.."}[30m]))
-								)
-								/
-								sum by (cluster) (rate(apiserver_request_total{job="apiserver",verb=~"POST|PUT|PATCH|DELETE"}[30m]))
-								`,
-						Labels: map[string]string{"verb": "write"},
-						Record: "apiserver_request:burnrate30m",
-					}, {
-						Expr: `
-								(
-								  (
-									# too slow
-									sum by (cluster) (rate(apiserver_request_slo_duration_seconds_count{job="apiserver",verb=~"POST|PUT|PATCH|DELETE",subresource!~"proxy|attach|log|exec|portforward"}[3d]))
-									-
-									sum by (cluster) (rate(apiserver_request_slo_duration_seconds_bucket{job="apiserver",verb=~"POST|PUT|PATCH|DELETE",subresource!~"proxy|attach|log|exec|portforward",le="1"}[3d]))
-								  )
-								  +
-								  sum by (cluster) (rate(apiserver_request_total{job="apiserver",verb=~"POST|PUT|PATCH|DELETE",code=~"5.."}[3d]))
-								)
-								/
-								sum by (cluster) (rate(apiserver_request_total{job="apiserver",verb=~"POST|PUT|PATCH|DELETE"}[3d]))
-								`,
-						Labels: map[string]string{"verb": "write"},
-						Record: "apiserver_request:burnrate3d",
-					}, {
-						Expr: `
-								(
-								  (
-									# too slow
-									sum by (cluster) (rate(apiserver_request_slo_duration_seconds_count{job="apiserver",verb=~"POST|PUT|PATCH|DELETE",subresource!~"proxy|attach|log|exec|portforward"}[5m]))
-									-
-									sum by (cluster) (rate(apiserver_request_slo_duration_seconds_bucket{job="apiserver",verb=~"POST|PUT|PATCH|DELETE",subresource!~"proxy|attach|log|exec|portforward",le="1"}[5m]))
-								  )
-								  +
-								  sum by (cluster) (rate(apiserver_request_total{job="apiserver",verb=~"POST|PUT|PATCH|DELETE",code=~"5.."}[5m]))
-								)
-								/
-								sum by (cluster) (rate(apiserver_request_total{job="apiserver",verb=~"POST|PUT|PATCH|DELETE"}[5m]))
-								`,
-						Labels: map[string]string{"verb": "write"},
-						Record: "apiserver_request:burnrate5m",
-					}, {
-						Expr: `
-								(
-								  (
-									# too slow
-									sum by (cluster) (rate(apiserver_request_slo_duration_seconds_count{job="apiserver",verb=~"POST|PUT|PATCH|DELETE",subresource!~"proxy|attach|log|exec|portforward"}[6h]))
-									-
-									sum by (cluster) (rate(apiserver_request_slo_duration_seconds_bucket{job="apiserver",verb=~"POST|PUT|PATCH|DELETE",subresource!~"proxy|attach|log|exec|portforward",le="1"}[6h]))
-								  )
-								  +
-								  sum by (cluster) (rate(apiserver_request_total{job="apiserver",verb=~"POST|PUT|PATCH|DELETE",code=~"5.."}[6h]))
-								)
-								/
-								sum by (cluster) (rate(apiserver_request_total{job="apiserver",verb=~"POST|PUT|PATCH|DELETE"}[6h]))
-								`,
-						Labels: map[string]string{"verb": "write"},
-						Record: "apiserver_request:burnrate6h",
-					},
-				},
+				Rules: burnRateRules(
+					AS.Name,
+					[]string{"5m", "30m", "1h", "2h", "6h", "1d", "3d"},
+				),
 			},
 		},
 	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "operator.victoriametrics.com/v1beta1",
-		Kind:       "VMRule",
-	},
+	TypeMeta: TypeVMRuleV1Beta1,
 }
 
 var APIServerHistogramRules = &v1beta1.VMRule{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-kube-apiserver-histogram.rules",
-		Namespace: "monitoring",
-	},
+	ObjectMeta: AS.ObjectMetaNameSuffix("histogram"),
 	Spec: v1beta1.VMRuleSpec{
 		Groups: []v1beta1.RuleGroup{
 			{
 				Name: "kube-apiserver-histogram.rules",
 				Rules: []v1beta1.Rule{
 					{
-						Expr: "histogram_quantile(0.99, sum by (cluster, le, resource) (rate(apiserver_request_slo_duration_seconds_bucket{job=\"apiserver\",verb=~\"LIST|GET\",subresource!~\"proxy|attach|log|exec|portforward\"}[5m]))) > 0",
+						Expr: `histogram_quantile(0.99, sum by (cluster, le, resource) (rate(apiserver_request_slo_duration_seconds_bucket{job="` + AS.Name + `",verb=~"LIST|GET",subresource!~"proxy|attach|log|exec|portforward"}[5m]))) > 0`,
 						Labels: map[string]string{
 							"quantile": "0.99",
 							"verb":     "read",
 						},
 						Record: "cluster_quantile:apiserver_request_slo_duration_seconds:histogram_quantile",
 					}, {
-						Expr: "histogram_quantile(0.99, sum by (cluster, le, resource) (rate(apiserver_request_slo_duration_seconds_bucket{job=\"apiserver\",verb=~\"POST|PUT|PATCH|DELETE\",subresource!~\"proxy|attach|log|exec|portforward\"}[5m]))) > 0",
+						Expr: `histogram_quantile(0.99, sum by (cluster, le, resource) (rate(apiserver_request_slo_duration_seconds_bucket{job="` + AS.Name + `",verb=~"POST|PUT|PATCH|DELETE",subresource!~"proxy|attach|log|exec|portforward"}[5m]))) > 0`,
 						Labels: map[string]string{
 							"quantile": "0.99",
 							"verb":     "write",
@@ -601,25 +310,11 @@ var APIServerHistogramRules = &v1beta1.VMRule{
 			},
 		},
 	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "operator.victoriametrics.com/v1beta1",
-		Kind:       "VMRule",
-	},
+	TypeMeta: TypeVMRuleV1Beta1,
 }
 
 var APIServerSLOsRules = &v1beta1.VMRule{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-kube-apiserver-slos",
-		Namespace: "monitoring",
-	},
+	ObjectMeta: AS.ObjectMetaNameSuffix("slos"),
 	Spec: v1beta1.VMRuleSpec{
 		Groups: []v1beta1.RuleGroup{
 			{
@@ -633,10 +328,10 @@ var APIServerSLOsRules = &v1beta1.VMRule{
 							"summary":     "The API server is burning too much error budget.",
 						},
 						Expr: `
-								sum(apiserver_request:burnrate1h) > (14.40 * 0.01000)
-								and
-								sum(apiserver_request:burnrate5m) > (14.40 * 0.01000)
-								`,
+sum(apiserver_request:burnrate1h) > (14.40 * 0.01000)
+and
+sum(apiserver_request:burnrate5m) > (14.40 * 0.01000)
+`,
 						For: "2m",
 						Labels: map[string]string{
 							"long":     "1h",
@@ -651,10 +346,10 @@ var APIServerSLOsRules = &v1beta1.VMRule{
 							"summary":     "The API server is burning too much error budget.",
 						},
 						Expr: `
-								sum(apiserver_request:burnrate6h) > (6.00 * 0.01000)
-								and
-								sum(apiserver_request:burnrate30m) > (6.00 * 0.01000)
-								`,
+sum(apiserver_request:burnrate6h) > (6.00 * 0.01000)
+and
+sum(apiserver_request:burnrate30m) > (6.00 * 0.01000)
+`,
 						For: "15m",
 						Labels: map[string]string{
 							"long":     "6h",
@@ -669,10 +364,10 @@ var APIServerSLOsRules = &v1beta1.VMRule{
 							"summary":     "The API server is burning too much error budget.",
 						},
 						Expr: `
-								sum(apiserver_request:burnrate1d) > (3.00 * 0.01000)
-								and
-								sum(apiserver_request:burnrate2h) > (3.00 * 0.01000)
-								`,
+sum(apiserver_request:burnrate1d) > (3.00 * 0.01000)
+and
+sum(apiserver_request:burnrate2h) > (3.00 * 0.01000)
+`,
 						For: "1h",
 						Labels: map[string]string{
 							"long":     "1d",
@@ -687,10 +382,10 @@ var APIServerSLOsRules = &v1beta1.VMRule{
 							"summary":     "The API server is burning too much error budget.",
 						},
 						Expr: `
-								sum(apiserver_request:burnrate3d) > (1.00 * 0.01000)
-								and
-								sum(apiserver_request:burnrate6h) > (1.00 * 0.01000)
-								`,
+sum(apiserver_request:burnrate3d) > (1.00 * 0.01000)
+and
+sum(apiserver_request:burnrate6h) > (1.00 * 0.01000)
+`,
 						For: "3h",
 						Labels: map[string]string{
 							"long":     "3d",
@@ -702,25 +397,11 @@ var APIServerSLOsRules = &v1beta1.VMRule{
 			},
 		},
 	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "operator.victoriametrics.com/v1beta1",
-		Kind:       "VMRule",
-	},
+	TypeMeta: TypeVMRuleV1Beta1,
 }
 
 var APIServerRules = &v1beta1.VMRule{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-kubernetes-system-apiserver",
-		Namespace: "monitoring",
-	},
+	ObjectMeta: AS.ObjectMetaNameSuffix("system"),
 	Spec: v1beta1.VMRuleSpec{
 		Groups: []v1beta1.RuleGroup{
 			{
@@ -733,7 +414,7 @@ var APIServerRules = &v1beta1.VMRule{
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubeclientcertificateexpiration",
 							"summary":     "Client certificate is about to expire.",
 						},
-						Expr:   "apiserver_client_certificate_expiration_seconds_count{job=\"apiserver\"} > 0 and on(job) histogram_quantile(0.01, sum by (job, le) (rate(apiserver_client_certificate_expiration_seconds_bucket{job=\"apiserver\"}[5m]))) < 604800",
+						Expr:   `apiserver_client_certificate_expiration_seconds_count{job="` + AS.Name + `"} > 0 and on(job) histogram_quantile(0.01, sum by (job, le) (rate(apiserver_client_certificate_expiration_seconds_bucket{job="` + AS.Name + `"}[5m]))) < 604800`,
 						For:    "5m",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
@@ -743,7 +424,7 @@ var APIServerRules = &v1beta1.VMRule{
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubeclientcertificateexpiration",
 							"summary":     "Client certificate is about to expire.",
 						},
-						Expr:   "apiserver_client_certificate_expiration_seconds_count{job=\"apiserver\"} > 0 and on(job) histogram_quantile(0.01, sum by (job, le) (rate(apiserver_client_certificate_expiration_seconds_bucket{job=\"apiserver\"}[5m]))) < 86400",
+						Expr:   `apiserver_client_certificate_expiration_seconds_count{job="` + AS.Name + `"} > 0 and on(job) histogram_quantile(0.01, sum by (job, le) (rate(apiserver_client_certificate_expiration_seconds_bucket{job="` + AS.Name + `"}[5m]))) < 86400`,
 						For:    "5m",
 						Labels: map[string]string{"severity": "critical"},
 					}, {
@@ -772,7 +453,7 @@ var APIServerRules = &v1beta1.VMRule{
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubeapidown",
 							"summary":     "Target disappeared from Prometheus target discovery.",
 						},
-						Expr:   "absent(up{job=\"apiserver\"} == 1)",
+						Expr:   `absent(up{job="` + AS.Name + `"} == 1)`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "critical"},
 					}, {
@@ -782,7 +463,7 @@ var APIServerRules = &v1beta1.VMRule{
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubeapiterminatedrequests",
 							"summary":     "The kubernetes apiserver has terminated {{ $value | humanizePercentage }} of its incoming requests.",
 						},
-						Expr:   "sum(rate(apiserver_request_terminations_total{job=\"apiserver\"}[10m]))  / (  sum(rate(apiserver_request_total{job=\"apiserver\"}[10m])) + sum(rate(apiserver_request_terminations_total{job=\"apiserver\"}[10m])) ) > 0.20",
+						Expr:   `sum(rate(apiserver_request_terminations_total{job="` + AS.Name + `"}[10m]))  / (  sum(rate(apiserver_request_total{job="` + AS.Name + `"}[10m])) + sum(rate(apiserver_request_terminations_total{job="` + AS.Name + `"}[10m])) ) > 0.20`,
 						For:    "5m",
 						Labels: map[string]string{"severity": "warning"},
 					},
@@ -790,8 +471,5 @@ var APIServerRules = &v1beta1.VMRule{
 			},
 		},
 	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "operator.victoriametrics.com/v1beta1",
-		Kind:       "VMRule",
-	},
+	TypeMeta: TypeVMRuleV1Beta1,
 }

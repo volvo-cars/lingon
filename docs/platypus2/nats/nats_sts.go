@@ -310,7 +310,7 @@ var startupProbe = &corev1.Probe{
 	FailureThreshold:    int32(90),
 	InitialDelaySeconds: int32(10),
 	PeriodSeconds:       int32(10),
-	ProbeHandler:        ku.ProbeHTTP(ku.PathProbes, PortProbe),
+	ProbeHandler:        ku.ProbeHTTP(ku.PathHealthz, PortProbe),
 	SuccessThreshold:    int32(1),
 	TimeoutSeconds:      int32(5),
 }

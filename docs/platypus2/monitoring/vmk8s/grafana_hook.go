@@ -1,7 +1,9 @@
+// Copyright (c) 2023 Volvo Car Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 package vmk8s
 
 import (
-	"github.com/VictoriaMetrics/operator/api/victoriametrics/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -190,32 +192,5 @@ var GrafanaTestPO = &corev1.Pod{
 	TypeMeta: metav1.TypeMeta{
 		APIVersion: "v1",
 		Kind:       "Pod",
-	},
-}
-
-var GrafanaScrape = &v1beta1.VMServiceScrape{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-grafana",
-		Namespace: "monitoring",
-	},
-	Spec: v1beta1.VMServiceScrapeSpec{
-		Endpoints: []v1beta1.Endpoint{{Port: "service"}},
-		Selector: metav1.LabelSelector{
-			MatchLabels: map[string]string{
-				"app.kubernetes.io/instance": "vmk8s",
-				"app.kubernetes.io/name":     "grafana",
-			},
-		},
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "operator.victoriametrics.com/v1beta1",
-		Kind:       "VMServiceScrape",
 	},
 }

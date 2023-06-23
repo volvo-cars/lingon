@@ -6,78 +6,70 @@ package vmk8s
 import (
 	"github.com/VictoriaMetrics/operator/api/victoriametrics/v1beta1"
 	"github.com/volvo-cars/lingon/pkg/kube"
+	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+const (
+	KSCPort     = 10251
+	KSCPortName = "http-metrics"
+	PathSA      = "/var/run/secrets/kubernetes.io/serviceaccount"
+)
+
+var KSC = &Metadata{
+	Name:      "kube-scheduler", // linked to the name of the JobLabel
+	Namespace: namespace,
+	Instance:  "kube-scheduler-" + namespace,
+	Component: "monitoring",
+	PartOf:    appName,
+	Version:   version,
+	ManagedBy: "lingon",
+}
+
 type MonKubeScheduler struct {
 	kube.App
 
+	KubeSchedulerScrape     *v1beta1.VMServiceScrape
 	KubeSchedulerRules      *v1beta1.VMRule
 	KubeSchedulerAlertRules *v1beta1.VMRule
 	KubeSchedulerSVC        *corev1.Service
-	KubeSchedulerScrape     *v1beta1.VMServiceScrape
 }
 
 func NewMonKubeScheduler() *MonKubeScheduler {
 	return &MonKubeScheduler{
-		KubeSchedulerRules:      KubeSchedulerRecordingRules,
-		KubeSchedulerSVC:        KubeSchedulerSVC,
 		KubeSchedulerScrape:     KubeSchedulerScrape,
+		KubeSchedulerRules:      KubeSchedulerRecordingRules,
 		KubeSchedulerAlertRules: KubeSchedulerAlertRules,
+		KubeSchedulerSVC:        KubeSchedulerSVC,
 	}
 }
 
 var KubeSchedulerScrape = &v1beta1.VMServiceScrape{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-kube-scheduler",
-		Namespace: "monitoring",
-	},
+	TypeMeta:   TypeVMServiceScrapeV1Beta1,
+	ObjectMeta: KSC.ObjectMeta(),
 	Spec: v1beta1.VMServiceScrapeSpec{
 		Endpoints: []v1beta1.Endpoint{
 			{
-				BearerTokenFile: "/var/run/secrets/kubernetes.io/serviceaccount/token",
-				Port:            "http-metrics",
+				BearerTokenFile: PathSA + "/token",
+				Port:            KSCPortName,
 				Scheme:          "https",
-				TLSConfig:       &v1beta1.TLSConfig{CAFile: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"},
+				TLSConfig:       &v1beta1.TLSConfig{CAFile: PathSA + "/ca.crt"},
 			},
 		},
-		JobLabel:          "jobLabel",
-		NamespaceSelector: v1beta1.NamespaceSelector{MatchNames: []string{"kube-system"}},
-		Selector: metav1.LabelSelector{
-			MatchLabels: map[string]string{
-				"app":                        "vmk8s-victoria-metrics-k8s-stack-kube-scheduler",
-				"app.kubernetes.io/instance": "vmk8s",
-			},
+		// JobLabel is linked to [ku.AppLabelName] which is defined by [KSC.Name]
+		JobLabel: ku.AppLabelName, // jobLabel
+		NamespaceSelector: v1beta1.NamespaceSelector{
+			MatchNames: []string{ku.NSKubeSystem}, // kube-system
 		},
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "operator.victoriametrics.com/v1beta1",
-		Kind:       "VMServiceScrape",
+		Selector: metav1.LabelSelector{MatchLabels: KSC.MatchLabels()},
 	},
 }
 
 var KubeSchedulerAlertRules = &v1beta1.VMRule{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-kubernetes-system-scheduler",
-		Namespace: "monitoring",
-	},
+	TypeMeta:   TypeVMRuleV1Beta1,
+	ObjectMeta: KSC.ObjectMeta(),
 	Spec: v1beta1.VMRuleSpec{
 		Groups: []v1beta1.RuleGroup{
 			{
@@ -90,7 +82,7 @@ var KubeSchedulerAlertRules = &v1beta1.VMRule{
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubeschedulerdown",
 							"summary":     "Target disappeared from Prometheus target discovery.",
 						},
-						Expr:   "absent(up{job=\"kube-scheduler\"} == 1)",
+						Expr:   `absent(up{job="` + KSC.Name + `"} == 1)`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "critical"},
 					},
@@ -98,64 +90,50 @@ var KubeSchedulerAlertRules = &v1beta1.VMRule{
 			},
 		},
 	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "operator.victoriametrics.com/v1beta1",
-		Kind:       "VMRule",
-	},
 }
 
 var KubeSchedulerRecordingRules = &v1beta1.VMRule{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-kube-scheduler.rules",
-		Namespace: "monitoring",
-	},
+	TypeMeta:   TypeVMRuleV1Beta1,
+	ObjectMeta: KSC.ObjectMetaNameSuffix("rules"),
 	Spec: v1beta1.VMRuleSpec{
 		Groups: []v1beta1.RuleGroup{
 			{
 				Name: "kube-scheduler.rules",
 				Rules: []v1beta1.Rule{
 					{
-						Expr:   "histogram_quantile(0.99, sum(rate(scheduler_e2e_scheduling_duration_seconds_bucket{job=\"kube-scheduler\"}[5m])) without(instance, pod))",
+						Expr:   `histogram_quantile(0.99, sum(rate(scheduler_e2e_scheduling_duration_seconds_bucket{job="` + KSC.Name + `"}[5m])) without(instance, pod))`,
 						Labels: map[string]string{"quantile": "0.99"},
 						Record: "cluster_quantile:scheduler_e2e_scheduling_duration_seconds:histogram_quantile",
 					}, {
-						Expr:   "histogram_quantile(0.99, sum(rate(scheduler_scheduling_algorithm_duration_seconds_bucket{job=\"kube-scheduler\"}[5m])) without(instance, pod))",
+						Expr:   `histogram_quantile(0.99, sum(rate(scheduler_scheduling_algorithm_duration_seconds_bucket{job="` + KSC.Name + `"}[5m])) without(instance, pod))`,
 						Labels: map[string]string{"quantile": "0.99"},
 						Record: "cluster_quantile:scheduler_scheduling_algorithm_duration_seconds:histogram_quantile",
 					}, {
-						Expr:   "histogram_quantile(0.99, sum(rate(scheduler_binding_duration_seconds_bucket{job=\"kube-scheduler\"}[5m])) without(instance, pod))",
+						Expr:   `histogram_quantile(0.99, sum(rate(scheduler_binding_duration_seconds_bucket{job="` + KSC.Name + `"}[5m])) without(instance, pod))`,
 						Labels: map[string]string{"quantile": "0.99"},
 						Record: "cluster_quantile:scheduler_binding_duration_seconds:histogram_quantile",
 					}, {
-						Expr:   "histogram_quantile(0.9, sum(rate(scheduler_e2e_scheduling_duration_seconds_bucket{job=\"kube-scheduler\"}[5m])) without(instance, pod))",
+						Expr:   `histogram_quantile(0.9, sum(rate(scheduler_e2e_scheduling_duration_seconds_bucket{job="` + KSC.Name + `"}[5m])) without(instance, pod))`,
 						Labels: map[string]string{"quantile": "0.9"},
 						Record: "cluster_quantile:scheduler_e2e_scheduling_duration_seconds:histogram_quantile",
 					}, {
-						Expr:   "histogram_quantile(0.9, sum(rate(scheduler_scheduling_algorithm_duration_seconds_bucket{job=\"kube-scheduler\"}[5m])) without(instance, pod))",
+						Expr:   `histogram_quantile(0.9, sum(rate(scheduler_scheduling_algorithm_duration_seconds_bucket{job="` + KSC.Name + `"}[5m])) without(instance, pod))`,
 						Labels: map[string]string{"quantile": "0.9"},
 						Record: "cluster_quantile:scheduler_scheduling_algorithm_duration_seconds:histogram_quantile",
 					}, {
-						Expr:   "histogram_quantile(0.9, sum(rate(scheduler_binding_duration_seconds_bucket{job=\"kube-scheduler\"}[5m])) without(instance, pod))",
+						Expr:   `histogram_quantile(0.9, sum(rate(scheduler_binding_duration_seconds_bucket{job="` + KSC.Name + `"}[5m])) without(instance, pod))`,
 						Labels: map[string]string{"quantile": "0.9"},
 						Record: "cluster_quantile:scheduler_binding_duration_seconds:histogram_quantile",
 					}, {
-						Expr:   "histogram_quantile(0.5, sum(rate(scheduler_e2e_scheduling_duration_seconds_bucket{job=\"kube-scheduler\"}[5m])) without(instance, pod))",
+						Expr:   `histogram_quantile(0.5, sum(rate(scheduler_e2e_scheduling_duration_seconds_bucket{job="` + KSC.Name + `"}[5m])) without(instance, pod))`,
 						Labels: map[string]string{"quantile": "0.5"},
 						Record: "cluster_quantile:scheduler_e2e_scheduling_duration_seconds:histogram_quantile",
 					}, {
-						Expr:   "histogram_quantile(0.5, sum(rate(scheduler_scheduling_algorithm_duration_seconds_bucket{job=\"kube-scheduler\"}[5m])) without(instance, pod))",
+						Expr:   `histogram_quantile(0.5, sum(rate(scheduler_scheduling_algorithm_duration_seconds_bucket{job="` + KSC.Name + `"}[5m])) without(instance, pod))`,
 						Labels: map[string]string{"quantile": "0.5"},
 						Record: "cluster_quantile:scheduler_scheduling_algorithm_duration_seconds:histogram_quantile",
 					}, {
-						Expr:   "histogram_quantile(0.5, sum(rate(scheduler_binding_duration_seconds_bucket{job=\"kube-scheduler\"}[5m])) without(instance, pod))",
+						Expr:   `histogram_quantile(0.5, sum(rate(scheduler_binding_duration_seconds_bucket{job="` + KSC.Name + `"}[5m])) without(instance, pod))`,
 						Labels: map[string]string{"quantile": "0.5"},
 						Record: "cluster_quantile:scheduler_binding_duration_seconds:histogram_quantile",
 					},
@@ -163,41 +141,26 @@ var KubeSchedulerRecordingRules = &v1beta1.VMRule{
 			},
 		},
 	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "operator.victoriametrics.com/v1beta1",
-		Kind:       "VMRule",
-	},
 }
 
 var KubeSchedulerSVC = &corev1.Service{
+	TypeMeta: ku.TypeServiceV1,
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "vmk8s-victoria-metrics-k8s-stack-kube-scheduler",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-			"jobLabel":                     "kube-scheduler",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-kube-scheduler",
-		Namespace: "kube-system",
+		Labels:    KSC.Labels(),
+		Name:      KSC.Name,
+		Namespace: ku.NSKubeSystem, // "kube-system",
 	},
 	Spec: corev1.ServiceSpec{
-		ClusterIP: "None",
+		ClusterIP: corev1.ClusterIPNone,
 		Ports: []corev1.ServicePort{
 			{
-				Name:       "http-metrics",
-				Port:       int32(10251),
+				Name:       KSCPortName,
+				Port:       int32(KSCPort),
 				Protocol:   corev1.ProtocolTCP,
-				TargetPort: intstr.IntOrString{IntVal: int32(10251)},
+				TargetPort: intstr.FromInt(KSCPort),
 			},
 		},
 		Selector: map[string]string{"component": "kube-scheduler"},
-		Type:     corev1.ServiceType("ClusterIP"),
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "Service",
+		Type:     corev1.ServiceTypeClusterIP,
 	},
 }

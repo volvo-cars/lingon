@@ -8,6 +8,7 @@ package vmk8s
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 
@@ -21,13 +22,16 @@ import (
 var _ kube.Exporter = (*Vmk8S)(nil)
 
 const (
-	namespace = "monitoring"
-	version   = "1.91.2"
-	appName   = "victoriametrics"
-
-	OperatorVersion = "0.34.1"
-	OperatorImg     = "victoriametrics/operator:v" + OperatorVersion
+	namespace          = "monitoring"
+	version            = "1.91.2"
+	appName            = "victoriametrics"
+	VMSinglePort       = 8429
+	VMAlertManagerPort = 9093
+	OperatorVersion    = "0.34.1"
+	OperatorImg        = "victoriametrics/operator:v" + OperatorVersion
 )
+
+var d = func(i int) string { return fmt.Sprintf("%d", i) }
 
 // Vmk8S contains kubernetes manifests
 type Vmk8S struct {
@@ -39,10 +43,12 @@ type Vmk8S struct {
 	NodeExporter     *NodeExporter
 	VMAlertManager   *VMAlertManager
 
-	MonKubeScheduler *MonKubeScheduler
-	MonAPIServer     *MonAPIServer
-	MonCoreDNS       *MonCoreDNS
-	MonETCD          *MonETCD
+	MonKubeScheduler  *MonKubeScheduler
+	MonAPIServer      *MonAPIServer
+	MonCoreDNS        *MonCoreDNS
+	MonETCD           *MonETCD
+	MonKubeController *MonKubeController
+	MonKubeProxy      *MonKubeProxy
 
 	K8SRules *K8SRules
 
@@ -54,15 +60,16 @@ type Vmk8S struct {
 	ProbesNodeScrape   *v1beta1.VMNodeScrape
 	KubeletNodeScrape  *v1beta1.VMNodeScrape
 
-	VMSingle                   *v1beta1.VMSingle
-	DashboardBackupManagerCM   *corev1.ConfigMap
-	VMHealthAlertRules         *v1beta1.VMRule
-	VMAgent                    *v1beta1.VMAgent
-	DashboardAgentCM           *corev1.ConfigMap
-	VMAgentAlertRules          *v1beta1.VMRule
-	VMK8sSA                    *corev1.ServiceAccount
-	VMSingleAlertRules         *v1beta1.VMRule
-	DashboardVictoriaMetricsCM *corev1.ConfigMap
+	VicMet *VicMet
+	// VMSingle                   *v1beta1.VMSingle
+	// DashboardBackupManagerCM   *corev1.ConfigMap
+	// VMHealthAlertRules         *v1beta1.VMRule
+	// VMAgent                    *v1beta1.VMAgent
+	// DashboardAgentCM           *corev1.ConfigMap
+	// VMAgentAlertRules          *v1beta1.VMRule
+	// VMK8sSA                    *corev1.ServiceAccount
+	// VMSingleAlertRules         *v1beta1.VMRule
+	// DashboardVictoriaMetricsCM *corev1.ConfigMap
 }
 
 // New creates a new Vmk8S
@@ -74,10 +81,12 @@ func New() *Vmk8S {
 		NodeExporter:     NewNodeExporter(),
 		VMAlertManager:   NewVMAlertManager(),
 
-		MonAPIServer:     NewMonAPIServer(),
-		MonKubeScheduler: NewMonKubeScheduler(),
-		MonCoreDNS:       NewMonCoreDNS(),
-		MonETCD:          NewMonETCD(),
+		MonAPIServer:      NewMonAPIServer(),
+		MonKubeProxy:      NewMonKubeProxy(),
+		MonKubeScheduler:  NewMonKubeScheduler(),
+		MonKubeController: NewMonKubeController(),
+		MonCoreDNS:        NewMonCoreDNS(),
+		MonETCD:           NewMonETCD(),
 
 		K8SRules: NewK8SRules(),
 
@@ -89,23 +98,21 @@ func New() *Vmk8S {
 		DashboardK8SNamespacesCM: DashboardK8SNamespacesCM,
 		DashboardK8SPodsCM:       DashboardK8SPodsCM,
 
-		VMK8sSA:                    VictoriaMetricsSA,
-		DashboardVictoriaMetricsCM: DashboardVictoriaMetricsCM,
-		DashboardBackupManagerCM:   DashboardBackupManagerCM,
-		DashboardAgentCM:           DashboardAgentCM,
-		VMAgent:                    VMAgent,
-		VMAgentAlertRules:          VMAgentAlertRules,
-		VMSingle:                   VMDB,
-		VMHealthAlertRules:         VMHealthAlertRules,
-		VMSingleAlertRules:         VMSingleAlertRules,
+		VicMet: NewVicMet(),
+		// VMK8sSA:                    VictoriaMetricsSA,
+		// DashboardVictoriaMetricsCM: DashboardVictoriaMetricsCM,
+		// DashboardBackupManagerCM:   DashboardBackupManagerCM,
+		// DashboardAgentCM:           DashboardAgentCM,
+		// VMAgent:                    VMAgent,
+		// VMAgentAlertRules:          VMAgentAlertRules,
+		// VMSingle:                   VMDB,
+		// VMHealthAlertRules:         VMHealthAlertRules,
+		// VMSingleAlertRules:         VMSingleAlertRules,
 	}
 }
 
 var VictoriaMetricsSA = ku.ServiceAccount(
-	"victoria-metrics",
-	namespace,
-	nil,
-	nil,
+	Single.Name, Single.Namespace, Single.Labels(), nil,
 )
 
 // Apply applies the kubernetes objects to the cluster

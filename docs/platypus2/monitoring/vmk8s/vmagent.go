@@ -13,15 +13,9 @@ import (
 
 var VMAgent = &v1beta1.VMAgent{
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack",
-		Namespace: "monitoring",
+		Labels:    RulesLabels,
+		Name:      "victoria-metrics-agent",
+		Namespace: Single.Namespace,
 	},
 	Spec: v1beta1.VMAgentSpec{
 		ExternalLabels:     map[string]string{"cluster": "cluster-name"},
@@ -71,7 +65,7 @@ var VMAgentAlertRules = &v1beta1.VMRule{
 						Alert: "RejectedRemoteWriteDataBlocksAreDropped",
 						Annotations: map[string]string{
 							"dashboard": "grafana.domain.com/d/G7Z9GzMGz?viewPanel=79&var-instance={{ $labels.instance }}",
-							"summary":   "Job \"{{ $labels.job }}\" on instance {{ $labels.instance }} drops the rejected by remote-write server data blocks. Check the logs to find the reason for rejects.",
+							"summary":   `Job "{{ $labels.job }}" on instance {{ $labels.instance }} drops the rejected by remote-write server data blocks. Check the logs to find the reason for rejects.`,
 						},
 						Expr:   "sum(increase(vmagent_remotewrite_packets_dropped_total[5m])) by (job, instance) > 0",
 						For:    "15m",
@@ -80,7 +74,7 @@ var VMAgentAlertRules = &v1beta1.VMRule{
 						Alert: "TooManyScrapeErrors",
 						Annotations: map[string]string{
 							"dashboard": "grafana.domain.com/d/G7Z9GzMGz?viewPanel=31&var-instance={{ $labels.instance }}",
-							"summary":   "Job \"{{ $labels.job }}\" on instance {{ $labels.instance }} fails to scrape targets for last 15m",
+							"summary":   `Job "{{ $labels.job }}" on instance {{ $labels.instance }} fails to scrape targets for last 15m`,
 						},
 						Expr:   "sum(increase(vm_promscrape_scrapes_failed_total[5m])) by (job, instance) > 0",
 						For:    "15m",
@@ -89,13 +83,13 @@ var VMAgentAlertRules = &v1beta1.VMRule{
 						Alert: "TooManyWriteErrors",
 						Annotations: map[string]string{
 							"dashboard": "grafana.domain.com/d/G7Z9GzMGz?viewPanel=77&var-instance={{ $labels.instance }}",
-							"summary":   "Job \"{{ $labels.job }}\" on instance {{ $labels.instance }} responds with errors to write requests for last 15m.",
+							"summary":   `Job "{{ $labels.job }}" on instance {{ $labels.instance }} responds with errors to write requests for last 15m.`,
 						},
 						Expr: `
-								(sum(increase(vm_ingestserver_request_errors_total[5m])) by (job, instance)
-								+
-								sum(increase(vmagent_http_request_errors_total[5m])) by (job, instance)) > 0
-								`,
+(sum(increase(vm_ingestserver_request_errors_total[5m])) by (job, instance)
++
+sum(increase(vmagent_http_request_errors_total[5m])) by (job, instance)) > 0
+`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
@@ -103,10 +97,10 @@ var VMAgentAlertRules = &v1beta1.VMRule{
 						Annotations: map[string]string{
 							"dashboard": "grafana.domain.com/d/G7Z9GzMGz?viewPanel=61&var-instance={{ $labels.instance }}",
 							"description": `
-								Vmagent fails to push data via remote write protocol to destination "{{ $labels.url }}"
-								 Ensure that destination is up and reachable.
-								`,
-							"summary": "Job \"{{ $labels.job }}\" on instance {{ $labels.instance }} fails to push to remote storage",
+Vmagent fails to push data via remote write protocol to destination "{{ $labels.url }}"
+ Ensure that destination is up and reachable.
+`,
+							"summary": `Job "{{ $labels.job }}" on instance {{ $labels.instance }} fails to push to remote storage`,
 						},
 						Expr:   "sum(rate(vmagent_remotewrite_retries_count_total[5m])) by(job, instance, url) > 0",
 						For:    "15m",
@@ -114,24 +108,21 @@ var VMAgentAlertRules = &v1beta1.VMRule{
 					}, {
 						Alert: "RemoteWriteConnectionIsSaturated",
 						Annotations: map[string]string{
-							"dashboard": "grafana.domain.com/d/G7Z9GzMGz?viewPanel=84&var-instance={{ $labels.instance }}",
-							"description": `
-								The remote write connection between vmagent "{{ $labels.job }}" (instance {{ $labels.instance }}) and destination "{{ $labels.url }}" is saturated by more than 90% and vmagent won't be able to keep up.
-								 This usually means that "-remoteWrite.queues" command-line flag must be increased in order to increase the number of connections per each remote storage.
-								`,
-							"summary": "Remote write connection from \"{{ $labels.job }}\" (instance {{ $labels.instance }}) to {{ $labels.url }} is saturated",
+							"dashboard":   "grafana.domain.com/d/G7Z9GzMGz?viewPanel=84&var-instance={{ $labels.instance }}",
+							"description": "The remote write connection between vmagent \"{{ $labels.job }}\" (instance {{ $labels.instance }}) and destination \"{{ $labels.url }}\" is saturated by more than 90% and vmagent won't be able to keep up.\n This usually means that `-remoteWrite.queues` command-line flag must be increased in order to increase the number of connections per each remote storage.",
+							"summary":     `Remote write connection from "{{ $labels.job }}" (instance {{ $labels.instance }}) to {{ $labels.url }} is saturated`,
 						},
 						Expr: `
-								sum(rate(vmagent_remotewrite_send_duration_seconds_total[5m])) by(job, instance, url) 
-								> 0.9 * max(vmagent_remotewrite_queues) by(job, instance, url)
-								`,
+sum(rate(vmagent_remotewrite_send_duration_seconds_total[5m])) by(job, instance, url) 
+> 0.9 * max(vmagent_remotewrite_queues) by(job, instance, url)
+`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
 						Alert: "PersistentQueueForWritesIsSaturated",
 						Annotations: map[string]string{
 							"dashboard":   "grafana.domain.com/d/G7Z9GzMGz?viewPanel=98&var-instance={{ $labels.instance }}",
-							"description": "Persistent queue writes for vmagent \"{{ $labels.job }}\" (instance {{ $labels.instance }}) are saturated by more than 90% and vmagent won't be able to keep up with flushing data on disk. In this case, consider to decrease load on the vmagent or improve the disk throughput.",
+							"description": `Persistent queue writes for vmagent "{{ $labels.job }}" (instance {{ $labels.instance }}) are saturated by more than 90% and vmagent won't be able to keep up with flushing data on disk. In this case, consider to decrease load on the vmagent or improve the disk throughput.`,
 							"summary":     "Persistent queue writes for instance {{ $labels.instance }} are saturated",
 						},
 						Expr:   "rate(vm_persistentqueue_write_duration_seconds_total[5m]) > 0.9",
@@ -141,7 +132,7 @@ var VMAgentAlertRules = &v1beta1.VMRule{
 						Alert: "PersistentQueueForReadsIsSaturated",
 						Annotations: map[string]string{
 							"dashboard":   "grafana.domain.com/d/G7Z9GzMGz?viewPanel=99&var-instance={{ $labels.instance }}",
-							"description": "Persistent queue reads for vmagent \"{{ $labels.job }}\" (instance {{ $labels.instance }}) are saturated by more than 90% and vmagent won't be able to keep up with reading data from the disk. In this case, consider to decrease load on the vmagent or improve the disk throughput.",
+							"description": `Persistent queue reads for vmagent "{{ $labels.job }}" (instance {{ $labels.instance }}) are saturated by more than 90% and vmagent won't be able to keep up with reading data from the disk. In this case, consider to decrease load on the vmagent or improve the disk throughput.`,
 							"summary":     "Persistent queue reads for instance {{ $labels.instance }} are saturated",
 						},
 						Expr:   "rate(vm_persistentqueue_read_duration_seconds_total[5m]) > 0.9",
@@ -172,10 +163,10 @@ var VMAgentAlertRules = &v1beta1.VMRule{
 							"summary":     "Configuration reload failed for vmagent instance {{ $labels.instance }}",
 						},
 						Expr: `
-								vm_promscrape_config_last_reload_successful != 1
-								or
-								vmagent_relabel_config_last_reload_successful != 1
-								`,
+vm_promscrape_config_last_reload_successful != 1
+or
+vmagent_relabel_config_last_reload_successful != 1
+`,
 						Labels: map[string]string{"severity": "warning"},
 					},
 				},

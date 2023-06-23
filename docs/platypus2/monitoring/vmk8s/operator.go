@@ -14,6 +14,23 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+const (
+	OpPort       = 8080
+	OpPortName   = "http"
+	OpWHPort     = 9443
+	OpWHPortName = "webhook"
+)
+
+var VMOp = &Metadata{
+	Name:      "victoria-metrics-operator",
+	Namespace: namespace,
+	Instance:  "victoria-metrics-operator-" + namespace,
+	Component: "operator",
+	PartOf:    appName,
+	Version:   OperatorVersion,
+	ManagedBy: "lingon",
+}
+
 type Operator struct {
 	kube.App
 
@@ -30,10 +47,20 @@ type Operator struct {
 
 func NewOperator() *Operator {
 	return &Operator{
-		CR:          OperatorCR,
-		CRB:         OperatorCRB,
-		Deploy:      OperatorDeploy,
-		RB:          OperatorRB,
+		CR: OperatorCR,
+		CRB: ku.BindClusterRole(
+			VMOp.Name,
+			OperatorSA,
+			OperatorCR,
+			VMOp.Labels(),
+		),
+		Deploy: OperatorDeploy,
+		RB: ku.BindRole(
+			VMOp.Name,
+			OperatorSA,
+			OperatorRole,
+			VMOp.Labels(),
+		),
 		Role:        OperatorRole,
 		SA:          OperatorSA,
 		SVC:         OperatorSVC,
@@ -55,6 +82,7 @@ var OperatorDeploy = &appsv1.Deployment{
 				Labels: VMOp.MatchLabels(),
 			},
 			Spec: corev1.PodSpec{
+				ServiceAccountName: OperatorSA.Name,
 				Containers: []corev1.Container{
 					{
 						Args: []string{
@@ -65,81 +93,61 @@ var OperatorDeploy = &appsv1.Deployment{
 						Env: []corev1.EnvVar{
 							{Name: "WATCH_NAMESPACE"},
 							ku.EnvVarDownAPI("POD_NAME", "metadata.name"),
+							{
+								Name: "OPERATOR_NAME", Value: VMOp.Name,
+							},
+							// See https://github.com/VictoriaMetrics/operator/blob/master/vars.MD
 							// {
-							// 	Name:      "POD_NAME",
-							// 	ValueFrom: &corev1.EnvVarSource{FieldRef: &corev1.ObjectFieldSelector{FieldPath: "metadata.name"}},
+							// 	Name:  "VM_ENABLEDPROMETHEUSCONVERTER_PODMONITOR",
+							// 	Value: "false",
 							// },
-							{
-								Name:  "OPERATOR_NAME",
-								Value: VMOp.Name,
-							},
-							{
-								Name:  "VM_ENABLEDPROMETHEUSCONVERTER_PODMONITOR",
-								Value: "false",
-							},
-							{
-								Name:  "VM_ENABLEDPROMETHEUSCONVERTER_SERVICESCRAPE",
-								Value: "false",
-							},
-							{
-								Name:  "VM_ENABLEDPROMETHEUSCONVERTER_PROMETHEUSRULE",
-								Value: "false",
-							},
-							{
-								Name:  "VM_ENABLEDPROMETHEUSCONVERTER_PROBE",
-								Value: "false",
-							},
-							{
-								Name:  "VM_ENABLEDPROMETHEUSCONVERTER_ALERTMANAGERCONFIG",
-								Value: "false",
-							},
-							{
-								Name:  "VM_PSPAUTOCREATEENABLED",
-								Value: "true",
-							},
-							{
-								Name:  "VM_ENABLEDPROMETHEUSCONVERTEROWNERREFERENCES",
-								Value: "false",
-							},
+							// {
+							// 	Name:  "VM_ENABLEDPROMETHEUSCONVERTER_SERVICESCRAPE",
+							// 	Value: "false",
+							// },
+							// {
+							// 	Name:  "VM_ENABLEDPROMETHEUSCONVERTER_PROMETHEUSRULE",
+							// 	Value: "false",
+							// },
+							// {
+							// 	Name:  "VM_ENABLEDPROMETHEUSCONVERTER_PROBE",
+							// 	Value: "false",
+							// },
+							// {
+							// 	Name:  "VM_ENABLEDPROMETHEUSCONVERTER_ALERTMANAGERCONFIG",
+							// 	Value: "false",
+							// },
+							// {
+							// 	Name:  "VM_PSPAUTOCREATEENABLED",
+							// 	Value: "true",
+							// },
+							// {
+							// 	Name:  "VM_ENABLEDPROMETHEUSCONVERTEROWNERREFERENCES",
+							// 	Value: "false",
+							// },
 						},
 						Image:           OperatorImg,
 						ImagePullPolicy: corev1.PullIfNotPresent,
 						Name:            VMOp.Name,
 						Ports: []corev1.ContainerPort{
 							{
-								ContainerPort: int32(8080),
-								Name:          "http",
+								ContainerPort: int32(OpPort),
+								Name:          OpPortName,
 								Protocol:      corev1.ProtocolTCP,
 							}, {
-								ContainerPort: int32(9443),
-								Name:          "webhook",
+								ContainerPort: int32(OpWHPort),
+								Name:          OpWHPortName,
 								Protocol:      corev1.ProtocolTCP,
 							},
 						},
 					},
 				},
-				ServiceAccountName: OperatorSA.Name,
 			},
 		},
 	},
 }
 
-var OperatorRB = &rbacv1.RoleBinding{
-	ObjectMeta: VMOp.ObjectMeta(),
-	RoleRef: rbacv1.RoleRef{
-		APIGroup: "rbac.authorization.k8s.io",
-		Kind:     "Role",
-		Name:     OperatorRole.Name,
-	},
-	Subjects: []rbacv1.Subject{
-		{
-			Kind:      "ServiceAccount",
-			Name:      OperatorSA.Name,
-			Namespace: "monitoring",
-		},
-	},
-	TypeMeta: ku.TypeRoleBindingV1,
-}
+var OperatorSA = VMOp.ServiceAccount()
 
 var OperatorCR = &rbacv1.ClusterRole{
 	TypeMeta:   ku.TypeClusterRoleV1,
@@ -577,41 +585,36 @@ var OperatorRole = &rbacv1.Role{
 }
 
 var OperatorSVC = &corev1.Service{
+	TypeMeta:   ku.TypeServiceV1,
 	ObjectMeta: VMOp.ObjectMeta(),
 	Spec: corev1.ServiceSpec{
 		Ports: []corev1.ServicePort{
 			{
-				Name:       "http",
-				Port:       int32(8080),
+				Name:       OpPortName,
+				Port:       int32(OpPort),
 				Protocol:   corev1.ProtocolTCP,
-				TargetPort: intstr.IntOrString{IntVal: int32(8080)},
+				TargetPort: intstr.FromInt(OpPort),
 			}, {
-				Name:       "webhook",
+				Name:       OpWHPortName,
 				Port:       int32(443),
-				TargetPort: intstr.IntOrString{IntVal: int32(9443)},
+				TargetPort: intstr.FromInt(OpWHPort),
 			},
 		},
 		Selector: VMOp.MatchLabels(),
-		Type:     corev1.ServiceType("ClusterIP"),
+		Type:     corev1.ServiceTypeClusterIP,
 	},
-	TypeMeta: ku.TypeServiceV1,
 }
 
-var OperatorCRB = &rbacv1.ClusterRoleBinding{
-	ObjectMeta: VMOp.ObjectMetaNoNS(),
-	RoleRef: rbacv1.RoleRef{
-		APIGroup: "rbac.authorization.k8s.io",
-		Kind:     "ClusterRole",
-		Name:     OperatorCR.Name,
-	},
-	Subjects: []rbacv1.Subject{
-		{
-			Kind:      "ServiceAccount",
-			Name:      OperatorSA.Name,
-			Namespace: "monitoring",
+var OperatorScrape = &v1beta1.VMServiceScrape{
+	TypeMeta:   TypeVMServiceScrapeV1Beta1,
+	ObjectMeta: VMOp.ObjectMeta(),
+	Spec: v1beta1.VMServiceScrapeSpec{
+		Endpoints: []v1beta1.Endpoint{{Port: OpPortName}},
+		NamespaceSelector: v1beta1.NamespaceSelector{
+			MatchNames: []string{VMOp.Namespace},
 		},
+		Selector: metav1.LabelSelector{MatchLabels: VMOp.MatchLabels()},
 	},
-	TypeMeta: ku.TypeClusterRoleBindingV1,
 }
 
 var OperatorDashboardCM = &corev1.ConfigMap{
@@ -1981,24 +1984,13 @@ var OperatorDashboardCM = &corev1.ConfigMap{
 }
 `,
 	},
-	ObjectMeta: VMOp.ObjectMeta(),
-	TypeMeta:   ku.TypeConfigMapV1,
-}
-
-var OperatorSA = &corev1.ServiceAccount{
-	ObjectMeta: VMOp.ObjectMeta(),
-	TypeMeta:   ku.TypeServiceAccountV1,
-}
-
-var OperatorScrape = &v1beta1.VMServiceScrape{
-	ObjectMeta: VMOp.ObjectMeta(),
-	Spec: v1beta1.VMServiceScrapeSpec{
-		Endpoints:         []v1beta1.Endpoint{{Port: "http"}},
-		NamespaceSelector: v1beta1.NamespaceSelector{MatchNames: []string{VMOp.Namespace}},
-		Selector:          metav1.LabelSelector{MatchLabels: VMOp.MatchLabels()},
+	ObjectMeta: metav1.ObjectMeta{
+		Labels: ku.MergeLabels(
+			VMOp.Labels(),
+			map[string]string{DashboardLabel: "1"},
+		),
+		Name:      VMOp.Name,
+		Namespace: VMOp.Namespace,
 	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "operator.victoriametrics.com/v1beta1",
-		Kind:       "VMServiceScrape",
-	},
+	TypeMeta: ku.TypeConfigMapV1,
 }

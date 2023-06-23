@@ -16,6 +16,29 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+const (
+	GrafanaVersion             = "9.3.0"
+	GrafanaSideCarImg          = "quay.io/kiwigrid/k8s-sidecar:1.19.2"
+	GrafanaPort                = 3000
+	GrafanaPortName            = "service"
+	DashboardLabel             = "grafana_dashboard"
+	DataSourceLabel            = "grafana_datasource"
+	defaultDashboardConfigName = "grafana-default-dashboards"
+)
+
+var Graf = &Metadata{
+	Name:      "grafana",
+	Namespace: namespace,
+	Instance:  "grafana" + namespace,
+	Component: "dashboards",
+	PartOf:    appName,
+	Version:   GrafanaVersion,
+	ManagedBy: "lingon",
+	Registry:  "",
+	Image:     "grafana/grafana",
+	Tag:       GrafanaVersion,
+}
+
 type Grafana struct {
 	kube.App
 
@@ -37,40 +60,19 @@ type Grafana struct {
 	GrafanaScrape       *v1beta1.VMServiceScrape
 }
 
-const (
-	GrafanaVersion             = "9.3.0"
-	GrafanaImg                 = "grafana/grafana:" + GrafanaVersion
-	GrafanaSideCarImg          = "quay.io/kiwigrid/k8s-sidecar:1.19.2"
-	grafanaPort                = 3000
-	defaultDashboardConfigName = "grafana-default-dashboards"
-	DashboardLabel             = "grafana_dashboard"
-	DataSourceLabel            = "grafana_datasource"
-)
-
-var Graf = &Metadata{
-	Name:      "grafana",
-	Namespace: namespace,
-	Instance:  "grafana" + namespace,
-	Component: "dashboards",
-	PartOf:    appName,
-	Version:   GrafanaVersion,
-	ManagedBy: "lingon",
-}
-
 func NewGrafana() *Grafana {
 	return &Grafana{
-		Deploy:  GrafanaDeploy,
-		SVC:     GrafanaSVC,
-		Secrets: GrafanaSecrets,
+		Deploy:        GrafanaDeploy,
+		SVC:           GrafanaSVC,
+		Secrets:       GrafanaSecrets,
+		GrafanaScrape: GrafanaScrape,
 
-		SA: GrafanaSA,
-		CR: GrafanaCR,
+		SA:   GrafanaSA,
+		Role: GrafanaRole,
+		RB:   ku.BindRole(Graf.Name, GrafanaSA, GrafanaRole, Graf.Labels()),
+		CR:   GrafanaCR,
 		CRB: ku.BindClusterRole(
 			Graf.Name, GrafanaSA, GrafanaCR, Graf.Labels(),
-		),
-		Role: GrafanaRole,
-		RB: ku.BindRole(
-			Graf.Name, GrafanaSA, GrafanaRole, Graf.Labels(),
 		),
 
 		CM:                  GrafanaCM,
@@ -79,12 +81,8 @@ func NewGrafana() *Grafana {
 		OverviewDashboardCM: GrafanaOverviewDashCM,
 		DefaultDashboardCM: ku.DataConfigMap(
 			defaultDashboardConfigName,
-			Graf.Namespace,
-			Graf.Labels(),
-			nil,
-			map[string]string{},
+			Graf.Namespace, Graf.Labels(), nil, map[string]string{},
 		),
-		GrafanaScrape: GrafanaScrape,
 	}
 }
 
@@ -186,7 +184,7 @@ var GrafanaDeploy = &appsv1.Deployment{
 								Name: "REQ_URL",
 								Value: fmt.Sprintf(
 									"http://localhost:%d/api/admin/provisioning/datasources/reload",
-									grafanaPort,
+									GrafanaPort,
 								),
 							},
 							{
@@ -211,8 +209,8 @@ var GrafanaDeploy = &appsv1.Deployment{
 							},
 						},
 					}, {
-						Name:            "grafana",
-						Image:           GrafanaImg,
+						Name:            Graf.Name,
+						Image:           Graf.ContainerURL(),
 						ImagePullPolicy: corev1.PullIfNotPresent,
 						Env: []corev1.EnvVar{
 							ku.SecretEnvVar(
@@ -249,15 +247,15 @@ var GrafanaDeploy = &appsv1.Deployment{
 							ProbeHandler: corev1.ProbeHandler{
 								HTTPGet: &corev1.HTTPGetAction{
 									Path: "/api/health",
-									Port: intstr.FromInt(grafanaPort),
+									Port: intstr.FromInt(GrafanaPort),
 								},
 							},
 							TimeoutSeconds: int32(30),
 						},
 						Ports: []corev1.ContainerPort{
 							{
-								ContainerPort: int32(grafanaPort),
-								Name:          "grafana",
+								ContainerPort: int32(GrafanaPort),
+								Name:          Graf.Name,
 								Protocol:      corev1.ProtocolTCP,
 							},
 						},
@@ -265,7 +263,7 @@ var GrafanaDeploy = &appsv1.Deployment{
 							ProbeHandler: corev1.ProbeHandler{
 								HTTPGet: &corev1.HTTPGetAction{
 									Path: "/api/health",
-									Port: intstr.FromInt(grafanaPort),
+									Port: intstr.FromInt(GrafanaPort),
 								},
 							},
 						},
@@ -352,21 +350,34 @@ var GrafanaDeploy = &appsv1.Deployment{
 	},
 }
 
-var GrafanaSVC = &corev1.Service{
-	TypeMeta:   ku.TypeServiceV1,
+var GrafanaSVC = Graf.Service(80, GrafanaPort, GrafanaPortName)
+
+// GrafanaSVC = &corev1.Service{
+// 	TypeMeta:   ku.TypeServiceV1,
+// 	ObjectMeta: Graf.ObjectMeta(),
+// 	Spec: corev1.ServiceSpec{
+// 		Ports: []corev1.ServicePort{
+// 			{
+// 				Name:       GrafanaPortName,
+// 				Port:       int32(80),
+// 				Protocol:   corev1.ProtocolTCP,
+// 				TargetPort: intstr.FromInt(GrafanaPort),
+// 			},
+// 		},
+// 		Selector: Graf.MatchLabels(),
+// 		Type:     corev1.ServiceTypeClusterIP,
+// 	},
+// }
+
+var GrafanaScrape = &v1beta1.VMServiceScrape{
 	ObjectMeta: Graf.ObjectMeta(),
-	Spec: corev1.ServiceSpec{
-		Ports: []corev1.ServicePort{
-			{
-				Name:       "service",
-				Port:       int32(80),
-				Protocol:   corev1.ProtocolTCP,
-				TargetPort: intstr.FromInt(grafanaPort),
-			},
+	Spec: v1beta1.VMServiceScrapeSpec{
+		Endpoints: []v1beta1.Endpoint{{Port: GrafanaPortName}},
+		Selector: metav1.LabelSelector{
+			MatchLabels: Graf.MatchLabels(),
 		},
-		Selector: Graf.MatchLabels(),
-		Type:     corev1.ServiceTypeClusterIP,
 	},
+	TypeMeta: TypeVMServiceScrapeV1Beta1,
 }
 
 var GrafanaCM = &corev1.ConfigMap{
@@ -1072,7 +1083,7 @@ var GrafanaOverviewDashCM = &corev1.ConfigMap{
 			Graf.Labels(),
 			map[string]string{DashboardLabel: "1"},
 		),
-		Name:      "grafana-overview",
+		Name:      Graf.Name + "-dash-overview",
 		Namespace: Graf.Namespace,
 	},
 	TypeMeta: ku.TypeConfigMapV1,

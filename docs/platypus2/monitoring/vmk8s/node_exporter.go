@@ -8,11 +8,31 @@ package vmk8s
 import (
 	"github.com/VictoriaMetrics/operator/api/victoriametrics/v1beta1"
 	"github.com/volvo-cars/lingon/pkg/kube"
+	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
+
+const (
+	NodeExportPort     = 9100
+	NodeExportPortName = "metrics"
+	NodeExportVersion  = "1.4.0"
+)
+
+var NE = &Metadata{
+	Name:      "node-exporter", // linked to the name of the JobLabel in VMServiceScrape
+	Namespace: namespace,
+	Instance:  "node-exporter-" + namespace,
+	Component: "metrics-export",
+	PartOf:    appName,
+	Version:   NodeExportVersion,
+	ManagedBy: "lingon",
+	Registry:  "quay.io",
+	Image:     "prometheus/node-exporter",
+	Tag:       "v" + NodeExportVersion,
+}
 
 type NodeExporter struct {
 	kube.App
@@ -36,41 +56,22 @@ func NewNodeExporter() *NodeExporter {
 	}
 }
 
+var NodeExporterSVC = NE.Service(
+	NodeExportPort,
+	NodeExportPort,
+	NodeExportPortName,
+)
+var NodeExporterSA = NE.ServiceAccount()
+
 var NodeExporterDS = &appsv1.DaemonSet{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/component":  "metrics",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "prometheus-node-exporter",
-			"app.kubernetes.io/part-of":    "prometheus-node-exporter",
-			"app.kubernetes.io/version":    "1.4.0",
-			"helm.sh/chart":                "prometheus-node-exporter-4.7.1",
-			"jobLabel":                     "node-exporter",
-		},
-		Name:      "vmk8s-prometheus-node-exporter",
-		Namespace: "monitoring",
-	},
+	TypeMeta:   ku.TypeDaemonSetV1,
+	ObjectMeta: NE.ObjectMeta(),
 	Spec: appsv1.DaemonSetSpec{
-		Selector: &metav1.LabelSelector{
-			MatchLabels: map[string]string{
-				"app.kubernetes.io/instance": "vmk8s",
-				"app.kubernetes.io/name":     "prometheus-node-exporter",
-			},
-		},
+		Selector: &metav1.LabelSelector{MatchLabels: NE.MatchLabels()},
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
 				Annotations: map[string]string{"cluster-autoscaler.kubernetes.io/safe-to-evict": "true"},
-				Labels: map[string]string{
-					"app.kubernetes.io/component":  "metrics",
-					"app.kubernetes.io/instance":   "vmk8s",
-					"app.kubernetes.io/managed-by": "Helm",
-					"app.kubernetes.io/name":       "prometheus-node-exporter",
-					"app.kubernetes.io/part-of":    "prometheus-node-exporter",
-					"app.kubernetes.io/version":    "1.4.0",
-					"helm.sh/chart":                "prometheus-node-exporter-4.7.1",
-					"jobLabel":                     "node-exporter",
-				},
+				Labels:      NE.Labels(),
 			},
 			Spec: corev1.PodSpec{
 				Containers: []corev1.Container{
@@ -79,51 +80,28 @@ var NodeExporterDS = &appsv1.DaemonSet{
 							"--path.procfs=/host/proc",
 							"--path.sysfs=/host/sys",
 							"--path.rootfs=/host/root",
-							"--web.listen-address=[$(HOST_IP)]:9100",
+							"--web.listen-address=[$(HOST_IP)]:" + d(NodeExportPort),
 							"--collector.filesystem.ignored-mount-points=^/(dev|proc|sys|var/lib/docker/.+|var/lib/kubelet/.+)($|/)",
 							"--collector.filesystem.ignored-fs-types=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs)$",
 						},
 						Env: []corev1.EnvVar{
-							{
-								Name:  "HOST_IP",
-								Value: "0.0.0.0",
-							},
+							{Name: "HOST_IP", Value: "0.0.0.0"},
 						},
-						Image:           "quay.io/prometheus/node-exporter:v1.4.0",
+						Image:           NE.ContainerURL(),
 						ImagePullPolicy: corev1.PullIfNotPresent,
 						LivenessProbe: &corev1.Probe{
-							FailureThreshold: int32(3),
-							PeriodSeconds:    int32(10),
-							ProbeHandler: corev1.ProbeHandler{
-								HTTPGet: &corev1.HTTPGetAction{
-									Path:   "/",
-									Port:   intstr.IntOrString{IntVal: int32(9100)},
-									Scheme: corev1.URIScheme("HTTP"),
-								},
-							},
-							SuccessThreshold: int32(1),
-							TimeoutSeconds:   int32(1),
+							ProbeHandler: ku.ProbeHTTP("/", NodeExportPort),
 						},
-						Name: "node-exporter",
+						Name: NE.Name,
 						Ports: []corev1.ContainerPort{
 							{
-								ContainerPort: int32(9100),
-								Name:          "metrics",
+								ContainerPort: int32(NodeExportPort),
+								Name:          NodeExportPortName,
 								Protocol:      corev1.ProtocolTCP,
 							},
 						},
 						ReadinessProbe: &corev1.Probe{
-							FailureThreshold: int32(3),
-							PeriodSeconds:    int32(10),
-							ProbeHandler: corev1.ProbeHandler{
-								HTTPGet: &corev1.HTTPGetAction{
-									Path:   "/",
-									Port:   intstr.IntOrString{IntVal: int32(9100)},
-									Scheme: corev1.URIScheme("HTTP"),
-								},
-							},
-							SuccessThreshold: int32(1),
-							TimeoutSeconds:   int32(1),
+							ProbeHandler: ku.ProbeHTTP("/", NodeExportPort),
 						},
 						VolumeMounts: []corev1.VolumeMount{
 							{
@@ -136,7 +114,7 @@ var NodeExporterDS = &appsv1.DaemonSet{
 								ReadOnly:  true,
 							}, {
 								MountPath:        "/host/root",
-								MountPropagation: P(corev1.MountPropagationMode("HostToContainer")),
+								MountPropagation: P(corev1.MountPropagationHostToContainer),
 								Name:             "root",
 								ReadOnly:         true,
 							},
@@ -151,11 +129,11 @@ var NodeExporterDS = &appsv1.DaemonSet{
 					RunAsNonRoot: P(true),
 					RunAsUser:    P(int64(65534)),
 				},
-				ServiceAccountName: "vmk8s-prometheus-node-exporter",
+				ServiceAccountName: NodeExporterSA.Name,
 				Tolerations: []corev1.Toleration{
 					{
-						Effect:   corev1.TaintEffect("NoSchedule"),
-						Operator: corev1.TolerationOperator("Exists"),
+						Effect:   corev1.TaintEffectNoSchedule,
+						Operator: corev1.TolerationOpExists,
 					},
 				},
 				Volumes: []corev1.Volume{
@@ -173,86 +151,17 @@ var NodeExporterDS = &appsv1.DaemonSet{
 			},
 		},
 		UpdateStrategy: appsv1.DaemonSetUpdateStrategy{
-			RollingUpdate: &appsv1.RollingUpdateDaemonSet{MaxUnavailable: &intstr.IntOrString{IntVal: int32(1)}},
-			Type:          appsv1.DaemonSetUpdateStrategyType("RollingUpdate"),
-		},
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "apps/v1",
-		Kind:       "DaemonSet",
-	},
-}
-
-var NodeExporterSVC = &corev1.Service{
-	ObjectMeta: metav1.ObjectMeta{
-		Annotations: map[string]string{"prometheus.io/scrape": "true"},
-		Labels: map[string]string{
-			"app.kubernetes.io/component":  "metrics",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "prometheus-node-exporter",
-			"app.kubernetes.io/part-of":    "prometheus-node-exporter",
-			"app.kubernetes.io/version":    "1.4.0",
-			"helm.sh/chart":                "prometheus-node-exporter-4.7.1",
-			"jobLabel":                     "node-exporter",
-		},
-		Name:      "vmk8s-prometheus-node-exporter",
-		Namespace: "monitoring",
-	},
-	Spec: corev1.ServiceSpec{
-		Ports: []corev1.ServicePort{
-			{
-				Name:       "metrics",
-				Port:       int32(9100),
-				Protocol:   corev1.ProtocolTCP,
-				TargetPort: intstr.IntOrString{IntVal: int32(9100)},
+			RollingUpdate: &appsv1.RollingUpdateDaemonSet{
+				MaxUnavailable: P(intstr.FromInt(1)),
 			},
+			Type: appsv1.RollingUpdateDaemonSetStrategyType,
 		},
-		Selector: map[string]string{
-			"app.kubernetes.io/instance": "vmk8s",
-			"app.kubernetes.io/name":     "prometheus-node-exporter",
-		},
-		Type: corev1.ServiceType("ClusterIP"),
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "Service",
-	},
-}
-
-var NodeExporterSA = &corev1.ServiceAccount{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/component":  "metrics",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "prometheus-node-exporter",
-			"app.kubernetes.io/part-of":    "prometheus-node-exporter",
-			"app.kubernetes.io/version":    "1.4.0",
-			"helm.sh/chart":                "prometheus-node-exporter-4.7.1",
-			"jobLabel":                     "node-exporter",
-		},
-		Name:      "vmk8s-prometheus-node-exporter",
-		Namespace: "monitoring",
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "ServiceAccount",
 	},
 }
 
 var NodeExporterScrape = &v1beta1.VMServiceScrape{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-node-exporter",
-		Namespace: "monitoring",
-	},
+	TypeMeta:   TypeVMServiceScrapeV1Beta1,
+	ObjectMeta: NE.ObjectMeta(),
 	Spec: v1beta1.VMServiceScrapeSpec{
 		Endpoints: []v1beta1.Endpoint{
 			{
@@ -264,31 +173,18 @@ var NodeExporterScrape = &v1beta1.VMServiceScrape{
 						UnderScoreSourceLabels: []string{"mountpoint"},
 					},
 				},
-				Port: "metrics",
+				Port: NodeExportPortName,
 			},
 		},
-		JobLabel: "jobLabel",
-		Selector: metav1.LabelSelector{MatchLabels: map[string]string{"app.kubernetes.io/name": "prometheus-node-exporter"}},
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "operator.victoriametrics.com/v1beta1",
-		Kind:       "VMServiceScrape",
+		// JobLabel is linked to [ku.AppLabelName] which is defined by [NE.Name]
+		JobLabel: ku.AppLabelName,
+		Selector: metav1.LabelSelector{MatchLabels: NE.MatchLabels()},
 	},
 }
 
 var NodeExporterRules = &v1beta1.VMRule{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-node-exporter.rules",
-		Namespace: "monitoring",
-	},
+	TypeMeta:   TypeVMRuleV1Beta1,
+	ObjectMeta: NE.ObjectMetaNameSuffix("rules"),
 	Spec: v1beta1.VMRuleSpec{
 		Groups: []v1beta1.RuleGroup{
 			{
@@ -296,109 +192,95 @@ var NodeExporterRules = &v1beta1.VMRule{
 				Rules: []v1beta1.Rule{
 					{
 						Expr: `
-								count without (cpu, mode) (
-								  node_cpu_seconds_total{job="node-exporter",mode="idle"}
-								)
-								`,
+count without (cpu, mode) (
+  node_cpu_seconds_total{job="node-exporter",mode="idle"}
+)
+`,
 						Record: "instance:node_num_cpu:sum",
 					}, {
 						Expr: `
-								1 - avg without (cpu) (
-								  sum without (mode) (rate(node_cpu_seconds_total{job="node-exporter", mode=~"idle|iowait|steal"}[5m]))
-								)
-								`,
+1 - avg without (cpu) (
+  sum without (mode) (rate(node_cpu_seconds_total{job="node-exporter", mode=~"idle|iowait|steal"}[5m]))
+)
+`,
 						Record: "instance:node_cpu_utilisation:rate5m",
 					}, {
 						Expr: `
-								(
-								  node_load1{job="node-exporter"}
-								/
-								  instance:node_num_cpu:sum{job="node-exporter"}
-								)
-								`,
+(
+  node_load1{job="node-exporter"}
+/
+  instance:node_num_cpu:sum{job="node-exporter"}
+)
+`,
 						Record: "instance:node_load1_per_cpu:ratio",
 					}, {
 						Expr: `
-								1 - (
-								  (
-									node_memory_MemAvailable_bytes{job="node-exporter"}
-									or
-									(
-									  node_memory_Buffers_bytes{job="node-exporter"}
-									  +
-									  node_memory_Cached_bytes{job="node-exporter"}
-									  +
-									  node_memory_MemFree_bytes{job="node-exporter"}
-									  +
-									  node_memory_Slab_bytes{job="node-exporter"}
-									)
-								  )
-								/
-								  node_memory_MemTotal_bytes{job="node-exporter"}
-								)
-								`,
+1 - (
+  (
+    node_memory_MemAvailable_bytes{job="node-exporter"}
+    or
+    (
+      node_memory_Buffers_bytes{job="node-exporter"}
+      +
+      node_memory_Cached_bytes{job="node-exporter"}
+      +
+      node_memory_MemFree_bytes{job="node-exporter"}
+      +
+      node_memory_Slab_bytes{job="node-exporter"}
+    )
+  )
+/
+  node_memory_MemTotal_bytes{job="node-exporter"}
+)
+`,
 						Record: "instance:node_memory_utilisation:ratio",
 					}, {
-						Expr:   "rate(node_vmstat_pgmajfault{job=\"node-exporter\"}[5m])",
+						Expr:   `rate(node_vmstat_pgmajfault{job="node-exporter"}[5m])`,
 						Record: "instance:node_vmstat_pgmajfault:rate5m",
 					}, {
-						Expr:   "rate(node_disk_io_time_seconds_total{job=\"node-exporter\", device=~\"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)\"}[5m])",
+						Expr:   `rate(node_disk_io_time_seconds_total{job="node-exporter", device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)"}[5m])`,
 						Record: "instance_device:node_disk_io_time_seconds:rate5m",
 					}, {
-						Expr:   "rate(node_disk_io_time_weighted_seconds_total{job=\"node-exporter\", device=~\"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)\"}[5m])",
+						Expr:   `rate(node_disk_io_time_weighted_seconds_total{job="node-exporter", device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)"}[5m])`,
 						Record: "instance_device:node_disk_io_time_weighted_seconds:rate5m",
 					}, {
 						Expr: `
-								sum without (device) (
-								  rate(node_network_receive_bytes_total{job="node-exporter", device!="lo"}[5m])
-								)
-								`,
+sum without (device) (
+  rate(node_network_receive_bytes_total{job="node-exporter", device!="lo"}[5m])
+)
+`,
 						Record: "instance:node_network_receive_bytes_excluding_lo:rate5m",
 					}, {
 						Expr: `
-								sum without (device) (
-								  rate(node_network_transmit_bytes_total{job="node-exporter", device!="lo"}[5m])
-								)
-								`,
+sum without (device) (
+  rate(node_network_transmit_bytes_total{job="node-exporter", device!="lo"}[5m])
+)
+`,
 						Record: "instance:node_network_transmit_bytes_excluding_lo:rate5m",
 					}, {
 						Expr: `
-								sum without (device) (
-								  rate(node_network_receive_drop_total{job="node-exporter", device!="lo"}[5m])
-								)
-								`,
+sum without (device) (
+  rate(node_network_receive_drop_total{job="node-exporter", device!="lo"}[5m])
+)
+`,
 						Record: "instance:node_network_receive_drop_excluding_lo:rate5m",
 					}, {
 						Expr: `
-								sum without (device) (
-								  rate(node_network_transmit_drop_total{job="node-exporter", device!="lo"}[5m])
-								)
-								`,
+sum without (device) (
+  rate(node_network_transmit_drop_total{job="node-exporter", device!="lo"}[5m])
+)
+`,
 						Record: "instance:node_network_transmit_drop_excluding_lo:rate5m",
 					},
 				},
 			},
 		},
 	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "operator.victoriametrics.com/v1beta1",
-		Kind:       "VMRule",
-	},
 }
 
 var NodeExporterAlertRules = &v1beta1.VMRule{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-node-exporter",
-		Namespace: "monitoring",
-	},
+	TypeMeta:   TypeVMRuleV1Beta1,
+	ObjectMeta: NE.ObjectMeta(),
 	Spec: v1beta1.VMRuleSpec{
 		Groups: []v1beta1.RuleGroup{
 			{
@@ -407,143 +289,143 @@ var NodeExporterAlertRules = &v1beta1.VMRule{
 					{
 						Alert: "NodeFilesystemSpaceFillingUp",
 						Annotations: map[string]string{
-							"description": "Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf \"%.2f\" $value }}% available space left and is filling up.",
+							"description": `Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf "%.2f" $value }}% available space left and is filling up.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/node/nodefilesystemspacefillingup",
 							"summary":     "Filesystem is predicted to run out of space within the next 24 hours.",
 						},
 						Expr: `
-								(
-								  node_filesystem_avail_bytes{job="node-exporter",fstype!="",mountpoint!=""} / node_filesystem_size_bytes{job="node-exporter",fstype!="",mountpoint!=""} * 100 < 15
-								and
-								  predict_linear(node_filesystem_avail_bytes{job="node-exporter",fstype!="",mountpoint!=""}[6h], 24*60*60) < 0
-								and
-								  node_filesystem_readonly{job="node-exporter",fstype!="",mountpoint!=""} == 0
-								)
-								`,
+(
+  node_filesystem_avail_bytes{job="node-exporter",fstype!="",mountpoint!=""} / node_filesystem_size_bytes{job="node-exporter",fstype!="",mountpoint!=""} * 100 < 15
+and
+  predict_linear(node_filesystem_avail_bytes{job="node-exporter",fstype!="",mountpoint!=""}[6h], 24*60*60) < 0
+and
+  node_filesystem_readonly{job="node-exporter",fstype!="",mountpoint!=""} == 0
+)
+`,
 						For:    "1h",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
 						Alert: "NodeFilesystemSpaceFillingUp",
 						Annotations: map[string]string{
-							"description": "Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf \"%.2f\" $value }}% available space left and is filling up fast.",
+							"description": `Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf "%.2f" $value }}% available space left and is filling up fast.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/node/nodefilesystemspacefillingup",
 							"summary":     "Filesystem is predicted to run out of space within the next 4 hours.",
 						},
 						Expr: `
-								(
-								  node_filesystem_avail_bytes{job="node-exporter",fstype!="",mountpoint!=""} / node_filesystem_size_bytes{job="node-exporter",fstype!="",mountpoint!=""} * 100 < 10
-								and
-								  predict_linear(node_filesystem_avail_bytes{job="node-exporter",fstype!="",mountpoint!=""}[6h], 4*60*60) < 0
-								and
-								  node_filesystem_readonly{job="node-exporter",fstype!="",mountpoint!=""} == 0
-								)
-								`,
+(
+  node_filesystem_avail_bytes{job="node-exporter",fstype!="",mountpoint!=""} / node_filesystem_size_bytes{job="node-exporter",fstype!="",mountpoint!=""} * 100 < 10
+and
+  predict_linear(node_filesystem_avail_bytes{job="node-exporter",fstype!="",mountpoint!=""}[6h], 4*60*60) < 0
+and
+  node_filesystem_readonly{job="node-exporter",fstype!="",mountpoint!=""} == 0
+)
+`,
 						For:    "1h",
 						Labels: map[string]string{"severity": "critical"},
 					}, {
 						Alert: "NodeFilesystemAlmostOutOfSpace",
 						Annotations: map[string]string{
-							"description": "Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf \"%.2f\" $value }}% available space left.",
+							"description": `Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf "%.2f" $value }}% available space left.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/node/nodefilesystemalmostoutofspace",
 							"summary":     "Filesystem has less than 5% space left.",
 						},
 						Expr: `
-								(
-								  node_filesystem_avail_bytes{job="node-exporter",fstype!="",mountpoint!=""} / node_filesystem_size_bytes{job="node-exporter",fstype!="",mountpoint!=""} * 100 < 5
-								and
-								  node_filesystem_readonly{job="node-exporter",fstype!="",mountpoint!=""} == 0
-								)
-								`,
+(
+  node_filesystem_avail_bytes{job="node-exporter",fstype!="",mountpoint!=""} / node_filesystem_size_bytes{job="node-exporter",fstype!="",mountpoint!=""} * 100 < 5
+and
+  node_filesystem_readonly{job="node-exporter",fstype!="",mountpoint!=""} == 0
+)
+`,
 						For:    "30m",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
 						Alert: "NodeFilesystemAlmostOutOfSpace",
 						Annotations: map[string]string{
-							"description": "Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf \"%.2f\" $value }}% available space left.",
+							"description": `Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf "%.2f" $value }}% available space left.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/node/nodefilesystemalmostoutofspace",
 							"summary":     "Filesystem has less than 3% space left.",
 						},
 						Expr: `
-								(
-								  node_filesystem_avail_bytes{job="node-exporter",fstype!="",mountpoint!=""} / node_filesystem_size_bytes{job="node-exporter",fstype!="",mountpoint!=""} * 100 < 3
-								and
-								  node_filesystem_readonly{job="node-exporter",fstype!="",mountpoint!=""} == 0
-								)
-								`,
+(
+  node_filesystem_avail_bytes{job="node-exporter",fstype!="",mountpoint!=""} / node_filesystem_size_bytes{job="node-exporter",fstype!="",mountpoint!=""} * 100 < 3
+and
+  node_filesystem_readonly{job="node-exporter",fstype!="",mountpoint!=""} == 0
+)
+`,
 						For:    "30m",
 						Labels: map[string]string{"severity": "critical"},
 					}, {
 						Alert: "NodeFilesystemFilesFillingUp",
 						Annotations: map[string]string{
-							"description": "Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf \"%.2f\" $value }}% available inodes left and is filling up.",
+							"description": `Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf "%.2f" $value }}% available inodes left and is filling up.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/node/nodefilesystemfilesfillingup",
 							"summary":     "Filesystem is predicted to run out of inodes within the next 24 hours.",
 						},
 						Expr: `
-								(
-								  node_filesystem_files_free{job="node-exporter",fstype!="",mountpoint!=""} / node_filesystem_files{job="node-exporter",fstype!="",mountpoint!=""} * 100 < 40
-								and
-								  predict_linear(node_filesystem_files_free{job="node-exporter",fstype!="",mountpoint!=""}[6h], 24*60*60) < 0
-								and
-								  node_filesystem_readonly{job="node-exporter",fstype!="",mountpoint!=""} == 0
-								)
-								`,
+(
+  node_filesystem_files_free{job="node-exporter",fstype!="",mountpoint!=""} / node_filesystem_files{job="node-exporter",fstype!="",mountpoint!=""} * 100 < 40
+and
+  predict_linear(node_filesystem_files_free{job="node-exporter",fstype!="",mountpoint!=""}[6h], 24*60*60) < 0
+and
+  node_filesystem_readonly{job="node-exporter",fstype!="",mountpoint!=""} == 0
+)
+`,
 						For:    "1h",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
 						Alert: "NodeFilesystemFilesFillingUp",
 						Annotations: map[string]string{
-							"description": "Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf \"%.2f\" $value }}% available inodes left and is filling up fast.",
+							"description": `Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf "%.2f" $value }}% available inodes left and is filling up fast.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/node/nodefilesystemfilesfillingup",
 							"summary":     "Filesystem is predicted to run out of inodes within the next 4 hours.",
 						},
 						Expr: `
-								(
-								  node_filesystem_files_free{job="node-exporter",fstype!="",mountpoint!=""} / node_filesystem_files{job="node-exporter",fstype!="",mountpoint!=""} * 100 < 20
-								and
-								  predict_linear(node_filesystem_files_free{job="node-exporter",fstype!="",mountpoint!=""}[6h], 4*60*60) < 0
-								and
-								  node_filesystem_readonly{job="node-exporter",fstype!="",mountpoint!=""} == 0
-								)
-								`,
+(
+  node_filesystem_files_free{job="node-exporter",fstype!="",mountpoint!=""} / node_filesystem_files{job="node-exporter",fstype!="",mountpoint!=""} * 100 < 20
+and
+  predict_linear(node_filesystem_files_free{job="node-exporter",fstype!="",mountpoint!=""}[6h], 4*60*60) < 0
+and
+  node_filesystem_readonly{job="node-exporter",fstype!="",mountpoint!=""} == 0
+)
+`,
 						For:    "1h",
 						Labels: map[string]string{"severity": "critical"},
 					}, {
 						Alert: "NodeFilesystemAlmostOutOfFiles",
 						Annotations: map[string]string{
-							"description": "Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf \"%.2f\" $value }}% available inodes left.",
+							"description": `Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf "%.2f" $value }}% available inodes left.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/node/nodefilesystemalmostoutoffiles",
 							"summary":     "Filesystem has less than 5% inodes left.",
 						},
 						Expr: `
-								(
-								  node_filesystem_files_free{job="node-exporter",fstype!="",mountpoint!=""} / node_filesystem_files{job="node-exporter",fstype!="",mountpoint!=""} * 100 < 5
-								and
-								  node_filesystem_readonly{job="node-exporter",fstype!="",mountpoint!=""} == 0
-								)
-								`,
+(
+  node_filesystem_files_free{job="node-exporter",fstype!="",mountpoint!=""} / node_filesystem_files{job="node-exporter",fstype!="",mountpoint!=""} * 100 < 5
+and
+  node_filesystem_readonly{job="node-exporter",fstype!="",mountpoint!=""} == 0
+)
+`,
 						For:    "1h",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
 						Alert: "NodeFilesystemAlmostOutOfFiles",
 						Annotations: map[string]string{
-							"description": "Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf \"%.2f\" $value }}% available inodes left.",
+							"description": `Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf "%.2f" $value }}% available inodes left.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/node/nodefilesystemalmostoutoffiles",
 							"summary":     "Filesystem has less than 3% inodes left.",
 						},
 						Expr: `
-								(
-								  node_filesystem_files_free{job="node-exporter",fstype!="",mountpoint!=""} / node_filesystem_files{job="node-exporter",fstype!="",mountpoint!=""} * 100 < 3
-								and
-								  node_filesystem_readonly{job="node-exporter",fstype!="",mountpoint!=""} == 0
-								)
-								`,
+(
+  node_filesystem_files_free{job="node-exporter",fstype!="",mountpoint!=""} / node_filesystem_files{job="node-exporter",fstype!="",mountpoint!=""} * 100 < 3
+and
+  node_filesystem_readonly{job="node-exporter",fstype!="",mountpoint!=""} == 0
+)
+`,
 						For:    "1h",
 						Labels: map[string]string{"severity": "critical"},
 					}, {
 						Alert: "NodeNetworkReceiveErrs",
 						Annotations: map[string]string{
-							"description": "{{ $labels.instance }} interface {{ $labels.device }} has encountered {{ printf \"%.0f\" $value }} receive errors in the last two minutes.",
+							"description": `{{ $labels.instance }} interface {{ $labels.device }} has encountered {{ printf "%.0f" $value }} receive errors in the last two minutes.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/node/nodenetworkreceiveerrs",
 							"summary":     "Network interface is reporting many receive errors.",
 						},
@@ -553,7 +435,7 @@ var NodeExporterAlertRules = &v1beta1.VMRule{
 					}, {
 						Alert: "NodeNetworkTransmitErrs",
 						Annotations: map[string]string{
-							"description": "{{ $labels.instance }} interface {{ $labels.device }} has encountered {{ printf \"%.0f\" $value }} transmit errors in the last two minutes.",
+							"description": `{{ $labels.instance }} interface {{ $labels.device }} has encountered {{ printf "%.0f" $value }} transmit errors in the last two minutes.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/node/nodenetworktransmiterrs",
 							"summary":     "Network interface is reporting many transmit errors.",
 						},
@@ -576,7 +458,7 @@ var NodeExporterAlertRules = &v1beta1.VMRule{
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/node/nodetextfilecollectorscrapeerror",
 							"summary":     "Node Exporter text file collector failed to scrape.",
 						},
-						Expr:   "node_textfile_scrape_error{job=\"node-exporter\"} == 1",
+						Expr:   `node_textfile_scrape_error{job="node-exporter"} == 1`,
 						Labels: map[string]string{"severity": "warning"},
 					}, {
 						Alert: "NodeClockSkewDetected",
@@ -586,18 +468,18 @@ var NodeExporterAlertRules = &v1beta1.VMRule{
 							"summary":     "Clock skew detected.",
 						},
 						Expr: `
-								(
-								  node_timex_offset_seconds{job="node-exporter"} > 0.05
-								and
-								  deriv(node_timex_offset_seconds{job="node-exporter"}[5m]) >= 0
-								)
-								or
-								(
-								  node_timex_offset_seconds{job="node-exporter"} < -0.05
-								and
-								  deriv(node_timex_offset_seconds{job="node-exporter"}[5m]) <= 0
-								)
-								`,
+(
+  node_timex_offset_seconds{job="node-exporter"} > 0.05
+and
+  deriv(node_timex_offset_seconds{job="node-exporter"}[5m]) >= 0
+)
+or
+(
+  node_timex_offset_seconds{job="node-exporter"} < -0.05
+and
+  deriv(node_timex_offset_seconds{job="node-exporter"}[5m]) <= 0
+)
+`,
 						For:    "10m",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
@@ -608,10 +490,10 @@ var NodeExporterAlertRules = &v1beta1.VMRule{
 							"summary":     "Clock not synchronising.",
 						},
 						Expr: `
-								min_over_time(node_timex_sync_status{job="node-exporter"}[5m]) == 0
-								and
-								node_timex_maxerror_seconds{job="node-exporter"} >= 16
-								`,
+min_over_time(node_timex_sync_status{job="node-exporter"}[5m]) == 0
+and
+node_timex_maxerror_seconds{job="node-exporter"} >= 16
+`,
 						For:    "10m",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
@@ -621,7 +503,7 @@ var NodeExporterAlertRules = &v1beta1.VMRule{
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/node/noderaiddegraded",
 							"summary":     "RAID Array is degraded",
 						},
-						Expr:   "node_md_disks_required{job=\"node-exporter\",device=~\"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)\"} - ignoring (state) (node_md_disks{state=\"active\",job=\"node-exporter\",device=~\"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)\"}) > 0",
+						Expr:   `node_md_disks_required{job="node-exporter",device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)"} - ignoring (state) (node_md_disks{state="active",job="node-exporter",device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)"}) > 0`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "critical"},
 					}, {
@@ -631,43 +513,39 @@ var NodeExporterAlertRules = &v1beta1.VMRule{
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/node/noderaiddiskfailure",
 							"summary":     "Failed device in RAID array",
 						},
-						Expr:   "node_md_disks{state=\"failed\",job=\"node-exporter\",device=~\"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)\"} > 0",
+						Expr:   `node_md_disks{state="failed",job="node-exporter",device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)"} > 0`,
 						Labels: map[string]string{"severity": "warning"},
 					}, {
 						Alert: "NodeFileDescriptorLimit",
 						Annotations: map[string]string{
-							"description": "File descriptors limit at {{ $labels.instance }} is currently at {{ printf \"%.2f\" $value }}%.",
+							"description": `File descriptors limit at {{ $labels.instance }} is currently at {{ printf "%.2f" $value }}%.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/node/nodefiledescriptorlimit",
 							"summary":     "Kernel is predicted to exhaust file descriptors limit soon.",
 						},
 						Expr: `
-								(
-								  node_filefd_allocated{job="node-exporter"} * 100 / node_filefd_maximum{job="node-exporter"} > 70
-								)
-								`,
+(
+  node_filefd_allocated{job="node-exporter"} * 100 / node_filefd_maximum{job="node-exporter"} > 70
+)
+`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
 						Alert: "NodeFileDescriptorLimit",
 						Annotations: map[string]string{
-							"description": "File descriptors limit at {{ $labels.instance }} is currently at {{ printf \"%.2f\" $value }}%.",
+							"description": `File descriptors limit at {{ $labels.instance }} is currently at {{ printf "%.2f" $value }}%.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/node/nodefiledescriptorlimit",
 							"summary":     "Kernel is predicted to exhaust file descriptors limit soon.",
 						},
 						Expr: `
-								(
-								  node_filefd_allocated{job="node-exporter"} * 100 / node_filefd_maximum{job="node-exporter"} > 90
-								)
-								`,
+(
+  node_filefd_allocated{job="node-exporter"} * 100 / node_filefd_maximum{job="node-exporter"} > 90
+)
+`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "critical"},
 					},
 				},
 			},
 		},
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "operator.victoriametrics.com/v1beta1",
-		Kind:       "VMRule",
 	},
 }

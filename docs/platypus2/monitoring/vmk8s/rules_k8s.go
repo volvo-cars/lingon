@@ -8,6 +8,7 @@ package vmk8s
 import (
 	"github.com/VictoriaMetrics/operator/api/victoriametrics/v1beta1"
 	"github.com/volvo-cars/lingon/pkg/kube"
+	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -45,18 +46,21 @@ func NewK8SRules() *K8SRules {
 	}
 }
 
+var RulesLabels = map[string]string{
+	"app":                Single.Name,
+	ku.AppLabelName:      Single.Name,
+	ku.AppLabelInstance:  Single.Instance,
+	ku.AppLabelComponent: "rules",
+	ku.AppLabelPartOf:    Single.PartOf,
+	ku.AppLabelVersion:   Single.Version,
+	ku.AppLabelManagedBy: "lingon",
+}
+
 var K8SGeneralAlertRules = &v1beta1.VMRule{
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-general.rules",
-		Namespace: "monitoring",
+		Labels:    RulesLabels,
+		Name:      "victoria-metrics-general.rules",
+		Namespace: Single.Namespace,
 	},
 	Spec: v1beta1.VMRuleSpec{
 		Groups: []v1beta1.RuleGroup{
@@ -66,7 +70,7 @@ var K8SGeneralAlertRules = &v1beta1.VMRule{
 					{
 						Alert: "TargetDown",
 						Annotations: map[string]string{
-							"description": "{{ printf \"%.4g\" $value }}% of the {{ $labels.job }}/{{ $labels.service }} targets in {{ $labels.namespace }} namespace are down.",
+							"description": `{{ printf "%.4g" $value }}% of the {{ $labels.job }}/{{ $labels.service }} targets in {{ $labels.namespace }} namespace are down.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/general/targetdown",
 							"summary":     "One or more targets are unreachable.",
 						},
@@ -76,7 +80,7 @@ var K8SGeneralAlertRules = &v1beta1.VMRule{
 					}, {
 						Alert: "Watchdog",
 						Annotations: map[string]string{
-							"description": "This is an alert meant to ensure that the entire alerting pipeline is functional. This alert is always firing, therefore it should always be firing in Alertmanager and always fire against a receiver. There are integrations with various notification mechanisms that send a notification when this alert is not firing. For example the \"DeadMansSnitch\" integration in PagerDuty. ",
+							"description": `This is an alert meant to ensure that the entire alerting pipeline is functional. This alert is always firing, therefore it should always be firing in Alertmanager and always fire against a receiver. There are integrations with various notification mechanisms that send a notification when this alert is not firing. For example the "DeadMansSnitch" integration in PagerDuty. `,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/general/watchdog",
 							"summary":     "An alert that should always be firing to certify that Alertmanager is working properly.",
 						},
@@ -85,11 +89,11 @@ var K8SGeneralAlertRules = &v1beta1.VMRule{
 					}, {
 						Alert: "InfoInhibitor",
 						Annotations: map[string]string{
-							"description": "This is an alert that is used to inhibit info alerts. By themselves, the info-level alerts are sometimes very noisy, but they are relevant when combined with other alerts. This alert fires whenever there's a severity=\"info\" alert, and stops firing when another alert with a severity of 'warning' or 'critical' starts firing on the same namespace. This alert should be routed to a null receiver and configured to inhibit alerts with severity=\"info\". ",
+							"description": `This is an alert that is used to inhibit info alerts. By themselves, the info-level alerts are sometimes very noisy, but they are relevant when combined with other alerts. This alert fires whenever there's a severity="info" alert, and stops firing when another alert with a severity of 'warning' or 'critical' starts firing on the same namespace. This alert should be routed to a null receiver and configured to inhibit alerts with severity="info". `,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/general/infoinhibitor",
 							"summary":     "Info-level alert inhibition.",
 						},
-						Expr:   "ALERTS{severity = \"info\"} == 1 unless on(namespace) ALERTS{alertname != \"InfoInhibitor\", severity =~ \"warning|critical\", alertstate=\"firing\"} == 1",
+						Expr:   `ALERTS{severity = "info"} == 1 unless on(namespace) ALERTS{alertname != "InfoInhibitor", severity =~ "warning|critical", alertstate="firing"} == 1`,
 						Labels: map[string]string{"severity": "none"},
 					},
 				},
@@ -104,16 +108,9 @@ var K8SGeneralAlertRules = &v1beta1.VMRule{
 
 var K8SRecordingRules = &v1beta1.VMRule{
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-k8s.rules",
-		Namespace: "monitoring",
+		Labels:    RulesLabels,
+		Name:      "victoria-metrics-k8s.rules",
+		Namespace: Single.Namespace,
 	},
 	Spec: v1beta1.VMRuleSpec{
 		Groups: []v1beta1.RuleGroup{
@@ -122,178 +119,178 @@ var K8SRecordingRules = &v1beta1.VMRule{
 				Rules: []v1beta1.Rule{
 					{
 						Expr: `
-								sum by (cluster, namespace, pod, container) (
-								  irate(container_cpu_usage_seconds_total{job="kubelet", metrics_path="/metrics/cadvisor", image!=""}[5m])
-								) * on (cluster, namespace, pod) group_left(node) topk by (cluster, namespace, pod) (
-								  1, max by(cluster, namespace, pod, node) (kube_pod_info{node!=""})
-								)
-								`,
+sum by (cluster, namespace, pod, container) (
+  irate(container_cpu_usage_seconds_total{job="kubelet", metrics_path="/metrics/cadvisor", image!=""}[5m])
+) * on (cluster, namespace, pod) group_left(node) topk by (cluster, namespace, pod) (
+  1, max by(cluster, namespace, pod, node) (kube_pod_info{node!=""})
+)
+`,
 						Record: "node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate",
 					}, {
 						Expr: `
-								container_memory_working_set_bytes{job="kubelet", metrics_path="/metrics/cadvisor", image!=""}
-								* on (cluster, namespace, pod) group_left(node) topk by(cluster, namespace, pod) (1,
-								  max by(cluster, namespace, pod, node) (kube_pod_info{node!=""})
-								)
-								`,
+container_memory_working_set_bytes{job="kubelet", metrics_path="/metrics/cadvisor", image!=""}
+* on (cluster, namespace, pod) group_left(node) topk by(cluster, namespace, pod) (1,
+  max by(cluster, namespace, pod, node) (kube_pod_info{node!=""})
+)
+`,
 						Record: "node_namespace_pod_container:container_memory_working_set_bytes",
 					}, {
 						Expr: `
-								container_memory_rss{job="kubelet", metrics_path="/metrics/cadvisor", image!=""}
-								* on (cluster, namespace, pod) group_left(node) topk by(cluster, namespace, pod) (1,
-								  max by(cluster, namespace, pod, node) (kube_pod_info{node!=""})
-								)
-								`,
+container_memory_rss{job="kubelet", metrics_path="/metrics/cadvisor", image!=""}
+* on (cluster, namespace, pod) group_left(node) topk by(cluster, namespace, pod) (1,
+  max by(cluster, namespace, pod, node) (kube_pod_info{node!=""})
+)
+`,
 						Record: "node_namespace_pod_container:container_memory_rss",
 					}, {
 						Expr: `
-								container_memory_cache{job="kubelet", metrics_path="/metrics/cadvisor", image!=""}
-								* on (cluster, namespace, pod) group_left(node) topk by(cluster, namespace, pod) (1,
-								  max by(cluster, namespace, pod, node) (kube_pod_info{node!=""})
-								)
-								`,
+container_memory_cache{job="kubelet", metrics_path="/metrics/cadvisor", image!=""}
+* on (cluster, namespace, pod) group_left(node) topk by(cluster, namespace, pod) (1,
+  max by(cluster, namespace, pod, node) (kube_pod_info{node!=""})
+)
+`,
 						Record: "node_namespace_pod_container:container_memory_cache",
 					}, {
 						Expr: `
-								container_memory_swap{job="kubelet", metrics_path="/metrics/cadvisor", image!=""}
-								* on (cluster, namespace, pod) group_left(node) topk by(cluster, namespace, pod) (1,
-								  max by(cluster, namespace, pod, node) (kube_pod_info{node!=""})
-								)
-								`,
+container_memory_swap{job="kubelet", metrics_path="/metrics/cadvisor", image!=""}
+* on (cluster, namespace, pod) group_left(node) topk by(cluster, namespace, pod) (1,
+  max by(cluster, namespace, pod, node) (kube_pod_info{node!=""})
+)
+`,
 						Record: "node_namespace_pod_container:container_memory_swap",
 					}, {
 						Expr: `
-								kube_pod_container_resource_requests{resource="memory",job="kube-state-metrics"}  * on (namespace, pod, cluster)
-								group_left() max by (namespace, pod, cluster) (
-								  (kube_pod_status_phase{phase=~"Pending|Running"} == 1)
-								)
-								`,
+kube_pod_container_resource_requests{resource="memory",job="kube-state-metrics"}  * on (namespace, pod, cluster)
+group_left() max by (namespace, pod, cluster) (
+  (kube_pod_status_phase{phase=~"Pending|Running"} == 1)
+)
+`,
 						Record: "cluster:namespace:pod_memory:active:kube_pod_container_resource_requests",
 					}, {
 						Expr: `
-								sum by (namespace, cluster) (
-									sum by (namespace, pod, cluster) (
-										max by (namespace, pod, container, cluster) (
-										  kube_pod_container_resource_requests{resource="memory",job="kube-state-metrics"}
-										) * on(namespace, pod, cluster) group_left() max by (namespace, pod, cluster) (
-										  kube_pod_status_phase{phase=~"Pending|Running"} == 1
-										)
-									)
-								)
-								`,
+sum by (namespace, cluster) (
+    sum by (namespace, pod, cluster) (
+        max by (namespace, pod, container, cluster) (
+          kube_pod_container_resource_requests{resource="memory",job="kube-state-metrics"}
+        ) * on(namespace, pod, cluster) group_left() max by (namespace, pod, cluster) (
+          kube_pod_status_phase{phase=~"Pending|Running"} == 1
+        )
+    )
+)
+`,
 						Record: "namespace_memory:kube_pod_container_resource_requests:sum",
 					}, {
 						Expr: `
-								kube_pod_container_resource_requests{resource="cpu",job="kube-state-metrics"}  * on (namespace, pod, cluster)
-								group_left() max by (namespace, pod, cluster) (
-								  (kube_pod_status_phase{phase=~"Pending|Running"} == 1)
-								)
-								`,
+kube_pod_container_resource_requests{resource="cpu",job="kube-state-metrics"}  * on (namespace, pod, cluster)
+group_left() max by (namespace, pod, cluster) (
+  (kube_pod_status_phase{phase=~"Pending|Running"} == 1)
+)
+`,
 						Record: "cluster:namespace:pod_cpu:active:kube_pod_container_resource_requests",
 					}, {
 						Expr: `
-								sum by (namespace, cluster) (
-									sum by (namespace, pod, cluster) (
-										max by (namespace, pod, container, cluster) (
-										  kube_pod_container_resource_requests{resource="cpu",job="kube-state-metrics"}
-										) * on(namespace, pod, cluster) group_left() max by (namespace, pod, cluster) (
-										  kube_pod_status_phase{phase=~"Pending|Running"} == 1
-										)
-									)
-								)
-								`,
+sum by (namespace, cluster) (
+    sum by (namespace, pod, cluster) (
+        max by (namespace, pod, container, cluster) (
+          kube_pod_container_resource_requests{resource="cpu",job="kube-state-metrics"}
+        ) * on(namespace, pod, cluster) group_left() max by (namespace, pod, cluster) (
+          kube_pod_status_phase{phase=~"Pending|Running"} == 1
+        )
+    )
+)
+`,
 						Record: "namespace_cpu:kube_pod_container_resource_requests:sum",
 					}, {
 						Expr: `
-								kube_pod_container_resource_limits{resource="memory",job="kube-state-metrics"}  * on (namespace, pod, cluster)
-								group_left() max by (namespace, pod, cluster) (
-								  (kube_pod_status_phase{phase=~"Pending|Running"} == 1)
-								)
-								`,
+kube_pod_container_resource_limits{resource="memory",job="kube-state-metrics"}  * on (namespace, pod, cluster)
+group_left() max by (namespace, pod, cluster) (
+  (kube_pod_status_phase{phase=~"Pending|Running"} == 1)
+)
+`,
 						Record: "cluster:namespace:pod_memory:active:kube_pod_container_resource_limits",
 					}, {
 						Expr: `
-								sum by (namespace, cluster) (
-									sum by (namespace, pod, cluster) (
-										max by (namespace, pod, container, cluster) (
-										  kube_pod_container_resource_limits{resource="memory",job="kube-state-metrics"}
-										) * on(namespace, pod, cluster) group_left() max by (namespace, pod, cluster) (
-										  kube_pod_status_phase{phase=~"Pending|Running"} == 1
-										)
-									)
-								)
-								`,
+sum by (namespace, cluster) (
+    sum by (namespace, pod, cluster) (
+        max by (namespace, pod, container, cluster) (
+          kube_pod_container_resource_limits{resource="memory",job="kube-state-metrics"}
+        ) * on(namespace, pod, cluster) group_left() max by (namespace, pod, cluster) (
+          kube_pod_status_phase{phase=~"Pending|Running"} == 1
+        )
+    )
+)
+`,
 						Record: "namespace_memory:kube_pod_container_resource_limits:sum",
 					}, {
 						Expr: `
-								kube_pod_container_resource_limits{resource="cpu",job="kube-state-metrics"}  * on (namespace, pod, cluster)
-								group_left() max by (namespace, pod, cluster) (
-								 (kube_pod_status_phase{phase=~"Pending|Running"} == 1)
-								 )
-								`,
+kube_pod_container_resource_limits{resource="cpu",job="kube-state-metrics"}  * on (namespace, pod, cluster)
+group_left() max by (namespace, pod, cluster) (
+ (kube_pod_status_phase{phase=~"Pending|Running"} == 1)
+ )
+`,
 						Record: "cluster:namespace:pod_cpu:active:kube_pod_container_resource_limits",
 					}, {
 						Expr: `
-								sum by (namespace, cluster) (
-									sum by (namespace, pod, cluster) (
-										max by (namespace, pod, container, cluster) (
-										  kube_pod_container_resource_limits{resource="cpu",job="kube-state-metrics"}
-										) * on(namespace, pod, cluster) group_left() max by (namespace, pod, cluster) (
-										  kube_pod_status_phase{phase=~"Pending|Running"} == 1
-										)
-									)
-								)
-								`,
+sum by (namespace, cluster) (
+    sum by (namespace, pod, cluster) (
+        max by (namespace, pod, container, cluster) (
+          kube_pod_container_resource_limits{resource="cpu",job="kube-state-metrics"}
+        ) * on(namespace, pod, cluster) group_left() max by (namespace, pod, cluster) (
+          kube_pod_status_phase{phase=~"Pending|Running"} == 1
+        )
+    )
+)
+`,
 						Record: "namespace_cpu:kube_pod_container_resource_limits:sum",
 					}, {
 						Expr: `
-								max by (cluster, namespace, workload, pod) (
-								  label_replace(
-									label_replace(
-									  kube_pod_owner{job="kube-state-metrics", owner_kind="ReplicaSet"},
-									  "replicaset", "$1", "owner_name", "(.*)"
-									) * on(replicaset, namespace) group_left(owner_name) topk by(replicaset, namespace) (
-									  1, max by (replicaset, namespace, owner_name) (
-										kube_replicaset_owner{job="kube-state-metrics"}
-									  )
-									),
-									"workload", "$1", "owner_name", "(.*)"
-								  )
-								)
-								`,
+max by (cluster, namespace, workload, pod) (
+  label_replace(
+    label_replace(
+      kube_pod_owner{job="kube-state-metrics", owner_kind="ReplicaSet"},
+      "replicaset", "$1", "owner_name", "(.*)"
+    ) * on(replicaset, namespace) group_left(owner_name) topk by(replicaset, namespace) (
+      1, max by (replicaset, namespace, owner_name) (
+        kube_replicaset_owner{job="kube-state-metrics"}
+      )
+    ),
+    "workload", "$1", "owner_name", "(.*)"
+  )
+)
+`,
 						Labels: map[string]string{"workload_type": "deployment"},
 						Record: "namespace_workload_pod:kube_pod_owner:relabel",
 					}, {
 						Expr: `
-								max by (cluster, namespace, workload, pod) (
-								  label_replace(
-									kube_pod_owner{job="kube-state-metrics", owner_kind="DaemonSet"},
-									"workload", "$1", "owner_name", "(.*)"
-								  )
-								)
-								`,
+max by (cluster, namespace, workload, pod) (
+  label_replace(
+    kube_pod_owner{job="kube-state-metrics", owner_kind="DaemonSet"},
+    "workload", "$1", "owner_name", "(.*)"
+  )
+)
+`,
 						Labels: map[string]string{"workload_type": "daemonset"},
 						Record: "namespace_workload_pod:kube_pod_owner:relabel",
 					}, {
 						Expr: `
-								max by (cluster, namespace, workload, pod) (
-								  label_replace(
-									kube_pod_owner{job="kube-state-metrics", owner_kind="StatefulSet"},
-									"workload", "$1", "owner_name", "(.*)"
-								  )
-								)
-								`,
+max by (cluster, namespace, workload, pod) (
+  label_replace(
+    kube_pod_owner{job="kube-state-metrics", owner_kind="StatefulSet"},
+    "workload", "$1", "owner_name", "(.*)"
+  )
+)
+`,
 						Labels: map[string]string{"workload_type": "statefulset"},
 						Record: "namespace_workload_pod:kube_pod_owner:relabel",
 					}, {
 						Expr: `
-								max by (cluster, namespace, workload, pod) (
-								  label_replace(
-									kube_pod_owner{job="kube-state-metrics", owner_kind="Job"},
-									"workload", "$1", "owner_name", "(.*)"
-								  )
-								)
-								`,
+max by (cluster, namespace, workload, pod) (
+  label_replace(
+    kube_pod_owner{job="kube-state-metrics", owner_kind="Job"},
+    "workload", "$1", "owner_name", "(.*)"
+  )
+)
+`,
 						Labels: map[string]string{"workload_type": "job"},
 						Record: "namespace_workload_pod:kube_pod_owner:relabel",
 					},
@@ -309,16 +306,9 @@ var K8SRecordingRules = &v1beta1.VMRule{
 
 var PromGeneralRules = &v1beta1.VMRule{
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-kube-prometheus-general.rules",
-		Namespace: "monitoring",
+		Labels:    RulesLabels,
+		Name:      "victoria-metrics-kube-prometheus-general.rules",
+		Namespace: Single.Namespace,
 	},
 	Spec: v1beta1.VMRuleSpec{
 		Groups: []v1beta1.RuleGroup{
@@ -344,16 +334,9 @@ var PromGeneralRules = &v1beta1.VMRule{
 
 var NodeRecordingRules = &v1beta1.VMRule{
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-kube-prometheus-node-recording",
-		Namespace: "monitoring",
+		Labels:    RulesLabels,
+		Name:      "victoria-metrics-kube-prometheus-node-recording",
+		Namespace: Single.Namespace,
 	},
 	Spec: v1beta1.VMRuleSpec{
 		Groups: []v1beta1.RuleGroup{
@@ -361,7 +344,7 @@ var NodeRecordingRules = &v1beta1.VMRule{
 				Name: "kube-prometheus-node-recording.rules",
 				Rules: []v1beta1.Rule{
 					{
-						Expr:   "sum(rate(node_cpu_seconds_total{mode!=\"idle\",mode!=\"iowait\",mode!=\"steal\"}[3m])) BY (instance)",
+						Expr:   `sum(rate(node_cpu_seconds_total{mode!="idle",mode!="iowait",mode!="steal"}[3m])) BY (instance)`,
 						Record: "instance:node_cpu:rate:sum",
 					}, {
 						Expr:   "sum(rate(node_network_receive_bytes_total[3m])) BY (instance)",
@@ -370,10 +353,10 @@ var NodeRecordingRules = &v1beta1.VMRule{
 						Expr:   "sum(rate(node_network_transmit_bytes_total[3m])) BY (instance)",
 						Record: "instance:node_network_transmit_bytes:rate:sum",
 					}, {
-						Expr:   "sum(rate(node_cpu_seconds_total{mode!=\"idle\",mode!=\"iowait\",mode!=\"steal\"}[5m])) WITHOUT (cpu, mode) / ON(instance) GROUP_LEFT() count(sum(node_cpu_seconds_total) BY (instance, cpu)) BY (instance)",
+						Expr:   `sum(rate(node_cpu_seconds_total{mode!="idle",mode!="iowait",mode!="steal"}[5m])) WITHOUT (cpu, mode) / ON(instance) GROUP_LEFT() count(sum(node_cpu_seconds_total) BY (instance, cpu)) BY (instance)`,
 						Record: "instance:node_cpu:ratio",
 					}, {
-						Expr:   "sum(rate(node_cpu_seconds_total{mode!=\"idle\",mode!=\"iowait\",mode!=\"steal\"}[5m]))",
+						Expr:   `sum(rate(node_cpu_seconds_total{mode!="idle",mode!="iowait",mode!="steal"}[5m]))`,
 						Record: "cluster:node_cpu:sum_rate5m",
 					}, {
 						Expr:   "cluster:node_cpu:sum_rate5m / count(sum(node_cpu_seconds_total) BY (instance, cpu))",
@@ -391,16 +374,9 @@ var NodeRecordingRules = &v1beta1.VMRule{
 
 var KubeletRecordingRules = &v1beta1.VMRule{
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-kubelet.rules",
-		Namespace: "monitoring",
+		Labels:    RulesLabels,
+		Name:      "victoria-metrics-kubelet.rules",
+		Namespace: Single.Namespace,
 	},
 	Spec: v1beta1.VMRuleSpec{
 		Groups: []v1beta1.RuleGroup{
@@ -408,15 +384,15 @@ var KubeletRecordingRules = &v1beta1.VMRule{
 				Name: "kubelet.rules",
 				Rules: []v1beta1.Rule{
 					{
-						Expr:   "histogram_quantile(0.99, sum(rate(kubelet_pleg_relist_duration_seconds_bucket[5m])) by (cluster, instance, le) * on(cluster, instance) group_left(node) kubelet_node_name{job=\"kubelet\", metrics_path=\"/metrics\"})",
+						Expr:   `histogram_quantile(0.99, sum(rate(kubelet_pleg_relist_duration_seconds_bucket[5m])) by (cluster, instance, le) * on(cluster, instance) group_left(node) kubelet_node_name{job="kubelet", metrics_path="/metrics"})`,
 						Labels: map[string]string{"quantile": "0.99"},
 						Record: "node_quantile:kubelet_pleg_relist_duration_seconds:histogram_quantile",
 					}, {
-						Expr:   "histogram_quantile(0.9, sum(rate(kubelet_pleg_relist_duration_seconds_bucket[5m])) by (cluster, instance, le) * on(cluster, instance) group_left(node) kubelet_node_name{job=\"kubelet\", metrics_path=\"/metrics\"})",
+						Expr:   `histogram_quantile(0.9, sum(rate(kubelet_pleg_relist_duration_seconds_bucket[5m])) by (cluster, instance, le) * on(cluster, instance) group_left(node) kubelet_node_name{job="kubelet", metrics_path="/metrics"})`,
 						Labels: map[string]string{"quantile": "0.9"},
 						Record: "node_quantile:kubelet_pleg_relist_duration_seconds:histogram_quantile",
 					}, {
-						Expr:   "histogram_quantile(0.5, sum(rate(kubelet_pleg_relist_duration_seconds_bucket[5m])) by (cluster, instance, le) * on(cluster, instance) group_left(node) kubelet_node_name{job=\"kubelet\", metrics_path=\"/metrics\"})",
+						Expr:   `histogram_quantile(0.5, sum(rate(kubelet_pleg_relist_duration_seconds_bucket[5m])) by (cluster, instance, le) * on(cluster, instance) group_left(node) kubelet_node_name{job="kubelet", metrics_path="/metrics"})`,
 						Labels: map[string]string{"quantile": "0.5"},
 						Record: "node_quantile:kubelet_pleg_relist_duration_seconds:histogram_quantile",
 					},
@@ -432,16 +408,9 @@ var KubeletRecordingRules = &v1beta1.VMRule{
 
 var KubernetesAppsAlertRules = &v1beta1.VMRule{
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-kubernetes-apps",
-		Namespace: "monitoring",
+		Labels:    RulesLabels,
+		Name:      "victoria-metrics-kubernetes-apps",
+		Namespace: Single.Namespace,
 	},
 	Spec: v1beta1.VMRuleSpec{
 		Groups: []v1beta1.RuleGroup{
@@ -451,11 +420,11 @@ var KubernetesAppsAlertRules = &v1beta1.VMRule{
 					{
 						Alert: "KubePodCrashLooping",
 						Annotations: map[string]string{
-							"description": "Pod {{ $labels.namespace }}/{{ $labels.pod }} ({{ $labels.container }}) is in waiting state (reason: \"CrashLoopBackOff\").",
+							"description": `Pod {{ $labels.namespace }}/{{ $labels.pod }} ({{ $labels.container }}) is in waiting state (reason: "CrashLoopBackOff").`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubepodcrashlooping",
 							"summary":     "Pod is crash looping.",
 						},
-						Expr:   "max_over_time(kube_pod_container_status_waiting_reason{reason=\"CrashLoopBackOff\", job=\"kube-state-metrics\", namespace=~\".*\"}[5m]) >= 1",
+						Expr:   `max_over_time(kube_pod_container_status_waiting_reason{reason="CrashLoopBackOff", job="kube-state-metrics", namespace=~".*"}[5m]) >= 1`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
@@ -466,14 +435,14 @@ var KubernetesAppsAlertRules = &v1beta1.VMRule{
 							"summary":     "Pod has been in a non-ready state for more than 15 minutes.",
 						},
 						Expr: `
-								sum by (namespace, pod, cluster) (
-								  max by(namespace, pod, cluster) (
-									kube_pod_status_phase{job="kube-state-metrics", namespace=~".*", phase=~"Pending|Unknown|Failed"}
-								  ) * on(namespace, pod, cluster) group_left(owner_kind) topk by(namespace, pod, cluster) (
-									1, max by(namespace, pod, owner_kind, cluster) (kube_pod_owner{owner_kind!="Job"})
-								  )
-								) > 0
-								`,
+sum by (namespace, pod, cluster) (
+  max by(namespace, pod, cluster) (
+    kube_pod_status_phase{job="kube-state-metrics", namespace=~".*", phase=~"Pending|Unknown|Failed"}
+  ) * on(namespace, pod, cluster) group_left(owner_kind) topk by(namespace, pod, cluster) (
+    1, max by(namespace, pod, owner_kind, cluster) (kube_pod_owner{owner_kind!="Job"})
+  )
+) > 0
+`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
@@ -484,10 +453,10 @@ var KubernetesAppsAlertRules = &v1beta1.VMRule{
 							"summary":     "Deployment generation mismatch due to possible roll-back",
 						},
 						Expr: `
-								kube_deployment_status_observed_generation{job="kube-state-metrics", namespace=~".*"}
-								  !=
-								kube_deployment_metadata_generation{job="kube-state-metrics", namespace=~".*"}
-								`,
+kube_deployment_status_observed_generation{job="kube-state-metrics", namespace=~".*"}
+  !=
+kube_deployment_metadata_generation{job="kube-state-metrics", namespace=~".*"}
+`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
@@ -498,16 +467,16 @@ var KubernetesAppsAlertRules = &v1beta1.VMRule{
 							"summary":     "Deployment has not matched the expected number of replicas.",
 						},
 						Expr: `
-								(
-								  kube_deployment_spec_replicas{job="kube-state-metrics", namespace=~".*"}
-									>
-								  kube_deployment_status_replicas_available{job="kube-state-metrics", namespace=~".*"}
-								) and (
-								  changes(kube_deployment_status_replicas_updated{job="kube-state-metrics", namespace=~".*"}[10m])
-									==
-								  0
-								)
-								`,
+(
+  kube_deployment_spec_replicas{job="kube-state-metrics", namespace=~".*"}
+    >
+  kube_deployment_status_replicas_available{job="kube-state-metrics", namespace=~".*"}
+) and (
+  changes(kube_deployment_status_replicas_updated{job="kube-state-metrics", namespace=~".*"}[10m])
+    ==
+  0
+)
+`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
@@ -518,16 +487,16 @@ var KubernetesAppsAlertRules = &v1beta1.VMRule{
 							"summary":     "Deployment has not matched the expected number of replicas.",
 						},
 						Expr: `
-								(
-								  kube_statefulset_status_replicas_ready{job="kube-state-metrics", namespace=~".*"}
-									!=
-								  kube_statefulset_status_replicas{job="kube-state-metrics", namespace=~".*"}
-								) and (
-								  changes(kube_statefulset_status_replicas_updated{job="kube-state-metrics", namespace=~".*"}[10m])
-									==
-								  0
-								)
-								`,
+(
+  kube_statefulset_status_replicas_ready{job="kube-state-metrics", namespace=~".*"}
+    !=
+  kube_statefulset_status_replicas{job="kube-state-metrics", namespace=~".*"}
+) and (
+  changes(kube_statefulset_status_replicas_updated{job="kube-state-metrics", namespace=~".*"}[10m])
+    ==
+  0
+)
+`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
@@ -538,10 +507,10 @@ var KubernetesAppsAlertRules = &v1beta1.VMRule{
 							"summary":     "StatefulSet generation mismatch due to possible roll-back",
 						},
 						Expr: `
-								kube_statefulset_status_observed_generation{job="kube-state-metrics", namespace=~".*"}
-								  !=
-								kube_statefulset_metadata_generation{job="kube-state-metrics", namespace=~".*"}
-								`,
+kube_statefulset_status_observed_generation{job="kube-state-metrics", namespace=~".*"}
+  !=
+kube_statefulset_metadata_generation{job="kube-state-metrics", namespace=~".*"}
+`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
@@ -552,24 +521,24 @@ var KubernetesAppsAlertRules = &v1beta1.VMRule{
 							"summary":     "StatefulSet update has not been rolled out.",
 						},
 						Expr: `
-								(
-								  max without (revision) (
-									kube_statefulset_status_current_revision{job="kube-state-metrics", namespace=~".*"}
-									  unless
-									kube_statefulset_status_update_revision{job="kube-state-metrics", namespace=~".*"}
-								  )
-									*
-								  (
-									kube_statefulset_replicas{job="kube-state-metrics", namespace=~".*"}
-									  !=
-									kube_statefulset_status_replicas_updated{job="kube-state-metrics", namespace=~".*"}
-								  )
-								)  and (
-								  changes(kube_statefulset_status_replicas_updated{job="kube-state-metrics", namespace=~".*"}[5m])
-									==
-								  0
-								)
-								`,
+(
+  max without (revision) (
+    kube_statefulset_status_current_revision{job="kube-state-metrics", namespace=~".*"}
+      unless
+    kube_statefulset_status_update_revision{job="kube-state-metrics", namespace=~".*"}
+  )
+    *
+  (
+    kube_statefulset_replicas{job="kube-state-metrics", namespace=~".*"}
+      !=
+    kube_statefulset_status_replicas_updated{job="kube-state-metrics", namespace=~".*"}
+  )
+)  and (
+  changes(kube_statefulset_status_replicas_updated{job="kube-state-metrics", namespace=~".*"}[5m])
+    ==
+  0
+)
+`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
@@ -580,30 +549,30 @@ var KubernetesAppsAlertRules = &v1beta1.VMRule{
 							"summary":     "DaemonSet rollout is stuck.",
 						},
 						Expr: `
-								(
-								  (
-									kube_daemonset_status_current_number_scheduled{job="kube-state-metrics", namespace=~".*"}
-									 !=
-									kube_daemonset_status_desired_number_scheduled{job="kube-state-metrics", namespace=~".*"}
-								  ) or (
-									kube_daemonset_status_number_misscheduled{job="kube-state-metrics", namespace=~".*"}
-									 !=
-									0
-								  ) or (
-									kube_daemonset_status_updated_number_scheduled{job="kube-state-metrics", namespace=~".*"}
-									 !=
-									kube_daemonset_status_desired_number_scheduled{job="kube-state-metrics", namespace=~".*"}
-								  ) or (
-									kube_daemonset_status_number_available{job="kube-state-metrics", namespace=~".*"}
-									 !=
-									kube_daemonset_status_desired_number_scheduled{job="kube-state-metrics", namespace=~".*"}
-								  )
-								) and (
-								  changes(kube_daemonset_status_updated_number_scheduled{job="kube-state-metrics", namespace=~".*"}[5m])
-									==
-								  0
-								)
-								`,
+(
+  (
+    kube_daemonset_status_current_number_scheduled{job="kube-state-metrics", namespace=~".*"}
+     !=
+    kube_daemonset_status_desired_number_scheduled{job="kube-state-metrics", namespace=~".*"}
+  ) or (
+    kube_daemonset_status_number_misscheduled{job="kube-state-metrics", namespace=~".*"}
+     !=
+    0
+  ) or (
+    kube_daemonset_status_updated_number_scheduled{job="kube-state-metrics", namespace=~".*"}
+     !=
+    kube_daemonset_status_desired_number_scheduled{job="kube-state-metrics", namespace=~".*"}
+  ) or (
+    kube_daemonset_status_number_available{job="kube-state-metrics", namespace=~".*"}
+     !=
+    kube_daemonset_status_desired_number_scheduled{job="kube-state-metrics", namespace=~".*"}
+  )
+) and (
+  changes(kube_daemonset_status_updated_number_scheduled{job="kube-state-metrics", namespace=~".*"}[5m])
+    ==
+  0
+)
+`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
@@ -613,7 +582,7 @@ var KubernetesAppsAlertRules = &v1beta1.VMRule{
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubecontainerwaiting",
 							"summary":     "Pod container waiting longer than 1 hour",
 						},
-						Expr:   "sum by (namespace, pod, container, cluster) (kube_pod_container_status_waiting_reason{job=\"kube-state-metrics\", namespace=~\".*\"}) > 0",
+						Expr:   `sum by (namespace, pod, container, cluster) (kube_pod_container_status_waiting_reason{job="kube-state-metrics", namespace=~".*"}) > 0`,
 						For:    "1h",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
@@ -624,10 +593,10 @@ var KubernetesAppsAlertRules = &v1beta1.VMRule{
 							"summary":     "DaemonSet pods are not scheduled.",
 						},
 						Expr: `
-								kube_daemonset_status_desired_number_scheduled{job="kube-state-metrics", namespace=~".*"}
-								  -
-								kube_daemonset_status_current_number_scheduled{job="kube-state-metrics", namespace=~".*"} > 0
-								`,
+kube_daemonset_status_desired_number_scheduled{job="kube-state-metrics", namespace=~".*"}
+  -
+kube_daemonset_status_current_number_scheduled{job="kube-state-metrics", namespace=~".*"} > 0
+`,
 						For:    "10m",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
@@ -637,21 +606,21 @@ var KubernetesAppsAlertRules = &v1beta1.VMRule{
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubedaemonsetmisscheduled",
 							"summary":     "DaemonSet pods are misscheduled.",
 						},
-						Expr:   "kube_daemonset_status_number_misscheduled{job=\"kube-state-metrics\", namespace=~\".*\"} > 0",
+						Expr:   `kube_daemonset_status_number_misscheduled{job="kube-state-metrics", namespace=~".*"} > 0`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
 						Alert: "KubeJobNotCompleted",
 						Annotations: map[string]string{
-							"description": "Job {{ $labels.namespace }}/{{ $labels.job_name }} is taking more than {{ \"43200\" | humanizeDuration }} to complete.",
+							"description": `Job {{ $labels.namespace }}/{{ $labels.job_name }} is taking more than {{ "43200" | humanizeDuration }} to complete.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubejobnotcompleted",
 							"summary":     "Job did not complete in time",
 						},
 						Expr: `
-								time() - max by(namespace, job_name, cluster) (kube_job_status_start_time{job="kube-state-metrics", namespace=~".*"}
-								  and
-								kube_job_status_active{job="kube-state-metrics", namespace=~".*"} > 0) > 43200
-								`,
+time() - max by(namespace, job_name, cluster) (kube_job_status_start_time{job="kube-state-metrics", namespace=~".*"}
+  and
+kube_job_status_active{job="kube-state-metrics", namespace=~".*"} > 0) > 43200
+`,
 						Labels: map[string]string{"severity": "warning"},
 					}, {
 						Alert: "KubeJobFailed",
@@ -660,7 +629,7 @@ var KubernetesAppsAlertRules = &v1beta1.VMRule{
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubejobfailed",
 							"summary":     "Job failed to complete.",
 						},
-						Expr:   "kube_job_failed{job=\"kube-state-metrics\", namespace=~\".*\"}  > 0",
+						Expr:   `kube_job_failed{job="kube-state-metrics", namespace=~".*"}  > 0`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
@@ -671,20 +640,20 @@ var KubernetesAppsAlertRules = &v1beta1.VMRule{
 							"summary":     "HPA has not matched desired number of replicas.",
 						},
 						Expr: `
-								(kube_horizontalpodautoscaler_status_desired_replicas{job="kube-state-metrics", namespace=~".*"}
-								  !=
-								kube_horizontalpodautoscaler_status_current_replicas{job="kube-state-metrics", namespace=~".*"})
-								  and
-								(kube_horizontalpodautoscaler_status_current_replicas{job="kube-state-metrics", namespace=~".*"}
-								  >
-								kube_horizontalpodautoscaler_spec_min_replicas{job="kube-state-metrics", namespace=~".*"})
-								  and
-								(kube_horizontalpodautoscaler_status_current_replicas{job="kube-state-metrics", namespace=~".*"}
-								  <
-								kube_horizontalpodautoscaler_spec_max_replicas{job="kube-state-metrics", namespace=~".*"})
-								  and
-								changes(kube_horizontalpodautoscaler_status_current_replicas{job="kube-state-metrics", namespace=~".*"}[15m]) == 0
-								`,
+(kube_horizontalpodautoscaler_status_desired_replicas{job="kube-state-metrics", namespace=~".*"}
+  !=
+kube_horizontalpodautoscaler_status_current_replicas{job="kube-state-metrics", namespace=~".*"})
+  and
+(kube_horizontalpodautoscaler_status_current_replicas{job="kube-state-metrics", namespace=~".*"}
+  >
+kube_horizontalpodautoscaler_spec_min_replicas{job="kube-state-metrics", namespace=~".*"})
+  and
+(kube_horizontalpodautoscaler_status_current_replicas{job="kube-state-metrics", namespace=~".*"}
+  <
+kube_horizontalpodautoscaler_spec_max_replicas{job="kube-state-metrics", namespace=~".*"})
+  and
+changes(kube_horizontalpodautoscaler_status_current_replicas{job="kube-state-metrics", namespace=~".*"}[15m]) == 0
+`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
@@ -695,10 +664,10 @@ var KubernetesAppsAlertRules = &v1beta1.VMRule{
 							"summary":     "HPA is running at max replicas",
 						},
 						Expr: `
-								kube_horizontalpodautoscaler_status_current_replicas{job="kube-state-metrics", namespace=~".*"}
-								  ==
-								kube_horizontalpodautoscaler_spec_max_replicas{job="kube-state-metrics", namespace=~".*"}
-								`,
+kube_horizontalpodautoscaler_status_current_replicas{job="kube-state-metrics", namespace=~".*"}
+  ==
+kube_horizontalpodautoscaler_spec_max_replicas{job="kube-state-metrics", namespace=~".*"}
+`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "warning"},
 					},
@@ -714,16 +683,9 @@ var KubernetesAppsAlertRules = &v1beta1.VMRule{
 
 var KubernetesResourcesAlertRules = &v1beta1.VMRule{
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-kubernetes-resources",
-		Namespace: "monitoring",
+		Labels:    RulesLabels,
+		Name:      "victoria-metrics-kubernetes-resources",
+		Namespace: Single.Namespace,
 	},
 	Spec: v1beta1.VMRuleSpec{
 		Groups: []v1beta1.RuleGroup{
@@ -738,10 +700,10 @@ var KubernetesResourcesAlertRules = &v1beta1.VMRule{
 							"summary":     "Cluster has overcommitted CPU resource requests.",
 						},
 						Expr: `
-								sum(namespace_cpu:kube_pod_container_resource_requests:sum{}) - (sum(kube_node_status_allocatable{resource="cpu"}) - max(kube_node_status_allocatable{resource="cpu"})) > 0
-								and
-								(sum(kube_node_status_allocatable{resource="cpu"}) - max(kube_node_status_allocatable{resource="cpu"})) > 0
-								`,
+sum(namespace_cpu:kube_pod_container_resource_requests:sum{}) - (sum(kube_node_status_allocatable{resource="cpu"}) - max(kube_node_status_allocatable{resource="cpu"})) > 0
+and
+(sum(kube_node_status_allocatable{resource="cpu"}) - max(kube_node_status_allocatable{resource="cpu"})) > 0
+`,
 						For:    "10m",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
@@ -752,10 +714,10 @@ var KubernetesResourcesAlertRules = &v1beta1.VMRule{
 							"summary":     "Cluster has overcommitted memory resource requests.",
 						},
 						Expr: `
-								sum(namespace_memory:kube_pod_container_resource_requests:sum{}) - (sum(kube_node_status_allocatable{resource="memory"}) - max(kube_node_status_allocatable{resource="memory"})) > 0
-								and
-								(sum(kube_node_status_allocatable{resource="memory"}) - max(kube_node_status_allocatable{resource="memory"})) > 0
-								`,
+sum(namespace_memory:kube_pod_container_resource_requests:sum{}) - (sum(kube_node_status_allocatable{resource="memory"}) - max(kube_node_status_allocatable{resource="memory"})) > 0
+and
+(sum(kube_node_status_allocatable{resource="memory"}) - max(kube_node_status_allocatable{resource="memory"})) > 0
+`,
 						For:    "10m",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
@@ -766,11 +728,11 @@ var KubernetesResourcesAlertRules = &v1beta1.VMRule{
 							"summary":     "Cluster has overcommitted CPU resource requests.",
 						},
 						Expr: `
-								sum(min without(resource) (kube_resourcequota{job="kube-state-metrics", type="hard", resource=~"(cpu|requests.cpu)"}))
-								  /
-								sum(kube_node_status_allocatable{resource="cpu", job="kube-state-metrics"})
-								  > 1.5
-								`,
+sum(min without(resource) (kube_resourcequota{job="kube-state-metrics", type="hard", resource=~"(cpu|requests.cpu)"}))
+  /
+sum(kube_node_status_allocatable{resource="cpu", job="kube-state-metrics"})
+  > 1.5
+`,
 						For:    "5m",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
@@ -781,11 +743,11 @@ var KubernetesResourcesAlertRules = &v1beta1.VMRule{
 							"summary":     "Cluster has overcommitted memory resource requests.",
 						},
 						Expr: `
-								sum(min without(resource) (kube_resourcequota{job="kube-state-metrics", type="hard", resource=~"(memory|requests.memory)"}))
-								  /
-								sum(kube_node_status_allocatable{resource="memory", job="kube-state-metrics"})
-								  > 1.5
-								`,
+sum(min without(resource) (kube_resourcequota{job="kube-state-metrics", type="hard", resource=~"(memory|requests.memory)"}))
+  /
+sum(kube_node_status_allocatable{resource="memory", job="kube-state-metrics"})
+  > 1.5
+`,
 						For:    "5m",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
@@ -796,11 +758,11 @@ var KubernetesResourcesAlertRules = &v1beta1.VMRule{
 							"summary":     "Namespace quota is going to be full.",
 						},
 						Expr: `
-								kube_resourcequota{job="kube-state-metrics", type="used"}
-								  / ignoring(instance, job, type)
-								(kube_resourcequota{job="kube-state-metrics", type="hard"} > 0)
-								  > 0.9 < 1
-								`,
+kube_resourcequota{job="kube-state-metrics", type="used"}
+  / ignoring(instance, job, type)
+(kube_resourcequota{job="kube-state-metrics", type="hard"} > 0)
+  > 0.9 < 1
+`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "info"},
 					}, {
@@ -811,11 +773,11 @@ var KubernetesResourcesAlertRules = &v1beta1.VMRule{
 							"summary":     "Namespace quota is fully used.",
 						},
 						Expr: `
-								kube_resourcequota{job="kube-state-metrics", type="used"}
-								  / ignoring(instance, job, type)
-								(kube_resourcequota{job="kube-state-metrics", type="hard"} > 0)
-								  == 1
-								`,
+kube_resourcequota{job="kube-state-metrics", type="used"}
+  / ignoring(instance, job, type)
+(kube_resourcequota{job="kube-state-metrics", type="hard"} > 0)
+  == 1
+`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "info"},
 					}, {
@@ -826,11 +788,11 @@ var KubernetesResourcesAlertRules = &v1beta1.VMRule{
 							"summary":     "Namespace quota has exceeded the limits.",
 						},
 						Expr: `
-								kube_resourcequota{job="kube-state-metrics", type="used"}
-								  / ignoring(instance, job, type)
-								(kube_resourcequota{job="kube-state-metrics", type="hard"} > 0)
-								  > 1
-								`,
+kube_resourcequota{job="kube-state-metrics", type="used"}
+  / ignoring(instance, job, type)
+(kube_resourcequota{job="kube-state-metrics", type="hard"} > 0)
+  > 1
+`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
@@ -841,11 +803,11 @@ var KubernetesResourcesAlertRules = &v1beta1.VMRule{
 							"summary":     "Processes experience elevated CPU throttling.",
 						},
 						Expr: `
-								sum(increase(container_cpu_cfs_throttled_periods_total{container!="", }[5m])) by (container, pod, namespace)
-								  /
-								sum(increase(container_cpu_cfs_periods_total{}[5m])) by (container, pod, namespace)
-								  > ( 25 / 100 )
-								`,
+sum(increase(container_cpu_cfs_throttled_periods_total{container!="", }[5m])) by (container, pod, namespace)
+  /
+sum(increase(container_cpu_cfs_periods_total{}[5m])) by (container, pod, namespace)
+  > ( 25 / 100 )
+`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "info"},
 					},
@@ -861,16 +823,9 @@ var KubernetesResourcesAlertRules = &v1beta1.VMRule{
 
 var KubernetesStorageAlertRules = &v1beta1.VMRule{
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-kubernetes-storage",
-		Namespace: "monitoring",
+		Labels:    RulesLabels,
+		Name:      "victoria-metrics-kubernetes-storage",
+		Namespace: Single.Namespace,
 	},
 	Spec: v1beta1.VMRuleSpec{
 		Groups: []v1beta1.RuleGroup{
@@ -885,18 +840,18 @@ var KubernetesStorageAlertRules = &v1beta1.VMRule{
 							"summary":     "PersistentVolume is filling up.",
 						},
 						Expr: `
-								(
-								  kubelet_volume_stats_available_bytes{job="kubelet", namespace=~".*", metrics_path="/metrics"}
-									/
-								  kubelet_volume_stats_capacity_bytes{job="kubelet", namespace=~".*", metrics_path="/metrics"}
-								) < 0.03
-								and
-								kubelet_volume_stats_used_bytes{job="kubelet", namespace=~".*", metrics_path="/metrics"} > 0
-								unless on(namespace, persistentvolumeclaim)
-								kube_persistentvolumeclaim_access_mode{ access_mode="ReadOnlyMany"} == 1
-								unless on(namespace, persistentvolumeclaim)
-								kube_persistentvolumeclaim_labels{label_excluded_from_alerts="true"} == 1
-								`,
+(
+  kubelet_volume_stats_available_bytes{job="kubelet", namespace=~".*", metrics_path="/metrics"}
+    /
+  kubelet_volume_stats_capacity_bytes{job="kubelet", namespace=~".*", metrics_path="/metrics"}
+) < 0.03
+and
+kubelet_volume_stats_used_bytes{job="kubelet", namespace=~".*", metrics_path="/metrics"} > 0
+unless on(namespace, persistentvolumeclaim)
+kube_persistentvolumeclaim_access_mode{ access_mode="ReadOnlyMany"} == 1
+unless on(namespace, persistentvolumeclaim)
+kube_persistentvolumeclaim_labels{label_excluded_from_alerts="true"} == 1
+`,
 						For:    "1m",
 						Labels: map[string]string{"severity": "critical"},
 					}, {
@@ -907,20 +862,20 @@ var KubernetesStorageAlertRules = &v1beta1.VMRule{
 							"summary":     "PersistentVolume is filling up.",
 						},
 						Expr: `
-								(
-								  kubelet_volume_stats_available_bytes{job="kubelet", namespace=~".*", metrics_path="/metrics"}
-									/
-								  kubelet_volume_stats_capacity_bytes{job="kubelet", namespace=~".*", metrics_path="/metrics"}
-								) < 0.15
-								and
-								kubelet_volume_stats_used_bytes{job="kubelet", namespace=~".*", metrics_path="/metrics"} > 0
-								and
-								predict_linear(kubelet_volume_stats_available_bytes{job="kubelet", namespace=~".*", metrics_path="/metrics"}[6h], 4 * 24 * 3600) < 0
-								unless on(namespace, persistentvolumeclaim)
-								kube_persistentvolumeclaim_access_mode{ access_mode="ReadOnlyMany"} == 1
-								unless on(namespace, persistentvolumeclaim)
-								kube_persistentvolumeclaim_labels{label_excluded_from_alerts="true"} == 1
-								`,
+(
+  kubelet_volume_stats_available_bytes{job="kubelet", namespace=~".*", metrics_path="/metrics"}
+    /
+  kubelet_volume_stats_capacity_bytes{job="kubelet", namespace=~".*", metrics_path="/metrics"}
+) < 0.15
+and
+kubelet_volume_stats_used_bytes{job="kubelet", namespace=~".*", metrics_path="/metrics"} > 0
+and
+predict_linear(kubelet_volume_stats_available_bytes{job="kubelet", namespace=~".*", metrics_path="/metrics"}[6h], 4 * 24 * 3600) < 0
+unless on(namespace, persistentvolumeclaim)
+kube_persistentvolumeclaim_access_mode{ access_mode="ReadOnlyMany"} == 1
+unless on(namespace, persistentvolumeclaim)
+kube_persistentvolumeclaim_labels{label_excluded_from_alerts="true"} == 1
+`,
 						For:    "1h",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
@@ -931,18 +886,18 @@ var KubernetesStorageAlertRules = &v1beta1.VMRule{
 							"summary":     "PersistentVolumeInodes are filling up.",
 						},
 						Expr: `
-								(
-								  kubelet_volume_stats_inodes_free{job="kubelet", namespace=~".*", metrics_path="/metrics"}
-									/
-								  kubelet_volume_stats_inodes{job="kubelet", namespace=~".*", metrics_path="/metrics"}
-								) < 0.03
-								and
-								kubelet_volume_stats_inodes_used{job="kubelet", namespace=~".*", metrics_path="/metrics"} > 0
-								unless on(namespace, persistentvolumeclaim)
-								kube_persistentvolumeclaim_access_mode{ access_mode="ReadOnlyMany"} == 1
-								unless on(namespace, persistentvolumeclaim)
-								kube_persistentvolumeclaim_labels{label_excluded_from_alerts="true"} == 1
-								`,
+(
+  kubelet_volume_stats_inodes_free{job="kubelet", namespace=~".*", metrics_path="/metrics"}
+    /
+  kubelet_volume_stats_inodes{job="kubelet", namespace=~".*", metrics_path="/metrics"}
+) < 0.03
+and
+kubelet_volume_stats_inodes_used{job="kubelet", namespace=~".*", metrics_path="/metrics"} > 0
+unless on(namespace, persistentvolumeclaim)
+kube_persistentvolumeclaim_access_mode{ access_mode="ReadOnlyMany"} == 1
+unless on(namespace, persistentvolumeclaim)
+kube_persistentvolumeclaim_labels{label_excluded_from_alerts="true"} == 1
+`,
 						For:    "1m",
 						Labels: map[string]string{"severity": "critical"},
 					}, {
@@ -953,20 +908,20 @@ var KubernetesStorageAlertRules = &v1beta1.VMRule{
 							"summary":     "PersistentVolumeInodes are filling up.",
 						},
 						Expr: `
-								(
-								  kubelet_volume_stats_inodes_free{job="kubelet", namespace=~".*", metrics_path="/metrics"}
-									/
-								  kubelet_volume_stats_inodes{job="kubelet", namespace=~".*", metrics_path="/metrics"}
-								) < 0.15
-								and
-								kubelet_volume_stats_inodes_used{job="kubelet", namespace=~".*", metrics_path="/metrics"} > 0
-								and
-								predict_linear(kubelet_volume_stats_inodes_free{job="kubelet", namespace=~".*", metrics_path="/metrics"}[6h], 4 * 24 * 3600) < 0
-								unless on(namespace, persistentvolumeclaim)
-								kube_persistentvolumeclaim_access_mode{ access_mode="ReadOnlyMany"} == 1
-								unless on(namespace, persistentvolumeclaim)
-								kube_persistentvolumeclaim_labels{label_excluded_from_alerts="true"} == 1
-								`,
+(
+  kubelet_volume_stats_inodes_free{job="kubelet", namespace=~".*", metrics_path="/metrics"}
+    /
+  kubelet_volume_stats_inodes{job="kubelet", namespace=~".*", metrics_path="/metrics"}
+) < 0.15
+and
+kubelet_volume_stats_inodes_used{job="kubelet", namespace=~".*", metrics_path="/metrics"} > 0
+and
+predict_linear(kubelet_volume_stats_inodes_free{job="kubelet", namespace=~".*", metrics_path="/metrics"}[6h], 4 * 24 * 3600) < 0
+unless on(namespace, persistentvolumeclaim)
+kube_persistentvolumeclaim_access_mode{ access_mode="ReadOnlyMany"} == 1
+unless on(namespace, persistentvolumeclaim)
+kube_persistentvolumeclaim_labels{label_excluded_from_alerts="true"} == 1
+`,
 						For:    "1h",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
@@ -976,7 +931,7 @@ var KubernetesStorageAlertRules = &v1beta1.VMRule{
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubepersistentvolumeerrors",
 							"summary":     "PersistentVolume is having issues with provisioning.",
 						},
-						Expr:   "kube_persistentvolume_status_phase{phase=~\"Failed|Pending\",job=\"kube-state-metrics\"} > 0",
+						Expr:   `kube_persistentvolume_status_phase{phase=~"Failed|Pending",job="kube-state-metrics"} > 0`,
 						For:    "5m",
 						Labels: map[string]string{"severity": "critical"},
 					},
@@ -992,16 +947,9 @@ var KubernetesStorageAlertRules = &v1beta1.VMRule{
 
 var KubeletAlertRules = &v1beta1.VMRule{
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-kubernetes-system-kubelet",
-		Namespace: "monitoring",
+		Labels:    RulesLabels,
+		Name:      "victoria-metrics-kubelet",
+		Namespace: Single.Namespace,
 	},
 	Spec: v1beta1.VMRuleSpec{
 		Groups: []v1beta1.RuleGroup{
@@ -1015,7 +963,7 @@ var KubeletAlertRules = &v1beta1.VMRule{
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubenodenotready",
 							"summary":     "Node is not ready.",
 						},
-						Expr:   "kube_node_status_condition{job=\"kube-state-metrics\",condition=\"Ready\",status=\"true\"} == 0",
+						Expr:   `kube_node_status_condition{job="kube-state-metrics",condition="Ready",status="true"} == 0`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
@@ -1025,7 +973,7 @@ var KubeletAlertRules = &v1beta1.VMRule{
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubenodeunreachable",
 							"summary":     "Node is unreachable.",
 						},
-						Expr:   "(kube_node_spec_taint{job=\"kube-state-metrics\",key=\"node.kubernetes.io/unreachable\",effect=\"NoSchedule\"} unless ignoring(key,value) kube_node_spec_taint{job=\"kube-state-metrics\",key=~\"ToBeDeletedByClusterAutoscaler|cloud.google.com/impending-node-termination|aws-node-termination-handler/spot-itn\"}) == 1",
+						Expr:   `(kube_node_spec_taint{job="kube-state-metrics",key="node.kubernetes.io/unreachable",effect="NoSchedule"} unless ignoring(key,value) kube_node_spec_taint{job="kube-state-metrics",key=~"ToBeDeletedByClusterAutoscaler|cloud.google.com/impending-node-termination|aws-node-termination-handler/spot-itn"}) == 1`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
@@ -1036,14 +984,14 @@ var KubeletAlertRules = &v1beta1.VMRule{
 							"summary":     "Kubelet is running at capacity.",
 						},
 						Expr: `
-								count by(cluster, node) (
-								  (kube_pod_status_phase{job="kube-state-metrics",phase="Running"} == 1) * on(instance,pod,namespace,cluster) group_left(node) topk by(instance,pod,namespace,cluster) (1, kube_pod_info{job="kube-state-metrics"})
-								)
-								/
-								max by(cluster, node) (
-								  kube_node_status_capacity{job="kube-state-metrics",resource="pods"} != 1
-								) > 0.95
-								`,
+count by(cluster, node) (
+  (kube_pod_status_phase{job="kube-state-metrics",phase="Running"} == 1) * on(instance,pod,namespace,cluster) group_left(node) topk by(instance,pod,namespace,cluster) (1, kube_pod_info{job="kube-state-metrics"})
+)
+/
+max by(cluster, node) (
+  kube_node_status_capacity{job="kube-state-metrics",resource="pods"} != 1
+) > 0.95
+`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "info"},
 					}, {
@@ -1053,7 +1001,7 @@ var KubeletAlertRules = &v1beta1.VMRule{
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubenodereadinessflapping",
 							"summary":     "Node readiness status is flapping.",
 						},
-						Expr:   "sum(changes(kube_node_status_condition{status=\"true\",condition=\"Ready\"}[15m])) by (cluster, node) > 2",
+						Expr:   `sum(changes(kube_node_status_condition{status="true",condition="Ready"}[15m])) by (cluster, node) > 2`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
@@ -1063,7 +1011,7 @@ var KubeletAlertRules = &v1beta1.VMRule{
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubeletplegdurationhigh",
 							"summary":     "Kubelet Pod Lifecycle Event Generator is taking too long to relist.",
 						},
-						Expr:   "node_quantile:kubelet_pleg_relist_duration_seconds:histogram_quantile{quantile=\"0.99\"} >= 10",
+						Expr:   `node_quantile:kubelet_pleg_relist_duration_seconds:histogram_quantile{quantile="0.99"} >= 10`,
 						For:    "5m",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
@@ -1073,7 +1021,7 @@ var KubeletAlertRules = &v1beta1.VMRule{
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubeletpodstartuplatencyhigh",
 							"summary":     "Kubelet Pod startup latency is too high.",
 						},
-						Expr:   "histogram_quantile(0.99, sum(rate(kubelet_pod_worker_duration_seconds_bucket{job=\"kubelet\", metrics_path=\"/metrics\"}[5m])) by (cluster, instance, le)) * on(cluster, instance) group_left(node) kubelet_node_name{job=\"kubelet\", metrics_path=\"/metrics\"} > 60",
+						Expr:   `histogram_quantile(0.99, sum(rate(kubelet_pod_worker_duration_seconds_bucket{job="kubelet", metrics_path="/metrics"}[5m])) by (cluster, instance, le)) * on(cluster, instance) group_left(node) kubelet_node_name{job="kubelet", metrics_path="/metrics"} > 60`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
@@ -1139,7 +1087,7 @@ var KubeletAlertRules = &v1beta1.VMRule{
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubeletdown",
 							"summary":     "Target disappeared from Prometheus target discovery.",
 						},
-						Expr:   "absent(up{job=\"kubelet\", metrics_path=\"/metrics\"} == 1)",
+						Expr:   `absent(up{job="kubelet", metrics_path="/metrics"} == 1)`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "critical"},
 					},
@@ -1155,16 +1103,9 @@ var KubeletAlertRules = &v1beta1.VMRule{
 
 var KubernetesSystemAlertRules = &v1beta1.VMRule{
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-kubernetes-system",
-		Namespace: "monitoring",
+		Labels:    RulesLabels,
+		Name:      "victoria-metrics-kubernetes-system",
+		Namespace: Single.Namespace,
 	},
 	Spec: v1beta1.VMRuleSpec{
 		Groups: []v1beta1.RuleGroup{
@@ -1178,7 +1119,7 @@ var KubernetesSystemAlertRules = &v1beta1.VMRule{
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubeversionmismatch",
 							"summary":     "Different semantic versions of Kubernetes components running.",
 						},
-						Expr:   "count by (cluster) (count by (git_version, cluster) (label_replace(kubernetes_build_info{job!~\"kube-dns|coredns\"},\"git_version\",\"$1\",\"git_version\",\"(v[0-9]*.[0-9]*).*\"))) > 1",
+						Expr:   `count by (cluster) (count by (git_version, cluster) (label_replace(kubernetes_build_info{job!~"kube-dns|coredns"},"git_version","$1","git_version","(v[0-9]*.[0-9]*).*"))) > 1`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "warning"},
 					}, {
@@ -1189,11 +1130,11 @@ var KubernetesSystemAlertRules = &v1beta1.VMRule{
 							"summary":     "Kubernetes API server client is experiencing errors.",
 						},
 						Expr: `
-								(sum(rate(rest_client_requests_total{code=~"5.."}[5m])) by (cluster, instance, job, namespace)
-								  /
-								sum(rate(rest_client_requests_total[5m])) by (cluster, instance, job, namespace))
-								> 0.01
-								`,
+(sum(rate(rest_client_requests_total{code=~"5.."}[5m])) by (cluster, instance, job, namespace)
+  /
+sum(rate(rest_client_requests_total[5m])) by (cluster, instance, job, namespace))
+> 0.01
+`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "warning"},
 					},
@@ -1209,16 +1150,9 @@ var KubernetesSystemAlertRules = &v1beta1.VMRule{
 
 var NodeNetworkAlertRules = &v1beta1.VMRule{
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-node-network",
-		Namespace: "monitoring",
+		Labels:    RulesLabels,
+		Name:      "victoria-metrics-node-network",
+		Namespace: Single.Namespace,
 	},
 	Spec: v1beta1.VMRuleSpec{
 		Groups: []v1beta1.RuleGroup{
@@ -1228,11 +1162,11 @@ var NodeNetworkAlertRules = &v1beta1.VMRule{
 					{
 						Alert: "NodeNetworkInterfaceFlapping",
 						Annotations: map[string]string{
-							"description": "Network interface \"{{ $labels.device }}\" changing its up status often on node-exporter {{ $labels.namespace }}/{{ $labels.pod }}",
+							"description": `Network interface "{{ $labels.device }}" changing its up status often on node-exporter {{ $labels.namespace }}/{{ $labels.pod }}`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/general/nodenetworkinterfaceflapping",
 							"summary":     "Network interface is often changing its status",
 						},
-						Expr:   "changes(node_network_up{job=\"node-exporter\",device!~\"veth.+\"}[2m]) > 2",
+						Expr:   `changes(node_network_up{job="node-exporter",device!~"veth.+"}[2m]) > 2`,
 						For:    "2m",
 						Labels: map[string]string{"severity": "warning"},
 					},
@@ -1248,16 +1182,9 @@ var NodeNetworkAlertRules = &v1beta1.VMRule{
 
 var K8SNodeRules = &v1beta1.VMRule{
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-node.rules",
-		Namespace: "monitoring",
+		Labels:    RulesLabels,
+		Name:      "victoria-metrics-node.rules",
+		Namespace: Single.Namespace,
 	},
 	Spec: v1beta1.VMRuleSpec{
 		Groups: []v1beta1.RuleGroup{
@@ -1266,49 +1193,49 @@ var K8SNodeRules = &v1beta1.VMRule{
 				Rules: []v1beta1.Rule{
 					{
 						Expr: `
-								topk by(cluster, namespace, pod) (1,
-								  max by (cluster, node, namespace, pod) (
-									label_replace(kube_pod_info{job="kube-state-metrics",node!=""}, "pod", "$1", "pod", "(.*)")
-								))
-								`,
+topk by(cluster, namespace, pod) (1,
+  max by (cluster, node, namespace, pod) (
+    label_replace(kube_pod_info{job="kube-state-metrics",node!=""}, "pod", "$1", "pod", "(.*)")
+))
+`,
 						Record: "node_namespace_pod:kube_pod_info:",
 					}, {
 						Expr: `
-								count by (cluster, node) (
-								  node_cpu_seconds_total{mode="idle",job="node-exporter"}
-								  * on (namespace, pod) group_left(node)
-								  topk by(namespace, pod) (1, node_namespace_pod:kube_pod_info:)
-								)
-								`,
+count by (cluster, node) (
+  node_cpu_seconds_total{mode="idle",job="node-exporter"}
+  * on (namespace, pod) group_left(node)
+  topk by(namespace, pod) (1, node_namespace_pod:kube_pod_info:)
+)
+`,
 						Record: "node:node_num_cpu:sum",
 					}, {
 						Expr: `
-								sum(
-								  node_memory_MemAvailable_bytes{job="node-exporter"} or
-								  (
-									node_memory_Buffers_bytes{job="node-exporter"} +
-									node_memory_Cached_bytes{job="node-exporter"} +
-									node_memory_MemFree_bytes{job="node-exporter"} +
-									node_memory_Slab_bytes{job="node-exporter"}
-								  )
-								) by (cluster)
-								`,
+sum(
+  node_memory_MemAvailable_bytes{job="node-exporter"} or
+  (
+    node_memory_Buffers_bytes{job="node-exporter"} +
+    node_memory_Cached_bytes{job="node-exporter"} +
+    node_memory_MemFree_bytes{job="node-exporter"} +
+    node_memory_Slab_bytes{job="node-exporter"}
+  )
+) by (cluster)
+`,
 						Record: ":node_memory_MemAvailable_bytes:sum",
 					}, {
 						Expr: `
-								avg by (cluster, node) (
-								  sum without (mode) (
-									rate(node_cpu_seconds_total{mode!="idle",mode!="iowait",mode!="steal",job="node-exporter"}[5m])
-								  )
-								)
-								`,
+avg by (cluster, node) (
+  sum without (mode) (
+    rate(node_cpu_seconds_total{mode!="idle",mode!="iowait",mode!="steal",job="node-exporter"}[5m])
+  )
+)
+`,
 						Record: "node:node_cpu_utilization:ratio_rate5m",
 					}, {
 						Expr: `
-								avg by (cluster) (
-								  node:node_cpu_utilization:ratio_rate5m
-								)
-								`,
+avg by (cluster) (
+  node:node_cpu_utilization:ratio_rate5m
+)
+`,
 						Record: "cluster:node_cpu:ratio_rate5m",
 					},
 				},
