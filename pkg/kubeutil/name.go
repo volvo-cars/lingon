@@ -13,6 +13,6 @@ const (
 const (
 	PathMetrics   = "/metrics"
 	PathProfiling = "/debug/pprof"
-	PathProbes    = "/healthz"
+	PathHealthz   = "/healthz"
 	PathReadiness = "/readiness"
 )

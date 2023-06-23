@@ -6,6 +6,8 @@ package testutil
 import (
 	"errors"
 	"testing"
+
+	"golang.org/x/exp/slices"
 )
 
 // AssertEqual checks if the expected and actual are equal. Errors if not.
@@ -32,8 +34,8 @@ func AssertNoError(t *testing.T, err error, msg ...string) {
 	}
 }
 
-// AssertError checks if the error is not nil.
-func AssertError(t *testing.T, err error, msg string) {
+// AssertErrorMsg checks if the error is not nil.
+func AssertErrorMsg(t *testing.T, err error, msg string) {
 	t.Helper()
 	if err == nil {
 		t.Fatal(Callers(), msg, errors.New("error was expected but is nil"))
@@ -51,7 +53,7 @@ func equal[C comparable](a, b C) bool {
 func IsEqual[C comparable](t *testing.T, expected, actual C) {
 	t.Helper()
 	if !equal(expected, actual) {
-		t.Fatalf("expected %v, got %v", expected, actual)
+		t.Fatal(Callers(), Diff(actual, expected))
 	}
 }
 
@@ -59,7 +61,7 @@ func IsEqual[C comparable](t *testing.T, expected, actual C) {
 func IsNotEqual[C comparable](t *testing.T, expected, actual C) {
 	t.Helper()
 	if equal(expected, actual) {
-		t.Fatalf("expected %v, got %v", expected, actual)
+		t.Fatal(Callers(), Diff(actual, expected))
 	}
 }
 
@@ -99,20 +101,10 @@ func IsNotNil(t *testing.T, obj any) {
 	}
 }
 
-func contains[C comparable](haystack []C, needle C) bool {
-	for _, item := range haystack {
-		if item == needle {
-			return true
-		}
-	}
-
-	return false
-}
-
 // Contains checks if the needle is in the haystack. Errors if not.
 func Contains[C comparable](t *testing.T, haystack []C, needle C) {
 	t.Helper()
-	if !contains(haystack, needle) {
+	if !slices.Contains(haystack, needle) {
 		t.Fatalf("expected %v to contain %v", haystack, needle)
 	}
 }
@@ -120,7 +112,7 @@ func Contains[C comparable](t *testing.T, haystack []C, needle C) {
 // NotContains checks if the needle is not in the haystack. Errors if it is.
 func NotContains[C comparable](t *testing.T, haystack []C, needle C) {
 	t.Helper()
-	if contains(haystack, needle) {
+	if slices.Contains(haystack, needle) {
 		t.Fatalf("expected %v to not contain %v", haystack, needle)
 	}
 }
@@ -142,6 +134,6 @@ func False(t *testing.T, condition bool, msg string) {
 func ErrorIs(t *testing.T, err, expected error) {
 	t.Helper()
 	if !errors.Is(err, expected) {
-		t.Fatalf("expected error \"%v\", got \"%v\"", expected, err)
+		t.Fatalf(`expected error "%v", got "%v"`, expected, err)
 	}
 }

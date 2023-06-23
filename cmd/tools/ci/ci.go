@@ -28,7 +28,7 @@ const (
 
 	// syft is for generating SBOM
 	syftRepo    = "github.com/anchore/syft/cmd/syft"
-	syftVersion = "@v0.79.0"
+	syftVersion = "@v0.83.0"
 
 	// goLicenses is Google's go-licenses to export all licenses
 	goLicensesRepo    = "github.com/google/go-licenses"
@@ -37,7 +37,7 @@ const (
 
 	// goCILint is for linting code
 	goCILintRepo    = "github.com/golangci/golangci-lint/cmd/golangci-lint"
-	goCILintVersion = "@v1.52.2"
+	goCILintVersion = "@v1.53.2"
 	goCILint        = goCILintRepo + goCILintVersion
 
 	// copyWriteCheck is hashicorp/copywrite to check license headers

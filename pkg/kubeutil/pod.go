@@ -54,6 +54,10 @@ func ProbeHTTP(path string, port int) corev1.ProbeHandler {
 	}
 }
 
+//	EnvVarDownAPI returns corev1.EnvVar{
+//			Name:      name,
+//			ValueFrom: &corev1.EnvVarSource{FieldRef: &corev1.ObjectFieldSelector{FieldPath: fieldPath}},
+//		}
 func EnvVarDownAPI(name, fieldPath string) corev1.EnvVar {
 	return corev1.EnvVar{
 		Name:      name,

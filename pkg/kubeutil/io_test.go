@@ -37,44 +37,6 @@ func TestFileExists(t *testing.T) {
 	}
 }
 
-func Test_contains(t *testing.T) {
-	type args struct {
-		e string
-		s []string
-	}
-	tests := []struct {
-		name string
-		args args
-		want bool
-	}{
-		{
-			name: "in haystack",
-			args: args{
-				e: "hey",
-				s: []string{"hey", "ho", "let's go"},
-			},
-			want: true,
-		},
-		{
-			name: "not in haystack",
-			args: args{
-				e: "NIE",
-				s: []string{"hey", "ho", "let's go"},
-			},
-			want: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(
-			tt.name, func(t *testing.T) {
-				if got := contains(tt.args.e, tt.args.s); got != tt.want {
-					t.Errorf("contains() = %v, want %v", got, tt.want)
-				}
-			},
-		)
-	}
-}
-
 func TestListGoFiles(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -88,13 +50,11 @@ func TestListGoFiles(t *testing.T) {
 			want: []string{
 				"config.go",
 				"config_test.go",
+				"deploy.go",
+				"deploy_test.go",
 				"doc.go",
-				"iam.go",
-				"iambinding.go",
 				"io.go",
 				"io_test.go",
-				"kubeutil.go",
-				"kubeutil_test.go",
 				"label.go",
 				"manifest.go",
 				"manifest_test.go",
@@ -105,7 +65,12 @@ func TestListGoFiles(t *testing.T) {
 				"p.go",
 				"p_test.go",
 				"pod.go",
+				"pod_test.go",
+				"rbac.go",
+				"rbac_binding.go",
+				"rbac_test.go",
 				"secret.go",
+				"secret_test.go",
 				"txtar.go",
 				"txtar_test.go",
 				"typemeta_gen.go",

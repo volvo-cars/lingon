@@ -260,8 +260,10 @@ func TestImport(t *testing.T) {
 
 				// compare content
 				golden, err := txtar.ParseFile(
-					filepath.Join("testdata", "golden",
-						strings.ReplaceAll(tc.Name, " ", "_")+".txt"),
+					filepath.Join(
+						"testdata", "golden",
+						strings.ReplaceAll(tc.Name, " ", "_")+".txt",
+					),
 				)
 				tu.AssertNoError(t, err, "reading golden file")
 				if diff := tu.DiffTxtarSort(ar, golden); diff != "" {
@@ -282,7 +284,7 @@ func TestImport_Error(t *testing.T) {
 	output := `import options: incompatible options
 package name cannot contain a dash
 file does not exist: does-not-exists.yaml`
-	tu.AssertEqual(t, output, err.Error())
+	tu.AssertErrorMsg(t, err, output)
 }
 
 func TestImport_ErrorEmptyManifest(t *testing.T) {
@@ -354,11 +356,7 @@ func TestImport_SaveFromReader(t *testing.T) {
 
 	// compare content
 	golden, err := txtar.ParseFile(
-		filepath.Join(
-			"testdata",
-			"golden",
-			"import_save_from_reader.txt",
-		),
+		filepath.Join("testdata", "golden", "import_save_from_reader.txt"),
 	)
 	tu.AssertNoError(t, err, "reading golden file")
 	if diff := tu.DiffTxtarSort(ar, golden); diff != "" {
@@ -393,7 +391,7 @@ func TestImport_MissingCRDs(t *testing.T) {
 	errmsg := "generate go: stdin: " +
 		"no kind \"EnvoyFilter\" is registered for version " +
 		"\"networking.istio.io/v1alpha3\" in scheme \"pkg/runtime/scheme.go:100\""
-	tu.AssertError(t, err, errmsg)
+	tu.AssertErrorMsg(t, err, errmsg)
 }
 
 func TestImport_ReaderWriter(t *testing.T) {

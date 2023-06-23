@@ -14,57 +14,55 @@ import (
 )
 
 type goky struct {
-	ar        *txtar.Archive
-	o         exportOption
-	useWriter bool
+	ar            *txtar.Archive
+	o             exportOption
+	dup           map[string]struct{} // kind/name  for duplicate detection
+	useWriter     bool
+	useSingleFile bool
 }
 
 func Export(km Exporter, opts ...ExportOption) error {
 	g := goky{
-		ar: &txtar.Archive{},
-		o:  exportDefaultOpts,
+		ar:  &txtar.Archive{},
+		o:   exportDefaultOpts,
+		dup: make(map[string]struct{}, 0),
 	}
 	for _, o := range opts {
 		o(&g)
 	}
 
-	if err := gatekeeperExportOptions(g.o); err != nil {
+	if err := g.gatekeeperExportOptions(); err != nil {
 		return fmt.Errorf("export: %w", err)
 	}
 
 	return g.export(km)
 }
 
-func gatekeeperExportOptions(o exportOption) error {
-	if o.Explode && o.SingleFile != "" {
+func (g *goky) gatekeeperExportOptions() error {
+	if g.o.Explode && g.useSingleFile {
 		return fmt.Errorf(
 			"WithExportExplodeManifests and WithExportAsSingleFile: %w",
 			ErrIncompatibleOptions,
 		)
 	}
 
-	if o.OutputJSON && o.Kustomize {
+	if g.o.OutputJSON && g.o.Kustomize {
 		return fmt.Errorf(
 			"WithExportJSON and WithExportKustomize: %w",
 			ErrIncompatibleOptions,
 		)
 	}
+
 	return nil
 }
 
 func (g *goky) export(km Exporter) error {
 	var err error
-	rv := reflect.ValueOf(km)
-
-	if rv.Kind() == reflect.Ptr {
-		rv = rv.Elem()
+	if km == nil {
+		return fmt.Errorf("cannot export type %T: %v", km, km)
 	}
-	if rv.Type().Kind() != reflect.Struct {
-		return fmt.Errorf("cannot encode non-struct type: %v", rv)
-	}
-
-	if err = g.encodeStruct(rv, ""); err != nil {
-		return err
+	if err = g.encodeStruct(reflect.ValueOf(km), ""); err != nil {
+		return fmt.Errorf("encoding: %w", err)
 	}
 
 	if len(g.ar.Files) == 0 {
@@ -92,7 +90,7 @@ resources:`
 	}
 
 	if g.useWriter {
-		if g.o.SingleFile != "" {
+		if g.useSingleFile {
 			// write to [io.Writer] as JSON array in a single file
 			if g.o.OutputJSON {
 				// The txtar is already in JSON format
@@ -121,7 +119,7 @@ resources:`
 		return fmt.Errorf("mkdir %s: %w", g.o.OutputDir, err)
 	}
 
-	if g.o.SingleFile != "" {
+	if g.useSingleFile {
 		f := filepath.Join(g.o.OutputDir, g.o.SingleFile)
 		// write to single file named g.o.SingleFile as JSON array
 		if g.o.OutputJSON {

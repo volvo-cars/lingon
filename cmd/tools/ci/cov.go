@@ -28,11 +28,20 @@ func CoverP() {
 	coverMode := "count" // see `go help testflag` for more info
 	iferr(
 		Go(
-			"test",
-			recDir,
-			"-coverprofile="+coverOutput,
-			"-covermode="+coverMode,
-		))
+			append(
+				[]string{"test"}, append(
+					listLibFolders(),
+					"-coverprofile="+coverOutput,
+					"-covermode="+coverMode,
+				)...,
+			)...,
+		// "test",
+		// // recDir,
+		// listLibFolders(),
+		// "-coverprofile="+coverOutput,
+		// "-covermode="+coverMode,
+		),
+	)
 
 	var buf bytes.Buffer
 	iferr(coverPct(&buf, coverOutput))
@@ -133,4 +142,21 @@ func coverPct(w io.Writer, o string) error {
 		return fmt.Errorf("go: %s", err)
 	}
 	return nil
+}
+
+func listLibFolders() []string {
+	cmd := exec.Command("go", "list", "./pkg/...")
+	slog.Info("exec", slog.String("cmd", cmd.String()))
+	defer slog.Info("done", slog.String("cmd", cmd.String()))
+
+	o, err := cmd.CombinedOutput()
+	iferr(err)
+	var buf bytes.Buffer
+	buf.Write(o)
+	s := bufio.NewScanner(&buf)
+	res := make([]string, 0)
+	for s.Scan() {
+		res = append(res, s.Text())
+	}
+	return res
 }

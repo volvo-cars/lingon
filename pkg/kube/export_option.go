@@ -62,7 +62,7 @@ var exportDefaultOpts = exportOption{
 	SecretHook:     nil,
 	Kustomize:      false,
 	Explode:        false,
-	SingleFile:     "",
+	SingleFile:     "out",
 	OutputJSON:     false,
 }
 
@@ -88,6 +88,7 @@ func WithExportNameFileFunc(f func(m *kubeutil.Metadata) string) ExportOption {
 func WithExportExplodeManifests(b bool) ExportOption {
 	return func(g *goky) {
 		g.o.Explode = b
+		g.useSingleFile = false
 	}
 }
 
@@ -123,6 +124,7 @@ func WithExportWriter(w io.Writer) ExportOption {
 func WithExportStdOut() ExportOption {
 	return func(g *goky) {
 		g.useWriter = true
+		g.o.SingleFile = "stdout"
 	}
 }
 
@@ -148,7 +150,10 @@ func WithExportOutputJSON(b bool) ExportOption {
 // the output file will be written to ./out/manifests.yaml
 func WithExportAsSingleFile(name string) ExportOption {
 	return func(g *goky) {
-		g.o.SingleFile = name
+		g.useSingleFile = true
+		if name != "" {
+			g.o.SingleFile = name
+		}
 	}
 }
 

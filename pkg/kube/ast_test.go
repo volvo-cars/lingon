@@ -177,6 +177,14 @@ func TestConvertValue(t *testing.T) {
 			want: `map[string][]string{"key1": []string{"ok", "yay"}}`,
 		},
 		{
+			name: "map of string",
+			in: map[string]string{
+				"key1": "value1",
+				"key2": `value2 and "quote"`,
+			},
+			want: "map[string]string{\n\t" + `"key1": "value1"` + ",\n\t\"key2\": `value2 and \"quote\"`,\n" + "}",
+		},
+		{
 			name: "map of map string",
 			in: map[string]map[string]string{
 				"key1": {"key2": "value1"},
@@ -292,6 +300,34 @@ func TestConvertValue(t *testing.T) {
 			in:   float64(10),
 			want: "10.0",
 		},
+		{
+			name: "embed unexported",
+			in: struct {
+				i int
+			}{
+				i: 42,
+			},
+			want: "\t{\n\t}",
+		},
+		{
+			name: "chan",
+			in:   make(chan int),
+			want: "nil",
+		},
+		{
+			name: "struct chan",
+			in: struct {
+				C chan int
+			}{
+				C: make(chan int),
+			},
+			want: "\t{\n\tC:\n\t\tnil\n\t}",
+		},
+		{
+			name: "map func",
+			in:   map[string]func() int{},
+			want: "map[string]string{}",
+		},
 	}
 
 	for _, tt := range tests {
@@ -361,7 +397,17 @@ func Test_rawString(t *testing.T) {
 		{
 			name: "with double quote",
 			s:    `this "double quote" in a string`,
-			want: `"this \"double quote\" in a string"`,
+			want: "`" + `this "double quote" in a string` + "`",
+		},
+		{
+			name: "escaped quote",
+			s:    "hello \" mess",
+			want: "`hello \" mess`",
+		},
+		{
+			name: "backtick in quotes in backticks",
+			s:    "`" + `hello " mess` + "`",
+			want: "\"`hello \\\" mess`\"",
 		},
 		{
 			name: "with new line",
@@ -380,13 +426,43 @@ this line
 			name: "backticks with new line",
 			s: `fun 
 stuff` + "`\"with backticks`\" and new lines",
-			want: "`\nfun \nstuff\"\"with backticks\"\" and new lines\n`",
+			want: "\"fun \\nstuff`\\\"with backticks`\\\" and new lines\"",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(
 			tt.name, func(t *testing.T) {
 				got := rawString(tt.s)
+				tu.AssertEqual(t, tt.want, fmt.Sprintf("%#v", got))
+			},
+		)
+	}
+}
+
+func Test_convertQuantity(t *testing.T) {
+	requests := kubeutil.Resources("1", "1Gi", "2", "2Gi").Requests
+	cpu := requests.Cpu()
+
+	tests := []struct {
+		name  string
+		input interface{}
+		want  string
+	}{
+		// TODO: Add test cases.
+		{
+			name:  "cpu ok",
+			input: *cpu,
+			want:  `resource.MustParse("1")`,
+		}, {
+			name:  "not a quantity",
+			input: "wrong",
+			want:  `resource.MustParse(">>> FAILED TO PARSE QUANTITY <<<")`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(
+			tt.name, func(t *testing.T) {
+				got := convertQuantity(reflect.ValueOf(tt.input))
 				tu.AssertEqual(t, tt.want, fmt.Sprintf("%#v", got))
 			},
 		)
