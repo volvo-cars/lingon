@@ -6,6 +6,7 @@ replace github.com/volvo-cars/lingon => ../../
 
 require (
 	github.com/K-Phoen/grabana v0.21.18
+	github.com/VictoriaMetrics/metricsql v0.56.2
 	github.com/VictoriaMetrics/operator/api v0.0.0-20230617192302-27cd5e501c90
 	github.com/ardanlabs/conf/v3 v3.1.6
 	github.com/aws/karpenter v0.28.0
@@ -47,7 +48,6 @@ require (
 	github.com/VictoriaMetrics/VictoriaMetrics v1.91.2 // indirect
 	github.com/VictoriaMetrics/fasthttp v1.2.0 // indirect
 	github.com/VictoriaMetrics/metrics v1.24.0 // indirect
-	github.com/VictoriaMetrics/metricsql v0.56.2 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/aws/aws-sdk-go v1.44.284 // indirect

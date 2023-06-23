@@ -329,14 +329,7 @@ func TestExport(t *testing.T) {
 				tu.AssertNoError(t, tc.err, "failed to check error")
 				tu.AssertNoError(t, err, "failed to export")
 				got := txtar.Parse(buf.Bytes())
-				tu.AssertEqualSlice(t, tu.Filenames(got), tc.outFiles)
-				f := filepath.Join(
-					"testdata",
-					"golden",
-					exportGoldenFileName(tc.name),
-				)
-				want, err := txtar.ParseFile(f)
-				tu.AssertNoError(t, err, "failed to parse expected txtar")
+				want := loadGolden(t, tc.name)
 				if diff := tu.DiffTxtar(got, want); diff != "" {
 					t.Fatal(tu.Callers(), diff)
 				}
@@ -345,8 +338,36 @@ func TestExport(t *testing.T) {
 	}
 }
 
-func exportGoldenFileName(s string) string {
-	return strings.ReplaceAll(s, " ", "_") + ".txt"
+func loadGolden(t *testing.T, s string) *txtar.Archive {
+	t.Helper()
+	cleanName := strings.ReplaceAll(s, " ", "_") + ".txt"
+	f := filepath.Join("testdata", "golden", cleanName)
+	want, err := txtar.ParseFile(f)
+	tu.AssertNoError(t, err, "failed to parse expected txtar")
+	return want
+}
+
+func TestExport_Nil(t *testing.T) {
+	tu.AssertErrorMsg(
+		t,
+		kube.Export(nil),
+		"cannot export type <nil>: <nil>",
+	)
+}
+
+func TestExport_Zero(t *testing.T) {
+	v := &kube.App{}
+	tu.AssertErrorMsg(t, kube.Export(v), "no file to write")
+}
+
+func TestExport_Zero2(t *testing.T) {
+	type A struct{ kube.App }
+	var a *A
+	tu.AssertErrorMsg(
+		t,
+		kube.Export(a),
+		`encoding: "*kube_test.A" is nil: missing`,
+	)
 }
 
 func TestExport_SingleFileJSON(t *testing.T) {

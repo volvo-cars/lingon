@@ -187,13 +187,13 @@ DefaultVolumesToRestic specifies whether restic should be used to take a backup 
 								Type:     "boolean",
 							},
 							"excludedClusterScopedResources": apiextensionsv1.JSONSchemaProps{
-								Description: "ExcludedClusterScopedResources is a slice of cluster-scoped resource type names to exclude from the backup. If set to \"*\", all cluster-scoped resource types are excluded. The default value is empty.",
+								Description: `ExcludedClusterScopedResources is a slice of cluster-scoped resource type names to exclude from the backup. If set to "*", all cluster-scoped resource types are excluded. The default value is empty.`,
 								Items:       &apiextensionsv1.JSONSchemaPropsOrArray{Schema: &apiextensionsv1.JSONSchemaProps{Type: "string"}},
 								Nullable:    true,
 								Type:        "array",
 							},
 							"excludedNamespaceScopedResources": apiextensionsv1.JSONSchemaProps{
-								Description: "ExcludedNamespaceScopedResources is a slice of namespace-scoped resource type names to exclude from the backup. If set to \"*\", all namespace-scoped resource types are excluded. The default value is empty.",
+								Description: `ExcludedNamespaceScopedResources is a slice of namespace-scoped resource type names to exclude from the backup. If set to "*", all namespace-scoped resource types are excluded. The default value is empty.`,
 								Items:       &apiextensionsv1.JSONSchemaPropsOrArray{Schema: &apiextensionsv1.JSONSchemaProps{Type: "string"}},
 								Nullable:    true,
 								Type:        "array",
@@ -274,7 +274,7 @@ DefaultVolumesToRestic specifies whether restic should be used to take a backup 
 															Allows: true,
 															Schema: &apiextensionsv1.JSONSchemaProps{Type: "string"},
 														},
-														Description: "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is \"key\", the operator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+														Description: `matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.`,
 														Type:        "object",
 													},
 												},
@@ -285,7 +285,7 @@ DefaultVolumesToRestic specifies whether restic should be used to take a backup 
 												Type:        "string",
 											},
 											"post": apiextensionsv1.JSONSchemaProps{
-												Description: "PostHooks is a list of BackupResourceHooks to execute after storing the item in the backup. These are executed after all \"additional items\" from item actions are processed.",
+												Description: `PostHooks is a list of BackupResourceHooks to execute after storing the item in the backup. These are executed after all "additional items" from item actions are processed.`,
 												Items: &apiextensionsv1.JSONSchemaPropsOrArray{Schema: &apiextensionsv1.JSONSchemaProps{
 													Description: "BackupResourceHook defines a hook for a resource.",
 													Properties: map[string]apiextensionsv1.JSONSchemaProps{"exec": apiextensionsv1.JSONSchemaProps{
@@ -320,7 +320,7 @@ DefaultVolumesToRestic specifies whether restic should be used to take a backup 
 												Type: "array",
 											},
 											"pre": apiextensionsv1.JSONSchemaProps{
-												Description: "PreHooks is a list of BackupResourceHooks to execute prior to storing the item in the backup. These are executed before any \"additional items\" from item actions are processed.",
+												Description: `PreHooks is a list of BackupResourceHooks to execute prior to storing the item in the backup. These are executed before any "additional items" from item actions are processed.`,
 												Items: &apiextensionsv1.JSONSchemaPropsOrArray{Schema: &apiextensionsv1.JSONSchemaProps{
 													Description: "BackupResourceHook defines a hook for a resource.",
 													Properties: map[string]apiextensionsv1.JSONSchemaProps{"exec": apiextensionsv1.JSONSchemaProps{
@@ -369,13 +369,13 @@ DefaultVolumesToRestic specifies whether restic should be used to take a backup 
 								Type:        "boolean",
 							},
 							"includedClusterScopedResources": apiextensionsv1.JSONSchemaProps{
-								Description: "IncludedClusterScopedResources is a slice of cluster-scoped resource type names to include in the backup. If set to \"*\", all cluster-scoped resource types are included. The default value is empty, which means only related cluster-scoped resources are included.",
+								Description: `IncludedClusterScopedResources is a slice of cluster-scoped resource type names to include in the backup. If set to "*", all cluster-scoped resource types are included. The default value is empty, which means only related cluster-scoped resources are included.`,
 								Items:       &apiextensionsv1.JSONSchemaPropsOrArray{Schema: &apiextensionsv1.JSONSchemaProps{Type: "string"}},
 								Nullable:    true,
 								Type:        "array",
 							},
 							"includedNamespaceScopedResources": apiextensionsv1.JSONSchemaProps{
-								Description: "IncludedNamespaceScopedResources is a slice of namespace-scoped resource type names to include in the backup. The default value is \"*\".",
+								Description: `IncludedNamespaceScopedResources is a slice of namespace-scoped resource type names to include in the backup. The default value is "*".`,
 								Items:       &apiextensionsv1.JSONSchemaPropsOrArray{Schema: &apiextensionsv1.JSONSchemaProps{Type: "string"}},
 								Nullable:    true,
 								Type:        "array",
@@ -429,7 +429,7 @@ DefaultVolumesToRestic specifies whether restic should be used to take a backup 
 											Allows: true,
 											Schema: &apiextensionsv1.JSONSchemaProps{Type: "string"},
 										},
-										Description: "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is \"key\", the operator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+										Description: `matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.`,
 										Type:        "object",
 									},
 								},
@@ -479,7 +479,7 @@ DefaultVolumesToRestic specifies whether restic should be used to take a backup 
 												Allows: true,
 												Schema: &apiextensionsv1.JSONSchemaProps{Type: "string"},
 											},
-											Description: "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is \"key\", the operator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+											Description: `matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.`,
 											Type:        "object",
 										},
 									},
@@ -493,7 +493,7 @@ DefaultVolumesToRestic specifies whether restic should be used to take a backup 
 									Allows: true,
 									Schema: &apiextensionsv1.JSONSchemaProps{Type: "string"},
 								},
-								Description: "OrderedResources specifies the backup order of resources of specific Kind. The map key is the resource name and value is a list of object names separated by commas. Each resource name has format \"namespace/objectname\".  For cluster resources, simply use \"objectname\".",
+								Description: `OrderedResources specifies the backup order of resources of specific Kind. The map key is the resource name and value is a list of object names separated by commas. Each resource name has format "namespace/objectname".  For cluster resources, simply use "objectname".`,
 								Nullable:    true,
 								Type:        "object",
 							},
@@ -787,11 +787,8 @@ AccessMode is an unused field.
 								Type: "string",
 							},
 							"lastSyncedRevision": apiextensionsv1.JSONSchemaProps{
-								Description: `
-LastSyncedRevision is the value of the "metadata/revision" file in the backup storage location the last time the BSL's contents were synced into the cluster. 
- Deprecated: this field is no longer updated or used for detecting changes to the location's contents and will be removed entirely in v2.0.
-`,
-								Type: "string",
+								Description: "LastSyncedRevision is the value of the `metadata/revision` file in the backup storage location the last time the BSL's contents were synced into the cluster. \n Deprecated: this field is no longer updated or used for detecting changes to the location's contents and will be removed entirely in v2.0.",
+								Type:        "string",
 							},
 							"lastSyncedTime": apiextensionsv1.JSONSchemaProps{
 								Description: "LastSyncedTime is the last time the contents of the location were synced into the cluster.",
@@ -1082,7 +1079,7 @@ var PodvolumebackupsIoCRD = &apiextensionsv1.CustomResourceDefinition{
 										Type:        "string",
 									},
 									"fieldPath": apiextensionsv1.JSONSchemaProps{
-										Description: "If referring to a piece of an object instead of an entire object, this string should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2]. For example, if the object reference is to a container within a pod, this would take on a value like: \"spec.containers{name}\" (where \"name\" refers to the name of the container that triggered the event) or if no container name is specified \"spec.containers[2]\" (container with index 2 in this pod). This syntax is chosen only to have some well-defined way of referencing a part of an object. TODO: this design is not final and this field is subject to change in the future.",
+										Description: `If referring to a piece of an object instead of an entire object, this string should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2]. For example, if the object reference is to a container within a pod, this would take on a value like: "spec.containers{name}" (where "name" refers to the name of the container that triggered the event) or if no container name is specified "spec.containers[2]" (container with index 2 in this pod). This syntax is chosen only to have some well-defined way of referencing a part of an object. TODO: this design is not final and this field is subject to change in the future.`,
 										Type:        "string",
 									},
 									"kind": apiextensionsv1.JSONSchemaProps{
@@ -1280,7 +1277,7 @@ var PodvolumerestoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 										Type:        "string",
 									},
 									"fieldPath": apiextensionsv1.JSONSchemaProps{
-										Description: "If referring to a piece of an object instead of an entire object, this string should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2]. For example, if the object reference is to a container within a pod, this would take on a value like: \"spec.containers{name}\" (where \"name\" refers to the name of the container that triggered the event) or if no container name is specified \"spec.containers[2]\" (container with index 2 in this pod). This syntax is chosen only to have some well-defined way of referencing a part of an object. TODO: this design is not final and this field is subject to change in the future.",
+										Description: `If referring to a piece of an object instead of an entire object, this string should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2]. For example, if the object reference is to a container within a pod, this would take on a value like: "spec.containers{name}" (where "name" refers to the name of the container that triggered the event) or if no container name is specified "spec.containers[2]" (container with index 2 in this pod). This syntax is chosen only to have some well-defined way of referencing a part of an object. TODO: this design is not final and this field is subject to change in the future.`,
 										Type:        "string",
 									},
 									"kind": apiextensionsv1.JSONSchemaProps{
@@ -1501,7 +1498,7 @@ var RestoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 															Allows: true,
 															Schema: &apiextensionsv1.JSONSchemaProps{Type: "string"},
 														},
-														Description: "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is \"key\", the operator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+														Description: `matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.`,
 														Type:        "object",
 													},
 												},
@@ -1629,7 +1626,7 @@ var RestoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 											Allows: true,
 											Schema: &apiextensionsv1.JSONSchemaProps{Type: "string"},
 										},
-										Description: "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is \"key\", the operator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+										Description: `matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.`,
 										Type:        "object",
 									},
 								},
@@ -1677,7 +1674,7 @@ var RestoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 												Allows: true,
 												Schema: &apiextensionsv1.JSONSchemaProps{Type: "string"},
 											},
-											Description: "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is \"key\", the operator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+											Description: `matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.`,
 											Type:        "object",
 										},
 									},
@@ -1889,13 +1886,13 @@ DefaultVolumesToRestic specifies whether restic should be used to take a backup 
 										Type:     "boolean",
 									},
 									"excludedClusterScopedResources": apiextensionsv1.JSONSchemaProps{
-										Description: "ExcludedClusterScopedResources is a slice of cluster-scoped resource type names to exclude from the backup. If set to \"*\", all cluster-scoped resource types are excluded. The default value is empty.",
+										Description: `ExcludedClusterScopedResources is a slice of cluster-scoped resource type names to exclude from the backup. If set to "*", all cluster-scoped resource types are excluded. The default value is empty.`,
 										Items:       &apiextensionsv1.JSONSchemaPropsOrArray{Schema: &apiextensionsv1.JSONSchemaProps{Type: "string"}},
 										Nullable:    true,
 										Type:        "array",
 									},
 									"excludedNamespaceScopedResources": apiextensionsv1.JSONSchemaProps{
-										Description: "ExcludedNamespaceScopedResources is a slice of namespace-scoped resource type names to exclude from the backup. If set to \"*\", all namespace-scoped resource types are excluded. The default value is empty.",
+										Description: `ExcludedNamespaceScopedResources is a slice of namespace-scoped resource type names to exclude from the backup. If set to "*", all namespace-scoped resource types are excluded. The default value is empty.`,
 										Items:       &apiextensionsv1.JSONSchemaPropsOrArray{Schema: &apiextensionsv1.JSONSchemaProps{Type: "string"}},
 										Nullable:    true,
 										Type:        "array",
@@ -1976,7 +1973,7 @@ DefaultVolumesToRestic specifies whether restic should be used to take a backup 
 																	Allows: true,
 																	Schema: &apiextensionsv1.JSONSchemaProps{Type: "string"},
 																},
-																Description: "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is \"key\", the operator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+																Description: `matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.`,
 																Type:        "object",
 															},
 														},
@@ -1987,7 +1984,7 @@ DefaultVolumesToRestic specifies whether restic should be used to take a backup 
 														Type:        "string",
 													},
 													"post": apiextensionsv1.JSONSchemaProps{
-														Description: "PostHooks is a list of BackupResourceHooks to execute after storing the item in the backup. These are executed after all \"additional items\" from item actions are processed.",
+														Description: `PostHooks is a list of BackupResourceHooks to execute after storing the item in the backup. These are executed after all "additional items" from item actions are processed.`,
 														Items: &apiextensionsv1.JSONSchemaPropsOrArray{Schema: &apiextensionsv1.JSONSchemaProps{
 															Description: "BackupResourceHook defines a hook for a resource.",
 															Properties: map[string]apiextensionsv1.JSONSchemaProps{"exec": apiextensionsv1.JSONSchemaProps{
@@ -2022,7 +2019,7 @@ DefaultVolumesToRestic specifies whether restic should be used to take a backup 
 														Type: "array",
 													},
 													"pre": apiextensionsv1.JSONSchemaProps{
-														Description: "PreHooks is a list of BackupResourceHooks to execute prior to storing the item in the backup. These are executed before any \"additional items\" from item actions are processed.",
+														Description: `PreHooks is a list of BackupResourceHooks to execute prior to storing the item in the backup. These are executed before any "additional items" from item actions are processed.`,
 														Items: &apiextensionsv1.JSONSchemaPropsOrArray{Schema: &apiextensionsv1.JSONSchemaProps{
 															Description: "BackupResourceHook defines a hook for a resource.",
 															Properties: map[string]apiextensionsv1.JSONSchemaProps{"exec": apiextensionsv1.JSONSchemaProps{
@@ -2071,13 +2068,13 @@ DefaultVolumesToRestic specifies whether restic should be used to take a backup 
 										Type:        "boolean",
 									},
 									"includedClusterScopedResources": apiextensionsv1.JSONSchemaProps{
-										Description: "IncludedClusterScopedResources is a slice of cluster-scoped resource type names to include in the backup. If set to \"*\", all cluster-scoped resource types are included. The default value is empty, which means only related cluster-scoped resources are included.",
+										Description: `IncludedClusterScopedResources is a slice of cluster-scoped resource type names to include in the backup. If set to "*", all cluster-scoped resource types are included. The default value is empty, which means only related cluster-scoped resources are included.`,
 										Items:       &apiextensionsv1.JSONSchemaPropsOrArray{Schema: &apiextensionsv1.JSONSchemaProps{Type: "string"}},
 										Nullable:    true,
 										Type:        "array",
 									},
 									"includedNamespaceScopedResources": apiextensionsv1.JSONSchemaProps{
-										Description: "IncludedNamespaceScopedResources is a slice of namespace-scoped resource type names to include in the backup. The default value is \"*\".",
+										Description: `IncludedNamespaceScopedResources is a slice of namespace-scoped resource type names to include in the backup. The default value is "*".`,
 										Items:       &apiextensionsv1.JSONSchemaPropsOrArray{Schema: &apiextensionsv1.JSONSchemaProps{Type: "string"}},
 										Nullable:    true,
 										Type:        "array",
@@ -2131,7 +2128,7 @@ DefaultVolumesToRestic specifies whether restic should be used to take a backup 
 													Allows: true,
 													Schema: &apiextensionsv1.JSONSchemaProps{Type: "string"},
 												},
-												Description: "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is \"key\", the operator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+												Description: `matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.`,
 												Type:        "object",
 											},
 										},
@@ -2181,7 +2178,7 @@ DefaultVolumesToRestic specifies whether restic should be used to take a backup 
 														Allows: true,
 														Schema: &apiextensionsv1.JSONSchemaProps{Type: "string"},
 													},
-													Description: "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is \"key\", the operator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+													Description: `matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.`,
 													Type:        "object",
 												},
 											},
@@ -2195,7 +2192,7 @@ DefaultVolumesToRestic specifies whether restic should be used to take a backup 
 											Allows: true,
 											Schema: &apiextensionsv1.JSONSchemaProps{Type: "string"},
 										},
-										Description: "OrderedResources specifies the backup order of resources of specific Kind. The map key is the resource name and value is a list of object names separated by commas. Each resource name has format \"namespace/objectname\".  For cluster resources, simply use \"objectname\".",
+										Description: `OrderedResources specifies the backup order of resources of specific Kind. The map key is the resource name and value is a list of object names separated by commas. Each resource name has format "namespace/objectname".  For cluster resources, simply use "objectname".`,
 										Nullable:    true,
 										Type:        "object",
 									},

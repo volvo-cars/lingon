@@ -29,50 +29,82 @@ func (g *goky) encodeStruct(
 	rv reflect.Value,
 	prefix string, // prefix is used for nested structs
 ) error {
+	if !rv.IsValid() {
+		return fmt.Errorf("probably a nil value: %v", rv)
+	}
+	if rv.Kind() == reflect.Ptr {
+		if rv.IsNil() {
+			return fmt.Errorf("%q is nil: %w", rv.Type(), ErrFieldMissing)
+		}
+		rv = rv.Elem()
+	}
+
 	if rv.Type().Kind() != reflect.Struct {
-		return fmt.Errorf("cannot encode non-struct type: %v", rv)
+		return fmt.Errorf(
+			"cannot encode non-struct type: [%s] %v",
+			rv.Type(), rv,
+		)
 	}
 
 	for i := 0; i < rv.NumField(); i++ {
 		sf := rv.Type().Field(i)
 		fv := rv.Field(i)
 
+		if fv.Kind() == reflect.Ptr {
+			if fv.IsNil() {
+				return fmt.Errorf(
+					"%q of type %q in %q is nil: %w",
+					sf.Name, sf.Type, rv.Type(), ErrFieldMissing,
+				)
+			}
+			fv = fv.Elem()
+		}
+
 		// embedded struct
 		if sf.Anonymous {
 			if err := g.encodeStruct(fv, sf.Name); err != nil {
-				return err
+				return fmt.Errorf("encoding embedded %s: %w", sf.Name, err)
 			}
 			continue
 		}
 
 		fieldVal := rv.FieldByName(sf.Name)
-		switch t := fieldVal.Interface().(type) {
-		case Exporter:
-			if fv.Kind() == reflect.Ptr {
-				fv = fv.Elem()
-			}
-			if err := g.encodeStruct(fv, sf.Name); err != nil {
-				return err
-			}
-			continue
-		case runtime.Object:
-			v := reflect.ValueOf(t)
-			// TODO: should we continue instead ? Should it be an option ?
-			if v.IsZero() || v.IsNil() {
+
+		if fieldVal.Kind() == reflect.Ptr {
+			if fieldVal.IsNil() {
 				return fmt.Errorf(
-					"%w: %q of type %q in %q",
-					ErrFieldMissing,
-					sf.Name,
-					sf.Type,
-					rv.Type(),
+					"%q of type %q in %q is nil: %w",
+					sf.Name, sf.Type, rv.Type(), ErrFieldMissing,
 				)
 			}
+			if fieldVal.Elem().IsZero() {
+				return fmt.Errorf(
+					"%q of type %q in %q is zero value: %w",
+					sf.Name, sf.Type, rv.Type(), ErrFieldMissing,
+				)
+			}
+		}
+		if fieldVal.IsZero() {
+			return fmt.Errorf(
+				"%q of type %q in %q is zero value: %w",
+				sf.Name, sf.Type, rv.Type(), ErrFieldMissing,
+			)
+		}
 
+		switch t := fieldVal.Interface().(type) {
+		case Exporter:
+			if err := g.encodeStruct(fieldVal, sf.Name); err != nil {
+				return fmt.Errorf("encoding field %s: %w", sf.Name, err)
+			}
+
+		case runtime.Object:
 			switch sec := t.(type) {
 			case *corev1.Secret:
 				if g.o.SecretHook != nil {
 					if err := g.o.SecretHook(sec); err != nil {
-						return err
+						return fmt.Errorf(
+							"encoding secret %s: %w", sf.Name, err,
+						)
 					}
 					// skip the secret if the hook is used
 					continue
@@ -92,10 +124,10 @@ func (g *goky) encodeStruct(
 			}
 
 			id := m.String()
-			if _, ok := g.kn[id]; ok {
-				return fmt.Errorf("%w: %s", ErrDuplicateDetected, id)
+			if _, ok := g.dup[id]; ok {
+				return fmt.Errorf("%s: %w", id, ErrDuplicateDetected)
 			}
-			g.kn[m.String()] = struct{}{}
+			g.dup[id] = struct{}{}
 
 			kj, err = kyaml.YAMLToJSON(kj)
 			if err != nil {
@@ -108,7 +140,6 @@ func (g *goky) encodeStruct(
 					"deleting creationTimestamp %s: %w", sf.Name, err,
 				)
 			}
-
 			kj, err = sjson.DeleteBytes(kj, "status")
 			if err != nil {
 				return fmt.Errorf("deleting status %s: %w", sf.Name, err)
@@ -148,7 +179,7 @@ func (g *goky) encodeStruct(
 		default:
 			// Not sure if this should be an error, but rather be explicit at this point
 			return fmt.Errorf(
-				"unknown public field: %s, type: %s, kind: %s",
+				"unsupported type: %s, type: %s, kind: %s",
 				sf.Name,
 				sf.Type,
 				fieldVal.Kind(),

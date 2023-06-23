@@ -106,7 +106,7 @@ func main() { fmt.Println("Hello, world!") }
 	}
 
 	want := "bla.go:2:1: expected declaration, found oops"
-	tu.AssertError(t, tu.VerifyGo(ar), want)
+	tu.AssertErrorMsg(t, tu.VerifyGo(ar), want)
 
 	// test the generated tekton example
 	ar, err := tu.Folder2Txtar("../kube/testdata/go/tekton")

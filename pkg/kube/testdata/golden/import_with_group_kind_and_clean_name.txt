@@ -397,59 +397,7 @@ var ConfigArtifactPvcCM = &corev1.ConfigMap{
 
 var ConfigDefaultsCM = &corev1.ConfigMap{
 	Data: map[string]string{
-		"_example": `
-################################
-#                              #
-#    EXAMPLE CONFIGURATION     #
-#                              #
-################################
-# This block is not actually functional configuration,
-# but serves to illustrate the available configuration
-# options and document them in a way that is accessible
-# to users that "kubectl edit" this config map.
-#
-# These sample configuration options may be copied out of
-# this example block and unindented to be in the data block
-# to actually change the configuration.
-# default-timeout-minutes contains the default number of
-# minutes to use for TaskRun and PipelineRun, if none is specified.
-default-timeout-minutes: "60"  # 60 minutes
-# default-service-account contains the default service account name
-# to use for TaskRun and PipelineRun, if none is specified.
-default-service-account: "default"
-# default-managed-by-label-value contains the default value given to the
-# "app.kubernetes.io/managed-by" label applied to all Pods created for
-# TaskRuns. If a user's requested TaskRun specifies another value for this
-# label, the user's request supercedes.
-default-managed-by-label-value: "tekton-pipelines"
-# default-pod-template contains the default pod template to use for
-# TaskRun and PipelineRun. If a pod template is specified on the
-# PipelineRun, the default-pod-template is merged with that one.
-# default-pod-template:
-# default-affinity-assistant-pod-template contains the default pod template
-# to use for affinity assistant pods. If a pod template is specified on the
-# PipelineRun, the default-affinity-assistant-pod-template is merged with
-# that one.
-# default-affinity-assistant-pod-template:
-# default-cloud-events-sink contains the default CloudEvents sink to be
-# used for TaskRun and PipelineRun, when no sink is specified.
-# Note that right now it is still not possible to set a PipelineRun or
-# TaskRun specific sink, so the default is the only option available.
-# If no sink is specified, no CloudEvent is generated
-# default-cloud-events-sink:
-# default-task-run-workspace-binding contains the default workspace
-# configuration provided for any Workspaces that a Task declares
-# but that a TaskRun does not explicitly provide.
-# default-task-run-workspace-binding: |
-#   emptyDir: {}
-# default-max-matrix-combinations-count contains the default maximum number
-# of combinations from a Matrix, if none is specified.
-default-max-matrix-combinations-count: "256"
-# default-forbidden-env contains comma seperated environment variables that cannot be
-# overridden by podTemplate.
-default-forbidden-env:
-
-`},
+		"_example": "################################\n#                              #\n#    EXAMPLE CONFIGURATION     #\n#                              #\n################################\n# This block is not actually functional configuration,\n# but serves to illustrate the available configuration\n# options and document them in a way that is accessible\n# to users that `kubectl edit` this config map.\n#\n# These sample configuration options may be copied out of\n# this example block and unindented to be in the data block\n# to actually change the configuration.\n# default-timeout-minutes contains the default number of\n# minutes to use for TaskRun and PipelineRun, if none is specified.\ndefault-timeout-minutes: \"60\"  # 60 minutes\n# default-service-account contains the default service account name\n# to use for TaskRun and PipelineRun, if none is specified.\ndefault-service-account: \"default\"\n# default-managed-by-label-value contains the default value given to the\n# \"app.kubernetes.io/managed-by\" label applied to all Pods created for\n# TaskRuns. If a user's requested TaskRun specifies another value for this\n# label, the user's request supercedes.\ndefault-managed-by-label-value: \"tekton-pipelines\"\n# default-pod-template contains the default pod template to use for\n# TaskRun and PipelineRun. If a pod template is specified on the\n# PipelineRun, the default-pod-template is merged with that one.\n# default-pod-template:\n# default-affinity-assistant-pod-template contains the default pod template\n# to use for affinity assistant pods. If a pod template is specified on the\n# PipelineRun, the default-affinity-assistant-pod-template is merged with\n# that one.\n# default-affinity-assistant-pod-template:\n# default-cloud-events-sink contains the default CloudEvents sink to be\n# used for TaskRun and PipelineRun, when no sink is specified.\n# Note that right now it is still not possible to set a PipelineRun or\n# TaskRun specific sink, so the default is the only option available.\n# If no sink is specified, no CloudEvent is generated\n# default-cloud-events-sink:\n# default-task-run-workspace-binding contains the default workspace\n# configuration provided for any Workspaces that a Task declares\n# but that a TaskRun does not explicitly provide.\n# default-task-run-workspace-binding: |\n#   emptyDir: {}\n# default-max-matrix-combinations-count contains the default maximum number\n# of combinations from a Matrix, if none is specified.\ndefault-max-matrix-combinations-count: \"256\"\n# default-forbidden-env contains comma seperated environment variables that cannot be\n# overridden by podTemplate.\ndefault-forbidden-env:\n"},
 	ObjectMeta: metav1.ObjectMeta{
 		Labels: map[string]string{
 			"app.kubernetes.io/instance": "default",
@@ -466,37 +414,7 @@ default-forbidden-env:
 
 var ConfigLeaderElectionCM = &corev1.ConfigMap{
 	Data: map[string]string{
-		"_example": `
-################################
-#                              #
-#    EXAMPLE CONFIGURATION     #
-#                              #
-################################
-# This block is not actually functional configuration,
-# but serves to illustrate the available configuration
-# options and document them in a way that is accessible
-# to users that "kubectl edit" this config map.
-#
-# These sample configuration options may be copied out of
-# this example block and unindented to be in the data block
-# to actually change the configuration.
-# lease-duration is how long non-leaders will wait to try to acquire the
-# lock; 15 seconds is the value used by core kubernetes controllers.
-lease-duration: "60s"
-# renew-deadline is how long a leader will try to renew the lease before
-# giving up; 10 seconds is the value used by core kubernetes controllers.
-renew-deadline: "40s"
-# retry-period is how long the leader election client waits between tries of
-# actions; 2 seconds is the value used by core kubernetes controllers.
-retry-period: "10s"
-# buckets is the number of buckets used to partition key space of each
-# Reconciler. If this number is M and the replica number of the controller
-# is N, the N replicas will compete for the M buckets. The owner of a
-# bucket will take care of the reconciling for the keys partitioned into
-# that bucket.
-buckets: "1"
-
-`},
+		"_example": "################################\n#                              #\n#    EXAMPLE CONFIGURATION     #\n#                              #\n################################\n# This block is not actually functional configuration,\n# but serves to illustrate the available configuration\n# options and document them in a way that is accessible\n# to users that `kubectl edit` this config map.\n#\n# These sample configuration options may be copied out of\n# this example block and unindented to be in the data block\n# to actually change the configuration.\n# lease-duration is how long non-leaders will wait to try to acquire the\n# lock; 15 seconds is the value used by core kubernetes controllers.\nlease-duration: \"60s\"\n# renew-deadline is how long a leader will try to renew the lease before\n# giving up; 10 seconds is the value used by core kubernetes controllers.\nrenew-deadline: \"40s\"\n# retry-period is how long the leader election client waits between tries of\n# actions; 2 seconds is the value used by core kubernetes controllers.\nretry-period: \"10s\"\n# buckets is the number of buckets used to partition key space of each\n# Reconciler. If this number is M and the replica number of the controller\n# is N, the N replicas will compete for the M buckets. The owner of a\n# bucket will take care of the reconciling for the keys partitioned into\n# that bucket.\nbuckets: \"1\"\n"},
 	ObjectMeta: metav1.ObjectMeta{
 		Labels: map[string]string{
 			"app.kubernetes.io/instance": "default",
@@ -513,37 +431,7 @@ buckets: "1"
 
 var ConfigLeaderElectionCM1 = &corev1.ConfigMap{
 	Data: map[string]string{
-		"_example": `
-################################
-#                              #
-#    EXAMPLE CONFIGURATION     #
-#                              #
-################################
-# This block is not actually functional configuration,
-# but serves to illustrate the available configuration
-# options and document them in a way that is accessible
-# to users that "kubectl edit" this config map.
-#
-# These sample configuration options may be copied out of
-# this example block and unindented to be in the data block
-# to actually change the configuration.
-# lease-duration is how long non-leaders will wait to try to acquire the
-# lock; 15 seconds is the value used by core kubernetes controllers.
-lease-duration: "60s"
-# renew-deadline is how long a leader will try to renew the lease before
-# giving up; 10 seconds is the value used by core kubernetes controllers.
-renew-deadline: "40s"
-# retry-period is how long the leader election client waits between tries of
-# actions; 2 seconds is the value used by core kubernetes controllers.
-retry-period: "10s"
-# buckets is the number of buckets used to partition key space of each
-# Reconciler. If this number is M and the replica number of the controller
-# is N, the N replicas will compete for the M buckets. The owner of a
-# bucket will take care of the reconciling for the keys partitioned into
-# that bucket.
-buckets: "1"
-
-`},
+		"_example": "################################\n#                              #\n#    EXAMPLE CONFIGURATION     #\n#                              #\n################################\n# This block is not actually functional configuration,\n# but serves to illustrate the available configuration\n# options and document them in a way that is accessible\n# to users that `kubectl edit` this config map.\n#\n# These sample configuration options may be copied out of\n# this example block and unindented to be in the data block\n# to actually change the configuration.\n# lease-duration is how long non-leaders will wait to try to acquire the\n# lock; 15 seconds is the value used by core kubernetes controllers.\nlease-duration: \"60s\"\n# renew-deadline is how long a leader will try to renew the lease before\n# giving up; 10 seconds is the value used by core kubernetes controllers.\nrenew-deadline: \"40s\"\n# retry-period is how long the leader election client waits between tries of\n# actions; 2 seconds is the value used by core kubernetes controllers.\nretry-period: \"10s\"\n# buckets is the number of buckets used to partition key space of each\n# Reconciler. If this number is M and the replica number of the controller\n# is N, the N replicas will compete for the M buckets. The owner of a\n# bucket will take care of the reconciling for the keys partitioned into\n# that bucket.\nbuckets: \"1\"\n"},
 	ObjectMeta: metav1.ObjectMeta{
 		Labels: map[string]string{
 			"app.kubernetes.io/component": "resolvers",
@@ -654,41 +542,7 @@ var ConfigLoggingCM2 = &corev1.ConfigMap{
 
 var ConfigObservabilityCM = &corev1.ConfigMap{
 	Data: map[string]string{
-		"_example": `
-################################
-#                              #
-#    EXAMPLE CONFIGURATION     #
-#                              #
-################################
-# This block is not actually functional configuration,
-# but serves to illustrate the available configuration
-# options and document them in a way that is accessible
-# to users that "kubectl edit" this config map.
-#
-# These sample configuration options may be copied out of
-# this example block and unindented to be in the data block
-# to actually change the configuration.
-# metrics.backend-destination field specifies the system metrics destination.
-# It supports either prometheus (the default) or stackdriver.
-# Note: Using Stackdriver will incur additional charges.
-metrics.backend-destination: prometheus
-# metrics.stackdriver-project-id field specifies the Stackdriver project ID. This
-# field is optional. When running on GCE, application default credentials will be
-# used and metrics will be sent to the cluster's project if this field is
-# not provided.
-metrics.stackdriver-project-id: "<your stackdriver project id>"
-# metrics.allow-stackdriver-custom-metrics indicates whether it is allowed
-# to send metrics to Stackdriver using "global" resource type and custom
-# metric type. Setting this flag to "true" could cause extra Stackdriver
-# charge.  If metrics.backend-destination is not Stackdriver, this is
-# ignored.
-metrics.allow-stackdriver-custom-metrics: "false"
-metrics.taskrun.level: "task"
-metrics.taskrun.duration-type: "histogram"
-metrics.pipelinerun.level: "pipeline"
-metrics.pipelinerun.duration-type: "histogram"
-
-`},
+		"_example": "################################\n#                              #\n#    EXAMPLE CONFIGURATION     #\n#                              #\n################################\n# This block is not actually functional configuration,\n# but serves to illustrate the available configuration\n# options and document them in a way that is accessible\n# to users that `kubectl edit` this config map.\n#\n# These sample configuration options may be copied out of\n# this example block and unindented to be in the data block\n# to actually change the configuration.\n# metrics.backend-destination field specifies the system metrics destination.\n# It supports either prometheus (the default) or stackdriver.\n# Note: Using Stackdriver will incur additional charges.\nmetrics.backend-destination: prometheus\n# metrics.stackdriver-project-id field specifies the Stackdriver project ID. This\n# field is optional. When running on GCE, application default credentials will be\n# used and metrics will be sent to the cluster's project if this field is\n# not provided.\nmetrics.stackdriver-project-id: \"<your stackdriver project id>\"\n# metrics.allow-stackdriver-custom-metrics indicates whether it is allowed\n# to send metrics to Stackdriver using \"global\" resource type and custom\n# metric type. Setting this flag to \"true\" could cause extra Stackdriver\n# charge.  If metrics.backend-destination is not Stackdriver, this is\n# ignored.\nmetrics.allow-stackdriver-custom-metrics: \"false\"\nmetrics.taskrun.level: \"task\"\nmetrics.taskrun.duration-type: \"histogram\"\nmetrics.pipelinerun.level: \"pipeline\"\nmetrics.pipelinerun.duration-type: \"histogram\"\n"},
 	ObjectMeta: metav1.ObjectMeta{
 		Labels: map[string]string{
 			"app.kubernetes.io/instance": "default",
@@ -705,40 +559,7 @@ metrics.pipelinerun.duration-type: "histogram"
 
 var ConfigObservabilityCM3 = &corev1.ConfigMap{
 	Data: map[string]string{
-		"_example": `
-################################
-#                              #
-#    EXAMPLE CONFIGURATION     #
-#                              #
-################################
-# This block is not actually functional configuration,
-# but serves to illustrate the available configuration
-# options and document them in a way that is accessible
-# to users that "kubectl edit" this config map.
-#
-# These sample configuration options may be copied out of
-# this example block and unindented to be in the data block
-# to actually change the configuration.
-# metrics.backend-destination field specifies the system metrics destination.
-# It supports either prometheus (the default) or stackdriver.
-# Note: Using stackdriver will incur additional charges
-metrics.backend-destination: prometheus
-# metrics.request-metrics-backend-destination specifies the request metrics
-# destination. If non-empty, it enables queue proxy to send request metrics.
-# Currently supported values: prometheus, stackdriver.
-metrics.request-metrics-backend-destination: prometheus
-# metrics.stackdriver-project-id field specifies the stackdriver project ID. This
-# field is optional. When running on GCE, application default credentials will be
-# used if this field is not provided.
-metrics.stackdriver-project-id: "<your stackdriver project id>"
-# metrics.allow-stackdriver-custom-metrics indicates whether it is allowed to send metrics to
-# Stackdriver using "global" resource type and custom metric type if the
-# metrics are not supported by "knative_revision" resource type. Setting this
-# flag to "true" could cause extra Stackdriver charge.
-# If metrics.backend-destination is not Stackdriver, this is ignored.
-metrics.allow-stackdriver-custom-metrics: "false"
-
-`},
+		"_example": "################################\n#                              #\n#    EXAMPLE CONFIGURATION     #\n#                              #\n################################\n# This block is not actually functional configuration,\n# but serves to illustrate the available configuration\n# options and document them in a way that is accessible\n# to users that `kubectl edit` this config map.\n#\n# These sample configuration options may be copied out of\n# this example block and unindented to be in the data block\n# to actually change the configuration.\n# metrics.backend-destination field specifies the system metrics destination.\n# It supports either prometheus (the default) or stackdriver.\n# Note: Using stackdriver will incur additional charges\nmetrics.backend-destination: prometheus\n# metrics.request-metrics-backend-destination specifies the request metrics\n# destination. If non-empty, it enables queue proxy to send request metrics.\n# Currently supported values: prometheus, stackdriver.\nmetrics.request-metrics-backend-destination: prometheus\n# metrics.stackdriver-project-id field specifies the stackdriver project ID. This\n# field is optional. When running on GCE, application default credentials will be\n# used if this field is not provided.\nmetrics.stackdriver-project-id: \"<your stackdriver project id>\"\n# metrics.allow-stackdriver-custom-metrics indicates whether it is allowed to send metrics to\n# Stackdriver using \"global\" resource type and custom metric type if the\n# metrics are not supported by \"knative_revision\" resource type. Setting this\n# flag to \"true\" could cause extra Stackdriver charge.\n# If metrics.backend-destination is not Stackdriver, this is ignored.\nmetrics.allow-stackdriver-custom-metrics: \"false\"\n"},
 	ObjectMeta: metav1.ObjectMeta{
 		Labels: map[string]string{
 			"app.kubernetes.io/component": "resolvers",
@@ -772,34 +593,7 @@ var ConfigRegistryCertCM = &corev1.ConfigMap{
 
 var ConfigSpireCM = &corev1.ConfigMap{
 	Data: map[string]string{
-		"_example": `
-################################
-#                              #
-#    EXAMPLE CONFIGURATION     #
-#                              #
-################################
-# This block is not actually functional configuration,
-# but serves to illustrate the available configuration
-# options and document them in a way that is accessible
-# to users that "kubectl edit" this config map.
-#
-# These sample configuration options may be copied out of
-# this example block and unindented to be in the data block
-# to actually change the configuration.
-#
-# spire-trust-domain specifies the SPIRE trust domain to use.
-# spire-trust-domain: "example.org"
-#
-# spire-socket-path specifies the SPIRE agent socket for SPIFFE workload API.
-# spire-socket-path: "unix:///spiffe-workload-api/spire-agent.sock"
-#
-# spire-server-addr specifies the SPIRE server address for workload/node registration.
-# spire-server-addr: "spire-server.spire.svc.cluster.local:8081"
-#
-# spire-node-alias-prefix specifies the SPIRE node alias prefix to use.
-# spire-node-alias-prefix: "/tekton-node/"
-
-`},
+		"_example": "################################\n#                              #\n#    EXAMPLE CONFIGURATION     #\n#                              #\n################################\n# This block is not actually functional configuration,\n# but serves to illustrate the available configuration\n# options and document them in a way that is accessible\n# to users that `kubectl edit` this config map.\n#\n# These sample configuration options may be copied out of\n# this example block and unindented to be in the data block\n# to actually change the configuration.\n#\n# spire-trust-domain specifies the SPIRE trust domain to use.\n# spire-trust-domain: \"example.org\"\n#\n# spire-socket-path specifies the SPIRE agent socket for SPIFFE workload API.\n# spire-socket-path: \"unix:///spiffe-workload-api/spire-agent.sock\"\n#\n# spire-server-addr specifies the SPIRE server address for workload/node registration.\n# spire-server-addr: \"spire-server.spire.svc.cluster.local:8081\"\n#\n# spire-node-alias-prefix specifies the SPIRE node alias prefix to use.\n# spire-node-alias-prefix: \"/tekton-node/\"\n"},
 	ObjectMeta: metav1.ObjectMeta{
 		Labels: map[string]string{
 			"app.kubernetes.io/instance": "default",
@@ -816,25 +610,7 @@ var ConfigSpireCM = &corev1.ConfigMap{
 
 var ConfigTrustedResourcesCM = &corev1.ConfigMap{
 	Data: map[string]string{
-		"_example": `
-################################
-#                              #
-#    EXAMPLE CONFIGURATION     #
-#                              #
-################################
-# This block is not actually functional configuration,
-# but serves to illustrate the available configuration
-# options and document them in a way that is accessible
-# to users that "kubectl edit" this config map.
-#
-# These sample configuration options may be copied out of
-# this example block and unindented to be in the data block
-# to actually change the configuration.
-# publickeys specifies the list of public keys, the paths are separated by comma
-# publickeys: "/etc/verification-secrets/cosign.pub,
-# gcpkms://projects/tekton/locations/us/keyRings/trusted-resources/cryptoKeys/trusted-resources"
-
-`},
+		"_example": "################################\n#                              #\n#    EXAMPLE CONFIGURATION     #\n#                              #\n################################\n# This block is not actually functional configuration,\n# but serves to illustrate the available configuration\n# options and document them in a way that is accessible\n# to users that `kubectl edit` this config map.\n#\n# These sample configuration options may be copied out of\n# this example block and unindented to be in the data block\n# to actually change the configuration.\n# publickeys specifies the list of public keys, the paths are separated by comma\n# publickeys: \"/etc/verification-secrets/cosign.pub,\n# gcpkms://projects/tekton/locations/us/keyRings/trusted-resources/cryptoKeys/trusted-resources\"\n"},
 	ObjectMeta: metav1.ObjectMeta{
 		Labels: map[string]string{
 			"app.kubernetes.io/instance": "default",
@@ -1152,11 +928,11 @@ var CustomrunsDevCRD = &apiextensionsv1.CustomResourceDefinition{
 		Scope: apiextensionsv1.ResourceScope("Namespaced"),
 		Versions: []apiextensionsv1.CustomResourceDefinitionVersion{apiextensionsv1.CustomResourceDefinitionVersion{
 			AdditionalPrinterColumns: []apiextensionsv1.CustomResourceColumnDefinition{apiextensionsv1.CustomResourceColumnDefinition{
-				JSONPath: ".status.conditions[?(@.type==\"Succeeded\")].status",
+				JSONPath: `.status.conditions[?(@.type=="Succeeded")].status`,
 				Name:     "Succeeded",
 				Type:     "string",
 			}, apiextensionsv1.CustomResourceColumnDefinition{
-				JSONPath: ".status.conditions[?(@.type==\"Succeeded\")].reason",
+				JSONPath: `.status.conditions[?(@.type=="Succeeded")].reason`,
 				Name:     "Reason",
 				Type:     "string",
 			}, apiextensionsv1.CustomResourceColumnDefinition{
@@ -1252,11 +1028,11 @@ var PipelinerunsDevCRD = &apiextensionsv1.CustomResourceDefinition{
 		Scope: apiextensionsv1.ResourceScope("Namespaced"),
 		Versions: []apiextensionsv1.CustomResourceDefinitionVersion{apiextensionsv1.CustomResourceDefinitionVersion{
 			AdditionalPrinterColumns: []apiextensionsv1.CustomResourceColumnDefinition{apiextensionsv1.CustomResourceColumnDefinition{
-				JSONPath: ".status.conditions[?(@.type==\"Succeeded\")].status",
+				JSONPath: `.status.conditions[?(@.type=="Succeeded")].status`,
 				Name:     "Succeeded",
 				Type:     "string",
 			}, apiextensionsv1.CustomResourceColumnDefinition{
-				JSONPath: ".status.conditions[?(@.type==\"Succeeded\")].reason",
+				JSONPath: `.status.conditions[?(@.type=="Succeeded")].reason`,
 				Name:     "Reason",
 				Type:     "string",
 			}, apiextensionsv1.CustomResourceColumnDefinition{
@@ -1278,11 +1054,11 @@ var PipelinerunsDevCRD = &apiextensionsv1.CustomResourceDefinition{
 			Subresources: &apiextensionsv1.CustomResourceSubresources{},
 		}, apiextensionsv1.CustomResourceDefinitionVersion{
 			AdditionalPrinterColumns: []apiextensionsv1.CustomResourceColumnDefinition{apiextensionsv1.CustomResourceColumnDefinition{
-				JSONPath: ".status.conditions[?(@.type==\"Succeeded\")].status",
+				JSONPath: `.status.conditions[?(@.type=="Succeeded")].status`,
 				Name:     "Succeeded",
 				Type:     "string",
 			}, apiextensionsv1.CustomResourceColumnDefinition{
-				JSONPath: ".status.conditions[?(@.type==\"Succeeded\")].reason",
+				JSONPath: `.status.conditions[?(@.type=="Succeeded")].reason`,
 				Name:     "Reason",
 				Type:     "string",
 			}, apiextensionsv1.CustomResourceColumnDefinition{
@@ -1469,11 +1245,11 @@ var RunsDevCRD = &apiextensionsv1.CustomResourceDefinition{
 		Scope: apiextensionsv1.ResourceScope("Namespaced"),
 		Versions: []apiextensionsv1.CustomResourceDefinitionVersion{apiextensionsv1.CustomResourceDefinitionVersion{
 			AdditionalPrinterColumns: []apiextensionsv1.CustomResourceColumnDefinition{apiextensionsv1.CustomResourceColumnDefinition{
-				JSONPath: ".status.conditions[?(@.type==\"Succeeded\")].status",
+				JSONPath: `.status.conditions[?(@.type=="Succeeded")].status`,
 				Name:     "Succeeded",
 				Type:     "string",
 			}, apiextensionsv1.CustomResourceColumnDefinition{
-				JSONPath: ".status.conditions[?(@.type==\"Succeeded\")].reason",
+				JSONPath: `.status.conditions[?(@.type=="Succeeded")].reason`,
 				Name:     "Reason",
 				Type:     "string",
 			}, apiextensionsv1.CustomResourceColumnDefinition{
@@ -1533,11 +1309,11 @@ var TaskrunsDevCRD = &apiextensionsv1.CustomResourceDefinition{
 		Scope: apiextensionsv1.ResourceScope("Namespaced"),
 		Versions: []apiextensionsv1.CustomResourceDefinitionVersion{apiextensionsv1.CustomResourceDefinitionVersion{
 			AdditionalPrinterColumns: []apiextensionsv1.CustomResourceColumnDefinition{apiextensionsv1.CustomResourceColumnDefinition{
-				JSONPath: ".status.conditions[?(@.type==\"Succeeded\")].status",
+				JSONPath: `.status.conditions[?(@.type=="Succeeded")].status`,
 				Name:     "Succeeded",
 				Type:     "string",
 			}, apiextensionsv1.CustomResourceColumnDefinition{
-				JSONPath: ".status.conditions[?(@.type==\"Succeeded\")].reason",
+				JSONPath: `.status.conditions[?(@.type=="Succeeded")].reason`,
 				Name:     "Reason",
 				Type:     "string",
 			}, apiextensionsv1.CustomResourceColumnDefinition{
@@ -1559,11 +1335,11 @@ var TaskrunsDevCRD = &apiextensionsv1.CustomResourceDefinition{
 			Subresources: &apiextensionsv1.CustomResourceSubresources{},
 		}, apiextensionsv1.CustomResourceDefinitionVersion{
 			AdditionalPrinterColumns: []apiextensionsv1.CustomResourceColumnDefinition{apiextensionsv1.CustomResourceColumnDefinition{
-				JSONPath: ".status.conditions[?(@.type==\"Succeeded\")].status",
+				JSONPath: `.status.conditions[?(@.type=="Succeeded")].status`,
 				Name:     "Succeeded",
 				Type:     "string",
 			}, apiextensionsv1.CustomResourceColumnDefinition{
-				JSONPath: ".status.conditions[?(@.type==\"Succeeded\")].reason",
+				JSONPath: `.status.conditions[?(@.type=="Succeeded")].reason`,
 				Name:     "Reason",
 				Type:     "string",
 			}, apiextensionsv1.CustomResourceColumnDefinition{

@@ -32,8 +32,8 @@ func AssertNoError(t *testing.T, err error, msg ...string) {
 	}
 }
 
-// AssertError checks if the error is not nil.
-func AssertError(t *testing.T, err error, msg string) {
+// AssertErrorMsg checks if the error is not nil.
+func AssertErrorMsg(t *testing.T, err error, msg string) {
 	t.Helper()
 	if err == nil {
 		t.Fatal(Callers(), msg, errors.New("error was expected but is nil"))
@@ -51,7 +51,7 @@ func equal[C comparable](a, b C) bool {
 func IsEqual[C comparable](t *testing.T, expected, actual C) {
 	t.Helper()
 	if !equal(expected, actual) {
-		t.Fatalf("expected %v, got %v", expected, actual)
+		t.Fatal(Callers(), Diff(actual, expected))
 	}
 }
 
@@ -59,7 +59,7 @@ func IsEqual[C comparable](t *testing.T, expected, actual C) {
 func IsNotEqual[C comparable](t *testing.T, expected, actual C) {
 	t.Helper()
 	if equal(expected, actual) {
-		t.Fatalf("expected %v, got %v", expected, actual)
+		t.Fatal(Callers(), Diff(actual, expected))
 	}
 }
 
@@ -142,6 +142,6 @@ func False(t *testing.T, condition bool, msg string) {
 func ErrorIs(t *testing.T, err, expected error) {
 	t.Helper()
 	if !errors.Is(err, expected) {
-		t.Fatalf("expected error \"%v\", got \"%v\"", expected, err)
+		t.Fatalf(`expected error "%v", got "%v"`, expected, err)
 	}
 }

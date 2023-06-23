@@ -7,7 +7,10 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-const NSKubeSystem = "kube-system"
+const (
+	NSKubeSystem = "kube-system"
+	NSDefault    = "default"
+)
 
 // Labels for namespaces
 // taken from https://kubernetes.io/docs/tasks/configure-pod-container/enforce-standards-namespace-labels/

@@ -49,7 +49,7 @@ func TestParseProvider(t *testing.T) {
 			tt.providerStr, func(t *testing.T) {
 				ap, err := ParseProvider(tt.providerStr)
 				if tt.expectErr {
-					tu.AssertError(t, err, tt.errmsg)
+					tu.AssertErrorMsg(t, err, tt.errmsg)
 				} else {
 					tu.AssertNoError(t, err, "parsing provider")
 					tu.AssertEqual(t, tt.provider, ap)

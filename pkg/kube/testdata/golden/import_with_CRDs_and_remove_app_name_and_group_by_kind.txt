@@ -332,7 +332,7 @@ var ApplicationsArgoprojIoCRD = &apiextensionsv1.CustomResourceDefinition{
 										Description: "Backoff controls how to backoff on subsequent retries of failed syncs",
 										Properties: map[string]apiextensionsv1.JSONSchemaProps{
 											"duration": apiextensionsv1.JSONSchemaProps{
-												Description: "Duration is the amount to back off. Default unit is seconds, but could also be a duration (e.g. \"2m\", \"1h\")",
+												Description: `Duration is the amount to back off. Default unit is seconds, but could also be a duration (e.g. "2m", "1h")`,
 												Type:        "string",
 											},
 											"factor": apiextensionsv1.JSONSchemaProps{
@@ -528,7 +528,7 @@ var ApplicationsArgoprojIoCRD = &apiextensionsv1.CustomResourceDefinition{
 														Type:        "string",
 													},
 													"version": apiextensionsv1.JSONSchemaProps{
-														Description: "Version is the Helm version to use for templating (\"3\")",
+														Description: `Version is the Helm version to use for templating ("3")`,
 														Type:        "string",
 													},
 												},
@@ -794,7 +794,7 @@ var ApplicationsArgoprojIoCRD = &apiextensionsv1.CustomResourceDefinition{
 															Type:        "string",
 														},
 														"version": apiextensionsv1.JSONSchemaProps{
-															Description: "Version is the Helm version to use for templating (\"3\")",
+															Description: `Version is the Helm version to use for templating ("3")`,
 															Type:        "string",
 														},
 													},
@@ -1163,7 +1163,7 @@ var ApplicationsArgoprojIoCRD = &apiextensionsv1.CustomResourceDefinition{
 												Type:        "string",
 											},
 											"version": apiextensionsv1.JSONSchemaProps{
-												Description: "Version is the Helm version to use for templating (\"3\")",
+												Description: `Version is the Helm version to use for templating ("3")`,
 												Type:        "string",
 											},
 										},
@@ -1429,7 +1429,7 @@ var ApplicationsArgoprojIoCRD = &apiextensionsv1.CustomResourceDefinition{
 													Type:        "string",
 												},
 												"version": apiextensionsv1.JSONSchemaProps{
-													Description: "Version is the Helm version to use for templating (\"3\")",
+													Description: `Version is the Helm version to use for templating ("3")`,
 													Type:        "string",
 												},
 											},
@@ -1610,7 +1610,7 @@ var ApplicationsArgoprojIoCRD = &apiextensionsv1.CustomResourceDefinition{
 												Description: "Backoff controls how to backoff on subsequent retries of failed syncs",
 												Properties: map[string]apiextensionsv1.JSONSchemaProps{
 													"duration": apiextensionsv1.JSONSchemaProps{
-														Description: "Duration is the amount to back off. Default unit is seconds, but could also be a duration (e.g. \"2m\", \"1h\")",
+														Description: `Duration is the amount to back off. Default unit is seconds, but could also be a duration (e.g. "2m", "1h")`,
 														Type:        "string",
 													},
 													"factor": apiextensionsv1.JSONSchemaProps{
@@ -1848,7 +1848,7 @@ var ApplicationsArgoprojIoCRD = &apiextensionsv1.CustomResourceDefinition{
 															Type:        "string",
 														},
 														"version": apiextensionsv1.JSONSchemaProps{
-															Description: "Version is the Helm version to use for templating (\"3\")",
+															Description: `Version is the Helm version to use for templating ("3")`,
 															Type:        "string",
 														},
 													},
@@ -2114,7 +2114,7 @@ var ApplicationsArgoprojIoCRD = &apiextensionsv1.CustomResourceDefinition{
 																Type:        "string",
 															},
 															"version": apiextensionsv1.JSONSchemaProps{
-																Description: "Version is the Helm version to use for templating (\"3\")",
+																Description: `Version is the Helm version to use for templating ("3")`,
 																Type:        "string",
 															},
 														},
@@ -2306,7 +2306,7 @@ var ApplicationsArgoprojIoCRD = &apiextensionsv1.CustomResourceDefinition{
 														Description: "Backoff controls how to backoff on subsequent retries of failed syncs",
 														Properties: map[string]apiextensionsv1.JSONSchemaProps{
 															"duration": apiextensionsv1.JSONSchemaProps{
-																Description: "Duration is the amount to back off. Default unit is seconds, but could also be a duration (e.g. \"2m\", \"1h\")",
+																Description: `Duration is the amount to back off. Default unit is seconds, but could also be a duration (e.g. "2m", "1h")`,
 																Type:        "string",
 															},
 															"factor": apiextensionsv1.JSONSchemaProps{
@@ -2502,7 +2502,7 @@ var ApplicationsArgoprojIoCRD = &apiextensionsv1.CustomResourceDefinition{
 																		Type:        "string",
 																	},
 																	"version": apiextensionsv1.JSONSchemaProps{
-																		Description: "Version is the Helm version to use for templating (\"3\")",
+																		Description: `Version is the Helm version to use for templating ("3")`,
 																		Type:        "string",
 																	},
 																},
@@ -2768,7 +2768,7 @@ var ApplicationsArgoprojIoCRD = &apiextensionsv1.CustomResourceDefinition{
 																			Type:        "string",
 																		},
 																		"version": apiextensionsv1.JSONSchemaProps{
-																			Description: "Version is the Helm version to use for templating (\"3\")",
+																			Description: `Version is the Helm version to use for templating ("3")`,
 																			Type:        "string",
 																		},
 																	},
@@ -3144,7 +3144,7 @@ var ApplicationsArgoprojIoCRD = &apiextensionsv1.CustomResourceDefinition{
 																Type:        "string",
 															},
 															"version": apiextensionsv1.JSONSchemaProps{
-																Description: "Version is the Helm version to use for templating (\"3\")",
+																Description: `Version is the Helm version to use for templating ("3")`,
 																Type:        "string",
 															},
 														},
@@ -3410,7 +3410,7 @@ var ApplicationsArgoprojIoCRD = &apiextensionsv1.CustomResourceDefinition{
 																	Type:        "string",
 																},
 																"version": apiextensionsv1.JSONSchemaProps{
-																	Description: "Version is the Helm version to use for templating (\"3\")",
+																	Description: `Version is the Helm version to use for templating ("3")`,
 																	Type:        "string",
 																},
 															},
@@ -3784,7 +3784,7 @@ var ApplicationsArgoprojIoCRD = &apiextensionsv1.CustomResourceDefinition{
 																Type:        "string",
 															},
 															"version": apiextensionsv1.JSONSchemaProps{
-																Description: "Version is the Helm version to use for templating (\"3\")",
+																Description: `Version is the Helm version to use for templating ("3")`,
 																Type:        "string",
 															},
 														},
@@ -4050,7 +4050,7 @@ var ApplicationsArgoprojIoCRD = &apiextensionsv1.CustomResourceDefinition{
 																	Type:        "string",
 																},
 																"version": apiextensionsv1.JSONSchemaProps{
-																	Description: "Version is the Helm version to use for templating (\"3\")",
+																	Description: `Version is the Helm version to use for templating ("3")`,
 																	Type:        "string",
 																},
 															},

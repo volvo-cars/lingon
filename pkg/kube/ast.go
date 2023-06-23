@@ -19,7 +19,11 @@ import (
 
 var commentSecret = "TODO: SECRETS SHOULD BE STORED ELSEWHERE THAN IN THE CODE!!!!" //nolint:gosec
 
-func returnTypeAlias(v reflect.Value, typename string, stmt *jen.Statement) *jen.Statement {
+func returnTypeAlias(
+	v reflect.Value,
+	typename string,
+	stmt *jen.Statement,
+) *jen.Statement {
 	if v.Type().String() != typename {
 		return jen.Qual(
 			v.Type().PkgPath(),
@@ -37,14 +41,8 @@ func (j *jamel) convertValue(v reflect.Value) *jen.Statement {
 	}
 	switch v.Type().Kind() {
 	case reflect.String:
-		s := v.String()
-		if strings.Contains(s, "\n") {
-			return returnTypeAlias(
-				v, reflect.String.String(), rawString(s),
-			)
-		}
 		return returnTypeAlias(
-			v, reflect.String.String(), jen.Lit(v.String()),
+			v, reflect.String.String(), rawString(v.String()),
 		)
 	case reflect.Bool:
 		return returnTypeAlias(
@@ -265,7 +263,10 @@ func isEmptyValue(v reflect.Value) bool {
 	return false
 }
 
-func (j *jamel) configMapComment(obj *corev1.ConfigMap, data []byte) (*jen.Statement, error) {
+func (j *jamel) configMapComment(
+	obj *corev1.ConfigMap,
+	data []byte,
+) (*jen.Statement, error) {
 	// parse YAML to extract comments
 	var d yaml.Node
 	err := yaml.Unmarshal(data, &d)
@@ -306,7 +307,10 @@ outer:
 	return j.convertConfigMap(rv, mc), nil
 }
 
-func (j *jamel) convertConfigMap(v reflect.Value, comment map[string]string) *jen.Statement {
+func (j *jamel) convertConfigMap(
+	v reflect.Value,
+	comment map[string]string,
+) *jen.Statement {
 	if v.IsZero() {
 		return jen.Nil()
 	}
@@ -334,7 +338,10 @@ func (j *jamel) convertConfigMap(v reflect.Value, comment map[string]string) *je
 	return jen.Op("&").Add(pk.Values(vf))
 }
 
-func convertConfigMapData(field reflect.Value, comment map[string]string) *jen.Statement {
+func convertConfigMapData(
+	field reflect.Value,
+	comment map[string]string,
+) *jen.Statement {
 	if field.IsZero() {
 		return jen.Nil()
 	}
@@ -384,17 +391,29 @@ func rawString(s string) *jen.Statement {
 	if len(s) == 0 {
 		return jen.Lit("")
 	}
-	newS := s
-	if !strings.Contains(newS, "\n") { // single line string
-		return jen.Lit(newS)
+	hasQuote := strings.Contains(s, `"`)
+	hasBacktick := strings.Contains(s, "`")
+	hasNewLine := strings.Contains(s, "\n")
+
+	if hasNewLine {
+		if hasBacktick {
+			return jen.Lit(s)
+		}
+		return jen.Custom(
+			jen.Options{Open: "`", Close: "`", Multi: true},
+			jen.Op(s),
+		)
 	}
-	if strings.Contains(newS, "`") {
-		newS = strings.ReplaceAll(newS, "`", "\"")
+	if hasQuote && hasBacktick {
+		return jen.Lit(s)
 	}
-	return jen.Custom(
-		jen.Options{Open: "`", Close: "`", Multi: true},
-		jen.Op(newS),
-	)
+	if hasQuote {
+		return jen.Custom(
+			jen.Options{Open: "`", Close: "`", Multi: false},
+			jen.Op(s),
+		)
+	}
+	return jen.Lit(s)
 }
 
 // convertSecret converts a Secret to a jen statement.
@@ -474,14 +493,10 @@ func convertQuantity(field reflect.Value) *jen.Statement {
 }
 
 var repl = strings.NewReplacer(
-	"-",
-	"",
-	".",
-	"",
-	"pkg/api/",
-	"",
-	"pkg/apis/",
-	"",
+	"-", "",
+	".", "",
+	"pkg/api/", "",
+	"pkg/apis/", "",
 )
 
 // storePkgPath stores the first non-native kubernetes package it finds,
@@ -517,9 +532,6 @@ func (j *jamel) storePkgPath(t reflect.Type) (string, string) {
 // For instance, `v1.ServiceAccount`, renamed [corev1.ServiceAccount]
 // with `import corev1 "k8s.io/api/core/v1"`
 func (j *jamel) prefixKind(v reflect.Value) *jen.Statement {
-	if v.IsZero() {
-		return nil
-	}
 	switch v.Kind() {
 
 	case reflect.Ptr:

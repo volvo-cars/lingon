@@ -429,11 +429,11 @@ var ClusterexternalsecretsIoCRD = &apiextensionsv1.CustomResourceDefinition{
 				Name:     "Refresh Interval",
 				Type:     "string",
 			}, apiextensionsv1.CustomResourceColumnDefinition{
-				JSONPath: ".status.conditions[?(@.type==\"Ready\")].reason",
+				JSONPath: `.status.conditions[?(@.type=="Ready")].reason`,
 				Name:     "Status",
 				Type:     "string",
 			}, apiextensionsv1.CustomResourceColumnDefinition{
-				JSONPath: ".status.conditions[?(@.type==\"Ready\")].status",
+				JSONPath: `.status.conditions[?(@.type=="Ready")].status`,
 				Name:     "Ready",
 				Type:     "string",
 			}},
@@ -694,7 +694,7 @@ var ClusterexternalsecretsIoCRD = &apiextensionsv1.CustomResourceDefinition{
 									},
 									"refreshInterval": apiextensionsv1.JSONSchemaProps{
 										Default:     &apiextensionsv1.JSON{Raw: []byte("\"1h\"")},
-										Description: "RefreshInterval is the amount of time before the values are read again from the SecretStore provider Valid time units are \"ns\", \"us\" (or \"µs\"), \"ms\", \"s\", \"m\", \"h\" May be set to zero to fetch and create it once. Defaults to 1h.",
+										Description: `RefreshInterval is the amount of time before the values are read again from the SecretStore provider Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h" May be set to zero to fetch and create it once. Defaults to 1h.`,
 										Type:        "string",
 									},
 									"secretStoreRef": apiextensionsv1.JSONSchemaProps{
@@ -867,7 +867,7 @@ var ClusterexternalsecretsIoCRD = &apiextensionsv1.CustomResourceDefinition{
 											Allows: true,
 											Schema: &apiextensionsv1.JSONSchemaProps{Type: "string"},
 										},
-										Description: "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is \"key\", the operator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+										Description: `matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.`,
 										Type:        "object",
 									},
 								},
@@ -971,7 +971,7 @@ var ClustersecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 				Name:     "AGE",
 				Type:     "date",
 			}, apiextensionsv1.CustomResourceColumnDefinition{
-				JSONPath: ".status.conditions[?(@.type==\"Ready\")].reason",
+				JSONPath: `.status.conditions[?(@.type=="Ready")].reason`,
 				Name:     "Status",
 				Type:     "string",
 			}},
@@ -1330,7 +1330,7 @@ var ClustersecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 											},
 											"authType": apiextensionsv1.JSONSchemaProps{
 												Default:     &apiextensionsv1.JSON{Raw: []byte("\"ServicePrincipal\"")},
-												Description: "Auth type defines how to authenticate to the keyvault service. Valid values are: - \"ServicePrincipal\" (default): Using a service principal (tenantId, clientId, clientSecret) - \"ManagedIdentity\": Using Managed Identity assigned to the pod (see aad-pod-identity)",
+												Description: `Auth type defines how to authenticate to the keyvault service. Valid values are: - "ServicePrincipal" (default): Using a service principal (tenantId, clientId, clientSecret) - "ManagedIdentity": Using Managed Identity assigned to the pod (see aad-pod-identity)`,
 												Enum:        []apiextensionsv1.JSON{apiextensionsv1.JSON{Raw: []byte("\"ServicePrincipal\"")}, apiextensionsv1.JSON{Raw: []byte("\"ManagedIdentity\"")}, apiextensionsv1.JSON{Raw: []byte("\"WorkloadIdentity\"")}},
 												Type:        "string",
 											},
@@ -1654,7 +1654,7 @@ var ClustersecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 														Description: "see: https://external-secrets.io/v0.4.1/spec/#external-secrets.io/v1alpha1.CAProvider",
 														Properties: map[string]apiextensionsv1.JSONSchemaProps{
 															"key": apiextensionsv1.JSONSchemaProps{
-																Description: "The key the value inside of the provider type to use, only used with \"Secret\" type",
+																Description: `The key the value inside of the provider type to use, only used with "Secret" type`,
 																Type:        "string",
 															},
 															"name": apiextensionsv1.JSONSchemaProps{
@@ -1666,7 +1666,7 @@ var ClustersecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 																Type:        "string",
 															},
 															"type": apiextensionsv1.JSONSchemaProps{
-																Description: "The type of provider to use such as \"Secret\", or \"ConfigMap\".",
+																Description: `The type of provider to use such as "Secret", or "ConfigMap".`,
 																Enum:        []apiextensionsv1.JSON{apiextensionsv1.JSON{Raw: []byte("\"Secret\"")}, apiextensionsv1.JSON{Raw: []byte("\"ConfigMap\"")}},
 																Type:        "string",
 															},
@@ -1770,7 +1770,7 @@ var ClustersecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 														Properties: map[string]apiextensionsv1.JSONSchemaProps{
 															"path": apiextensionsv1.JSONSchemaProps{
 																Default:     &apiextensionsv1.JSON{Raw: []byte("\"approle\"")},
-																Description: "Path where the App Role authentication backend is mounted in Vault, e.g: \"approle\"",
+																Description: `Path where the App Role authentication backend is mounted in Vault, e.g: "approle"`,
 																Type:        "string",
 															},
 															"roleId": apiextensionsv1.JSONSchemaProps{
@@ -1883,7 +1883,7 @@ var ClustersecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 															},
 															"path": apiextensionsv1.JSONSchemaProps{
 																Default:     &apiextensionsv1.JSON{Raw: []byte("\"jwt\"")},
-																Description: "Path where the JWT authentication backend is mounted in Vault, e.g: \"jwt\"",
+																Description: `Path where the JWT authentication backend is mounted in Vault, e.g: "jwt"`,
 																Type:        "string",
 															},
 															"role": apiextensionsv1.JSONSchemaProps{
@@ -1917,7 +1917,7 @@ var ClustersecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 														Properties: map[string]apiextensionsv1.JSONSchemaProps{
 															"mountPath": apiextensionsv1.JSONSchemaProps{
 																Default:     &apiextensionsv1.JSON{Raw: []byte("\"kubernetes\"")},
-																Description: "Path where the Kubernetes authentication backend is mounted in Vault, e.g: \"kubernetes\"",
+																Description: `Path where the Kubernetes authentication backend is mounted in Vault, e.g: "kubernetes"`,
 																Type:        "string",
 															},
 															"role": apiextensionsv1.JSONSchemaProps{
@@ -1971,7 +1971,7 @@ var ClustersecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 														Properties: map[string]apiextensionsv1.JSONSchemaProps{
 															"path": apiextensionsv1.JSONSchemaProps{
 																Default:     &apiextensionsv1.JSON{Raw: []byte("\"ldap\"")},
-																Description: "Path where the LDAP authentication backend is mounted in Vault, e.g: \"ldap\"",
+																Description: `Path where the LDAP authentication backend is mounted in Vault, e.g: "ldap"`,
 																Type:        "string",
 															},
 															"secretRef": apiextensionsv1.JSONSchemaProps{
@@ -2030,7 +2030,7 @@ var ClustersecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 												Description: "The provider for the CA bundle to use to validate Vault server certificate.",
 												Properties: map[string]apiextensionsv1.JSONSchemaProps{
 													"key": apiextensionsv1.JSONSchemaProps{
-														Description: "The key the value inside of the provider type to use, only used with \"Secret\" type",
+														Description: `The key the value inside of the provider type to use, only used with "Secret" type`,
 														Type:        "string",
 													},
 													"name": apiextensionsv1.JSONSchemaProps{
@@ -2042,7 +2042,7 @@ var ClustersecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 														Type:        "string",
 													},
 													"type": apiextensionsv1.JSONSchemaProps{
-														Description: "The type of provider to use such as \"Secret\", or \"ConfigMap\".",
+														Description: `The type of provider to use such as "Secret", or "ConfigMap".`,
 														Enum:        []apiextensionsv1.JSON{apiextensionsv1.JSON{Raw: []byte("\"Secret\"")}, apiextensionsv1.JSON{Raw: []byte("\"ConfigMap\"")}},
 														Type:        "string",
 													},
@@ -2055,11 +2055,11 @@ var ClustersecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 												Type:        "boolean",
 											},
 											"namespace": apiextensionsv1.JSONSchemaProps{
-												Description: "Name of the vault namespace. Namespaces is a set of features within Vault Enterprise that allows Vault environments to support Secure Multi-tenancy. e.g: \"ns1\". More about namespaces can be found here https://www.vaultproject.io/docs/enterprise/namespaces",
+												Description: `Name of the vault namespace. Namespaces is a set of features within Vault Enterprise that allows Vault environments to support Secure Multi-tenancy. e.g: "ns1". More about namespaces can be found here https://www.vaultproject.io/docs/enterprise/namespaces`,
 												Type:        "string",
 											},
 											"path": apiextensionsv1.JSONSchemaProps{
-												Description: "Path is the mount path of the Vault KV backend endpoint, e.g: \"secret\". The v2 KV secret engine version specific \"/data\" path suffix for fetching secrets from Vault is optional and will be appended if not present in specified path.",
+												Description: `Path is the mount path of the Vault KV backend endpoint, e.g: "secret". The v2 KV secret engine version specific "/data" path suffix for fetching secrets from Vault is optional and will be appended if not present in specified path.`,
 												Type:        "string",
 											},
 											"readYourWrites": apiextensionsv1.JSONSchemaProps{
@@ -2067,12 +2067,12 @@ var ClustersecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 												Type:        "boolean",
 											},
 											"server": apiextensionsv1.JSONSchemaProps{
-												Description: "Server is the connection address for the Vault server, e.g: \"https://vault.example.com:8200\".",
+												Description: `Server is the connection address for the Vault server, e.g: "https://vault.example.com:8200".`,
 												Type:        "string",
 											},
 											"version": apiextensionsv1.JSONSchemaProps{
 												Default:     &apiextensionsv1.JSON{Raw: []byte("\"v2\"")},
-												Description: "Version is the Vault KV secret engine version. This can be either \"v1\" or \"v2\". Version defaults to \"v2\".",
+												Description: `Version is the Vault KV secret engine version. This can be either "v1" or "v2". Version defaults to "v2".`,
 												Enum:        []apiextensionsv1.JSON{apiextensionsv1.JSON{Raw: []byte("\"v1\"")}, apiextensionsv1.JSON{Raw: []byte("\"v2\"")}},
 												Type:        "string",
 											},
@@ -2096,7 +2096,7 @@ var ClustersecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 												Description: "The provider for the CA bundle to use to validate webhook server certificate.",
 												Properties: map[string]apiextensionsv1.JSONSchemaProps{
 													"key": apiextensionsv1.JSONSchemaProps{
-														Description: "The key the value inside of the provider type to use, only used with \"Secret\" type",
+														Description: `The key the value inside of the provider type to use, only used with "Secret" type`,
 														Type:        "string",
 													},
 													"name": apiextensionsv1.JSONSchemaProps{
@@ -2108,7 +2108,7 @@ var ClustersecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 														Type:        "string",
 													},
 													"type": apiextensionsv1.JSONSchemaProps{
-														Description: "The type of provider to use such as \"Secret\", or \"ConfigMap\".",
+														Description: `The type of provider to use such as "Secret", or "ConfigMap".`,
 														Enum:        []apiextensionsv1.JSON{apiextensionsv1.JSON{Raw: []byte("\"Secret\"")}, apiextensionsv1.JSON{Raw: []byte("\"ConfigMap\"")}},
 														Type:        "string",
 													},
@@ -2285,7 +2285,7 @@ var ClustersecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 				Name:     "AGE",
 				Type:     "date",
 			}, apiextensionsv1.CustomResourceColumnDefinition{
-				JSONPath: ".status.conditions[?(@.type==\"Ready\")].reason",
+				JSONPath: `.status.conditions[?(@.type=="Ready")].reason`,
 				Name:     "Status",
 				Type:     "string",
 			}, apiextensionsv1.CustomResourceColumnDefinition{
@@ -2293,7 +2293,7 @@ var ClustersecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 				Name:     "Capabilities",
 				Type:     "string",
 			}, apiextensionsv1.CustomResourceColumnDefinition{
-				JSONPath: ".status.conditions[?(@.type==\"Ready\")].status",
+				JSONPath: `.status.conditions[?(@.type=="Ready")].status`,
 				Name:     "Ready",
 				Type:     "string",
 			}},
@@ -2350,7 +2350,7 @@ var ClustersecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 														Allows: true,
 														Schema: &apiextensionsv1.JSONSchemaProps{Type: "string"},
 													},
-													Description: "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is \"key\", the operator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+													Description: `matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.`,
 													Type:        "object",
 												},
 											},
@@ -2728,7 +2728,7 @@ var ClustersecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 											},
 											"authType": apiextensionsv1.JSONSchemaProps{
 												Default:     &apiextensionsv1.JSON{Raw: []byte("\"ServicePrincipal\"")},
-												Description: "Auth type defines how to authenticate to the keyvault service. Valid values are: - \"ServicePrincipal\" (default): Using a service principal (tenantId, clientId, clientSecret) - \"ManagedIdentity\": Using Managed Identity assigned to the pod (see aad-pod-identity)",
+												Description: `Auth type defines how to authenticate to the keyvault service. Valid values are: - "ServicePrincipal" (default): Using a service principal (tenantId, clientId, clientSecret) - "ManagedIdentity": Using Managed Identity assigned to the pod (see aad-pod-identity)`,
 												Enum:        []apiextensionsv1.JSON{apiextensionsv1.JSON{Raw: []byte("\"ServicePrincipal\"")}, apiextensionsv1.JSON{Raw: []byte("\"ManagedIdentity\"")}, apiextensionsv1.JSON{Raw: []byte("\"WorkloadIdentity\"")}},
 												Type:        "string",
 											},
@@ -3150,7 +3150,7 @@ var ClustersecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 																Type:        "string",
 															},
 															"type": apiextensionsv1.JSONSchemaProps{
-																Description: "The type of provider to use such as \"Secret\", or \"ConfigMap\".",
+																Description: `The type of provider to use such as "Secret", or "ConfigMap".`,
 																Enum:        []apiextensionsv1.JSON{apiextensionsv1.JSON{Raw: []byte("\"Secret\"")}, apiextensionsv1.JSON{Raw: []byte("\"ConfigMap\"")}},
 																Type:        "string",
 															},
@@ -3347,7 +3347,7 @@ var ClustersecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 														Properties: map[string]apiextensionsv1.JSONSchemaProps{
 															"path": apiextensionsv1.JSONSchemaProps{
 																Default:     &apiextensionsv1.JSON{Raw: []byte("\"approle\"")},
-																Description: "Path where the App Role authentication backend is mounted in Vault, e.g: \"approle\"",
+																Description: `Path where the App Role authentication backend is mounted in Vault, e.g: "approle"`,
 																Type:        "string",
 															},
 															"roleId": apiextensionsv1.JSONSchemaProps{
@@ -3460,7 +3460,7 @@ var ClustersecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 															},
 															"path": apiextensionsv1.JSONSchemaProps{
 																Default:     &apiextensionsv1.JSON{Raw: []byte("\"jwt\"")},
-																Description: "Path where the JWT authentication backend is mounted in Vault, e.g: \"jwt\"",
+																Description: `Path where the JWT authentication backend is mounted in Vault, e.g: "jwt"`,
 																Type:        "string",
 															},
 															"role": apiextensionsv1.JSONSchemaProps{
@@ -3494,7 +3494,7 @@ var ClustersecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 														Properties: map[string]apiextensionsv1.JSONSchemaProps{
 															"mountPath": apiextensionsv1.JSONSchemaProps{
 																Default:     &apiextensionsv1.JSON{Raw: []byte("\"kubernetes\"")},
-																Description: "Path where the Kubernetes authentication backend is mounted in Vault, e.g: \"kubernetes\"",
+																Description: `Path where the Kubernetes authentication backend is mounted in Vault, e.g: "kubernetes"`,
 																Type:        "string",
 															},
 															"role": apiextensionsv1.JSONSchemaProps{
@@ -3548,7 +3548,7 @@ var ClustersecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 														Properties: map[string]apiextensionsv1.JSONSchemaProps{
 															"path": apiextensionsv1.JSONSchemaProps{
 																Default:     &apiextensionsv1.JSON{Raw: []byte("\"ldap\"")},
-																Description: "Path where the LDAP authentication backend is mounted in Vault, e.g: \"ldap\"",
+																Description: `Path where the LDAP authentication backend is mounted in Vault, e.g: "ldap"`,
 																Type:        "string",
 															},
 															"secretRef": apiextensionsv1.JSONSchemaProps{
@@ -3619,7 +3619,7 @@ var ClustersecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 														Type:        "string",
 													},
 													"type": apiextensionsv1.JSONSchemaProps{
-														Description: "The type of provider to use such as \"Secret\", or \"ConfigMap\".",
+														Description: `The type of provider to use such as "Secret", or "ConfigMap".`,
 														Enum:        []apiextensionsv1.JSON{apiextensionsv1.JSON{Raw: []byte("\"Secret\"")}, apiextensionsv1.JSON{Raw: []byte("\"ConfigMap\"")}},
 														Type:        "string",
 													},
@@ -3632,11 +3632,11 @@ var ClustersecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 												Type:        "boolean",
 											},
 											"namespace": apiextensionsv1.JSONSchemaProps{
-												Description: "Name of the vault namespace. Namespaces is a set of features within Vault Enterprise that allows Vault environments to support Secure Multi-tenancy. e.g: \"ns1\". More about namespaces can be found here https://www.vaultproject.io/docs/enterprise/namespaces",
+												Description: `Name of the vault namespace. Namespaces is a set of features within Vault Enterprise that allows Vault environments to support Secure Multi-tenancy. e.g: "ns1". More about namespaces can be found here https://www.vaultproject.io/docs/enterprise/namespaces`,
 												Type:        "string",
 											},
 											"path": apiextensionsv1.JSONSchemaProps{
-												Description: "Path is the mount path of the Vault KV backend endpoint, e.g: \"secret\". The v2 KV secret engine version specific \"/data\" path suffix for fetching secrets from Vault is optional and will be appended if not present in specified path.",
+												Description: `Path is the mount path of the Vault KV backend endpoint, e.g: "secret". The v2 KV secret engine version specific "/data" path suffix for fetching secrets from Vault is optional and will be appended if not present in specified path.`,
 												Type:        "string",
 											},
 											"readYourWrites": apiextensionsv1.JSONSchemaProps{
@@ -3644,12 +3644,12 @@ var ClustersecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 												Type:        "boolean",
 											},
 											"server": apiextensionsv1.JSONSchemaProps{
-												Description: "Server is the connection address for the Vault server, e.g: \"https://vault.example.com:8200\".",
+												Description: `Server is the connection address for the Vault server, e.g: "https://vault.example.com:8200".`,
 												Type:        "string",
 											},
 											"version": apiextensionsv1.JSONSchemaProps{
 												Default:     &apiextensionsv1.JSON{Raw: []byte("\"v2\"")},
-												Description: "Version is the Vault KV secret engine version. This can be either \"v1\" or \"v2\". Version defaults to \"v2\".",
+												Description: `Version is the Vault KV secret engine version. This can be either "v1" or "v2". Version defaults to "v2".`,
 												Enum:        []apiextensionsv1.JSON{apiextensionsv1.JSON{Raw: []byte("\"v1\"")}, apiextensionsv1.JSON{Raw: []byte("\"v2\"")}},
 												Type:        "string",
 											},
@@ -3673,7 +3673,7 @@ var ClustersecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 												Description: "The provider for the CA bundle to use to validate webhook server certificate.",
 												Properties: map[string]apiextensionsv1.JSONSchemaProps{
 													"key": apiextensionsv1.JSONSchemaProps{
-														Description: "The key the value inside of the provider type to use, only used with \"Secret\" type",
+														Description: `The key the value inside of the provider type to use, only used with "Secret" type`,
 														Type:        "string",
 													},
 													"name": apiextensionsv1.JSONSchemaProps{
@@ -3685,7 +3685,7 @@ var ClustersecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 														Type:        "string",
 													},
 													"type": apiextensionsv1.JSONSchemaProps{
-														Description: "The type of provider to use such as \"Secret\", or \"ConfigMap\".",
+														Description: `The type of provider to use such as "Secret", or "ConfigMap".`,
 														Enum:        []apiextensionsv1.JSON{apiextensionsv1.JSON{Raw: []byte("\"Secret\"")}, apiextensionsv1.JSON{Raw: []byte("\"ConfigMap\"")}},
 														Type:        "string",
 													},
@@ -4126,7 +4126,7 @@ var ExternalsecretsIoCRD = &apiextensionsv1.CustomResourceDefinition{
 				Name:     "Refresh Interval",
 				Type:     "string",
 			}, apiextensionsv1.CustomResourceColumnDefinition{
-				JSONPath: ".status.conditions[?(@.type==\"Ready\")].reason",
+				JSONPath: `.status.conditions[?(@.type=="Ready")].reason`,
 				Name:     "Status",
 				Type:     "string",
 			}},
@@ -4213,7 +4213,7 @@ var ExternalsecretsIoCRD = &apiextensionsv1.CustomResourceDefinition{
 							},
 							"refreshInterval": apiextensionsv1.JSONSchemaProps{
 								Default:     &apiextensionsv1.JSON{Raw: []byte("\"1h\"")},
-								Description: "RefreshInterval is the amount of time before the values are read again from the SecretStore provider Valid time units are \"ns\", \"us\" (or \"µs\"), \"ms\", \"s\", \"m\", \"h\" May be set to zero to fetch and create it once. Defaults to 1h.",
+								Description: `RefreshInterval is the amount of time before the values are read again from the SecretStore provider Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h" May be set to zero to fetch and create it once. Defaults to 1h.`,
 								Type:        "string",
 							},
 							"secretStoreRef": apiextensionsv1.JSONSchemaProps{
@@ -4380,11 +4380,11 @@ var ExternalsecretsIoCRD = &apiextensionsv1.CustomResourceDefinition{
 				Name:     "Refresh Interval",
 				Type:     "string",
 			}, apiextensionsv1.CustomResourceColumnDefinition{
-				JSONPath: ".status.conditions[?(@.type==\"Ready\")].reason",
+				JSONPath: `.status.conditions[?(@.type=="Ready")].reason`,
 				Name:     "Status",
 				Type:     "string",
 			}, apiextensionsv1.CustomResourceColumnDefinition{
-				JSONPath: ".status.conditions[?(@.type==\"Ready\")].status",
+				JSONPath: `.status.conditions[?(@.type=="Ready")].status`,
 				Name:     "Ready",
 				Type:     "string",
 			}},
@@ -4638,7 +4638,7 @@ var ExternalsecretsIoCRD = &apiextensionsv1.CustomResourceDefinition{
 							},
 							"refreshInterval": apiextensionsv1.JSONSchemaProps{
 								Default:     &apiextensionsv1.JSON{Raw: []byte("\"1h\"")},
-								Description: "RefreshInterval is the amount of time before the values are read again from the SecretStore provider Valid time units are \"ns\", \"us\" (or \"µs\"), \"ms\", \"s\", \"m\", \"h\" May be set to zero to fetch and create it once. Defaults to 1h.",
+								Description: `RefreshInterval is the amount of time before the values are read again from the SecretStore provider Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h" May be set to zero to fetch and create it once. Defaults to 1h.`,
 								Type:        "string",
 							},
 							"secretStoreRef": apiextensionsv1.JSONSchemaProps{
@@ -5134,7 +5134,7 @@ var PushsecretsIoCRD = &apiextensionsv1.CustomResourceDefinition{
 				Name:     "AGE",
 				Type:     "date",
 			}, apiextensionsv1.CustomResourceColumnDefinition{
-				JSONPath: ".status.conditions[?(@.type==\"Ready\")].reason",
+				JSONPath: `.status.conditions[?(@.type=="Ready")].reason`,
 				Name:     "Status",
 				Type:     "string",
 			}},
@@ -5183,7 +5183,7 @@ var PushsecretsIoCRD = &apiextensionsv1.CustomResourceDefinition{
 							},
 							"deletionPolicy": apiextensionsv1.JSONSchemaProps{
 								Default:     &apiextensionsv1.JSON{Raw: []byte("\"None\"")},
-								Description: "Deletion Policy to handle Secrets in the provider. Possible Values: \"Delete/None\". Defaults to \"None\".",
+								Description: `Deletion Policy to handle Secrets in the provider. Possible Values: "Delete/None". Defaults to "None".`,
 								Type:        "string",
 							},
 							"refreshInterval": apiextensionsv1.JSONSchemaProps{
@@ -5230,7 +5230,7 @@ var PushsecretsIoCRD = &apiextensionsv1.CustomResourceDefinition{
 														Allows: true,
 														Schema: &apiextensionsv1.JSONSchemaProps{Type: "string"},
 													},
-													Description: "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is \"key\", the operator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+													Description: `matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.`,
 													Type:        "object",
 												},
 											},
@@ -5385,7 +5385,7 @@ var SecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 				Name:     "AGE",
 				Type:     "date",
 			}, apiextensionsv1.CustomResourceColumnDefinition{
-				JSONPath: ".status.conditions[?(@.type==\"Ready\")].reason",
+				JSONPath: `.status.conditions[?(@.type=="Ready")].reason`,
 				Name:     "Status",
 				Type:     "string",
 			}},
@@ -5744,7 +5744,7 @@ var SecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 											},
 											"authType": apiextensionsv1.JSONSchemaProps{
 												Default:     &apiextensionsv1.JSON{Raw: []byte("\"ServicePrincipal\"")},
-												Description: "Auth type defines how to authenticate to the keyvault service. Valid values are: - \"ServicePrincipal\" (default): Using a service principal (tenantId, clientId, clientSecret) - \"ManagedIdentity\": Using Managed Identity assigned to the pod (see aad-pod-identity)",
+												Description: `Auth type defines how to authenticate to the keyvault service. Valid values are: - "ServicePrincipal" (default): Using a service principal (tenantId, clientId, clientSecret) - "ManagedIdentity": Using Managed Identity assigned to the pod (see aad-pod-identity)`,
 												Enum:        []apiextensionsv1.JSON{apiextensionsv1.JSON{Raw: []byte("\"ServicePrincipal\"")}, apiextensionsv1.JSON{Raw: []byte("\"ManagedIdentity\"")}, apiextensionsv1.JSON{Raw: []byte("\"WorkloadIdentity\"")}},
 												Type:        "string",
 											},
@@ -6068,7 +6068,7 @@ var SecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 														Description: "see: https://external-secrets.io/v0.4.1/spec/#external-secrets.io/v1alpha1.CAProvider",
 														Properties: map[string]apiextensionsv1.JSONSchemaProps{
 															"key": apiextensionsv1.JSONSchemaProps{
-																Description: "The key the value inside of the provider type to use, only used with \"Secret\" type",
+																Description: `The key the value inside of the provider type to use, only used with "Secret" type`,
 																Type:        "string",
 															},
 															"name": apiextensionsv1.JSONSchemaProps{
@@ -6080,7 +6080,7 @@ var SecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 																Type:        "string",
 															},
 															"type": apiextensionsv1.JSONSchemaProps{
-																Description: "The type of provider to use such as \"Secret\", or \"ConfigMap\".",
+																Description: `The type of provider to use such as "Secret", or "ConfigMap".`,
 																Enum:        []apiextensionsv1.JSON{apiextensionsv1.JSON{Raw: []byte("\"Secret\"")}, apiextensionsv1.JSON{Raw: []byte("\"ConfigMap\"")}},
 																Type:        "string",
 															},
@@ -6184,7 +6184,7 @@ var SecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 														Properties: map[string]apiextensionsv1.JSONSchemaProps{
 															"path": apiextensionsv1.JSONSchemaProps{
 																Default:     &apiextensionsv1.JSON{Raw: []byte("\"approle\"")},
-																Description: "Path where the App Role authentication backend is mounted in Vault, e.g: \"approle\"",
+																Description: `Path where the App Role authentication backend is mounted in Vault, e.g: "approle"`,
 																Type:        "string",
 															},
 															"roleId": apiextensionsv1.JSONSchemaProps{
@@ -6297,7 +6297,7 @@ var SecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 															},
 															"path": apiextensionsv1.JSONSchemaProps{
 																Default:     &apiextensionsv1.JSON{Raw: []byte("\"jwt\"")},
-																Description: "Path where the JWT authentication backend is mounted in Vault, e.g: \"jwt\"",
+																Description: `Path where the JWT authentication backend is mounted in Vault, e.g: "jwt"`,
 																Type:        "string",
 															},
 															"role": apiextensionsv1.JSONSchemaProps{
@@ -6331,7 +6331,7 @@ var SecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 														Properties: map[string]apiextensionsv1.JSONSchemaProps{
 															"mountPath": apiextensionsv1.JSONSchemaProps{
 																Default:     &apiextensionsv1.JSON{Raw: []byte("\"kubernetes\"")},
-																Description: "Path where the Kubernetes authentication backend is mounted in Vault, e.g: \"kubernetes\"",
+																Description: `Path where the Kubernetes authentication backend is mounted in Vault, e.g: "kubernetes"`,
 																Type:        "string",
 															},
 															"role": apiextensionsv1.JSONSchemaProps{
@@ -6385,7 +6385,7 @@ var SecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 														Properties: map[string]apiextensionsv1.JSONSchemaProps{
 															"path": apiextensionsv1.JSONSchemaProps{
 																Default:     &apiextensionsv1.JSON{Raw: []byte("\"ldap\"")},
-																Description: "Path where the LDAP authentication backend is mounted in Vault, e.g: \"ldap\"",
+																Description: `Path where the LDAP authentication backend is mounted in Vault, e.g: "ldap"`,
 																Type:        "string",
 															},
 															"secretRef": apiextensionsv1.JSONSchemaProps{
@@ -6444,7 +6444,7 @@ var SecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 												Description: "The provider for the CA bundle to use to validate Vault server certificate.",
 												Properties: map[string]apiextensionsv1.JSONSchemaProps{
 													"key": apiextensionsv1.JSONSchemaProps{
-														Description: "The key the value inside of the provider type to use, only used with \"Secret\" type",
+														Description: `The key the value inside of the provider type to use, only used with "Secret" type`,
 														Type:        "string",
 													},
 													"name": apiextensionsv1.JSONSchemaProps{
@@ -6456,7 +6456,7 @@ var SecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 														Type:        "string",
 													},
 													"type": apiextensionsv1.JSONSchemaProps{
-														Description: "The type of provider to use such as \"Secret\", or \"ConfigMap\".",
+														Description: `The type of provider to use such as "Secret", or "ConfigMap".`,
 														Enum:        []apiextensionsv1.JSON{apiextensionsv1.JSON{Raw: []byte("\"Secret\"")}, apiextensionsv1.JSON{Raw: []byte("\"ConfigMap\"")}},
 														Type:        "string",
 													},
@@ -6469,11 +6469,11 @@ var SecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 												Type:        "boolean",
 											},
 											"namespace": apiextensionsv1.JSONSchemaProps{
-												Description: "Name of the vault namespace. Namespaces is a set of features within Vault Enterprise that allows Vault environments to support Secure Multi-tenancy. e.g: \"ns1\". More about namespaces can be found here https://www.vaultproject.io/docs/enterprise/namespaces",
+												Description: `Name of the vault namespace. Namespaces is a set of features within Vault Enterprise that allows Vault environments to support Secure Multi-tenancy. e.g: "ns1". More about namespaces can be found here https://www.vaultproject.io/docs/enterprise/namespaces`,
 												Type:        "string",
 											},
 											"path": apiextensionsv1.JSONSchemaProps{
-												Description: "Path is the mount path of the Vault KV backend endpoint, e.g: \"secret\". The v2 KV secret engine version specific \"/data\" path suffix for fetching secrets from Vault is optional and will be appended if not present in specified path.",
+												Description: `Path is the mount path of the Vault KV backend endpoint, e.g: "secret". The v2 KV secret engine version specific "/data" path suffix for fetching secrets from Vault is optional and will be appended if not present in specified path.`,
 												Type:        "string",
 											},
 											"readYourWrites": apiextensionsv1.JSONSchemaProps{
@@ -6481,12 +6481,12 @@ var SecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 												Type:        "boolean",
 											},
 											"server": apiextensionsv1.JSONSchemaProps{
-												Description: "Server is the connection address for the Vault server, e.g: \"https://vault.example.com:8200\".",
+												Description: `Server is the connection address for the Vault server, e.g: "https://vault.example.com:8200".`,
 												Type:        "string",
 											},
 											"version": apiextensionsv1.JSONSchemaProps{
 												Default:     &apiextensionsv1.JSON{Raw: []byte("\"v2\"")},
-												Description: "Version is the Vault KV secret engine version. This can be either \"v1\" or \"v2\". Version defaults to \"v2\".",
+												Description: `Version is the Vault KV secret engine version. This can be either "v1" or "v2". Version defaults to "v2".`,
 												Enum:        []apiextensionsv1.JSON{apiextensionsv1.JSON{Raw: []byte("\"v1\"")}, apiextensionsv1.JSON{Raw: []byte("\"v2\"")}},
 												Type:        "string",
 											},
@@ -6510,7 +6510,7 @@ var SecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 												Description: "The provider for the CA bundle to use to validate webhook server certificate.",
 												Properties: map[string]apiextensionsv1.JSONSchemaProps{
 													"key": apiextensionsv1.JSONSchemaProps{
-														Description: "The key the value inside of the provider type to use, only used with \"Secret\" type",
+														Description: `The key the value inside of the provider type to use, only used with "Secret" type`,
 														Type:        "string",
 													},
 													"name": apiextensionsv1.JSONSchemaProps{
@@ -6522,7 +6522,7 @@ var SecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 														Type:        "string",
 													},
 													"type": apiextensionsv1.JSONSchemaProps{
-														Description: "The type of provider to use such as \"Secret\", or \"ConfigMap\".",
+														Description: `The type of provider to use such as "Secret", or "ConfigMap".`,
 														Enum:        []apiextensionsv1.JSON{apiextensionsv1.JSON{Raw: []byte("\"Secret\"")}, apiextensionsv1.JSON{Raw: []byte("\"ConfigMap\"")}},
 														Type:        "string",
 													},
@@ -6699,7 +6699,7 @@ var SecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 				Name:     "AGE",
 				Type:     "date",
 			}, apiextensionsv1.CustomResourceColumnDefinition{
-				JSONPath: ".status.conditions[?(@.type==\"Ready\")].reason",
+				JSONPath: `.status.conditions[?(@.type=="Ready")].reason`,
 				Name:     "Status",
 				Type:     "string",
 			}, apiextensionsv1.CustomResourceColumnDefinition{
@@ -6707,7 +6707,7 @@ var SecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 				Name:     "Capabilities",
 				Type:     "string",
 			}, apiextensionsv1.CustomResourceColumnDefinition{
-				JSONPath: ".status.conditions[?(@.type==\"Ready\")].status",
+				JSONPath: `.status.conditions[?(@.type=="Ready")].status`,
 				Name:     "Ready",
 				Type:     "string",
 			}},
@@ -6764,7 +6764,7 @@ var SecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 														Allows: true,
 														Schema: &apiextensionsv1.JSONSchemaProps{Type: "string"},
 													},
-													Description: "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is \"key\", the operator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+													Description: `matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.`,
 													Type:        "object",
 												},
 											},
@@ -7142,7 +7142,7 @@ var SecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 											},
 											"authType": apiextensionsv1.JSONSchemaProps{
 												Default:     &apiextensionsv1.JSON{Raw: []byte("\"ServicePrincipal\"")},
-												Description: "Auth type defines how to authenticate to the keyvault service. Valid values are: - \"ServicePrincipal\" (default): Using a service principal (tenantId, clientId, clientSecret) - \"ManagedIdentity\": Using Managed Identity assigned to the pod (see aad-pod-identity)",
+												Description: `Auth type defines how to authenticate to the keyvault service. Valid values are: - "ServicePrincipal" (default): Using a service principal (tenantId, clientId, clientSecret) - "ManagedIdentity": Using Managed Identity assigned to the pod (see aad-pod-identity)`,
 												Enum:        []apiextensionsv1.JSON{apiextensionsv1.JSON{Raw: []byte("\"ServicePrincipal\"")}, apiextensionsv1.JSON{Raw: []byte("\"ManagedIdentity\"")}, apiextensionsv1.JSON{Raw: []byte("\"WorkloadIdentity\"")}},
 												Type:        "string",
 											},
@@ -7564,7 +7564,7 @@ var SecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 																Type:        "string",
 															},
 															"type": apiextensionsv1.JSONSchemaProps{
-																Description: "The type of provider to use such as \"Secret\", or \"ConfigMap\".",
+																Description: `The type of provider to use such as "Secret", or "ConfigMap".`,
 																Enum:        []apiextensionsv1.JSON{apiextensionsv1.JSON{Raw: []byte("\"Secret\"")}, apiextensionsv1.JSON{Raw: []byte("\"ConfigMap\"")}},
 																Type:        "string",
 															},
@@ -7761,7 +7761,7 @@ var SecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 														Properties: map[string]apiextensionsv1.JSONSchemaProps{
 															"path": apiextensionsv1.JSONSchemaProps{
 																Default:     &apiextensionsv1.JSON{Raw: []byte("\"approle\"")},
-																Description: "Path where the App Role authentication backend is mounted in Vault, e.g: \"approle\"",
+																Description: `Path where the App Role authentication backend is mounted in Vault, e.g: "approle"`,
 																Type:        "string",
 															},
 															"roleId": apiextensionsv1.JSONSchemaProps{
@@ -7874,7 +7874,7 @@ var SecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 															},
 															"path": apiextensionsv1.JSONSchemaProps{
 																Default:     &apiextensionsv1.JSON{Raw: []byte("\"jwt\"")},
-																Description: "Path where the JWT authentication backend is mounted in Vault, e.g: \"jwt\"",
+																Description: `Path where the JWT authentication backend is mounted in Vault, e.g: "jwt"`,
 																Type:        "string",
 															},
 															"role": apiextensionsv1.JSONSchemaProps{
@@ -7908,7 +7908,7 @@ var SecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 														Properties: map[string]apiextensionsv1.JSONSchemaProps{
 															"mountPath": apiextensionsv1.JSONSchemaProps{
 																Default:     &apiextensionsv1.JSON{Raw: []byte("\"kubernetes\"")},
-																Description: "Path where the Kubernetes authentication backend is mounted in Vault, e.g: \"kubernetes\"",
+																Description: `Path where the Kubernetes authentication backend is mounted in Vault, e.g: "kubernetes"`,
 																Type:        "string",
 															},
 															"role": apiextensionsv1.JSONSchemaProps{
@@ -7962,7 +7962,7 @@ var SecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 														Properties: map[string]apiextensionsv1.JSONSchemaProps{
 															"path": apiextensionsv1.JSONSchemaProps{
 																Default:     &apiextensionsv1.JSON{Raw: []byte("\"ldap\"")},
-																Description: "Path where the LDAP authentication backend is mounted in Vault, e.g: \"ldap\"",
+																Description: `Path where the LDAP authentication backend is mounted in Vault, e.g: "ldap"`,
 																Type:        "string",
 															},
 															"secretRef": apiextensionsv1.JSONSchemaProps{
@@ -8033,7 +8033,7 @@ var SecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 														Type:        "string",
 													},
 													"type": apiextensionsv1.JSONSchemaProps{
-														Description: "The type of provider to use such as \"Secret\", or \"ConfigMap\".",
+														Description: `The type of provider to use such as "Secret", or "ConfigMap".`,
 														Enum:        []apiextensionsv1.JSON{apiextensionsv1.JSON{Raw: []byte("\"Secret\"")}, apiextensionsv1.JSON{Raw: []byte("\"ConfigMap\"")}},
 														Type:        "string",
 													},
@@ -8046,11 +8046,11 @@ var SecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 												Type:        "boolean",
 											},
 											"namespace": apiextensionsv1.JSONSchemaProps{
-												Description: "Name of the vault namespace. Namespaces is a set of features within Vault Enterprise that allows Vault environments to support Secure Multi-tenancy. e.g: \"ns1\". More about namespaces can be found here https://www.vaultproject.io/docs/enterprise/namespaces",
+												Description: `Name of the vault namespace. Namespaces is a set of features within Vault Enterprise that allows Vault environments to support Secure Multi-tenancy. e.g: "ns1". More about namespaces can be found here https://www.vaultproject.io/docs/enterprise/namespaces`,
 												Type:        "string",
 											},
 											"path": apiextensionsv1.JSONSchemaProps{
-												Description: "Path is the mount path of the Vault KV backend endpoint, e.g: \"secret\". The v2 KV secret engine version specific \"/data\" path suffix for fetching secrets from Vault is optional and will be appended if not present in specified path.",
+												Description: `Path is the mount path of the Vault KV backend endpoint, e.g: "secret". The v2 KV secret engine version specific "/data" path suffix for fetching secrets from Vault is optional and will be appended if not present in specified path.`,
 												Type:        "string",
 											},
 											"readYourWrites": apiextensionsv1.JSONSchemaProps{
@@ -8058,12 +8058,12 @@ var SecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 												Type:        "boolean",
 											},
 											"server": apiextensionsv1.JSONSchemaProps{
-												Description: "Server is the connection address for the Vault server, e.g: \"https://vault.example.com:8200\".",
+												Description: `Server is the connection address for the Vault server, e.g: "https://vault.example.com:8200".`,
 												Type:        "string",
 											},
 											"version": apiextensionsv1.JSONSchemaProps{
 												Default:     &apiextensionsv1.JSON{Raw: []byte("\"v2\"")},
-												Description: "Version is the Vault KV secret engine version. This can be either \"v1\" or \"v2\". Version defaults to \"v2\".",
+												Description: `Version is the Vault KV secret engine version. This can be either "v1" or "v2". Version defaults to "v2".`,
 												Enum:        []apiextensionsv1.JSON{apiextensionsv1.JSON{Raw: []byte("\"v1\"")}, apiextensionsv1.JSON{Raw: []byte("\"v2\"")}},
 												Type:        "string",
 											},
@@ -8087,7 +8087,7 @@ var SecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 												Description: "The provider for the CA bundle to use to validate webhook server certificate.",
 												Properties: map[string]apiextensionsv1.JSONSchemaProps{
 													"key": apiextensionsv1.JSONSchemaProps{
-														Description: "The key the value inside of the provider type to use, only used with \"Secret\" type",
+														Description: `The key the value inside of the provider type to use, only used with "Secret" type`,
 														Type:        "string",
 													},
 													"name": apiextensionsv1.JSONSchemaProps{
@@ -8099,7 +8099,7 @@ var SecretstoresIoCRD = &apiextensionsv1.CustomResourceDefinition{
 														Type:        "string",
 													},
 													"type": apiextensionsv1.JSONSchemaProps{
-														Description: "The type of provider to use such as \"Secret\", or \"ConfigMap\".",
+														Description: `The type of provider to use such as "Secret", or "ConfigMap".`,
 														Enum:        []apiextensionsv1.JSON{apiextensionsv1.JSON{Raw: []byte("\"Secret\"")}, apiextensionsv1.JSON{Raw: []byte("\"ConfigMap\"")}},
 														Type:        "string",
 													},

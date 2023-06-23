@@ -8,9 +8,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	tu "github.com/volvo-cars/lingon/pkg/testutil"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -32,6 +32,7 @@ func TestMergeLabels(t *testing.T) {
 				"key3": "val3",
 			},
 		},
+		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(
@@ -90,55 +91,6 @@ func TestNamespace(t *testing.T) {
 	}
 }
 
-func TestResources(t *testing.T) {
-	type args struct {
-		cpuWant string
-		memWant string
-		cpuMax  string
-		memMax  string
-	}
-	tests := []struct {
-		name string
-		args args
-		want corev1.ResourceRequirements
-	}{
-		// TODO: Add test cases.
-		{
-			name: "ram cpu",
-			args: args{
-				cpuWant: "2",
-				memWant: "2Gi",
-				cpuMax:  "4",
-				memMax:  "4Gi",
-			},
-			want: corev1.ResourceRequirements{
-				Requests: corev1.ResourceList{
-					corev1.ResourceCPU:    resource.MustParse("2"),
-					corev1.ResourceMemory: resource.MustParse("2Gi"),
-				},
-				Limits: corev1.ResourceList{
-					corev1.ResourceCPU:    resource.MustParse("4"),
-					corev1.ResourceMemory: resource.MustParse("4Gi"),
-				},
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(
-			tt.name, func(t *testing.T) {
-				if got := Resources(
-					tt.args.cpuWant,
-					tt.args.memWant,
-					tt.args.cpuMax,
-					tt.args.memMax,
-				); !reflect.DeepEqual(got, tt.want) {
-					t.Errorf("Resources() = %v, want %v", got, tt.want)
-				}
-			},
-		)
-	}
-}
-
 func TestSimpleDeployment(t *testing.T) {
 	type args struct {
 		name      string
@@ -152,20 +104,55 @@ func TestSimpleDeployment(t *testing.T) {
 		args args
 		want *appsv1.Deployment
 	}{
-		// TODO: Add test cases.
+		{
+			name: "simple",
+			args: args{
+				name:      "depl",
+				namespace: "default",
+				labels:    map[string]string{"app": "depl"},
+				replicas:  1,
+				image:     "nginx",
+			},
+			want: &appsv1.Deployment{
+				TypeMeta: TypeDeploymentV1,
+				ObjectMeta: ObjectMeta(
+					"depl", "default",
+					map[string]string{"app": "depl"}, nil,
+				),
+				Spec: appsv1.DeploymentSpec{
+					Replicas: P(int32(1)),
+					Selector: &metav1.LabelSelector{MatchLabels: map[string]string{"app": "depl"}},
+					Template: corev1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{"app": "depl"},
+						},
+						Spec: corev1.PodSpec{
+							Containers: []corev1.Container{
+								{Name: "depl", Image: "nginx"},
+							},
+							ServiceAccountName: "depl",
+						},
+					},
+					Strategy:                appsv1.DeploymentStrategy{},
+					MinReadySeconds:         0,
+					RevisionHistoryLimit:    nil,
+					Paused:                  false,
+					ProgressDeadlineSeconds: nil,
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(
 			tt.name, func(t *testing.T) {
-				if got := SimpleDeployment(
+				got := SimpleDeployment(
 					tt.args.name,
 					tt.args.namespace,
 					tt.args.labels,
 					tt.args.replicas,
 					tt.args.image,
-				); !reflect.DeepEqual(got, tt.want) {
-					t.Errorf("SimpleDeployment() = %v, want %v", got, tt.want)
-				}
+				)
+				tu.AssertEqual(t, tt.want, got)
 			},
 		)
 	}
