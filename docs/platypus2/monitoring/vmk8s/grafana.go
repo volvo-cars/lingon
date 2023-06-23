@@ -24,6 +24,7 @@ const (
 	DashboardLabel             = "grafana_dashboard"
 	DataSourceLabel            = "grafana_datasource"
 	defaultDashboardConfigName = "grafana-default-dashboards"
+	curlImg                    = "curlimages/curl:7.85.0"
 )
 
 var Graf = &Metadata{
@@ -34,7 +35,7 @@ var Graf = &Metadata{
 	PartOf:    appName,
 	Version:   GrafanaVersion,
 	ManagedBy: "lingon",
-	Registry:  "",
+	Registry:  "docker.io",
 	Image:     "grafana/grafana",
 	Tag:       GrafanaVersion,
 }
@@ -297,9 +298,9 @@ var GrafanaDeploy = &appsv1.Deployment{
 				EnableServiceLinks: P(true),
 				InitContainers: []corev1.Container{
 					{
-						Image:           "curlimages/curl:7.85.0",
-						ImagePullPolicy: corev1.PullIfNotPresent,
 						Name:            "download-dashboards",
+						Image:           curlImg,
+						ImagePullPolicy: corev1.PullIfNotPresent,
 						Command:         []string{"/bin/sh"},
 						Args: []string{
 							"-c",
@@ -316,6 +317,31 @@ var GrafanaDeploy = &appsv1.Deployment{
 								Name:      "storage",
 							},
 						},
+					},
+					{
+						Name:            "load-vm-ds-plugin",
+						Image:           curlImg,
+						ImagePullPolicy: corev1.PullIfNotPresent,
+						Command:         []string{"/bin/sh"},
+						Args: []string{
+							"-c", `
+set -ex
+mkdir -p /var/lib/grafana/plugins/
+ver=$(curl -s https://api.github.com/repos/VictoriaMetrics/grafana-datasource/releases/latest | grep -oE 'v\d+\.\d+\.\d+' | head -1)
+curl -L https://github.com/VictoriaMetrics/grafana-datasource/releases/download/$ver/victoriametrics-datasource-$ver.tar.gz -o /var/lib/grafana/plugins/plugin.tar.gz
+tar -xf /var/lib/grafana/plugins/plugin.tar.gz -C /var/lib/grafana/plugins/
+rm /var/lib/grafana/plugins/plugin.tar.gz
+chown -R 472:472 /var/lib/grafana/plugins/
+
+`,
+						},
+						VolumeMounts: []corev1.VolumeMount{
+							{
+								MountPath: "/var/lib/grafana",
+								Name:      "storage",
+							},
+						},
+						WorkingDir: "/var/lib/grafana/plugins",
 					},
 				},
 				SecurityContext: &corev1.PodSecurityContext{
@@ -351,23 +377,6 @@ var GrafanaDeploy = &appsv1.Deployment{
 }
 
 var GrafanaSVC = Graf.Service(80, GrafanaPort, GrafanaPortName)
-
-// GrafanaSVC = &corev1.Service{
-// 	TypeMeta:   ku.TypeServiceV1,
-// 	ObjectMeta: Graf.ObjectMeta(),
-// 	Spec: corev1.ServiceSpec{
-// 		Ports: []corev1.ServicePort{
-// 			{
-// 				Name:       GrafanaPortName,
-// 				Port:       int32(80),
-// 				Protocol:   corev1.ProtocolTCP,
-// 				TargetPort: intstr.FromInt(GrafanaPort),
-// 			},
-// 		},
-// 		Selector: Graf.MatchLabels(),
-// 		Type:     corev1.ServiceTypeClusterIP,
-// 	},
-// }
 
 var GrafanaScrape = &v1beta1.VMServiceScrape{
 	ObjectMeta: Graf.ObjectMeta(),

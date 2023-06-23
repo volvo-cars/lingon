@@ -19,7 +19,7 @@ var KubePromtheusStackGrafanaDeploy = &appsv1.Deployment{
 			"app.kubernetes.io/managed-by": "Helm",
 			"app.kubernetes.io/name":       "grafana",
 			"app.kubernetes.io/version":    "9.5.3",
-			"helm.sh/chart":                "grafana-6.57.1",
+			"helm.sh/chart":                "grafana-6.57.3",
 		},
 		Name:      "kube-promtheus-stack-grafana",
 		Namespace: "monitoring",
@@ -37,10 +37,10 @@ var KubePromtheusStackGrafanaDeploy = &appsv1.Deployment{
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
 				Annotations: map[string]string{
-					"checksum/config":                         "6af0e9e0a49249fae7b3e748f87b696afcc696d0194b961d1b0ad42cf43ec46c",
+					"checksum/config":                         "0bb0136ef860605a7b0baf9d0d9052238264a318b6b15f3b8aa8eb33ac29585f",
 					"checksum/dashboards-json-config":         "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
-					"checksum/sc-dashboard-provider-config":   "75c1423979b7b41cfae0a2846a6a946c2a442d95be23985606abe18c9969dd30",
-					"checksum/secret":                         "d5c06bbfbeff89f112015dfa47a7f5b7e58bc7a218de269c5d4ff86eb17674b5",
+					"checksum/sc-dashboard-provider-config":   "5b9c2cf3c94bfe204cd8121c6ad413f9aa2217b1aba9b90432f799804bf4a3df",
+					"checksum/secret":                         "afc5925db4631da14cc6e0ec3a3bcf0741d58d6615593db4e25a814e9f299742",
 					"kubectl.kubernetes.io/default-container": "grafana",
 				},
 				Labels: map[string]string{
@@ -302,8 +302,8 @@ var KubePromtheusStackKubeOperatorDeploy = &appsv1.Deployment{
 			"app.kubernetes.io/instance":   "kube-promtheus-stack",
 			"app.kubernetes.io/managed-by": "Helm",
 			"app.kubernetes.io/part-of":    "kube-prometheus-stack",
-			"app.kubernetes.io/version":    "46.8.0",
-			"chart":                        "kube-prometheus-stack-46.8.0",
+			"app.kubernetes.io/version":    "47.0.0",
+			"chart":                        "kube-prometheus-stack-47.0.0",
 			"heritage":                     "Helm",
 			"release":                      "kube-promtheus-stack",
 		},
@@ -325,8 +325,8 @@ var KubePromtheusStackKubeOperatorDeploy = &appsv1.Deployment{
 					"app.kubernetes.io/instance":   "kube-promtheus-stack",
 					"app.kubernetes.io/managed-by": "Helm",
 					"app.kubernetes.io/part-of":    "kube-prometheus-stack",
-					"app.kubernetes.io/version":    "46.8.0",
-					"chart":                        "kube-prometheus-stack-46.8.0",
+					"app.kubernetes.io/version":    "47.0.0",
+					"chart":                        "kube-prometheus-stack-47.0.0",
 					"heritage":                     "Helm",
 					"release":                      "kube-promtheus-stack",
 				},
@@ -337,7 +337,7 @@ var KubePromtheusStackKubeOperatorDeploy = &appsv1.Deployment{
 						Args: []string{
 							"--kubelet-service=kube-system/kube-promtheus-stack-kube-kubelet",
 							"--localhost=127.0.0.1",
-							"--prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.65.2",
+							"--prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.66.0",
 							"--config-reloader-cpu-request=200m",
 							"--config-reloader-cpu-limit=200m",
 							"--config-reloader-memory-request=50Mi",
@@ -350,7 +350,7 @@ var KubePromtheusStackKubeOperatorDeploy = &appsv1.Deployment{
 							"--web.listen-address=:10250",
 							"--web.tls-min-version=VersionTLS13",
 						},
-						Image:           "quay.io/prometheus-operator/prometheus-operator:v0.65.2",
+						Image:           "quay.io/prometheus-operator/prometheus-operator:v0.66.0",
 						ImagePullPolicy: corev1.PullPolicy("IfNotPresent"),
 						Name:            "kube-prometheus-stack",
 						Ports: []corev1.ContainerPort{

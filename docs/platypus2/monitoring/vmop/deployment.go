@@ -6,95 +6,87 @@
 package vmop
 
 import (
+	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	resource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var VictoriaMetricsOperatorDeploy = &appsv1.Deployment{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmop",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-operator",
-			"helm.sh/chart":                "victoria-metrics-operator-0.23.1",
-		},
-		Name:      "vmop-victoria-metrics-operator",
-		Namespace: "monitoring",
-	},
+var Deploy = &appsv1.Deployment{
+	TypeMeta: ku.TypeDeploymentV1,
+
+	ObjectMeta: O.ObjectMeta(),
 	Spec: appsv1.DeploymentSpec{
 		Replicas: P(int32(1)),
-		Selector: &metav1.LabelSelector{MatchLabels: map[string]string{
-			"app.kubernetes.io/instance": "vmop",
-			"app.kubernetes.io/name":     "victoria-metrics-operator",
-		}},
+		Selector: &metav1.LabelSelector{MatchLabels: O.MatchLabels()},
 		Template: corev1.PodTemplateSpec{
-			ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{
-				"app.kubernetes.io/instance": "vmop",
-				"app.kubernetes.io/name":     "victoria-metrics-operator",
-			}},
+			ObjectMeta: metav1.ObjectMeta{Labels: O.MatchLabels()},
 			Spec: corev1.PodSpec{
-				Containers: []corev1.Container{{
-					Args:    []string{"--zap-log-level=info", "--enable-leader-election", "--webhook.enable=true"},
-					Command: []string{"manager"},
-					Env: []corev1.EnvVar{{
-						Name:  "VM_VMSINGLEDEFAULT_VERSION",
-						Value: "v1.91.0",
-					}, {Name: "WATCH_NAMESPACE"}, {
-						Name:      "POD_NAME",
-						ValueFrom: &corev1.EnvVarSource{FieldRef: &corev1.ObjectFieldSelector{FieldPath: "metadata.name"}},
-					}, {
-						Name:  "OPERATOR_NAME",
-						Value: "victoria-metrics-operator",
-					}, {
-						Name:  "VM_PSPAUTOCREATEENABLED",
-						Value: "true",
-					}, {
-						Name:  "VM_ENABLEDPROMETHEUSCONVERTEROWNERREFERENCES",
-						Value: "false",
-					}},
-					Image:           "victoriametrics/operator:v0.34.1",
-					ImagePullPolicy: corev1.PullPolicy("IfNotPresent"),
-					Name:            "victoria-metrics-operator",
-					Ports: []corev1.ContainerPort{{
-						ContainerPort: int32(8080),
-						Name:          "http",
-						Protocol:      corev1.Protocol("TCP"),
-					}, {
-						ContainerPort: int32(9443),
-						Name:          "webhook",
-						Protocol:      corev1.Protocol("TCP"),
-					}},
-					Resources: corev1.ResourceRequirements{
-						Limits: map[corev1.ResourceName]resource.Quantity{
-							corev1.ResourceName("cpu"):    resource.MustParse("120m"),
-							corev1.ResourceName("memory"): resource.MustParse("320Mi"),
+				ServiceAccountName: SA.Name,
+
+				Containers: []corev1.Container{
+					{
+						Image:           O.ContainerURL(),
+						ImagePullPolicy: corev1.PullIfNotPresent,
+						Name:            O.Name,
+						Args: []string{
+							"--zap-log-level=info",
+							"--enable-leader-election",
+							"--webhook.enable=true",
 						},
-						Requests: map[corev1.ResourceName]resource.Quantity{
-							corev1.ResourceName("cpu"):    resource.MustParse("80m"),
-							corev1.ResourceName("memory"): resource.MustParse("120Mi"),
+						Command: []string{"manager"},
+						Env: []corev1.EnvVar{
+							{Name: "WATCH_NAMESPACE"},
+							ku.EnvVarDownAPI("POD_NAME", "metadata.name"),
+							{
+								Name:  "VM_VMSINGLEDEFAULT_VERSION",
+								Value: "v" + O.VMVersion,
+							},
+							{
+								Name:  "OPERATOR_NAME",
+								Value: O.Name,
+							},
+							{
+								Name:  "VM_PSPAUTOCREATEENABLED",
+								Value: "false",
+							},
+							{
+								Name:  "VM_ENABLEDPROMETHEUSCONVERTEROWNERREFERENCES",
+								Value: "false",
+							},
 						},
+						Ports: []corev1.ContainerPort{
+							O.Main.Container,
+							O.Webhook.Container,
+						},
+						Resources: ku.Resources(
+							"80m",
+							"310Mi",
+							"120m",
+							"320Mi",
+						),
+						// TODO: certificate for webhook
+						// VolumeMounts: []corev1.VolumeMount{
+						// 	{
+						// 		MountPath: "/tmp/k8s-webhook-server/serving-certs",
+						// 		Name:      "cert",
+						// 		ReadOnly:  true,
+						// 	},
+						// },
 					},
-					VolumeMounts: []corev1.VolumeMount{{
-						MountPath: "/tmp/k8s-webhook-server/serving-certs",
-						Name:      "cert",
-						ReadOnly:  true,
-					}},
-				}},
-				ServiceAccountName: "vmop-victoria-metrics-operator",
-				Volumes: []corev1.Volume{{
-					Name: "cert",
-					VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{
-						DefaultMode: P(int32(420)),
-						SecretName:  "vmop-victoria-metrics-operator-validation",
-					}},
-				}},
+				},
+				// Volumes: []corev1.Volume{
+				// 	{
+				// 		Name: "cert",
+				// 		VolumeSource: corev1.VolumeSource{
+				// 			Secret: &corev1.SecretVolumeSource{
+				// 				DefaultMode: P(int32(420)),
+				// 				SecretName:  "vmop-victoria-metrics-operator-validation",
+				// 			},
+				// 		},
+				// 	},
+				// },
 			},
 		},
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "apps/v1",
-		Kind:       "Deployment",
 	},
 }

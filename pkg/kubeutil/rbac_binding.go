@@ -66,7 +66,7 @@ func BindRole(
 func ClusterRoleRef(name string) rbacv1.RoleRef {
 	return rbacv1.RoleRef{
 		APIGroup: TypeClusterRoleV1.GroupVersionKind().Group,
-		Kind:     TypeClusterRoleV1.GroupVersionKind().Kind,
+		Kind:     TypeClusterRoleV1.Kind,
 		Name:     name,
 	}
 }
@@ -75,7 +75,7 @@ func ClusterRoleRef(name string) rbacv1.RoleRef {
 func RoleRef(name string) rbacv1.RoleRef {
 	return rbacv1.RoleRef{
 		APIGroup: TypeRoleV1.GroupVersionKind().Group,
-		Kind:     TypeRoleV1.GroupVersionKind().Kind,
+		Kind:     TypeRoleV1.Kind,
 		Name:     name,
 	}
 }
@@ -84,7 +84,7 @@ func RoleRef(name string) rbacv1.RoleRef {
 func RoleSubject(name, namespace string) []rbacv1.Subject {
 	return []rbacv1.Subject{
 		{
-			Kind:      TypeServiceAccountV1.GroupVersionKind().Kind,
+			Kind:      TypeServiceAccountV1.Kind,
 			Name:      name,
 			Namespace: namespace,
 		},

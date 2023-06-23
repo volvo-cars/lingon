@@ -284,7 +284,7 @@ func TestImport_Error(t *testing.T) {
 	output := `import options: incompatible options
 package name cannot contain a dash
 file does not exist: does-not-exists.yaml`
-	tu.AssertEqual(t, output, err.Error())
+	tu.AssertErrorMsg(t, err, output)
 }
 
 func TestImport_ErrorEmptyManifest(t *testing.T) {

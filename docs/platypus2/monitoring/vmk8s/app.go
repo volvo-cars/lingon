@@ -61,15 +61,6 @@ type Vmk8S struct {
 	KubeletNodeScrape  *v1beta1.VMNodeScrape
 
 	VicMet *VicMet
-	// VMSingle                   *v1beta1.VMSingle
-	// DashboardBackupManagerCM   *corev1.ConfigMap
-	// VMHealthAlertRules         *v1beta1.VMRule
-	// VMAgent                    *v1beta1.VMAgent
-	// DashboardAgentCM           *corev1.ConfigMap
-	// VMAgentAlertRules          *v1beta1.VMRule
-	// VMK8sSA                    *corev1.ServiceAccount
-	// VMSingleAlertRules         *v1beta1.VMRule
-	// DashboardVictoriaMetricsCM *corev1.ConfigMap
 }
 
 // New creates a new Vmk8S
@@ -99,15 +90,6 @@ func New() *Vmk8S {
 		DashboardK8SPodsCM:       DashboardK8SPodsCM,
 
 		VicMet: NewVicMet(),
-		// VMK8sSA:                    VictoriaMetricsSA,
-		// DashboardVictoriaMetricsCM: DashboardVictoriaMetricsCM,
-		// DashboardBackupManagerCM:   DashboardBackupManagerCM,
-		// DashboardAgentCM:           DashboardAgentCM,
-		// VMAgent:                    VMAgent,
-		// VMAgentAlertRules:          VMAgentAlertRules,
-		// VMSingle:                   VMDB,
-		// VMHealthAlertRules:         VMHealthAlertRules,
-		// VMSingleAlertRules:         VMSingleAlertRules,
 	}
 }
 

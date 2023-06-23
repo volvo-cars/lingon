@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"golang.org/x/exp/slices"
 )
 
 // ListGoFiles returns a list of all go files in the root directory and
@@ -44,9 +46,9 @@ func listFiles(root string, extensions []string) ([]string, error) {
 				return fmt.Errorf("walk %q %q, %w", path, info.Name(), err)
 			}
 
-			if !info.IsDir() && contains(
-				filepath.Ext(filepath.Base(path)),
+			if !info.IsDir() && slices.Contains(
 				extensions,
+				filepath.Ext(filepath.Base(path)),
 			) {
 				files = append(files, path)
 			}
@@ -58,15 +60,6 @@ func listFiles(root string, extensions []string) ([]string, error) {
 		return nil, fmt.Errorf("walk: %w", err)
 	}
 	return files, nil
-}
-
-func contains(e string, s []string) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
-	}
-	return false
 }
 
 func FileExists(filename string) bool {

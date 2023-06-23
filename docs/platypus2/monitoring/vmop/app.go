@@ -11,83 +11,173 @@ import (
 	"os"
 	"os/exec"
 
-	kube "github.com/volvo-cars/lingon/pkg/kube"
+	"github.com/volvo-cars/lingon/pkg/kube"
+	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
+	"github.com/volvo-cars/lingoneks/meta"
 	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-// validate the struct implements the interface
-var _ kube.Exporter = (*Vmop)(nil)
-
-// Vmop contains kubernetes manifests
-type Vmop struct {
-	kube.App
-
-	VictoriaMetricsOperatorAdmissionValidatingwebhookconfigurations *admissionregistrationv1.ValidatingWebhookConfiguration
-	VictoriaMetricsOperatorCR                                       *rbacv1.ClusterRole
-	VictoriaMetricsOperatorCRB                                      *rbacv1.ClusterRoleBinding
-	VictoriaMetricsOperatorDeploy                                   *appsv1.Deployment
-	VictoriaMetricsOperatorPDB                                      *policyv1beta1.PodDisruptionBudget
-	VictoriaMetricsOperatorRB                                       *rbacv1.RoleBinding
-	VictoriaMetricsOperatorRole                                     *rbacv1.Role
-	VictoriaMetricsOperatorSA                                       *corev1.ServiceAccount
-	VictoriaMetricsOperatorSVC                                      *corev1.Service
-	VmagentsOperatorVictoriametricsComCRD                           *apiextensionsv1.CustomResourceDefinition
-	VmalertmanagerconfigsOperatorVictoriametricsComCRD              *apiextensionsv1.CustomResourceDefinition
-	VmalertmanagersOperatorVictoriametricsComCRD                    *apiextensionsv1.CustomResourceDefinition
-	VmalertsOperatorVictoriametricsComCRD                           *apiextensionsv1.CustomResourceDefinition
-	VmauthsOperatorVictoriametricsComCRD                            *apiextensionsv1.CustomResourceDefinition
-	VmclustersOperatorVictoriametricsComCRD                         *apiextensionsv1.CustomResourceDefinition
-	VmnodescrapesOperatorVictoriametricsComCRD                      *apiextensionsv1.CustomResourceDefinition
-	VmpodscrapesOperatorVictoriametricsComCRD                       *apiextensionsv1.CustomResourceDefinition
-	VmprobesOperatorVictoriametricsComCRD                           *apiextensionsv1.CustomResourceDefinition
-	VmrulesOperatorVictoriametricsComCRD                            *apiextensionsv1.CustomResourceDefinition
-	VmservicescrapesOperatorVictoriametricsComCRD                   *apiextensionsv1.CustomResourceDefinition
-	VmsinglesOperatorVictoriametricsComCRD                          *apiextensionsv1.CustomResourceDefinition
-	VmstaticscrapesOperatorVictoriametricsComCRD                    *apiextensionsv1.CustomResourceDefinition
-	VmusersOperatorVictoriametricsComCRD                            *apiextensionsv1.CustomResourceDefinition
+func Core() Meta {
+	return Meta{
+		Metadata: meta.Metadata{
+			Name:      "victoria-metrics-operator",
+			Namespace: "monitoring",
+			Instance:  "victoria-metrics-operator-monitoring",
+			Component: "operator",
+			PartOf:    "victoria-metrics-operator",
+			Version:   "0.34.1",
+			ManagedBy: "lingon",
+			Registry:  "",
+			Image:     "victoriametrics/operator",
+			Tag:       "v0.34.1",
+		},
+		Webhook: meta.NetPort{
+			Container: corev1.ContainerPort{
+				Name:          "webhook",
+				ContainerPort: 9443,
+				Protocol:      corev1.ProtocolTCP,
+			},
+			Service: corev1.ServicePort{
+				Name:       "webhook",
+				Port:       443,
+				TargetPort: intstr.FromString("webhook"),
+				Protocol:   corev1.ProtocolTCP,
+			},
+		},
+		Main: meta.NetPort{
+			Container: corev1.ContainerPort{
+				Name:          "http",
+				ContainerPort: 8080,
+				Protocol:      corev1.ProtocolTCP,
+			},
+			Service: corev1.ServicePort{
+				Name:       "http",
+				Port:       8080,
+				TargetPort: intstr.FromString("http"),
+				Protocol:   corev1.ProtocolTCP,
+			},
+		},
+		VMVersion: "1.91.0",
+	}
 }
 
-// New creates a new Vmop
-func New() *Vmop {
-	return &Vmop{
-		VictoriaMetricsOperatorAdmissionValidatingwebhookconfigurations: VictoriaMetricsOperatorAdmissionValidatingwebhookconfigurations,
-		VictoriaMetricsOperatorCR:                          VictoriaMetricsOperatorCR,
-		VictoriaMetricsOperatorCRB:                         VictoriaMetricsOperatorCRB,
-		VictoriaMetricsOperatorDeploy:                      VictoriaMetricsOperatorDeploy,
-		VictoriaMetricsOperatorPDB:                         VictoriaMetricsOperatorPDB,
-		VictoriaMetricsOperatorRB:                          VictoriaMetricsOperatorRB,
-		VictoriaMetricsOperatorRole:                        VictoriaMetricsOperatorRole,
-		VictoriaMetricsOperatorSA:                          VictoriaMetricsOperatorSA,
-		VictoriaMetricsOperatorSVC:                         VictoriaMetricsOperatorSVC,
-		VmagentsOperatorVictoriametricsComCRD:              VmagentsOperatorVictoriametricsComCRD,
-		VmalertmanagerconfigsOperatorVictoriametricsComCRD: VmalertmanagerconfigsOperatorVictoriametricsComCRD,
-		VmalertmanagersOperatorVictoriametricsComCRD:       VmalertmanagersOperatorVictoriametricsComCRD,
-		VmalertsOperatorVictoriametricsComCRD:              VmalertsOperatorVictoriametricsComCRD,
-		VmauthsOperatorVictoriametricsComCRD:               VmauthsOperatorVictoriametricsComCRD,
-		VmclustersOperatorVictoriametricsComCRD:            VmclustersOperatorVictoriametricsComCRD,
-		VmnodescrapesOperatorVictoriametricsComCRD:         VmnodescrapesOperatorVictoriametricsComCRD,
-		VmpodscrapesOperatorVictoriametricsComCRD:          VmpodscrapesOperatorVictoriametricsComCRD,
-		VmprobesOperatorVictoriametricsComCRD:              VmprobesOperatorVictoriametricsComCRD,
-		VmrulesOperatorVictoriametricsComCRD:               VmrulesOperatorVictoriametricsComCRD,
-		VmservicescrapesOperatorVictoriametricsComCRD:      VmservicescrapesOperatorVictoriametricsComCRD,
-		VmsinglesOperatorVictoriametricsComCRD:             VmsinglesOperatorVictoriametricsComCRD,
-		VmstaticscrapesOperatorVictoriametricsComCRD:       VmstaticscrapesOperatorVictoriametricsComCRD,
-		VmusersOperatorVictoriametricsComCRD:               VmusersOperatorVictoriametricsComCRD,
+type Meta struct {
+	meta.Metadata
+
+	Webhook   meta.NetPort
+	Main      meta.NetPort
+	VMVersion string
+}
+
+var (
+	// validate the struct implements the interface
+	_ kube.Exporter = (*VMOperator)(nil)
+	O               = Core()
+)
+
+// VMOperator contains kubernetes manifests
+type VMOperator struct {
+	kube.App
+
+	NS     *corev1.Namespace
+	CR     *rbacv1.ClusterRole
+	CRB    *rbacv1.ClusterRoleBinding
+	Deploy *appsv1.Deployment
+	PDB    *policyv1beta1.PodDisruptionBudget
+	RB     *rbacv1.RoleBinding
+	Role   *rbacv1.Role
+	SA     *corev1.ServiceAccount
+	SVC    *corev1.Service
+
+	WHValidation *admissionregistrationv1.ValidatingWebhookConfiguration
+
+	CRD
+}
+
+type CRD struct {
+	VMAgentsCRD              *apiextensionsv1.CustomResourceDefinition
+	VMAlertManagerConfigsCRD *apiextensionsv1.CustomResourceDefinition
+	VMAlertManagersCRD       *apiextensionsv1.CustomResourceDefinition
+	VMAlertsCRD              *apiextensionsv1.CustomResourceDefinition
+	VMAuthsCRD               *apiextensionsv1.CustomResourceDefinition
+	VMClustersCRD            *apiextensionsv1.CustomResourceDefinition
+	VMNodeScrapesCRD         *apiextensionsv1.CustomResourceDefinition
+	VMPodScrapesCRD          *apiextensionsv1.CustomResourceDefinition
+	VMProbesCRD              *apiextensionsv1.CustomResourceDefinition
+	VMRulesCRD               *apiextensionsv1.CustomResourceDefinition
+	VMServiceScrapesCRD      *apiextensionsv1.CustomResourceDefinition
+	VMSinglesCRD             *apiextensionsv1.CustomResourceDefinition
+	VMStaticScrapesCRD       *apiextensionsv1.CustomResourceDefinition
+	VMUsersCRD               *apiextensionsv1.CustomResourceDefinition
+}
+
+var SA = O.ServiceAccount()
+
+// New creates a new VMOperator
+func New() *VMOperator {
+	return &VMOperator{
+		NS:           ku.Namespace(O.Namespace, O.Labels(), nil),
+		WHValidation: WHValidation,
+		CR:           CR,
+		CRB:          ku.BindClusterRole(O.Name, SA, CR, O.Labels()),
+		Deploy:       Deploy,
+		RB:           ku.BindRole(O.Name, SA, Role, O.Labels()),
+		Role:         Role,
+		SA:           SA,
+		PDB: &policyv1beta1.PodDisruptionBudget{
+			TypeMeta:   ku.TypePodDisruptionBudgetV1,
+			ObjectMeta: O.ObjectMeta(),
+			Spec: policyv1beta1.PodDisruptionBudgetSpec{
+				MinAvailable: P(intstr.FromInt(1)),
+				Selector:     &metav1.LabelSelector{MatchLabels: O.MatchLabels()},
+			},
+		},
+
+		SVC: &corev1.Service{
+			TypeMeta:   ku.TypeServiceV1,
+			ObjectMeta: O.ObjectMeta(),
+			Spec: corev1.ServiceSpec{
+				Ports: []corev1.ServicePort{
+					O.Main.Service,
+					O.Webhook.Service,
+				},
+				Selector: O.MatchLabels(),
+				Type:     corev1.ServiceTypeClusterIP,
+			},
+		},
+		CRD: CRD{
+			VMAgentsCRD:              VMAgentsCRD,
+			VMAlertManagerConfigsCRD: VMAlertManagerConfigsCRD,
+			VMAlertManagersCRD:       VMAlertManagersCRD,
+			VMAlertsCRD:              VMAlertsCRD,
+			VMAuthsCRD:               VMAuthsCRD,
+			VMClustersCRD:            VMClustersCRD,
+			VMNodeScrapesCRD:         VMNodeScrapesCRD,
+			VMPodScrapesCRD:          VMPodScrapesCRD,
+			VMProbesCRD:              VMProbesCRD,
+			VMRulesCRD:               VMRulesCRD,
+			VMServiceScrapesCRD:      VMServiceScrapesCRD,
+			VMSinglesCRD:             VMSinglesCRD,
+			VMStaticScrapesCRD:       VMStaticScrapesCRD,
+			VMUsersCRD:               VMUsersCRD,
+		},
 	}
 }
 
 // Apply applies the kubernetes objects to the cluster
-func (a *Vmop) Apply(ctx context.Context) error {
+func (a *VMOperator) Apply(ctx context.Context) error {
 	return Apply(ctx, a)
 }
 
 // Export exports the kubernetes objects to YAML files in the given directory
-func (a *Vmop) Export(dir string) error {
+func (a *VMOperator) Export(dir string) error {
 	return kube.Export(a, kube.WithExportOutputDirectory(dir))
 }
 
@@ -107,7 +197,11 @@ func Apply(ctx context.Context, km kube.Exporter) error {
 		defer func() {
 			err = errors.Join(err, stdin.Close())
 		}()
-		if errEW := kube.Export(km, kube.WithExportWriter(stdin), kube.WithExportAsSingleFile("stdin")); errEW != nil {
+		if errEW := kube.Export(
+			km,
+			kube.WithExportWriter(stdin),
+			kube.WithExportAsSingleFile("stdin"),
+		); errEW != nil {
 			err = errors.Join(err, errEW)
 		}
 	}()

@@ -37,44 +37,6 @@ func TestFileExists(t *testing.T) {
 	}
 }
 
-func Test_contains(t *testing.T) {
-	type args struct {
-		e string
-		s []string
-	}
-	tests := []struct {
-		name string
-		args args
-		want bool
-	}{
-		{
-			name: "in haystack",
-			args: args{
-				e: "hey",
-				s: []string{"hey", "ho", "let's go"},
-			},
-			want: true,
-		},
-		{
-			name: "not in haystack",
-			args: args{
-				e: "NIE",
-				s: []string{"hey", "ho", "let's go"},
-			},
-			want: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(
-			tt.name, func(t *testing.T) {
-				if got := contains(tt.args.e, tt.args.s); got != tt.want {
-					t.Errorf("contains() = %v, want %v", got, tt.want)
-				}
-			},
-		)
-	}
-}
-
 func TestListGoFiles(t *testing.T) {
 	tests := []struct {
 		name    string

@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	KSMVersion  = "2.7.0"
+	KSMVersion  = "2.9.2"
 	KSMPort     = 8080
 	KSMPortName = "http"
 )

@@ -21,10 +21,10 @@ import (
 )
 
 // validate the struct implements the interface
-var _ kube.Exporter = (*KubePrometheusStack)(nil)
+var _ kube.Exporter = (*Kubeprometheusstack)(nil)
 
-// KubePrometheusStack contains kubernetes manifests
-type KubePrometheusStack struct {
+// Kubeprometheusstack contains kubernetes manifests
+type Kubeprometheusstack struct {
 	kube.App
 
 	AlertmanagerKubePromtheusStackKubeAlertmanagerSecrets                 *corev1.Secret
@@ -148,9 +148,9 @@ type KubePrometheusStack struct {
 	KubePromtheusStackPrometheusNodeExporterServiceMonitor                *prometheusoperatorprometheusoperatorpkgapismonitoringv1.ServiceMonitor
 }
 
-// New creates a new KubePrometheusStack
-func New() *KubePrometheusStack {
-	return &KubePrometheusStack{
+// New creates a new Kubeprometheusstack
+func New() *Kubeprometheusstack {
+	return &Kubeprometheusstack{
 		AlertmanagerKubePromtheusStackKubeAlertmanagerSecrets:                 AlertmanagerKubePromtheusStackKubeAlertmanagerSecrets,
 		KubePromtheusStackGrafanaCM:                                           KubePromtheusStackGrafanaCM,
 		KubePromtheusStackGrafanaCR:                                           KubePromtheusStackGrafanaCR,
@@ -274,12 +274,12 @@ func New() *KubePrometheusStack {
 }
 
 // Apply applies the kubernetes objects to the cluster
-func (a *KubePrometheusStack) Apply(ctx context.Context) error {
+func (a *Kubeprometheusstack) Apply(ctx context.Context) error {
 	return Apply(ctx, a)
 }
 
 // Export exports the kubernetes objects to YAML files in the given directory
-func (a *KubePrometheusStack) Export(dir string) error {
+func (a *Kubeprometheusstack) Export(dir string) error {
 	return kube.Export(a, kube.WithExportOutputDirectory(dir))
 }
 
