@@ -8,7 +8,6 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -22,25 +21,6 @@ func Resources(cpuWant, memWant, cpuMax, memMax string) corev1.ResourceRequireme
 		Limits: corev1.ResourceList{
 			corev1.ResourceCPU:    resource.MustParse(cpuMax),
 			corev1.ResourceMemory: resource.MustParse(memMax),
-		},
-	}
-}
-
-func AntiAffinityHostnameByLabel(key, value string) *corev1.PodAntiAffinity {
-	return &corev1.PodAntiAffinity{
-		RequiredDuringSchedulingIgnoredDuringExecution: []corev1.PodAffinityTerm{
-			{
-				LabelSelector: &metav1.LabelSelector{
-					MatchExpressions: []metav1.LabelSelectorRequirement{
-						{
-							Key:      key,
-							Operator: metav1.LabelSelectorOpIn,
-							Values:   []string{value},
-						},
-					},
-				},
-				TopologyKey: LabelHostname,
-			},
 		},
 	}
 }

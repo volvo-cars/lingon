@@ -54,7 +54,7 @@ var Deploy = &appsv1.Deployment{
 				Containers: []corev1.Container{
 					{
 						Name:            M.Name,
-						Image:           M.ContainerURL(),
+						Image:           M.Img.URL(),
 						ImagePullPolicy: corev1.PullIfNotPresent,
 						Args: []string{
 							"--secure-port=" + d(M.P.Container.ContainerPort),

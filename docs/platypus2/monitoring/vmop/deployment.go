@@ -13,8 +13,7 @@ import (
 )
 
 var Deploy = &appsv1.Deployment{
-	TypeMeta: ku.TypeDeploymentV1,
-
+	TypeMeta:   ku.TypeDeploymentV1,
 	ObjectMeta: O.ObjectMeta(),
 	Spec: appsv1.DeploymentSpec{
 		Replicas: P(int32(1)),
@@ -26,7 +25,7 @@ var Deploy = &appsv1.Deployment{
 
 				Containers: []corev1.Container{
 					{
-						Image:           O.ContainerURL(),
+						Image:           O.Img.URL(),
 						ImagePullPolicy: corev1.PullIfNotPresent,
 						Name:            O.Name,
 						Args: []string{
@@ -37,22 +36,28 @@ var Deploy = &appsv1.Deployment{
 						Command: []string{"manager"},
 						Env: []corev1.EnvVar{
 							{Name: "WATCH_NAMESPACE"},
+							{Name: "OPERATOR_NAME", Value: O.Name},
 							ku.EnvVarDownAPI("POD_NAME", "metadata.name"),
+							// See https://github.com/VictoriaMetrics/operator/blob/master/vars.MD
 							{
 								Name:  "VM_VMSINGLEDEFAULT_VERSION",
 								Value: "v" + O.VMVersion,
 							},
 							{
-								Name:  "OPERATOR_NAME",
-								Value: O.Name,
+								Name:  "VM_USECUSTOMCONFIGRELOADER",
+								Value: "true",
 							},
 							{
 								Name:  "VM_PSPAUTOCREATEENABLED",
 								Value: "false",
 							},
 							{
+								// By default, the operator doesn't make converted objects disappear after original ones are deleted.
+								// To change this behaviour, it adds `OwnerReferences` to converted objects.
+								// Converted objects will be linked to the original ones
+								// and will be deleted by kubernetes after the original ones are deleted.
 								Name:  "VM_ENABLEDPROMETHEUSCONVERTEROWNERREFERENCES",
-								Value: "false",
+								Value: "true",
 							},
 						},
 						Ports: []corev1.ContainerPort{

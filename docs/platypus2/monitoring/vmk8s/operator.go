@@ -7,6 +7,7 @@ import (
 	"github.com/VictoriaMetrics/operator/api/victoriametrics/v1beta1"
 	"github.com/volvo-cars/lingon/pkg/kube"
 	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
+	"github.com/volvo-cars/lingoneks/meta"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -14,21 +15,58 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-const (
-	OpPort       = 8080
-	OpPortName   = "http"
-	OpWHPort     = 9443
-	OpWHPortName = "webhook"
-)
+var O = Core()
 
-var VMOp = &Metadata{
-	Name:      "victoria-metrics-operator",
-	Namespace: namespace,
-	Instance:  "victoria-metrics-operator-" + namespace,
-	Component: "operator",
-	PartOf:    appName,
-	Version:   OperatorVersion,
-	ManagedBy: "lingon",
+func Core() VMOpMeta {
+	OpPort := 8080
+	OpPortName := "http"
+	OpWHPort := 9443
+	OpWHPortName := "webhook"
+
+	return VMOpMeta{
+		Metadata: meta.Metadata{
+			Name:      "victoria-metrics-operator",
+			Namespace: namespace,
+			Instance:  "victoria-metrics-operator-" + namespace,
+			Component: "operator",
+			PartOf:    appName,
+			Version:   "0.34.1",
+			ManagedBy: "lingon",
+			Img: meta.ContainerImg{
+				Registry: "docker.io",
+				Image:    "victoriametrics/operator",
+				Tag:      "v0.34.1",
+			},
+		},
+		P: meta.NetPort{
+			Container: corev1.ContainerPort{
+				ContainerPort: int32(OpPort),
+				Name:          OpPortName,
+			},
+			Service: corev1.ServicePort{
+				Name:       OpPortName,
+				Port:       int32(OpPort),
+				TargetPort: intstr.FromInt(OpPort),
+			},
+		},
+		WH: meta.NetPort{
+			Container: corev1.ContainerPort{
+				Name:          OpWHPortName,
+				ContainerPort: int32(OpWHPort),
+			},
+			Service: corev1.ServicePort{
+				Name:       OpWHPortName,
+				Port:       int32(443),
+				TargetPort: intstr.FromInt(OpWHPort),
+			},
+		},
+	}
+}
+
+type VMOpMeta struct {
+	meta.Metadata
+	WH meta.NetPort
+	P  meta.NetPort
 }
 
 type Operator struct {
@@ -49,42 +87,45 @@ func NewOperator() *Operator {
 	return &Operator{
 		CR: OperatorCR,
 		CRB: ku.BindClusterRole(
-			VMOp.Name,
+			O.Name,
 			OperatorSA,
 			OperatorCR,
-			VMOp.Labels(),
+			O.Labels(),
 		),
 		Deploy: OperatorDeploy,
 		RB: ku.BindRole(
-			VMOp.Name,
+			O.Name,
 			OperatorSA,
 			OperatorRole,
-			VMOp.Labels(),
+			O.Labels(),
 		),
 		Role:        OperatorRole,
 		SA:          OperatorSA,
 		SVC:         OperatorSVC,
-		DashboardCM: OperatorDashboardCM,
+		DashboardCM: DashboardVMOperator,
 		Scrape:      OperatorScrape,
 	}
 }
 
 var OperatorDeploy = &appsv1.Deployment{
 	TypeMeta:   ku.TypeDeploymentV1,
-	ObjectMeta: VMOp.ObjectMeta(),
+	ObjectMeta: O.ObjectMeta(),
 	Spec: appsv1.DeploymentSpec{
 		Replicas: P(int32(1)),
 		Selector: &metav1.LabelSelector{
-			MatchLabels: VMOp.MatchLabels(),
+			MatchLabels: O.MatchLabels(),
 		},
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
-				Labels: VMOp.MatchLabels(),
+				Labels: O.MatchLabels(),
 			},
 			Spec: corev1.PodSpec{
 				ServiceAccountName: OperatorSA.Name,
 				Containers: []corev1.Container{
 					{
+						Image:           O.Img.URL(),
+						ImagePullPolicy: corev1.PullIfNotPresent,
+						Name:            O.Name,
 						Args: []string{
 							"--zap-log-level=info",
 							"--enable-leader-election",
@@ -93,52 +134,14 @@ var OperatorDeploy = &appsv1.Deployment{
 						Env: []corev1.EnvVar{
 							{Name: "WATCH_NAMESPACE"},
 							ku.EnvVarDownAPI("POD_NAME", "metadata.name"),
-							{
-								Name: "OPERATOR_NAME", Value: VMOp.Name,
-							},
+							{Name: "OPERATOR_NAME", Value: O.Name},
 							// See https://github.com/VictoriaMetrics/operator/blob/master/vars.MD
-							// {
-							// 	Name:  "VM_ENABLEDPROMETHEUSCONVERTER_PODMONITOR",
-							// 	Value: "false",
-							// },
-							// {
-							// 	Name:  "VM_ENABLEDPROMETHEUSCONVERTER_SERVICESCRAPE",
-							// 	Value: "false",
-							// },
-							// {
-							// 	Name:  "VM_ENABLEDPROMETHEUSCONVERTER_PROMETHEUSRULE",
-							// 	Value: "false",
-							// },
-							// {
-							// 	Name:  "VM_ENABLEDPROMETHEUSCONVERTER_PROBE",
-							// 	Value: "false",
-							// },
-							// {
-							// 	Name:  "VM_ENABLEDPROMETHEUSCONVERTER_ALERTMANAGERCONFIG",
-							// 	Value: "false",
-							// },
-							// {
-							// 	Name:  "VM_PSPAUTOCREATEENABLED",
-							// 	Value: "true",
-							// },
-							// {
-							// 	Name:  "VM_ENABLEDPROMETHEUSCONVERTEROWNERREFERENCES",
-							// 	Value: "false",
-							// },
+
 						},
-						Image:           OperatorImg,
-						ImagePullPolicy: corev1.PullIfNotPresent,
-						Name:            VMOp.Name,
+
 						Ports: []corev1.ContainerPort{
-							{
-								ContainerPort: int32(OpPort),
-								Name:          OpPortName,
-								Protocol:      corev1.ProtocolTCP,
-							}, {
-								ContainerPort: int32(OpWHPort),
-								Name:          OpWHPortName,
-								Protocol:      corev1.ProtocolTCP,
-							},
+							O.P.Container,
+							O.WH.Container,
 						},
 					},
 				},
@@ -147,11 +150,11 @@ var OperatorDeploy = &appsv1.Deployment{
 	},
 }
 
-var OperatorSA = VMOp.ServiceAccount()
+var OperatorSA = O.ServiceAccount()
 
 var OperatorCR = &rbacv1.ClusterRole{
 	TypeMeta:   ku.TypeClusterRoleV1,
-	ObjectMeta: VMOp.ObjectMetaNoNS(),
+	ObjectMeta: O.ObjectMetaNoNS(),
 	Rules: []rbacv1.PolicyRule{
 		{
 			APIGroups: []string{""},
@@ -554,7 +557,7 @@ var OperatorCR = &rbacv1.ClusterRole{
 
 var OperatorRole = &rbacv1.Role{
 	TypeMeta:   ku.TypeRoleV1,
-	ObjectMeta: VMOp.ObjectMeta(),
+	ObjectMeta: O.ObjectMeta(),
 	Rules: []rbacv1.PolicyRule{
 		{
 			APIGroups: []string{""},
@@ -586,38 +589,30 @@ var OperatorRole = &rbacv1.Role{
 
 var OperatorSVC = &corev1.Service{
 	TypeMeta:   ku.TypeServiceV1,
-	ObjectMeta: VMOp.ObjectMeta(),
+	ObjectMeta: O.ObjectMeta(),
 	Spec: corev1.ServiceSpec{
 		Ports: []corev1.ServicePort{
-			{
-				Name:       OpPortName,
-				Port:       int32(OpPort),
-				Protocol:   corev1.ProtocolTCP,
-				TargetPort: intstr.FromInt(OpPort),
-			}, {
-				Name:       OpWHPortName,
-				Port:       int32(443),
-				TargetPort: intstr.FromInt(OpWHPort),
-			},
+			O.P.Service,
+			O.WH.Service,
 		},
-		Selector: VMOp.MatchLabels(),
+		Selector: O.MatchLabels(),
 		Type:     corev1.ServiceTypeClusterIP,
 	},
 }
 
 var OperatorScrape = &v1beta1.VMServiceScrape{
 	TypeMeta:   TypeVMServiceScrapeV1Beta1,
-	ObjectMeta: VMOp.ObjectMeta(),
+	ObjectMeta: O.ObjectMeta(),
 	Spec: v1beta1.VMServiceScrapeSpec{
-		Endpoints: []v1beta1.Endpoint{{Port: OpPortName}},
+		Endpoints: []v1beta1.Endpoint{{Port: O.P.Service.Name}},
 		NamespaceSelector: v1beta1.NamespaceSelector{
-			MatchNames: []string{VMOp.Namespace},
+			MatchNames: []string{O.Namespace},
 		},
-		Selector: metav1.LabelSelector{MatchLabels: VMOp.MatchLabels()},
+		Selector: metav1.LabelSelector{MatchLabels: O.MatchLabels()},
 	},
 }
 
-var OperatorDashboardCM = &corev1.ConfigMap{
+var DashboardVMOperator = &corev1.ConfigMap{
 	Data: map[string]string{
 		"operator.json": `
 {
@@ -1986,11 +1981,11 @@ var OperatorDashboardCM = &corev1.ConfigMap{
 	},
 	ObjectMeta: metav1.ObjectMeta{
 		Labels: ku.MergeLabels(
-			VMOp.Labels(),
+			O.Labels(),
 			map[string]string{DashboardLabel: "1"},
 		),
-		Name:      VMOp.Name,
-		Namespace: VMOp.Namespace,
+		Name:      O.Name,
+		Namespace: O.Namespace,
 	},
 	TypeMeta: ku.TypeConfigMapV1,
 }

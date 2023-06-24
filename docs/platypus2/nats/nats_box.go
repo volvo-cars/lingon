@@ -6,23 +6,30 @@
 package nats
 
 import (
+	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
+	"github.com/volvo-cars/lingoneks/meta"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const (
-	natsBox        = "nats-box"
-	natsBoxVersion = "0.13.8"
+var (
+	natsBox = "nats-box"
+
+	natsBoxImg = meta.ContainerImg{
+		Image: "natsio/nats-box",
+		Tag:   "0.13.8",
+	}
+
+	natsBoxLabel = map[string]string{"app": natsBox}
 )
 
-var natsBoxLabel = map[string]string{"app": natsBox}
-
 var BoxDeploy = &appsv1.Deployment{
+	TypeMeta: ku.TypeDeploymentV1,
 	ObjectMeta: metav1.ObjectMeta{
 		Labels:    natsBoxLabel,
 		Name:      natsBox,
-		Namespace: namespace,
+		Namespace: N.Namespace,
 	},
 	Spec: appsv1.DeploymentSpec{
 		Replicas: P(int32(1)),
@@ -39,23 +46,20 @@ var BoxDeploy = &appsv1.Deployment{
 								Value: "nats",
 							},
 						},
-						Image:           "natsio/" + natsBox + ":" + natsBoxVersion,
-						ImagePullPolicy: corev1.PullPolicy("IfNotPresent"),
+						Image:           natsBoxImg.URL(),
+						ImagePullPolicy: corev1.PullIfNotPresent,
 						Name:            natsBox,
 					},
 				},
 			},
 		},
 	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "apps/v1",
-		Kind:       "Deployment",
-	},
 }
 
 var TestRequestReplyPO = &corev1.Pod{
+	TypeMeta: ku.TypePodV1,
 	ObjectMeta: metav1.ObjectMeta{
-		Annotations: map[string]string{"helm.sh/hook": "test"},
+		// Annotations: map[string]string{"helm.sh/hook": "test"},
 		Labels: map[string]string{
 			"app":   "nats-test-request-reply",
 			"chart": "nats-0.19.13",
@@ -80,14 +84,10 @@ var TestRequestReplyPO = &corev1.Pod{
 						Value: "nats",
 					},
 				},
-				Image: "natsio/nats-box:0.13.8",
-				Name:  "nats-box",
+				Image: natsBoxImg.URL(),
+				Name:  natsBox,
 			},
 		},
-		RestartPolicy: corev1.RestartPolicy("Never"),
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "Pod",
+		RestartPolicy: corev1.RestartPolicyNever,
 	},
 }

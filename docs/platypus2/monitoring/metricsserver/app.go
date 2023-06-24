@@ -31,18 +31,24 @@ var (
 )
 
 func Core() Meta {
+	n := "metrics-server"
+	ns := "monitoring"
+	ver := "0.6.3"
+
 	return Meta{
 		Metadata: meta.Metadata{
-			Name:      "metrics-server",
-			Namespace: "monitoring",
-			Instance:  "metrics-server-monitoring",
+			Name:      n,
+			Namespace: ns,
+			Instance:  n + "-" + ns,
 			Component: "metrics",
-			PartOf:    "metrics-server",
-			Version:   "0.6.3",
+			PartOf:    n,
+			Version:   ver,
 			ManagedBy: "lingon",
-			Registry:  "registry.k8s.io",
-			Image:     "metrics-server/metrics-server",
-			Tag:       "v0.6.3",
+			Img: meta.ContainerImg{
+				Registry: "registry.k8s.io",
+				Image:    "metrics-server/metrics-server",
+				Tag:      "v" + ver,
+			},
 		},
 		P: meta.NetPort{
 			Container: corev1.ContainerPort{

@@ -37,7 +37,7 @@ var d = func(i int) string { return fmt.Sprintf("%d", i) }
 type Vmk8S struct {
 	kube.App
 
-	Operator         *Operator
+	// Operator         *Operator
 	Grafana          *Grafana
 	KubeStateMetrics *KubeStateMetrics
 	NodeExporter     *NodeExporter
@@ -55,6 +55,7 @@ type Vmk8S struct {
 	DashboardK8SGlobalCM     *corev1.ConfigMap
 	DashboardK8SNamespacesCM *corev1.ConfigMap
 	DashboardK8SPodsCM       *corev1.ConfigMap
+	DashboardVMOperatorCM    *corev1.ConfigMap
 
 	CadvisorNodeScrape *v1beta1.VMNodeScrape
 	ProbesNodeScrape   *v1beta1.VMNodeScrape
@@ -66,7 +67,7 @@ type Vmk8S struct {
 // New creates a new Vmk8S
 func New() *Vmk8S {
 	return &Vmk8S{
-		Operator:         NewOperator(),
+		// Operator:         NewOperator(),
 		Grafana:          NewGrafana(),
 		KubeStateMetrics: NewKubeStateMetrics(),
 		NodeExporter:     NewNodeExporter(),
@@ -88,6 +89,7 @@ func New() *Vmk8S {
 		DashboardK8SGlobalCM:     DashboardK8SGlobalCM,
 		DashboardK8SNamespacesCM: DashboardK8SNamespacesCM,
 		DashboardK8SPodsCM:       DashboardK8SPodsCM,
+		DashboardVMOperatorCM:    DashboardVMOperator,
 
 		VicMet: NewVicMet(),
 	}

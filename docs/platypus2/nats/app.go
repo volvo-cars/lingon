@@ -14,23 +14,28 @@ import (
 	promoperatorv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/volvo-cars/lingon/pkg/kube"
 	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
-	"github.com/volvo-cars/lingoneks/nats/jetstream"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	policyv1 "k8s.io/api/policy/v1"
-	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 // validate the struct implements the interface
 var _ kube.Exporter = (*Nats)(nil)
+
+var (
+	NS = N.NS()
+	SA = N.ServiceAccount()
+)
 
 // Nats contains kubernetes manifests
 type Nats struct {
 	kube.App
 
 	// embedded struct
-	CRD
-	Surveyor
+	// CRD
+	// Surveyor
 
 	NS *corev1.Namespace
 
@@ -48,67 +53,60 @@ type Nats struct {
 // New creates a new Nats
 func New() *Nats {
 	return &Nats{
-		CRD: CRD{
-			AccountsNatsIoCRD:        jetstream.AccountsJetstreamNatsIoCRD,
-			ConsumersNatsIoCRD:       jetstream.ConsumersJetstreamNatsIoCRD,
-			StreamsNatsIoCRD:         jetstream.StreamsJetstreamNatsIoCRD,
-			StreamtemplatesNatsIoCRD: jetstream.StreamTemplatesJetstreamNatsIoCRD,
+		// CRD: CRD{
+		// 	AccountsNatsIoCRD:        jetstream.AccountsJetstreamNatsIoCRD,
+		// 	ConsumersNatsIoCRD:       jetstream.ConsumersJetstreamNatsIoCRD,
+		// 	StreamsNatsIoCRD:         jetstream.StreamsJetstreamNatsIoCRD,
+		// 	StreamtemplatesNatsIoCRD: jetstream.StreamTemplatesJetstreamNatsIoCRD,
+		// },
+		// Surveyor:           *NewSurveyor(),
+		NS: NS,
+		SA: SA,
+
+		STS:      STS,
+		ConfigCM: N.Config.ConfigMap(),
+		SVC:      SVC,
+
+		BoxDeploy: BoxDeploy,
+		ServiceMonitor: &promoperatorv1.ServiceMonitor{
+			ObjectMeta: N.ObjectMeta(),
+			Spec: promoperatorv1.ServiceMonitorSpec{
+				Endpoints: []promoperatorv1.Endpoint{
+					{
+						Path: ku.PathMetrics,
+						Port: N.Metrics.Service.Name,
+					},
+				},
+				NamespaceSelector: promoperatorv1.NamespaceSelector{Any: true},
+				Selector: metav1.LabelSelector{
+					MatchLabels: N.MatchLabels(),
+				},
+			},
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: "monitoring.coreos.com/v1",
+				Kind:       "ServiceMonitor",
+			},
 		},
-		Surveyor:           *NewSurveyor(),
-		NS:                 NS,
-		BoxDeploy:          BoxDeploy,
-		ConfigCM:           cm.ConfigMap(),
-		PDB:                PDB,
-		SA:                 SA,
-		STS:                STS,
-		SVC:                SVC,
-		ServiceMonitor:     ServiceMonitor,
+
+		PDB: &policyv1.PodDisruptionBudget{
+			ObjectMeta: N.ObjectMeta(),
+			Spec: policyv1.PodDisruptionBudgetSpec{
+				MaxUnavailable: P(intstr.FromInt(1)),
+				Selector:       &metav1.LabelSelector{MatchLabels: N.MatchLabels()},
+			},
+			TypeMeta: ku.TypePodDisruptionBudgetV1,
+		},
 		TestRequestReplyPO: TestRequestReplyPO,
 		// DashboardCM:        DashboardNatsCM,
 	}
 }
 
-type CRD struct {
-	AccountsNatsIoCRD        *apiextensionsv1.CustomResourceDefinition
-	ConsumersNatsIoCRD       *apiextensionsv1.CustomResourceDefinition
-	StreamsNatsIoCRD         *apiextensionsv1.CustomResourceDefinition
-	StreamtemplatesNatsIoCRD *apiextensionsv1.CustomResourceDefinition
-}
-
-const (
-	appName           = "nats"
-	defaultContainer  = appName
-	namespace         = "nats"
-	version           = "2.9.16"
-	replicas          = 3
-	storageClass      = "gp2"
-	ImgNats           = "nats:" + version + "-alpine"
-	sidecarVersion    = "0.10.1"
-	ImgConfigReloader = "natsio/nats-server-config-reloader:" + sidecarVersion
-	ImgPromExporter   = "natsio/prometheus-nats-exporter:" + sidecarVersion
-)
-
-var (
-	NS = ku.Namespace(namespace, BaseLabels(), nil)
-	SA = ku.ServiceAccount(appName, namespace, BaseLabels(), nil)
-)
-
-var matchLabels = map[string]string{
-	ku.AppLabelName:     appName,
-	ku.AppLabelInstance: appName,
-}
-
-func BaseLabels() map[string]string {
-	return ku.MergeLabels(
-		matchLabels, map[string]string{
-			"app":                appName,
-			ku.AppLabelComponent: appName,
-			ku.AppLabelPartOf:    appName,
-			ku.AppLabelVersion:   version,
-			ku.AppLabelManagedBy: "lingon",
-		},
-	)
-}
+//	type CRD struct {
+//		AccountsNatsIoCRD        *apiextensionsv1.CustomResourceDefinition
+//		ConsumersNatsIoCRD       *apiextensionsv1.CustomResourceDefinition
+//		StreamsNatsIoCRD         *apiextensionsv1.CustomResourceDefinition
+//		StreamtemplatesNatsIoCRD *apiextensionsv1.CustomResourceDefinition
+//	}
 
 // Apply applies the kubernetes objects to the cluster
 func (a *Nats) Apply(ctx context.Context) error {

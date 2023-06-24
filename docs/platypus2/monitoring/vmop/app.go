@@ -11,32 +11,67 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/VictoriaMetrics/operator/api/victoriametrics/v1beta1"
 	"github.com/volvo-cars/lingon/pkg/kube"
 	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
 	"github.com/volvo-cars/lingoneks/meta"
 	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	policyv1beta1 "k8s.io/api/policy/v1beta1"
+	policyv1 "k8s.io/api/policy/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+var (
+	// validate the struct implements the interface
+	_ kube.Exporter = (*VMOperator)(nil)
+
+	O = Core()
+
+	SA = O.ServiceAccount()
+)
+
 func Core() Meta {
+	n := "victoria-metrics-operator"
+	ns := "monitoring"
+	ver := "0.34.1"
+
+	p := 8080
+	pn := "http"
+
 	return Meta{
 		Metadata: meta.Metadata{
-			Name:      "victoria-metrics-operator",
-			Namespace: "monitoring",
-			Instance:  "victoria-metrics-operator-monitoring",
+			Name:      n,
+			Namespace: ns,
+			Instance:  n + "-" + ns,
 			Component: "operator",
-			PartOf:    "victoria-metrics-operator",
-			Version:   "0.34.1",
+			PartOf:    n,
+			Version:   ver,
 			ManagedBy: "lingon",
-			Registry:  "",
-			Image:     "victoriametrics/operator",
-			Tag:       "v0.34.1",
+			Img: meta.ContainerImg{
+				Registry: "",
+				Image:    "victoriametrics/operator",
+				Tag:      "v" + ver,
+			},
+		},
+
+		VMVersion: "1.91.0",
+
+		Main: meta.NetPort{
+			Container: corev1.ContainerPort{
+				Name:          pn,
+				ContainerPort: int32(p),
+				Protocol:      corev1.ProtocolTCP,
+			},
+			Service: corev1.ServicePort{
+				Name:       pn,
+				Port:       int32(p),
+				TargetPort: intstr.FromString(pn),
+				Protocol:   corev1.ProtocolTCP,
+			},
 		},
 		Webhook: meta.NetPort{
 			Container: corev1.ContainerPort{
@@ -51,20 +86,6 @@ func Core() Meta {
 				Protocol:   corev1.ProtocolTCP,
 			},
 		},
-		Main: meta.NetPort{
-			Container: corev1.ContainerPort{
-				Name:          "http",
-				ContainerPort: 8080,
-				Protocol:      corev1.ProtocolTCP,
-			},
-			Service: corev1.ServicePort{
-				Name:       "http",
-				Port:       8080,
-				TargetPort: intstr.FromString("http"),
-				Protocol:   corev1.ProtocolTCP,
-			},
-		},
-		VMVersion: "1.91.0",
 	}
 }
 
@@ -76,25 +97,20 @@ type Meta struct {
 	VMVersion string
 }
 
-var (
-	// validate the struct implements the interface
-	_ kube.Exporter = (*VMOperator)(nil)
-	O               = Core()
-)
-
 // VMOperator contains kubernetes manifests
 type VMOperator struct {
 	kube.App
 
-	NS     *corev1.Namespace
-	CR     *rbacv1.ClusterRole
-	CRB    *rbacv1.ClusterRoleBinding
-	Deploy *appsv1.Deployment
-	PDB    *policyv1beta1.PodDisruptionBudget
-	RB     *rbacv1.RoleBinding
-	Role   *rbacv1.Role
-	SA     *corev1.ServiceAccount
-	SVC    *corev1.Service
+	NS        *corev1.Namespace
+	CR        *rbacv1.ClusterRole
+	CRB       *rbacv1.ClusterRoleBinding
+	Deploy    *appsv1.Deployment
+	PDB       *policyv1.PodDisruptionBudget
+	RB        *rbacv1.RoleBinding
+	Role      *rbacv1.Role
+	SA        *corev1.ServiceAccount
+	SVC       *corev1.Service
+	SvcScrape *v1beta1.VMServiceScrape
 
 	WHValidation *admissionregistrationv1.ValidatingWebhookConfiguration
 
@@ -118,12 +134,10 @@ type CRD struct {
 	VMUsersCRD               *apiextensionsv1.CustomResourceDefinition
 }
 
-var SA = O.ServiceAccount()
-
 // New creates a new VMOperator
 func New() *VMOperator {
 	return &VMOperator{
-		NS:           ku.Namespace(O.Namespace, O.Labels(), nil),
+		NS:           ku.Namespace(O.Namespace, nil, nil),
 		WHValidation: WHValidation,
 		CR:           CR,
 		CRB:          ku.BindClusterRole(O.Name, SA, CR, O.Labels()),
@@ -131,10 +145,10 @@ func New() *VMOperator {
 		RB:           ku.BindRole(O.Name, SA, Role, O.Labels()),
 		Role:         Role,
 		SA:           SA,
-		PDB: &policyv1beta1.PodDisruptionBudget{
+		PDB: &policyv1.PodDisruptionBudget{
 			TypeMeta:   ku.TypePodDisruptionBudgetV1,
 			ObjectMeta: O.ObjectMeta(),
-			Spec: policyv1beta1.PodDisruptionBudgetSpec{
+			Spec: policyv1.PodDisruptionBudgetSpec{
 				MinAvailable: P(intstr.FromInt(1)),
 				Selector:     &metav1.LabelSelector{MatchLabels: O.MatchLabels()},
 			},
@@ -152,6 +166,21 @@ func New() *VMOperator {
 				Type:     corev1.ServiceTypeClusterIP,
 			},
 		},
+		SvcScrape: &v1beta1.VMServiceScrape{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: "operator.victoriametrics.com/v1beta1",
+				Kind:       "VMServiceScrape",
+			},
+			ObjectMeta: O.ObjectMeta(),
+			Spec: v1beta1.VMServiceScrapeSpec{
+				Endpoints: []v1beta1.Endpoint{{Port: O.Main.Service.Name}},
+				NamespaceSelector: v1beta1.NamespaceSelector{
+					MatchNames: []string{O.Namespace},
+				},
+				Selector: metav1.LabelSelector{MatchLabels: O.MatchLabels()},
+			},
+		},
+
 		CRD: CRD{
 			VMAgentsCRD:              VMAgentsCRD,
 			VMAlertManagerConfigsCRD: VMAlertManagerConfigsCRD,
