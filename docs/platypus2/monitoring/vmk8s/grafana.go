@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	GrafanaVersion             = "9.3.0"
+	GrafanaVersion             = "9.5.3"
 	GrafanaSideCarImg          = "quay.io/kiwigrid/k8s-sidecar:1.19.2"
 	GrafanaPort                = 3000
 	GrafanaPortName            = "service"
@@ -124,10 +124,11 @@ var GrafanaDeploy = &appsv1.Deployment{
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
 				Annotations: map[string]string{
-					"checksum/config":     ku.HashConfig(GrafanaCM),
-					"checksum/provider":   ku.HashConfig(GrafanaProviderCM),
-					"checksum/datasource": ku.HashConfig(GrafanaDataSourceCM),
-					"checksum/secret":     ku.HashSecret(GrafanaSecrets),
+					"checksum/config":                         ku.HashConfig(GrafanaCM),
+					"checksum/provider":                       ku.HashConfig(GrafanaProviderCM),
+					"checksum/datasource":                     ku.HashConfig(GrafanaDataSourceCM),
+					"checksum/secret":                         ku.HashSecret(GrafanaSecrets),
+					"kubectl.kubernetes.io/default-container": Graf.Name,
 				},
 				Labels: Graf.MatchLabels(),
 			},
@@ -160,7 +161,8 @@ var GrafanaDeploy = &appsv1.Deployment{
 								Name:      "sc-dashboard-volume",
 							},
 						},
-					}, {
+					},
+					{
 						Name:            "grafana-sc-datasources",
 						Image:           GrafanaSideCarImg,
 						ImagePullPolicy: corev1.PullIfNotPresent,
@@ -209,7 +211,8 @@ var GrafanaDeploy = &appsv1.Deployment{
 								Name:      "sc-datasources-volume",
 							},
 						},
-					}, {
+					},
+					{
 						Name:            Graf.Name,
 						Image:           Graf.ContainerURL(),
 						ImagePullPolicy: corev1.PullIfNotPresent,
@@ -224,6 +227,15 @@ var GrafanaDeploy = &appsv1.Deployment{
 								"admin-password",
 								GrafanaSecrets.Name,
 							),
+							{
+								Name: "GF_INSTALL_PLUGINS",
+								ValueFrom: &corev1.EnvVarSource{
+									ConfigMapKeyRef: &corev1.ConfigMapKeySelector{
+										Key:                  "plugins",
+										LocalObjectReference: corev1.LocalObjectReference{Name: Graf.Name},
+									},
+								},
+							},
 							{
 								Name:  "GF_PATHS_DATA",
 								Value: "/var/lib/grafana/",
@@ -267,6 +279,16 @@ var GrafanaDeploy = &appsv1.Deployment{
 									Port: intstr.FromInt(GrafanaPort),
 								},
 							},
+						},
+						Resources: ku.Resources(
+							"500m",
+							"128Mi",
+							"500m",
+							"128Mi",
+						),
+						SecurityContext: &corev1.SecurityContext{
+							Capabilities:   &corev1.Capabilities{Drop: []corev1.Capability{corev1.Capability("ALL")}},
+							SeccompProfile: &corev1.SeccompProfile{Type: corev1.SeccompProfileType("RuntimeDefault")},
 						},
 						VolumeMounts: []corev1.VolumeMount{
 							{
@@ -323,11 +345,20 @@ var GrafanaDeploy = &appsv1.Deployment{
 						Image:           curlImg,
 						ImagePullPolicy: corev1.PullIfNotPresent,
 						Command:         []string{"/bin/sh"},
+						// FIXME: PERMISSION DENIED
 						Args: []string{
 							"-c", `
 set -ex
+
+ls -l /var/lib/grafana/
 mkdir -p /var/lib/grafana/plugins/
-ver=$(curl -s https://api.github.com/repos/VictoriaMetrics/grafana-datasource/releases/latest | grep -oE 'v\d+\.\d+\.\d+' | head -1)
+chown -R 472:472 /var/lib/grafana/plugins/
+ls -l /var/lib/grafana/
+id
+touch /var/lib/grafana/plugins/fake.txt
+curl www.google.com
+# ver=$(curl -s https://api.github.com/repos/VictoriaMetrics/grafana-datasource/releases/latest | grep -oE 'v\d+\.\d+\.\d+' | head -1)
+ver="v0.2.0"
 curl -L https://github.com/VictoriaMetrics/grafana-datasource/releases/download/$ver/victoriametrics-datasource-$ver.tar.gz -o /var/lib/grafana/plugins/plugin.tar.gz
 tar -xf /var/lib/grafana/plugins/plugin.tar.gz -C /var/lib/grafana/plugins/
 rm /var/lib/grafana/plugins/plugin.tar.gz
@@ -341,13 +372,15 @@ chown -R 472:472 /var/lib/grafana/plugins/
 								Name:      "storage",
 							},
 						},
-						WorkingDir: "/var/lib/grafana/plugins",
+						SecurityContext: &corev1.SecurityContext{},
+						WorkingDir:      "/var/lib/grafana/plugins",
 					},
 				},
 				SecurityContext: &corev1.PodSecurityContext{
-					FSGroup:    P(int64(472)),
-					RunAsGroup: P(int64(472)),
-					RunAsUser:  P(int64(472)),
+					FSGroup:      P(int64(472)),
+					RunAsGroup:   P(int64(472)),
+					RunAsNonRoot: P(true),
+					RunAsUser:    P(int64(472)),
 				},
 				ServiceAccountName: GrafanaSA.Name,
 				Volumes: []corev1.Volume{
@@ -434,6 +467,7 @@ provisioning = /etc/grafana/provisioning
 domain = ''
 
 `,
+		"plugins": "https://grafana.com/api/plugins/marcusolsson-json-datasource/versions/1.3.2/download;marcusolsson-json-datasource",
 	},
 	ObjectMeta: Graf.ObjectMeta(),
 	TypeMeta:   ku.TypeConfigMapV1,
@@ -462,6 +496,30 @@ providers:
 
 var GrafanaDataSourceCM = &corev1.ConfigMap{
 	Data: map[string]string{
+		//
+		// 		"datasources.yaml": `
+		// apiVersion: 1
+		// datasources:
+		// - access: proxy
+		//   isDefault: true
+		//   name: VictoriaMetrics
+		//   type: victoriametrics-datasource
+		//   url: http://victoriametrics:8428
+		// - access: proxy
+		//   isDefault: true
+		//   name: Prometheus
+		//   type: prometheus
+		//   url: http://prometheus-prometheus-server
+		// - access: proxy
+		//   editable: false
+		//   jsonData:
+		//     authType: default
+		//     defaultRegion: us-east-1
+		//   name: CloudWatch
+		//   type: cloudwatch
+		//   uid: cloudwatch
+		//
+		// `,
 		"datasource.yaml": `
 apiVersion: 1
 datasources:

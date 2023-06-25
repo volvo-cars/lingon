@@ -15,12 +15,10 @@ import (
 	"github.com/volvo-cars/lingon/pkg/kube"
 	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
 	"github.com/volvo-cars/lingoneks/meta"
-	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	policyv1 "k8s.io/api/policy/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -112,39 +110,20 @@ type VMOperator struct {
 	SVC       *corev1.Service
 	SvcScrape *v1beta1.VMServiceScrape
 
-	WHValidation *admissionregistrationv1.ValidatingWebhookConfiguration
-
-	CRD
-}
-
-type CRD struct {
-	VMAgentsCRD              *apiextensionsv1.CustomResourceDefinition
-	VMAlertManagerConfigsCRD *apiextensionsv1.CustomResourceDefinition
-	VMAlertManagersCRD       *apiextensionsv1.CustomResourceDefinition
-	VMAlertsCRD              *apiextensionsv1.CustomResourceDefinition
-	VMAuthsCRD               *apiextensionsv1.CustomResourceDefinition
-	VMClustersCRD            *apiextensionsv1.CustomResourceDefinition
-	VMNodeScrapesCRD         *apiextensionsv1.CustomResourceDefinition
-	VMPodScrapesCRD          *apiextensionsv1.CustomResourceDefinition
-	VMProbesCRD              *apiextensionsv1.CustomResourceDefinition
-	VMRulesCRD               *apiextensionsv1.CustomResourceDefinition
-	VMServiceScrapesCRD      *apiextensionsv1.CustomResourceDefinition
-	VMSinglesCRD             *apiextensionsv1.CustomResourceDefinition
-	VMStaticScrapesCRD       *apiextensionsv1.CustomResourceDefinition
-	VMUsersCRD               *apiextensionsv1.CustomResourceDefinition
+	// WHValidation *admissionregistrationv1.ValidatingWebhookConfiguration
 }
 
 // New creates a new VMOperator
 func New() *VMOperator {
 	return &VMOperator{
-		NS:           ku.Namespace(O.Namespace, nil, nil),
-		WHValidation: WHValidation,
-		CR:           CR,
-		CRB:          ku.BindClusterRole(O.Name, SA, CR, O.Labels()),
-		Deploy:       Deploy,
-		RB:           ku.BindRole(O.Name, SA, Role, O.Labels()),
-		Role:         Role,
-		SA:           SA,
+		NS: ku.Namespace(O.Namespace, nil, nil),
+		// WHValidation: WHValidation,
+		CR:     CR,
+		CRB:    ku.BindClusterRole(O.Name, SA, CR, O.Labels()),
+		Deploy: Deploy,
+		RB:     ku.BindRole(O.Name, SA, Role, O.Labels()),
+		Role:   Role,
+		SA:     SA,
 		PDB: &policyv1.PodDisruptionBudget{
 			TypeMeta:   ku.TypePodDisruptionBudgetV1,
 			ObjectMeta: O.ObjectMeta(),
@@ -179,23 +158,6 @@ func New() *VMOperator {
 				},
 				Selector: metav1.LabelSelector{MatchLabels: O.MatchLabels()},
 			},
-		},
-
-		CRD: CRD{
-			VMAgentsCRD:              VMAgentsCRD,
-			VMAlertManagerConfigsCRD: VMAlertManagerConfigsCRD,
-			VMAlertManagersCRD:       VMAlertManagersCRD,
-			VMAlertsCRD:              VMAlertsCRD,
-			VMAuthsCRD:               VMAuthsCRD,
-			VMClustersCRD:            VMClustersCRD,
-			VMNodeScrapesCRD:         VMNodeScrapesCRD,
-			VMPodScrapesCRD:          VMPodScrapesCRD,
-			VMProbesCRD:              VMProbesCRD,
-			VMRulesCRD:               VMRulesCRD,
-			VMServiceScrapesCRD:      VMServiceScrapesCRD,
-			VMSinglesCRD:             VMSinglesCRD,
-			VMStaticScrapesCRD:       VMStaticScrapesCRD,
-			VMUsersCRD:               VMUsersCRD,
 		},
 	}
 }

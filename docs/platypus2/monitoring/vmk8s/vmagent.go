@@ -7,6 +7,7 @@ package vmk8s
 
 import (
 	"github.com/VictoriaMetrics/operator/api/victoriametrics/v1beta1"
+	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -24,6 +25,7 @@ var VMAgent = &v1beta1.VMAgent{
 		RemoteWrite:        []v1beta1.VMAgentRemoteWriteSpec{{URL: "http://vmsingle-vmk8s-victoria-metrics-k8s-stack.monitoring.svc:8429/api/v1/write"}},
 		ScrapeInterval:     "25s",
 		SelectAllByDefault: true,
+		Resources:          ku.Resources("200m", "128Mi", "200m", "128Mi"),
 	},
 	TypeMeta: metav1.TypeMeta{
 		APIVersion: "operator.victoriametrics.com/v1beta1",

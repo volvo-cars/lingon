@@ -98,6 +98,12 @@ var KubeStateMetricsDeploy = &appsv1.Deployment{
 							TimeoutSeconds: int32(5),
 						},
 						Name: KSM.Name,
+						Resources: ku.Resources(
+							"200m",
+							"300Mi",
+							"200m",
+							"300Mi",
+						),
 						Ports: []corev1.ContainerPort{
 							{
 								ContainerPort: int32(KSMPort),

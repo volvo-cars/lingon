@@ -75,6 +75,7 @@ var VMDB = &v1beta1.VMSingle{
 			),
 		},
 		RetentionPeriod: "14",
+		Resources:       ku.Resources("1", "512Mi", "1", "512Mi"),
 		Port:            d(VMSinglePort),
 		Storage: &corev1.PersistentVolumeClaimSpec{
 			AccessModes: []corev1.PersistentVolumeAccessMode{
@@ -335,7 +336,7 @@ Logging rate for job "{{ $labels.job }}" ({{ $labels.instance }}) is {{ $value }
 }
 
 var DashboardVictoriaMetricsCM = &corev1.ConfigMap{
-	TypeMeta: ku.TypeServiceV1,
+	TypeMeta: ku.TypeConfigMapV1,
 	ObjectMeta: metav1.ObjectMeta{
 		Labels: ku.MergeLabels(
 			Single.Labels(),

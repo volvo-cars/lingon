@@ -13,11 +13,13 @@ import (
 	"github.com/volvo-cars/lingoneks/monitoring/promcrd"
 	"github.com/volvo-cars/lingoneks/monitoring/vmk8s"
 	"github.com/volvo-cars/lingoneks/monitoring/vmop"
+	"github.com/volvo-cars/lingoneks/monitoring/vmop/vmcrd"
 )
 
 func TestMonitoringExport(t *testing.T) {
 	tests := map[string]kube.Exporter{
 		"out/1_promcrd":      promcrd.New(),
+		"out/1_vmcrd":        vmcrd.New(),
 		"out/2_vmop":         vmop.New(),
 		"out/metrics-server": metricsserver.New(),
 		"out/vmk8s":          vmk8s.New(),
@@ -37,18 +39,19 @@ func TestMonitoringExport(t *testing.T) {
 // func TestMonitoringDeploy(t *testing.T) {
 // 	ctx := context.Background()
 //
-// 	// pcrd := promcrd.New()
-// 	// tu.AssertNoError(t, pcrd.Apply(ctx), "prometheus crd")
+// 	type Applyer interface {
+// 		Lingon()
+// 		Apply(ctx2 context.Context) error
+// 	}
+// 	tests := map[string]Applyer{
+// 		"out/1_promcrd":      promcrd.New(),
+// 		"out/2_vmop":         vmop.New(),
+// 		"out/metrics-server": metricsserver.New(),
+// 		"out/vmk8s":          vmk8s.New(),
+// 	}
+// 	for f, km := range tests {
+// 		_ = os.RemoveAll(f)
 //
-// 	// ms := metricsserver.New()
-// 	// tu.AssertNoError(t, ms.Apply(ctx), "metrics-server")
-// 	//
-// 	// ps := promstack.New()
-// 	// tu.AssertNoError(t, ps.Apply(ctx), "prometheus stack")
-//
-// 	vmcrds := vmcrd.New()
-// 	tu.AssertNoError(t, vmcrds.Apply(ctx), "victoria metrics crds")
-//
-// 	vm := vmk8s.New()
-// 	tu.AssertNoError(t, vm.Apply(ctx), "victoria metrics stack")
+// 		tu.AssertNoError(t, km.Apply(ctx), f)
+// 	}
 // }

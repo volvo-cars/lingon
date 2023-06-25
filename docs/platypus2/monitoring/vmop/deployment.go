@@ -31,7 +31,7 @@ var Deploy = &appsv1.Deployment{
 						Args: []string{
 							"--zap-log-level=info",
 							"--enable-leader-election",
-							"--webhook.enable=true",
+							// "--webhook.enable=true",
 						},
 						Command: []string{"manager"},
 						Env: []corev1.EnvVar{

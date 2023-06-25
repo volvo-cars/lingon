@@ -76,6 +76,12 @@ var Deploy = &appsv1.Deployment{
 								},
 							},
 						},
+						Resources: ku.Resources(
+							"200m",
+							"300Mi",
+							"200m",
+							"300Mi",
+						),
 						ReadinessProbe: &corev1.Probe{
 							FailureThreshold:    int32(3),
 							InitialDelaySeconds: int32(20),

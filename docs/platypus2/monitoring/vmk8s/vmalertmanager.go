@@ -83,7 +83,7 @@ var Alert = &v1beta1.VMAlert{
 		EvaluationInterval: "15s",
 		ExternalLabels:     map[string]string{},
 		ExtraArgs:          map[string]string{"remoteWrite.disablePathAppend": "true"},
-		Image:              v1beta1.Image{Tag: Single.Version},
+		Image:              v1beta1.Image{Tag: "v" + Single.Version},
 		Notifiers: []v1beta1.VMAlertNotifierSpec{
 			{
 				URL: fmt.Sprintf(
@@ -94,6 +94,7 @@ var Alert = &v1beta1.VMAlert{
 				),
 			},
 		},
+		Resources: ku.Resources("200m", "128Mi", "200m", "128Mi"),
 		RemoteRead: &v1beta1.VMAlertRemoteReadSpec{
 			URL: fmt.Sprintf(
 				"http://%s.%s.svc:%d/",

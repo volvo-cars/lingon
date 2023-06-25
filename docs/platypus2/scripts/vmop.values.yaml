@@ -56,7 +56,7 @@ operator:
   psp_auto_creation_enabled: false
   # -- Enables ownership reference for converted prometheus-operator objects,
   # it will remove corresponding victoria-metrics objects in case of deletion prometheus one.
-  enable_converter_ownership: false
+  enable_converter_ownership: true
   # -- Enables custom config-reloader, bundled with operator.
   # It should reduce  vmagent and vmauth config sync-time and make it predictable.
   useCustomConfigReloader: true
@@ -136,7 +136,7 @@ extraContainers:
 # -- Configures resource validation
 admissionWebhooks:
   # -- Enables validation webhook.
-  enabled: true
+  enabled: false
   enabledCRDValidation:
     vmagent: true
     vmalert: true
