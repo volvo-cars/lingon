@@ -21,7 +21,7 @@ var KubePromtheusStackGrafanaTestPO = &corev1.Pod{
 			"app.kubernetes.io/managed-by": "Helm",
 			"app.kubernetes.io/name":       "grafana",
 			"app.kubernetes.io/version":    "9.5.3",
-			"helm.sh/chart":                "grafana-6.57.1",
+			"helm.sh/chart":                "grafana-6.57.3",
 		},
 		Name:      "kube-promtheus-stack-grafana-test",
 		Namespace: "monitoring",

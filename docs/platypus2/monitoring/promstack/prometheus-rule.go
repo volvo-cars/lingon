@@ -18,8 +18,8 @@ var KubePromtheusStackKubeAlertmanagerRulesPrometheusRule = &v1.PrometheusRule{
 			"app.kubernetes.io/instance":   "kube-promtheus-stack",
 			"app.kubernetes.io/managed-by": "Helm",
 			"app.kubernetes.io/part-of":    "kube-prometheus-stack",
-			"app.kubernetes.io/version":    "46.8.0",
-			"chart":                        "kube-prometheus-stack-46.8.0",
+			"app.kubernetes.io/version":    "47.0.0",
+			"chart":                        "kube-prometheus-stack-47.0.0",
 			"heritage":                     "Helm",
 			"release":                      "kube-promtheus-stack",
 		},
@@ -95,15 +95,8 @@ max_over_time(alertmanager_config_last_reload_successful{job="kube-promtheus-sta
 							"summary":     "All Alertmanager instances in a cluster failed to send notifications to a critical integration.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: `
-min by (namespace,service, integration) (
-  rate(alertmanager_notifications_failed_total{job="kube-promtheus-stack-kube-alertmanager",namespace="monitoring", integration=~".*"}[5m])
-/
-  rate(alertmanager_notifications_total{job="kube-promtheus-stack-kube-alertmanager",namespace="monitoring", integration=~".*"}[5m])
-)
-> 0.01
-`,
-							Type: intstr.Type(int64(1)),
+							StrVal: "min by (namespace,service, integration) (\n  rate(alertmanager_notifications_failed_total{job=\"kube-promtheus-stack-kube-alertmanager\",namespace=\"monitoring\", integration=~`.*`}[5m])\n/\n  rate(alertmanager_notifications_total{job=\"kube-promtheus-stack-kube-alertmanager\",namespace=\"monitoring\", integration=~`.*`}[5m])\n)\n> 0.01",
+							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("5m")),
 						Labels: map[string]string{"severity": "critical"},
@@ -115,15 +108,8 @@ min by (namespace,service, integration) (
 							"summary":     "All Alertmanager instances in a cluster failed to send notifications to a non-critical integration.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: `
-min by (namespace,service, integration) (
-  rate(alertmanager_notifications_failed_total{job="kube-promtheus-stack-kube-alertmanager",namespace="monitoring", integration!~".*"}[5m])
-/
-  rate(alertmanager_notifications_total{job="kube-promtheus-stack-kube-alertmanager",namespace="monitoring", integration!~".*"}[5m])
-)
-> 0.01
-`,
-							Type: intstr.Type(int64(1)),
+							StrVal: "min by (namespace,service, integration) (\n  rate(alertmanager_notifications_failed_total{job=\"kube-promtheus-stack-kube-alertmanager\",namespace=\"monitoring\", integration!~`.*`}[5m])\n/\n  rate(alertmanager_notifications_total{job=\"kube-promtheus-stack-kube-alertmanager\",namespace=\"monitoring\", integration!~`.*`}[5m])\n)\n> 0.01",
+							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("5m")),
 						Labels: map[string]string{"severity": "warning"},
@@ -211,8 +197,8 @@ var KubePromtheusStackKubeConfigReloadersPrometheusRule = &v1.PrometheusRule{
 			"app.kubernetes.io/instance":   "kube-promtheus-stack",
 			"app.kubernetes.io/managed-by": "Helm",
 			"app.kubernetes.io/part-of":    "kube-prometheus-stack",
-			"app.kubernetes.io/version":    "46.8.0",
-			"chart":                        "kube-prometheus-stack-46.8.0",
+			"app.kubernetes.io/version":    "47.0.0",
+			"chart":                        "kube-prometheus-stack-47.0.0",
 			"heritage":                     "Helm",
 			"release":                      "kube-promtheus-stack",
 		},
@@ -232,7 +218,7 @@ var KubePromtheusStackKubeConfigReloadersPrometheusRule = &v1.PrometheusRule{
 							"summary":     "config-reloader sidecar has not had a successful reload for 10m",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "max_over_time(reloader_last_reload_successful{namespace=~\".+\"}[5m]) == 0",
+							StrVal: `max_over_time(reloader_last_reload_successful{namespace=~".+"}[5m]) == 0`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("10m")),
@@ -255,8 +241,8 @@ var KubePromtheusStackKubeEtcdPrometheusRule = &v1.PrometheusRule{
 			"app.kubernetes.io/instance":   "kube-promtheus-stack",
 			"app.kubernetes.io/managed-by": "Helm",
 			"app.kubernetes.io/part-of":    "kube-prometheus-stack",
-			"app.kubernetes.io/version":    "46.8.0",
-			"chart":                        "kube-prometheus-stack-46.8.0",
+			"app.kubernetes.io/version":    "47.0.0",
+			"chart":                        "kube-prometheus-stack-47.0.0",
 			"heritage":                     "Helm",
 			"release":                      "kube-promtheus-stack",
 		},
@@ -271,7 +257,7 @@ var KubePromtheusStackKubeEtcdPrometheusRule = &v1.PrometheusRule{
 					{
 						Alert: "etcdMembersDown",
 						Annotations: map[string]string{
-							"description": "etcd cluster \"{{ $labels.job }}\": members are down ({{ $value }}).",
+							"description": `etcd cluster "{{ $labels.job }}": members are down ({{ $value }}).`,
 							"summary":     "etcd cluster members are down.",
 						},
 						Expr: intstr.IntOrString{
@@ -292,11 +278,11 @@ or
 					}, {
 						Alert: "etcdInsufficientMembers",
 						Annotations: map[string]string{
-							"description": "etcd cluster \"{{ $labels.job }}\": insufficient members ({{ $value }}).",
+							"description": `etcd cluster "{{ $labels.job }}": insufficient members ({{ $value }}).`,
 							"summary":     "etcd cluster has insufficient number of members.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "sum(up{job=~\".*etcd.*\"} == bool 1) without (instance) < ((count(up{job=~\".*etcd.*\"}) without (instance) + 1) / 2)",
+							StrVal: `sum(up{job=~".*etcd.*"} == bool 1) without (instance) < ((count(up{job=~".*etcd.*"}) without (instance) + 1) / 2)`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("3m")),
@@ -304,11 +290,11 @@ or
 					}, {
 						Alert: "etcdNoLeader",
 						Annotations: map[string]string{
-							"description": "etcd cluster \"{{ $labels.job }}\": member {{ $labels.instance }} has no leader.",
+							"description": `etcd cluster "{{ $labels.job }}": member {{ $labels.instance }} has no leader.`,
 							"summary":     "etcd cluster has no leader.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "etcd_server_has_leader{job=~\".*etcd.*\"} == 0",
+							StrVal: `etcd_server_has_leader{job=~".*etcd.*"} == 0`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("1m")),
@@ -316,11 +302,11 @@ or
 					}, {
 						Alert: "etcdHighNumberOfLeaderChanges",
 						Annotations: map[string]string{
-							"description": "etcd cluster \"{{ $labels.job }}\": {{ $value }} leader changes within the last 15 minutes. Frequent elections may be a sign of insufficient resources, high network latency, or disruptions by other components and should be investigated.",
+							"description": `etcd cluster "{{ $labels.job }}": {{ $value }} leader changes within the last 15 minutes. Frequent elections may be a sign of insufficient resources, high network latency, or disruptions by other components and should be investigated.`,
 							"summary":     "etcd cluster has high number of leader changes.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "increase((max without (instance) (etcd_server_leader_changes_seen_total{job=~\".*etcd.*\"}) or 0*absent(etcd_server_leader_changes_seen_total{job=~\".*etcd.*\"}))[15m:1m]) >= 4",
+							StrVal: `increase((max without (instance) (etcd_server_leader_changes_seen_total{job=~".*etcd.*"}) or 0*absent(etcd_server_leader_changes_seen_total{job=~".*etcd.*"}))[15m:1m]) >= 4`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("5m")),
@@ -328,7 +314,7 @@ or
 					}, {
 						Alert: "etcdHighNumberOfFailedGRPCRequests",
 						Annotations: map[string]string{
-							"description": "etcd cluster \"{{ $labels.job }}\": {{ $value }}% of requests for {{ $labels.grpc_method }} failed on etcd instance {{ $labels.instance }}.",
+							"description": `etcd cluster "{{ $labels.job }}": {{ $value }}% of requests for {{ $labels.grpc_method }} failed on etcd instance {{ $labels.instance }}.`,
 							"summary":     "etcd cluster has high number of failed grpc requests.",
 						},
 						Expr: intstr.IntOrString{
@@ -345,7 +331,7 @@ sum(rate(grpc_server_handled_total{job=~".*etcd.*"}[5m])) without (grpc_type, gr
 					}, {
 						Alert: "etcdHighNumberOfFailedGRPCRequests",
 						Annotations: map[string]string{
-							"description": "etcd cluster \"{{ $labels.job }}\": {{ $value }}% of requests for {{ $labels.grpc_method }} failed on etcd instance {{ $labels.instance }}.",
+							"description": `etcd cluster "{{ $labels.job }}": {{ $value }}% of requests for {{ $labels.grpc_method }} failed on etcd instance {{ $labels.instance }}.`,
 							"summary":     "etcd cluster has high number of failed grpc requests.",
 						},
 						Expr: intstr.IntOrString{
@@ -362,7 +348,7 @@ sum(rate(grpc_server_handled_total{job=~".*etcd.*"}[5m])) without (grpc_type, gr
 					}, {
 						Alert: "etcdGRPCRequestsSlow",
 						Annotations: map[string]string{
-							"description": "etcd cluster \"{{ $labels.job }}\": 99th percentile of gRPC requests is {{ $value }}s on etcd instance {{ $labels.instance }} for {{ $labels.grpc_method }} method.",
+							"description": `etcd cluster "{{ $labels.job }}": 99th percentile of gRPC requests is {{ $value }}s on etcd instance {{ $labels.instance }} for {{ $labels.grpc_method }} method.`,
 							"summary":     "etcd grpc requests are slow",
 						},
 						Expr: intstr.IntOrString{
@@ -377,7 +363,7 @@ histogram_quantile(0.99, sum(rate(grpc_server_handling_seconds_bucket{job=~".*et
 					}, {
 						Alert: "etcdMemberCommunicationSlow",
 						Annotations: map[string]string{
-							"description": "etcd cluster \"{{ $labels.job }}\": member communication with {{ $labels.To }} is taking {{ $value }}s on etcd instance {{ $labels.instance }}.",
+							"description": `etcd cluster "{{ $labels.job }}": member communication with {{ $labels.To }} is taking {{ $value }}s on etcd instance {{ $labels.instance }}.`,
 							"summary":     "etcd cluster member communication is slow.",
 						},
 						Expr: intstr.IntOrString{
@@ -392,11 +378,11 @@ histogram_quantile(0.99, rate(etcd_network_peer_round_trip_time_seconds_bucket{j
 					}, {
 						Alert: "etcdHighNumberOfFailedProposals",
 						Annotations: map[string]string{
-							"description": "etcd cluster \"{{ $labels.job }}\": {{ $value }} proposal failures within the last 30 minutes on etcd instance {{ $labels.instance }}.",
+							"description": `etcd cluster "{{ $labels.job }}": {{ $value }} proposal failures within the last 30 minutes on etcd instance {{ $labels.instance }}.`,
 							"summary":     "etcd cluster has high number of proposal failures.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "rate(etcd_server_proposals_failed_total{job=~\".*etcd.*\"}[15m]) > 5",
+							StrVal: `rate(etcd_server_proposals_failed_total{job=~".*etcd.*"}[15m]) > 5`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("15m")),
@@ -404,7 +390,7 @@ histogram_quantile(0.99, rate(etcd_network_peer_round_trip_time_seconds_bucket{j
 					}, {
 						Alert: "etcdHighFsyncDurations",
 						Annotations: map[string]string{
-							"description": "etcd cluster \"{{ $labels.job }}\": 99th percentile fsync durations are {{ $value }}s on etcd instance {{ $labels.instance }}.",
+							"description": `etcd cluster "{{ $labels.job }}": 99th percentile fsync durations are {{ $value }}s on etcd instance {{ $labels.instance }}.`,
 							"summary":     "etcd cluster 99th percentile fsync durations are too high.",
 						},
 						Expr: intstr.IntOrString{
@@ -419,7 +405,7 @@ histogram_quantile(0.99, rate(etcd_disk_wal_fsync_duration_seconds_bucket{job=~"
 					}, {
 						Alert: "etcdHighFsyncDurations",
 						Annotations: map[string]string{
-							"description": "etcd cluster \"{{ $labels.job }}\": 99th percentile fsync durations are {{ $value }}s on etcd instance {{ $labels.instance }}.",
+							"description": `etcd cluster "{{ $labels.job }}": 99th percentile fsync durations are {{ $value }}s on etcd instance {{ $labels.instance }}.`,
 							"summary":     "etcd cluster 99th percentile fsync durations are too high.",
 						},
 						Expr: intstr.IntOrString{
@@ -434,7 +420,7 @@ histogram_quantile(0.99, rate(etcd_disk_wal_fsync_duration_seconds_bucket{job=~"
 					}, {
 						Alert: "etcdHighCommitDurations",
 						Annotations: map[string]string{
-							"description": "etcd cluster \"{{ $labels.job }}\": 99th percentile commit durations {{ $value }}s on etcd instance {{ $labels.instance }}.",
+							"description": `etcd cluster "{{ $labels.job }}": 99th percentile commit durations {{ $value }}s on etcd instance {{ $labels.instance }}.`,
 							"summary":     "etcd cluster 99th percentile commit durations are too high.",
 						},
 						Expr: intstr.IntOrString{
@@ -449,7 +435,7 @@ histogram_quantile(0.99, rate(etcd_disk_backend_commit_duration_seconds_bucket{j
 					}, {
 						Alert: "etcdDatabaseQuotaLowSpace",
 						Annotations: map[string]string{
-							"description": "etcd cluster \"{{ $labels.job }}\": database size exceeds the defined quota on etcd instance {{ $labels.instance }}, please defrag or increase the quota as the writes to etcd will be disabled when it is full.",
+							"description": `etcd cluster "{{ $labels.job }}": database size exceeds the defined quota on etcd instance {{ $labels.instance }}, please defrag or increase the quota as the writes to etcd will be disabled when it is full.`,
 							"summary":     "etcd cluster database is running full.",
 						},
 						Expr: intstr.IntOrString{
@@ -461,7 +447,7 @@ histogram_quantile(0.99, rate(etcd_disk_backend_commit_duration_seconds_bucket{j
 					}, {
 						Alert: "etcdExcessiveDatabaseGrowth",
 						Annotations: map[string]string{
-							"description": "etcd cluster \"{{ $labels.job }}\": Predicting running out of disk space in the next four hours, based on write observations within the past four hours on etcd instance {{ $labels.instance }}, please check as it might be disruptive.",
+							"description": `etcd cluster "{{ $labels.job }}": Predicting running out of disk space in the next four hours, based on write observations within the past four hours on etcd instance {{ $labels.instance }}, please check as it might be disruptive.`,
 							"summary":     "etcd cluster database growing very fast.",
 						},
 						Expr: intstr.IntOrString{
@@ -473,7 +459,7 @@ histogram_quantile(0.99, rate(etcd_disk_backend_commit_duration_seconds_bucket{j
 					}, {
 						Alert: "etcdDatabaseHighFragmentationRatio",
 						Annotations: map[string]string{
-							"description": "etcd cluster \"{{ $labels.job }}\": database size in use on instance {{ $labels.instance }} is {{ $value | humanizePercentage }} of the actual allocated disk space, please run defragmentation (e.g. etcdctl defrag) to retrieve the unused fragmented disk space.",
+							"description": `etcd cluster "{{ $labels.job }}": database size in use on instance {{ $labels.instance }} is {{ $value | humanizePercentage }} of the actual allocated disk space, please run defragmentation (e.g. etcdctl defrag) to retrieve the unused fragmented disk space.`,
 							"runbook_url": "https://etcd.io/docs/v3.5/op-guide/maintenance/#defragmentation",
 							"summary":     "etcd database size in use is less than 50% of the actual allocated storage.",
 						},
@@ -501,8 +487,8 @@ var KubePromtheusStackKubeGeneralRulesPrometheusRule = &v1.PrometheusRule{
 			"app.kubernetes.io/instance":   "kube-promtheus-stack",
 			"app.kubernetes.io/managed-by": "Helm",
 			"app.kubernetes.io/part-of":    "kube-prometheus-stack",
-			"app.kubernetes.io/version":    "46.8.0",
-			"chart":                        "kube-prometheus-stack-46.8.0",
+			"app.kubernetes.io/version":    "47.0.0",
+			"chart":                        "kube-prometheus-stack-47.0.0",
 			"heritage":                     "Helm",
 			"release":                      "kube-promtheus-stack",
 		},
@@ -517,7 +503,7 @@ var KubePromtheusStackKubeGeneralRulesPrometheusRule = &v1.PrometheusRule{
 					{
 						Alert: "TargetDown",
 						Annotations: map[string]string{
-							"description": "{{ printf \"%.4g\" $value }}% of the {{ $labels.job }}/{{ $labels.service }} targets in {{ $labels.namespace }} namespace are down.",
+							"description": `{{ printf "%.4g" $value }}% of the {{ $labels.job }}/{{ $labels.service }} targets in {{ $labels.namespace }} namespace are down.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/general/targetdown",
 							"summary":     "One or more targets are unreachable.",
 						},
@@ -530,7 +516,7 @@ var KubePromtheusStackKubeGeneralRulesPrometheusRule = &v1.PrometheusRule{
 					}, {
 						Alert: "Watchdog",
 						Annotations: map[string]string{
-							"description": "This is an alert meant to ensure that the entire alerting pipeline is functional. This alert is always firing, therefore it should always be firing in Alertmanager and always fire against a receiver. There are integrations with various notification mechanisms that send a notification when this alert is not firing. For example the \"DeadMansSnitch\" integration in PagerDuty. ",
+							"description": `This is an alert meant to ensure that the entire alerting pipeline is functional. This alert is always firing, therefore it should always be firing in Alertmanager and always fire against a receiver. There are integrations with various notification mechanisms that send a notification when this alert is not firing. For example the "DeadMansSnitch" integration in PagerDuty. `,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/general/watchdog",
 							"summary":     "An alert that should always be firing to certify that Alertmanager is working properly.",
 						},
@@ -542,12 +528,12 @@ var KubePromtheusStackKubeGeneralRulesPrometheusRule = &v1.PrometheusRule{
 					}, {
 						Alert: "InfoInhibitor",
 						Annotations: map[string]string{
-							"description": "This is an alert that is used to inhibit info alerts. By themselves, the info-level alerts are sometimes very noisy, but they are relevant when combined with other alerts. This alert fires whenever there's a severity=\"info\" alert, and stops firing when another alert with a severity of 'warning' or 'critical' starts firing on the same namespace. This alert should be routed to a null receiver and configured to inhibit alerts with severity=\"info\". ",
+							"description": `This is an alert that is used to inhibit info alerts. By themselves, the info-level alerts are sometimes very noisy, but they are relevant when combined with other alerts. This alert fires whenever there's a severity="info" alert, and stops firing when another alert with a severity of 'warning' or 'critical' starts firing on the same namespace. This alert should be routed to a null receiver and configured to inhibit alerts with severity="info". `,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/general/infoinhibitor",
 							"summary":     "Info-level alert inhibition.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "ALERTS{severity = \"info\"} == 1 unless on(namespace) ALERTS{alertname != \"InfoInhibitor\", severity =~ \"warning|critical\", alertstate=\"firing\"} == 1",
+							StrVal: `ALERTS{severity = "info"} == 1 unless on(namespace) ALERTS{alertname != "InfoInhibitor", severity =~ "warning|critical", alertstate="firing"} == 1`,
 							Type:   intstr.Type(int64(1)),
 						},
 						Labels: map[string]string{"severity": "none"},
@@ -569,8 +555,8 @@ var KubePromtheusStackKubeK8SRulesPrometheusRule = &v1.PrometheusRule{
 			"app.kubernetes.io/instance":   "kube-promtheus-stack",
 			"app.kubernetes.io/managed-by": "Helm",
 			"app.kubernetes.io/part-of":    "kube-prometheus-stack",
-			"app.kubernetes.io/version":    "46.8.0",
-			"chart":                        "kube-prometheus-stack-46.8.0",
+			"app.kubernetes.io/version":    "47.0.0",
+			"chart":                        "kube-prometheus-stack-47.0.0",
 			"heritage":                     "Helm",
 			"release":                      "kube-promtheus-stack",
 		},
@@ -827,8 +813,8 @@ var KubePromtheusStackKubeKubeApiserverAvailabilityRulesPrometheusRule = &v1.Pro
 			"app.kubernetes.io/instance":   "kube-promtheus-stack",
 			"app.kubernetes.io/managed-by": "Helm",
 			"app.kubernetes.io/part-of":    "kube-prometheus-stack",
-			"app.kubernetes.io/version":    "46.8.0",
-			"chart":                        "kube-prometheus-stack-46.8.0",
+			"app.kubernetes.io/version":    "47.0.0",
+			"chart":                        "kube-prometheus-stack-47.0.0",
 			"heritage":                     "Helm",
 			"release":                      "kube-promtheus-stack",
 		},
@@ -849,14 +835,14 @@ var KubePromtheusStackKubeKubeApiserverAvailabilityRulesPrometheusRule = &v1.Pro
 						Record: "code_verb:apiserver_request_total:increase30d",
 					}, {
 						Expr: intstr.IntOrString{
-							StrVal: "sum by (cluster, code) (code_verb:apiserver_request_total:increase30d{verb=~\"LIST|GET\"})",
+							StrVal: `sum by (cluster, code) (code_verb:apiserver_request_total:increase30d{verb=~"LIST|GET"})`,
 							Type:   intstr.Type(int64(1)),
 						},
 						Labels: map[string]string{"verb": "read"},
 						Record: "code:apiserver_request_total:increase30d",
 					}, {
 						Expr: intstr.IntOrString{
-							StrVal: "sum by (cluster, code) (code_verb:apiserver_request_total:increase30d{verb=~\"POST|PUT|PATCH|DELETE\"})",
+							StrVal: `sum by (cluster, code) (code_verb:apiserver_request_total:increase30d{verb=~"POST|PUT|PATCH|DELETE"})`,
 							Type:   intstr.Type(int64(1)),
 						},
 						Labels: map[string]string{"verb": "write"},
@@ -973,39 +959,39 @@ sum by (cluster) (code:apiserver_request_total:increase30d{verb="write"})
 						Record: "apiserver_request:availability30d",
 					}, {
 						Expr: intstr.IntOrString{
-							StrVal: "sum by (cluster,code,resource) (rate(apiserver_request_total{job=\"apiserver\",verb=~\"LIST|GET\"}[5m]))",
+							StrVal: `sum by (cluster,code,resource) (rate(apiserver_request_total{job="apiserver",verb=~"LIST|GET"}[5m]))`,
 							Type:   intstr.Type(int64(1)),
 						},
 						Labels: map[string]string{"verb": "read"},
 						Record: "code_resource:apiserver_request_total:rate5m",
 					}, {
 						Expr: intstr.IntOrString{
-							StrVal: "sum by (cluster,code,resource) (rate(apiserver_request_total{job=\"apiserver\",verb=~\"POST|PUT|PATCH|DELETE\"}[5m]))",
+							StrVal: `sum by (cluster,code,resource) (rate(apiserver_request_total{job="apiserver",verb=~"POST|PUT|PATCH|DELETE"}[5m]))`,
 							Type:   intstr.Type(int64(1)),
 						},
 						Labels: map[string]string{"verb": "write"},
 						Record: "code_resource:apiserver_request_total:rate5m",
 					}, {
 						Expr: intstr.IntOrString{
-							StrVal: "sum by (cluster, code, verb) (increase(apiserver_request_total{job=\"apiserver\",verb=~\"LIST|GET|POST|PUT|PATCH|DELETE\",code=~\"2..\"}[1h]))",
+							StrVal: `sum by (cluster, code, verb) (increase(apiserver_request_total{job="apiserver",verb=~"LIST|GET|POST|PUT|PATCH|DELETE",code=~"2.."}[1h]))`,
 							Type:   intstr.Type(int64(1)),
 						},
 						Record: "code_verb:apiserver_request_total:increase1h",
 					}, {
 						Expr: intstr.IntOrString{
-							StrVal: "sum by (cluster, code, verb) (increase(apiserver_request_total{job=\"apiserver\",verb=~\"LIST|GET|POST|PUT|PATCH|DELETE\",code=~\"3..\"}[1h]))",
+							StrVal: `sum by (cluster, code, verb) (increase(apiserver_request_total{job="apiserver",verb=~"LIST|GET|POST|PUT|PATCH|DELETE",code=~"3.."}[1h]))`,
 							Type:   intstr.Type(int64(1)),
 						},
 						Record: "code_verb:apiserver_request_total:increase1h",
 					}, {
 						Expr: intstr.IntOrString{
-							StrVal: "sum by (cluster, code, verb) (increase(apiserver_request_total{job=\"apiserver\",verb=~\"LIST|GET|POST|PUT|PATCH|DELETE\",code=~\"4..\"}[1h]))",
+							StrVal: `sum by (cluster, code, verb) (increase(apiserver_request_total{job="apiserver",verb=~"LIST|GET|POST|PUT|PATCH|DELETE",code=~"4.."}[1h]))`,
 							Type:   intstr.Type(int64(1)),
 						},
 						Record: "code_verb:apiserver_request_total:increase1h",
 					}, {
 						Expr: intstr.IntOrString{
-							StrVal: "sum by (cluster, code, verb) (increase(apiserver_request_total{job=\"apiserver\",verb=~\"LIST|GET|POST|PUT|PATCH|DELETE\",code=~\"5..\"}[1h]))",
+							StrVal: `sum by (cluster, code, verb) (increase(apiserver_request_total{job="apiserver",verb=~"LIST|GET|POST|PUT|PATCH|DELETE",code=~"5.."}[1h]))`,
 							Type:   intstr.Type(int64(1)),
 						},
 						Record: "code_verb:apiserver_request_total:increase1h",
@@ -1027,8 +1013,8 @@ var KubePromtheusStackKubeKubeApiserverBurnrateRulesPrometheusRule = &v1.Prometh
 			"app.kubernetes.io/instance":   "kube-promtheus-stack",
 			"app.kubernetes.io/managed-by": "Helm",
 			"app.kubernetes.io/part-of":    "kube-prometheus-stack",
-			"app.kubernetes.io/version":    "46.8.0",
-			"chart":                        "kube-prometheus-stack-46.8.0",
+			"app.kubernetes.io/version":    "47.0.0",
+			"chart":                        "kube-prometheus-stack-47.0.0",
 			"heritage":                     "Helm",
 			"release":                      "kube-promtheus-stack",
 		},
@@ -1415,8 +1401,8 @@ var KubePromtheusStackKubeKubeApiserverHistogramRulesPrometheusRule = &v1.Promet
 			"app.kubernetes.io/instance":   "kube-promtheus-stack",
 			"app.kubernetes.io/managed-by": "Helm",
 			"app.kubernetes.io/part-of":    "kube-prometheus-stack",
-			"app.kubernetes.io/version":    "46.8.0",
-			"chart":                        "kube-prometheus-stack-46.8.0",
+			"app.kubernetes.io/version":    "47.0.0",
+			"chart":                        "kube-prometheus-stack-47.0.0",
 			"heritage":                     "Helm",
 			"release":                      "kube-promtheus-stack",
 		},
@@ -1430,7 +1416,7 @@ var KubePromtheusStackKubeKubeApiserverHistogramRulesPrometheusRule = &v1.Promet
 				Rules: []v1.Rule{
 					{
 						Expr: intstr.IntOrString{
-							StrVal: "histogram_quantile(0.99, sum by (cluster, le, resource) (rate(apiserver_request_slo_duration_seconds_bucket{job=\"apiserver\",verb=~\"LIST|GET\",subresource!~\"proxy|attach|log|exec|portforward\"}[5m]))) > 0",
+							StrVal: `histogram_quantile(0.99, sum by (cluster, le, resource) (rate(apiserver_request_slo_duration_seconds_bucket{job="apiserver",verb=~"LIST|GET",subresource!~"proxy|attach|log|exec|portforward"}[5m]))) > 0`,
 							Type:   intstr.Type(int64(1)),
 						},
 						Labels: map[string]string{
@@ -1440,7 +1426,7 @@ var KubePromtheusStackKubeKubeApiserverHistogramRulesPrometheusRule = &v1.Promet
 						Record: "cluster_quantile:apiserver_request_slo_duration_seconds:histogram_quantile",
 					}, {
 						Expr: intstr.IntOrString{
-							StrVal: "histogram_quantile(0.99, sum by (cluster, le, resource) (rate(apiserver_request_slo_duration_seconds_bucket{job=\"apiserver\",verb=~\"POST|PUT|PATCH|DELETE\",subresource!~\"proxy|attach|log|exec|portforward\"}[5m]))) > 0",
+							StrVal: `histogram_quantile(0.99, sum by (cluster, le, resource) (rate(apiserver_request_slo_duration_seconds_bucket{job="apiserver",verb=~"POST|PUT|PATCH|DELETE",subresource!~"proxy|attach|log|exec|portforward"}[5m]))) > 0`,
 							Type:   intstr.Type(int64(1)),
 						},
 						Labels: map[string]string{
@@ -1466,8 +1452,8 @@ var KubePromtheusStackKubeKubeApiserverSlosPrometheusRule = &v1.PrometheusRule{
 			"app.kubernetes.io/instance":   "kube-promtheus-stack",
 			"app.kubernetes.io/managed-by": "Helm",
 			"app.kubernetes.io/part-of":    "kube-prometheus-stack",
-			"app.kubernetes.io/version":    "46.8.0",
-			"chart":                        "kube-prometheus-stack-46.8.0",
+			"app.kubernetes.io/version":    "47.0.0",
+			"chart":                        "kube-prometheus-stack-47.0.0",
 			"heritage":                     "Helm",
 			"release":                      "kube-promtheus-stack",
 		},
@@ -1581,8 +1567,8 @@ var KubePromtheusStackKubeKubePrometheusGeneralRulesPrometheusRule = &v1.Prometh
 			"app.kubernetes.io/instance":   "kube-promtheus-stack",
 			"app.kubernetes.io/managed-by": "Helm",
 			"app.kubernetes.io/part-of":    "kube-prometheus-stack",
-			"app.kubernetes.io/version":    "46.8.0",
-			"chart":                        "kube-prometheus-stack-46.8.0",
+			"app.kubernetes.io/version":    "47.0.0",
+			"chart":                        "kube-prometheus-stack-47.0.0",
 			"heritage":                     "Helm",
 			"release":                      "kube-promtheus-stack",
 		},
@@ -1624,8 +1610,8 @@ var KubePromtheusStackKubeKubePrometheusNodeRecordingRulesPrometheusRule = &v1.P
 			"app.kubernetes.io/instance":   "kube-promtheus-stack",
 			"app.kubernetes.io/managed-by": "Helm",
 			"app.kubernetes.io/part-of":    "kube-prometheus-stack",
-			"app.kubernetes.io/version":    "46.8.0",
-			"chart":                        "kube-prometheus-stack-46.8.0",
+			"app.kubernetes.io/version":    "47.0.0",
+			"chart":                        "kube-prometheus-stack-47.0.0",
 			"heritage":                     "Helm",
 			"release":                      "kube-promtheus-stack",
 		},
@@ -1639,7 +1625,7 @@ var KubePromtheusStackKubeKubePrometheusNodeRecordingRulesPrometheusRule = &v1.P
 				Rules: []v1.Rule{
 					{
 						Expr: intstr.IntOrString{
-							StrVal: "sum(rate(node_cpu_seconds_total{mode!=\"idle\",mode!=\"iowait\",mode!=\"steal\"}[3m])) BY (instance)",
+							StrVal: `sum(rate(node_cpu_seconds_total{mode!="idle",mode!="iowait",mode!="steal"}[3m])) BY (instance)`,
 							Type:   intstr.Type(int64(1)),
 						},
 						Record: "instance:node_cpu:rate:sum",
@@ -1657,13 +1643,13 @@ var KubePromtheusStackKubeKubePrometheusNodeRecordingRulesPrometheusRule = &v1.P
 						Record: "instance:node_network_transmit_bytes:rate:sum",
 					}, {
 						Expr: intstr.IntOrString{
-							StrVal: "sum(rate(node_cpu_seconds_total{mode!=\"idle\",mode!=\"iowait\",mode!=\"steal\"}[5m])) WITHOUT (cpu, mode) / ON(instance) GROUP_LEFT() count(sum(node_cpu_seconds_total) BY (instance, cpu)) BY (instance)",
+							StrVal: `sum(rate(node_cpu_seconds_total{mode!="idle",mode!="iowait",mode!="steal"}[5m])) WITHOUT (cpu, mode) / ON(instance) GROUP_LEFT() count(sum(node_cpu_seconds_total) BY (instance, cpu)) BY (instance)`,
 							Type:   intstr.Type(int64(1)),
 						},
 						Record: "instance:node_cpu:ratio",
 					}, {
 						Expr: intstr.IntOrString{
-							StrVal: "sum(rate(node_cpu_seconds_total{mode!=\"idle\",mode!=\"iowait\",mode!=\"steal\"}[5m]))",
+							StrVal: `sum(rate(node_cpu_seconds_total{mode!="idle",mode!="iowait",mode!="steal"}[5m]))`,
 							Type:   intstr.Type(int64(1)),
 						},
 						Record: "cluster:node_cpu:sum_rate5m",
@@ -1691,8 +1677,8 @@ var KubePromtheusStackKubeKubeSchedulerRulesPrometheusRule = &v1.PrometheusRule{
 			"app.kubernetes.io/instance":   "kube-promtheus-stack",
 			"app.kubernetes.io/managed-by": "Helm",
 			"app.kubernetes.io/part-of":    "kube-prometheus-stack",
-			"app.kubernetes.io/version":    "46.8.0",
-			"chart":                        "kube-prometheus-stack-46.8.0",
+			"app.kubernetes.io/version":    "47.0.0",
+			"chart":                        "kube-prometheus-stack-47.0.0",
 			"heritage":                     "Helm",
 			"release":                      "kube-promtheus-stack",
 		},
@@ -1706,63 +1692,63 @@ var KubePromtheusStackKubeKubeSchedulerRulesPrometheusRule = &v1.PrometheusRule{
 				Rules: []v1.Rule{
 					{
 						Expr: intstr.IntOrString{
-							StrVal: "histogram_quantile(0.99, sum(rate(scheduler_e2e_scheduling_duration_seconds_bucket{job=\"kube-scheduler\"}[5m])) without(instance, pod))",
+							StrVal: `histogram_quantile(0.99, sum(rate(scheduler_e2e_scheduling_duration_seconds_bucket{job="kube-scheduler"}[5m])) without(instance, pod))`,
 							Type:   intstr.Type(int64(1)),
 						},
 						Labels: map[string]string{"quantile": "0.99"},
 						Record: "cluster_quantile:scheduler_e2e_scheduling_duration_seconds:histogram_quantile",
 					}, {
 						Expr: intstr.IntOrString{
-							StrVal: "histogram_quantile(0.99, sum(rate(scheduler_scheduling_algorithm_duration_seconds_bucket{job=\"kube-scheduler\"}[5m])) without(instance, pod))",
+							StrVal: `histogram_quantile(0.99, sum(rate(scheduler_scheduling_algorithm_duration_seconds_bucket{job="kube-scheduler"}[5m])) without(instance, pod))`,
 							Type:   intstr.Type(int64(1)),
 						},
 						Labels: map[string]string{"quantile": "0.99"},
 						Record: "cluster_quantile:scheduler_scheduling_algorithm_duration_seconds:histogram_quantile",
 					}, {
 						Expr: intstr.IntOrString{
-							StrVal: "histogram_quantile(0.99, sum(rate(scheduler_binding_duration_seconds_bucket{job=\"kube-scheduler\"}[5m])) without(instance, pod))",
+							StrVal: `histogram_quantile(0.99, sum(rate(scheduler_binding_duration_seconds_bucket{job="kube-scheduler"}[5m])) without(instance, pod))`,
 							Type:   intstr.Type(int64(1)),
 						},
 						Labels: map[string]string{"quantile": "0.99"},
 						Record: "cluster_quantile:scheduler_binding_duration_seconds:histogram_quantile",
 					}, {
 						Expr: intstr.IntOrString{
-							StrVal: "histogram_quantile(0.9, sum(rate(scheduler_e2e_scheduling_duration_seconds_bucket{job=\"kube-scheduler\"}[5m])) without(instance, pod))",
+							StrVal: `histogram_quantile(0.9, sum(rate(scheduler_e2e_scheduling_duration_seconds_bucket{job="kube-scheduler"}[5m])) without(instance, pod))`,
 							Type:   intstr.Type(int64(1)),
 						},
 						Labels: map[string]string{"quantile": "0.9"},
 						Record: "cluster_quantile:scheduler_e2e_scheduling_duration_seconds:histogram_quantile",
 					}, {
 						Expr: intstr.IntOrString{
-							StrVal: "histogram_quantile(0.9, sum(rate(scheduler_scheduling_algorithm_duration_seconds_bucket{job=\"kube-scheduler\"}[5m])) without(instance, pod))",
+							StrVal: `histogram_quantile(0.9, sum(rate(scheduler_scheduling_algorithm_duration_seconds_bucket{job="kube-scheduler"}[5m])) without(instance, pod))`,
 							Type:   intstr.Type(int64(1)),
 						},
 						Labels: map[string]string{"quantile": "0.9"},
 						Record: "cluster_quantile:scheduler_scheduling_algorithm_duration_seconds:histogram_quantile",
 					}, {
 						Expr: intstr.IntOrString{
-							StrVal: "histogram_quantile(0.9, sum(rate(scheduler_binding_duration_seconds_bucket{job=\"kube-scheduler\"}[5m])) without(instance, pod))",
+							StrVal: `histogram_quantile(0.9, sum(rate(scheduler_binding_duration_seconds_bucket{job="kube-scheduler"}[5m])) without(instance, pod))`,
 							Type:   intstr.Type(int64(1)),
 						},
 						Labels: map[string]string{"quantile": "0.9"},
 						Record: "cluster_quantile:scheduler_binding_duration_seconds:histogram_quantile",
 					}, {
 						Expr: intstr.IntOrString{
-							StrVal: "histogram_quantile(0.5, sum(rate(scheduler_e2e_scheduling_duration_seconds_bucket{job=\"kube-scheduler\"}[5m])) without(instance, pod))",
+							StrVal: `histogram_quantile(0.5, sum(rate(scheduler_e2e_scheduling_duration_seconds_bucket{job="kube-scheduler"}[5m])) without(instance, pod))`,
 							Type:   intstr.Type(int64(1)),
 						},
 						Labels: map[string]string{"quantile": "0.5"},
 						Record: "cluster_quantile:scheduler_e2e_scheduling_duration_seconds:histogram_quantile",
 					}, {
 						Expr: intstr.IntOrString{
-							StrVal: "histogram_quantile(0.5, sum(rate(scheduler_scheduling_algorithm_duration_seconds_bucket{job=\"kube-scheduler\"}[5m])) without(instance, pod))",
+							StrVal: `histogram_quantile(0.5, sum(rate(scheduler_scheduling_algorithm_duration_seconds_bucket{job="kube-scheduler"}[5m])) without(instance, pod))`,
 							Type:   intstr.Type(int64(1)),
 						},
 						Labels: map[string]string{"quantile": "0.5"},
 						Record: "cluster_quantile:scheduler_scheduling_algorithm_duration_seconds:histogram_quantile",
 					}, {
 						Expr: intstr.IntOrString{
-							StrVal: "histogram_quantile(0.5, sum(rate(scheduler_binding_duration_seconds_bucket{job=\"kube-scheduler\"}[5m])) without(instance, pod))",
+							StrVal: `histogram_quantile(0.5, sum(rate(scheduler_binding_duration_seconds_bucket{job="kube-scheduler"}[5m])) without(instance, pod))`,
 							Type:   intstr.Type(int64(1)),
 						},
 						Labels: map[string]string{"quantile": "0.5"},
@@ -1785,8 +1771,8 @@ var KubePromtheusStackKubeKubeStateMetricsPrometheusRule = &v1.PrometheusRule{
 			"app.kubernetes.io/instance":   "kube-promtheus-stack",
 			"app.kubernetes.io/managed-by": "Helm",
 			"app.kubernetes.io/part-of":    "kube-prometheus-stack",
-			"app.kubernetes.io/version":    "46.8.0",
-			"chart":                        "kube-prometheus-stack-46.8.0",
+			"app.kubernetes.io/version":    "47.0.0",
+			"chart":                        "kube-prometheus-stack-47.0.0",
 			"heritage":                     "Helm",
 			"release":                      "kube-promtheus-stack",
 		},
@@ -1842,7 +1828,7 @@ sum(rate(kube_state_metrics_watch_total{job="kube-state-metrics"}[5m])) by (clus
 							"summary":     "kube-state-metrics sharding is misconfigured.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "stdvar (kube_state_metrics_total_shards{job=\"kube-state-metrics\"}) by (cluster) != 0",
+							StrVal: `stdvar (kube_state_metrics_total_shards{job="kube-state-metrics"}) by (cluster) != 0`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("15m")),
@@ -1883,8 +1869,8 @@ var KubePromtheusStackKubeKubeletRulesPrometheusRule = &v1.PrometheusRule{
 			"app.kubernetes.io/instance":   "kube-promtheus-stack",
 			"app.kubernetes.io/managed-by": "Helm",
 			"app.kubernetes.io/part-of":    "kube-prometheus-stack",
-			"app.kubernetes.io/version":    "46.8.0",
-			"chart":                        "kube-prometheus-stack-46.8.0",
+			"app.kubernetes.io/version":    "47.0.0",
+			"chart":                        "kube-prometheus-stack-47.0.0",
 			"heritage":                     "Helm",
 			"release":                      "kube-promtheus-stack",
 		},
@@ -1898,21 +1884,21 @@ var KubePromtheusStackKubeKubeletRulesPrometheusRule = &v1.PrometheusRule{
 				Rules: []v1.Rule{
 					{
 						Expr: intstr.IntOrString{
-							StrVal: "histogram_quantile(0.99, sum(rate(kubelet_pleg_relist_duration_seconds_bucket{job=\"kubelet\", metrics_path=\"/metrics\"}[5m])) by (cluster, instance, le) * on(cluster, instance) group_left(node) kubelet_node_name{job=\"kubelet\", metrics_path=\"/metrics\"})",
+							StrVal: `histogram_quantile(0.99, sum(rate(kubelet_pleg_relist_duration_seconds_bucket{job="kubelet", metrics_path="/metrics"}[5m])) by (cluster, instance, le) * on(cluster, instance) group_left(node) kubelet_node_name{job="kubelet", metrics_path="/metrics"})`,
 							Type:   intstr.Type(int64(1)),
 						},
 						Labels: map[string]string{"quantile": "0.99"},
 						Record: "node_quantile:kubelet_pleg_relist_duration_seconds:histogram_quantile",
 					}, {
 						Expr: intstr.IntOrString{
-							StrVal: "histogram_quantile(0.9, sum(rate(kubelet_pleg_relist_duration_seconds_bucket{job=\"kubelet\", metrics_path=\"/metrics\"}[5m])) by (cluster, instance, le) * on(cluster, instance) group_left(node) kubelet_node_name{job=\"kubelet\", metrics_path=\"/metrics\"})",
+							StrVal: `histogram_quantile(0.9, sum(rate(kubelet_pleg_relist_duration_seconds_bucket{job="kubelet", metrics_path="/metrics"}[5m])) by (cluster, instance, le) * on(cluster, instance) group_left(node) kubelet_node_name{job="kubelet", metrics_path="/metrics"})`,
 							Type:   intstr.Type(int64(1)),
 						},
 						Labels: map[string]string{"quantile": "0.9"},
 						Record: "node_quantile:kubelet_pleg_relist_duration_seconds:histogram_quantile",
 					}, {
 						Expr: intstr.IntOrString{
-							StrVal: "histogram_quantile(0.5, sum(rate(kubelet_pleg_relist_duration_seconds_bucket{job=\"kubelet\", metrics_path=\"/metrics\"}[5m])) by (cluster, instance, le) * on(cluster, instance) group_left(node) kubelet_node_name{job=\"kubelet\", metrics_path=\"/metrics\"})",
+							StrVal: `histogram_quantile(0.5, sum(rate(kubelet_pleg_relist_duration_seconds_bucket{job="kubelet", metrics_path="/metrics"}[5m])) by (cluster, instance, le) * on(cluster, instance) group_left(node) kubelet_node_name{job="kubelet", metrics_path="/metrics"})`,
 							Type:   intstr.Type(int64(1)),
 						},
 						Labels: map[string]string{"quantile": "0.5"},
@@ -1935,8 +1921,8 @@ var KubePromtheusStackKubeKubernetesAppsPrometheusRule = &v1.PrometheusRule{
 			"app.kubernetes.io/instance":   "kube-promtheus-stack",
 			"app.kubernetes.io/managed-by": "Helm",
 			"app.kubernetes.io/part-of":    "kube-prometheus-stack",
-			"app.kubernetes.io/version":    "46.8.0",
-			"chart":                        "kube-prometheus-stack-46.8.0",
+			"app.kubernetes.io/version":    "47.0.0",
+			"chart":                        "kube-prometheus-stack-47.0.0",
 			"heritage":                     "Helm",
 			"release":                      "kube-promtheus-stack",
 		},
@@ -1951,12 +1937,12 @@ var KubePromtheusStackKubeKubernetesAppsPrometheusRule = &v1.PrometheusRule{
 					{
 						Alert: "KubePodCrashLooping",
 						Annotations: map[string]string{
-							"description": "Pod {{ $labels.namespace }}/{{ $labels.pod }} ({{ $labels.container }}) is in waiting state (reason: \"CrashLoopBackOff\").",
+							"description": `Pod {{ $labels.namespace }}/{{ $labels.pod }} ({{ $labels.container }}) is in waiting state (reason: "CrashLoopBackOff").`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubepodcrashlooping",
 							"summary":     "Pod is crash looping.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "max_over_time(kube_pod_container_status_waiting_reason{reason=\"CrashLoopBackOff\", job=\"kube-state-metrics\", namespace=~\".*\"}[5m]) >= 1",
+							StrVal: `max_over_time(kube_pod_container_status_waiting_reason{reason="CrashLoopBackOff", job="kube-state-metrics", namespace=~".*"}[5m]) >= 1`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("15m")),
@@ -2138,7 +2124,7 @@ kube_statefulset_metadata_generation{job="kube-state-metrics", namespace=~".*"}
 							"summary":     "Pod container waiting longer than 1 hour",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "sum by (namespace, pod, container, cluster) (kube_pod_container_status_waiting_reason{job=\"kube-state-metrics\", namespace=~\".*\"}) > 0",
+							StrVal: `sum by (namespace, pod, container, cluster) (kube_pod_container_status_waiting_reason{job="kube-state-metrics", namespace=~".*"}) > 0`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("1h")),
@@ -2168,7 +2154,7 @@ kube_daemonset_status_current_number_scheduled{job="kube-state-metrics", namespa
 							"summary":     "DaemonSet pods are misscheduled.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "kube_daemonset_status_number_misscheduled{job=\"kube-state-metrics\", namespace=~\".*\"} > 0",
+							StrVal: `kube_daemonset_status_number_misscheduled{job="kube-state-metrics", namespace=~".*"} > 0`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("15m")),
@@ -2176,7 +2162,7 @@ kube_daemonset_status_current_number_scheduled{job="kube-state-metrics", namespa
 					}, {
 						Alert: "KubeJobNotCompleted",
 						Annotations: map[string]string{
-							"description": "Job {{ $labels.namespace }}/{{ $labels.job_name }} is taking more than {{ \"43200\" | humanizeDuration }} to complete.",
+							"description": `Job {{ $labels.namespace }}/{{ $labels.job_name }} is taking more than {{ "43200" | humanizeDuration }} to complete.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubejobnotcompleted",
 							"summary":     "Job did not complete in time",
 						},
@@ -2197,7 +2183,7 @@ kube_job_status_active{job="kube-state-metrics", namespace=~".*"} > 0) > 43200
 							"summary":     "Job failed to complete.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "kube_job_failed{job=\"kube-state-metrics\", namespace=~\".*\"}  > 0",
+							StrVal: `kube_job_failed{job="kube-state-metrics", namespace=~".*"}  > 0`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("15m")),
@@ -2264,8 +2250,8 @@ var KubePromtheusStackKubeKubernetesResourcesPrometheusRule = &v1.PrometheusRule
 			"app.kubernetes.io/instance":   "kube-promtheus-stack",
 			"app.kubernetes.io/managed-by": "Helm",
 			"app.kubernetes.io/part-of":    "kube-prometheus-stack",
-			"app.kubernetes.io/version":    "46.8.0",
-			"chart":                        "kube-prometheus-stack-46.8.0",
+			"app.kubernetes.io/version":    "47.0.0",
+			"chart":                        "kube-prometheus-stack-47.0.0",
 			"heritage":                     "Helm",
 			"release":                      "kube-promtheus-stack",
 		},
@@ -2437,8 +2423,8 @@ var KubePromtheusStackKubeKubernetesStoragePrometheusRule = &v1.PrometheusRule{
 			"app.kubernetes.io/instance":   "kube-promtheus-stack",
 			"app.kubernetes.io/managed-by": "Helm",
 			"app.kubernetes.io/part-of":    "kube-prometheus-stack",
-			"app.kubernetes.io/version":    "46.8.0",
-			"chart":                        "kube-prometheus-stack-46.8.0",
+			"app.kubernetes.io/version":    "47.0.0",
+			"chart":                        "kube-prometheus-stack-47.0.0",
 			"heritage":                     "Helm",
 			"release":                      "kube-promtheus-stack",
 		},
@@ -2562,7 +2548,7 @@ kube_persistentvolumeclaim_labels{label_excluded_from_alerts="true"} == 1
 							"summary":     "PersistentVolume is having issues with provisioning.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "kube_persistentvolume_status_phase{phase=~\"Failed|Pending\",job=\"kube-state-metrics\"} > 0",
+							StrVal: `kube_persistentvolume_status_phase{phase=~"Failed|Pending",job="kube-state-metrics"} > 0`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("5m")),
@@ -2585,8 +2571,8 @@ var KubePromtheusStackKubeKubernetesSystemApiserverPrometheusRule = &v1.Promethe
 			"app.kubernetes.io/instance":   "kube-promtheus-stack",
 			"app.kubernetes.io/managed-by": "Helm",
 			"app.kubernetes.io/part-of":    "kube-prometheus-stack",
-			"app.kubernetes.io/version":    "46.8.0",
-			"chart":                        "kube-prometheus-stack-46.8.0",
+			"app.kubernetes.io/version":    "47.0.0",
+			"chart":                        "kube-prometheus-stack-47.0.0",
 			"heritage":                     "Helm",
 			"release":                      "kube-promtheus-stack",
 		},
@@ -2606,7 +2592,7 @@ var KubePromtheusStackKubeKubernetesSystemApiserverPrometheusRule = &v1.Promethe
 							"summary":     "Client certificate is about to expire.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "apiserver_client_certificate_expiration_seconds_count{job=\"apiserver\"} > 0 and on(job) histogram_quantile(0.01, sum by (job, le) (rate(apiserver_client_certificate_expiration_seconds_bucket{job=\"apiserver\"}[5m]))) < 604800",
+							StrVal: `apiserver_client_certificate_expiration_seconds_count{job="apiserver"} > 0 and on(job) histogram_quantile(0.01, sum by (job, le) (rate(apiserver_client_certificate_expiration_seconds_bucket{job="apiserver"}[5m]))) < 604800`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("5m")),
@@ -2619,7 +2605,7 @@ var KubePromtheusStackKubeKubernetesSystemApiserverPrometheusRule = &v1.Promethe
 							"summary":     "Client certificate is about to expire.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "apiserver_client_certificate_expiration_seconds_count{job=\"apiserver\"} > 0 and on(job) histogram_quantile(0.01, sum by (job, le) (rate(apiserver_client_certificate_expiration_seconds_bucket{job=\"apiserver\"}[5m]))) < 86400",
+							StrVal: `apiserver_client_certificate_expiration_seconds_count{job="apiserver"} > 0 and on(job) histogram_quantile(0.01, sum by (job, le) (rate(apiserver_client_certificate_expiration_seconds_bucket{job="apiserver"}[5m]))) < 86400`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("5m")),
@@ -2657,7 +2643,7 @@ var KubePromtheusStackKubeKubernetesSystemApiserverPrometheusRule = &v1.Promethe
 							"summary":     "Target disappeared from Prometheus target discovery.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "absent(up{job=\"apiserver\"} == 1)",
+							StrVal: `absent(up{job="apiserver"} == 1)`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("15m")),
@@ -2670,7 +2656,7 @@ var KubePromtheusStackKubeKubernetesSystemApiserverPrometheusRule = &v1.Promethe
 							"summary":     "The kubernetes apiserver has terminated {{ $value | humanizePercentage }} of its incoming requests.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "sum(rate(apiserver_request_terminations_total{job=\"apiserver\"}[10m]))  / (  sum(rate(apiserver_request_total{job=\"apiserver\"}[10m])) + sum(rate(apiserver_request_terminations_total{job=\"apiserver\"}[10m])) ) > 0.20",
+							StrVal: `sum(rate(apiserver_request_terminations_total{job="apiserver"}[10m]))  / (  sum(rate(apiserver_request_total{job="apiserver"}[10m])) + sum(rate(apiserver_request_terminations_total{job="apiserver"}[10m])) ) > 0.20`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("5m")),
@@ -2693,8 +2679,8 @@ var KubePromtheusStackKubeKubernetesSystemControllerManagerPrometheusRule = &v1.
 			"app.kubernetes.io/instance":   "kube-promtheus-stack",
 			"app.kubernetes.io/managed-by": "Helm",
 			"app.kubernetes.io/part-of":    "kube-prometheus-stack",
-			"app.kubernetes.io/version":    "46.8.0",
-			"chart":                        "kube-prometheus-stack-46.8.0",
+			"app.kubernetes.io/version":    "47.0.0",
+			"chart":                        "kube-prometheus-stack-47.0.0",
 			"heritage":                     "Helm",
 			"release":                      "kube-promtheus-stack",
 		},
@@ -2714,7 +2700,7 @@ var KubePromtheusStackKubeKubernetesSystemControllerManagerPrometheusRule = &v1.
 							"summary":     "Target disappeared from Prometheus target discovery.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "absent(up{job=\"kube-controller-manager\"} == 1)",
+							StrVal: `absent(up{job="kube-controller-manager"} == 1)`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("15m")),
@@ -2737,8 +2723,8 @@ var KubePromtheusStackKubeKubernetesSystemKubeProxyPrometheusRule = &v1.Promethe
 			"app.kubernetes.io/instance":   "kube-promtheus-stack",
 			"app.kubernetes.io/managed-by": "Helm",
 			"app.kubernetes.io/part-of":    "kube-prometheus-stack",
-			"app.kubernetes.io/version":    "46.8.0",
-			"chart":                        "kube-prometheus-stack-46.8.0",
+			"app.kubernetes.io/version":    "47.0.0",
+			"chart":                        "kube-prometheus-stack-47.0.0",
 			"heritage":                     "Helm",
 			"release":                      "kube-promtheus-stack",
 		},
@@ -2758,7 +2744,7 @@ var KubePromtheusStackKubeKubernetesSystemKubeProxyPrometheusRule = &v1.Promethe
 							"summary":     "Target disappeared from Prometheus target discovery.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "absent(up{job=\"kube-proxy\"} == 1)",
+							StrVal: `absent(up{job="kube-proxy"} == 1)`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("15m")),
@@ -2781,8 +2767,8 @@ var KubePromtheusStackKubeKubernetesSystemKubeletPrometheusRule = &v1.Prometheus
 			"app.kubernetes.io/instance":   "kube-promtheus-stack",
 			"app.kubernetes.io/managed-by": "Helm",
 			"app.kubernetes.io/part-of":    "kube-prometheus-stack",
-			"app.kubernetes.io/version":    "46.8.0",
-			"chart":                        "kube-prometheus-stack-46.8.0",
+			"app.kubernetes.io/version":    "47.0.0",
+			"chart":                        "kube-prometheus-stack-47.0.0",
 			"heritage":                     "Helm",
 			"release":                      "kube-promtheus-stack",
 		},
@@ -2802,7 +2788,7 @@ var KubePromtheusStackKubeKubernetesSystemKubeletPrometheusRule = &v1.Prometheus
 							"summary":     "Node is not ready.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "kube_node_status_condition{job=\"kube-state-metrics\",condition=\"Ready\",status=\"true\"} == 0",
+							StrVal: `kube_node_status_condition{job="kube-state-metrics",condition="Ready",status="true"} == 0`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("15m")),
@@ -2815,7 +2801,7 @@ var KubePromtheusStackKubeKubernetesSystemKubeletPrometheusRule = &v1.Prometheus
 							"summary":     "Node is unreachable.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "(kube_node_spec_taint{job=\"kube-state-metrics\",key=\"node.kubernetes.io/unreachable\",effect=\"NoSchedule\"} unless ignoring(key,value) kube_node_spec_taint{job=\"kube-state-metrics\",key=~\"ToBeDeletedByClusterAutoscaler|cloud.google.com/impending-node-termination|aws-node-termination-handler/spot-itn\"}) == 1",
+							StrVal: `(kube_node_spec_taint{job="kube-state-metrics",key="node.kubernetes.io/unreachable",effect="NoSchedule"} unless ignoring(key,value) kube_node_spec_taint{job="kube-state-metrics",key=~"ToBeDeletedByClusterAutoscaler|cloud.google.com/impending-node-termination|aws-node-termination-handler/spot-itn"}) == 1`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("15m")),
@@ -2849,7 +2835,7 @@ max by(cluster, node) (
 							"summary":     "Node readiness status is flapping.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "sum(changes(kube_node_status_condition{job=\"kube-state-metrics\",status=\"true\",condition=\"Ready\"}[15m])) by (cluster, node) > 2",
+							StrVal: `sum(changes(kube_node_status_condition{job="kube-state-metrics",status="true",condition="Ready"}[15m])) by (cluster, node) > 2`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("15m")),
@@ -2862,7 +2848,7 @@ max by(cluster, node) (
 							"summary":     "Kubelet Pod Lifecycle Event Generator is taking too long to relist.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "node_quantile:kubelet_pleg_relist_duration_seconds:histogram_quantile{quantile=\"0.99\"} >= 10",
+							StrVal: `node_quantile:kubelet_pleg_relist_duration_seconds:histogram_quantile{quantile="0.99"} >= 10`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("5m")),
@@ -2875,7 +2861,7 @@ max by(cluster, node) (
 							"summary":     "Kubelet Pod startup latency is too high.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "histogram_quantile(0.99, sum(rate(kubelet_pod_worker_duration_seconds_bucket{job=\"kubelet\", metrics_path=\"/metrics\"}[5m])) by (cluster, instance, le)) * on(cluster, instance) group_left(node) kubelet_node_name{job=\"kubelet\", metrics_path=\"/metrics\"} > 60",
+							StrVal: `histogram_quantile(0.99, sum(rate(kubelet_pod_worker_duration_seconds_bucket{job="kubelet", metrics_path="/metrics"}[5m])) by (cluster, instance, le)) * on(cluster, instance) group_left(node) kubelet_node_name{job="kubelet", metrics_path="/metrics"} > 60`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("15m")),
@@ -2962,7 +2948,7 @@ max by(cluster, node) (
 							"summary":     "Target disappeared from Prometheus target discovery.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "absent(up{job=\"kubelet\", metrics_path=\"/metrics\"} == 1)",
+							StrVal: `absent(up{job="kubelet", metrics_path="/metrics"} == 1)`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("15m")),
@@ -2985,8 +2971,8 @@ var KubePromtheusStackKubeKubernetesSystemPrometheusRule = &v1.PrometheusRule{
 			"app.kubernetes.io/instance":   "kube-promtheus-stack",
 			"app.kubernetes.io/managed-by": "Helm",
 			"app.kubernetes.io/part-of":    "kube-prometheus-stack",
-			"app.kubernetes.io/version":    "46.8.0",
-			"chart":                        "kube-prometheus-stack-46.8.0",
+			"app.kubernetes.io/version":    "47.0.0",
+			"chart":                        "kube-prometheus-stack-47.0.0",
 			"heritage":                     "Helm",
 			"release":                      "kube-promtheus-stack",
 		},
@@ -3006,7 +2992,7 @@ var KubePromtheusStackKubeKubernetesSystemPrometheusRule = &v1.PrometheusRule{
 							"summary":     "Different semantic versions of Kubernetes components running.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "count by (cluster) (count by (git_version, cluster) (label_replace(kubernetes_build_info{job!~\"kube-dns|coredns\"},\"git_version\",\"$1\",\"git_version\",\"(v[0-9]*.[0-9]*).*\"))) > 1",
+							StrVal: `count by (cluster) (count by (git_version, cluster) (label_replace(kubernetes_build_info{job!~"kube-dns|coredns"},"git_version","$1","git_version","(v[0-9]*.[0-9]*).*"))) > 1`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("15m")),
@@ -3047,8 +3033,8 @@ var KubePromtheusStackKubeKubernetesSystemSchedulerPrometheusRule = &v1.Promethe
 			"app.kubernetes.io/instance":   "kube-promtheus-stack",
 			"app.kubernetes.io/managed-by": "Helm",
 			"app.kubernetes.io/part-of":    "kube-prometheus-stack",
-			"app.kubernetes.io/version":    "46.8.0",
-			"chart":                        "kube-prometheus-stack-46.8.0",
+			"app.kubernetes.io/version":    "47.0.0",
+			"chart":                        "kube-prometheus-stack-47.0.0",
 			"heritage":                     "Helm",
 			"release":                      "kube-promtheus-stack",
 		},
@@ -3068,7 +3054,7 @@ var KubePromtheusStackKubeKubernetesSystemSchedulerPrometheusRule = &v1.Promethe
 							"summary":     "Target disappeared from Prometheus target discovery.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "absent(up{job=\"kube-scheduler\"} == 1)",
+							StrVal: `absent(up{job="kube-scheduler"} == 1)`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("15m")),
@@ -3091,8 +3077,8 @@ var KubePromtheusStackKubeNodeExporterPrometheusRule = &v1.PrometheusRule{
 			"app.kubernetes.io/instance":   "kube-promtheus-stack",
 			"app.kubernetes.io/managed-by": "Helm",
 			"app.kubernetes.io/part-of":    "kube-prometheus-stack",
-			"app.kubernetes.io/version":    "46.8.0",
-			"chart":                        "kube-prometheus-stack-46.8.0",
+			"app.kubernetes.io/version":    "47.0.0",
+			"chart":                        "kube-prometheus-stack-47.0.0",
 			"heritage":                     "Helm",
 			"release":                      "kube-promtheus-stack",
 		},
@@ -3107,7 +3093,7 @@ var KubePromtheusStackKubeNodeExporterPrometheusRule = &v1.PrometheusRule{
 					{
 						Alert: "NodeFilesystemSpaceFillingUp",
 						Annotations: map[string]string{
-							"description": "Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf \"%.2f\" $value }}% available space left and is filling up.",
+							"description": `Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf "%.2f" $value }}% available space left and is filling up.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/node/nodefilesystemspacefillingup",
 							"summary":     "Filesystem is predicted to run out of space within the next 24 hours.",
 						},
@@ -3128,7 +3114,7 @@ and
 					}, {
 						Alert: "NodeFilesystemSpaceFillingUp",
 						Annotations: map[string]string{
-							"description": "Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf \"%.2f\" $value }}% available space left and is filling up fast.",
+							"description": `Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf "%.2f" $value }}% available space left and is filling up fast.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/node/nodefilesystemspacefillingup",
 							"summary":     "Filesystem is predicted to run out of space within the next 4 hours.",
 						},
@@ -3149,7 +3135,7 @@ and
 					}, {
 						Alert: "NodeFilesystemAlmostOutOfSpace",
 						Annotations: map[string]string{
-							"description": "Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf \"%.2f\" $value }}% available space left.",
+							"description": `Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf "%.2f" $value }}% available space left.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/node/nodefilesystemalmostoutofspace",
 							"summary":     "Filesystem has less than 5% space left.",
 						},
@@ -3168,7 +3154,7 @@ and
 					}, {
 						Alert: "NodeFilesystemAlmostOutOfSpace",
 						Annotations: map[string]string{
-							"description": "Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf \"%.2f\" $value }}% available space left.",
+							"description": `Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf "%.2f" $value }}% available space left.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/node/nodefilesystemalmostoutofspace",
 							"summary":     "Filesystem has less than 3% space left.",
 						},
@@ -3187,7 +3173,7 @@ and
 					}, {
 						Alert: "NodeFilesystemFilesFillingUp",
 						Annotations: map[string]string{
-							"description": "Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf \"%.2f\" $value }}% available inodes left and is filling up.",
+							"description": `Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf "%.2f" $value }}% available inodes left and is filling up.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/node/nodefilesystemfilesfillingup",
 							"summary":     "Filesystem is predicted to run out of inodes within the next 24 hours.",
 						},
@@ -3208,7 +3194,7 @@ and
 					}, {
 						Alert: "NodeFilesystemFilesFillingUp",
 						Annotations: map[string]string{
-							"description": "Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf \"%.2f\" $value }}% available inodes left and is filling up fast.",
+							"description": `Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf "%.2f" $value }}% available inodes left and is filling up fast.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/node/nodefilesystemfilesfillingup",
 							"summary":     "Filesystem is predicted to run out of inodes within the next 4 hours.",
 						},
@@ -3229,7 +3215,7 @@ and
 					}, {
 						Alert: "NodeFilesystemAlmostOutOfFiles",
 						Annotations: map[string]string{
-							"description": "Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf \"%.2f\" $value }}% available inodes left.",
+							"description": `Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf "%.2f" $value }}% available inodes left.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/node/nodefilesystemalmostoutoffiles",
 							"summary":     "Filesystem has less than 5% inodes left.",
 						},
@@ -3248,7 +3234,7 @@ and
 					}, {
 						Alert: "NodeFilesystemAlmostOutOfFiles",
 						Annotations: map[string]string{
-							"description": "Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf \"%.2f\" $value }}% available inodes left.",
+							"description": `Filesystem on {{ $labels.device }} at {{ $labels.instance }} has only {{ printf "%.2f" $value }}% available inodes left.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/node/nodefilesystemalmostoutoffiles",
 							"summary":     "Filesystem has less than 3% inodes left.",
 						},
@@ -3267,7 +3253,7 @@ and
 					}, {
 						Alert: "NodeNetworkReceiveErrs",
 						Annotations: map[string]string{
-							"description": "{{ $labels.instance }} interface {{ $labels.device }} has encountered {{ printf \"%.0f\" $value }} receive errors in the last two minutes.",
+							"description": `{{ $labels.instance }} interface {{ $labels.device }} has encountered {{ printf "%.0f" $value }} receive errors in the last two minutes.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/node/nodenetworkreceiveerrs",
 							"summary":     "Network interface is reporting many receive errors.",
 						},
@@ -3280,7 +3266,7 @@ and
 					}, {
 						Alert: "NodeNetworkTransmitErrs",
 						Annotations: map[string]string{
-							"description": "{{ $labels.instance }} interface {{ $labels.device }} has encountered {{ printf \"%.0f\" $value }} transmit errors in the last two minutes.",
+							"description": `{{ $labels.instance }} interface {{ $labels.device }} has encountered {{ printf "%.0f" $value }} transmit errors in the last two minutes.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/node/nodenetworktransmiterrs",
 							"summary":     "Network interface is reporting many transmit errors.",
 						},
@@ -3310,7 +3296,7 @@ and
 							"summary":     "Node Exporter text file collector failed to scrape.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "node_textfile_scrape_error{job=\"node-exporter\"} == 1",
+							StrVal: `node_textfile_scrape_error{job="node-exporter"} == 1`,
 							Type:   intstr.Type(int64(1)),
 						},
 						Labels: map[string]string{"severity": "warning"},
@@ -3364,7 +3350,7 @@ node_timex_maxerror_seconds{job="node-exporter"} >= 16
 							"summary":     "RAID Array is degraded",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "node_md_disks_required{job=\"node-exporter\",device=~\"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)\"} - ignoring (state) (node_md_disks{state=\"active\",job=\"node-exporter\",device=~\"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)\"}) > 0",
+							StrVal: `node_md_disks_required{job="node-exporter",device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)"} - ignoring (state) (node_md_disks{state="active",job="node-exporter",device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)"}) > 0`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("15m")),
@@ -3377,14 +3363,14 @@ node_timex_maxerror_seconds{job="node-exporter"} >= 16
 							"summary":     "Failed device in RAID array",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "node_md_disks{state=\"failed\",job=\"node-exporter\",device=~\"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)\"} > 0",
+							StrVal: `node_md_disks{state="failed",job="node-exporter",device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)"} > 0`,
 							Type:   intstr.Type(int64(1)),
 						},
 						Labels: map[string]string{"severity": "warning"},
 					}, {
 						Alert: "NodeFileDescriptorLimit",
 						Annotations: map[string]string{
-							"description": "File descriptors limit at {{ $labels.instance }} is currently at {{ printf \"%.2f\" $value }}%.",
+							"description": `File descriptors limit at {{ $labels.instance }} is currently at {{ printf "%.2f" $value }}%.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/node/nodefiledescriptorlimit",
 							"summary":     "Kernel is predicted to exhaust file descriptors limit soon.",
 						},
@@ -3401,7 +3387,7 @@ node_timex_maxerror_seconds{job="node-exporter"} >= 16
 					}, {
 						Alert: "NodeFileDescriptorLimit",
 						Annotations: map[string]string{
-							"description": "File descriptors limit at {{ $labels.instance }} is currently at {{ printf \"%.2f\" $value }}%.",
+							"description": `File descriptors limit at {{ $labels.instance }} is currently at {{ printf "%.2f" $value }}%.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/node/nodefiledescriptorlimit",
 							"summary":     "Kernel is predicted to exhaust file descriptors limit soon.",
 						},
@@ -3433,8 +3419,8 @@ var KubePromtheusStackKubeNodeExporterRulesPrometheusRule = &v1.PrometheusRule{
 			"app.kubernetes.io/instance":   "kube-promtheus-stack",
 			"app.kubernetes.io/managed-by": "Helm",
 			"app.kubernetes.io/part-of":    "kube-prometheus-stack",
-			"app.kubernetes.io/version":    "46.8.0",
-			"chart":                        "kube-prometheus-stack-46.8.0",
+			"app.kubernetes.io/version":    "47.0.0",
+			"chart":                        "kube-prometheus-stack-47.0.0",
 			"heritage":                     "Helm",
 			"release":                      "kube-promtheus-stack",
 		},
@@ -3504,19 +3490,19 @@ count without (cpu, mode) (
 						Record: "instance:node_memory_utilisation:ratio",
 					}, {
 						Expr: intstr.IntOrString{
-							StrVal: "rate(node_vmstat_pgmajfault{job=\"node-exporter\"}[5m])",
+							StrVal: `rate(node_vmstat_pgmajfault{job="node-exporter"}[5m])`,
 							Type:   intstr.Type(int64(1)),
 						},
 						Record: "instance:node_vmstat_pgmajfault:rate5m",
 					}, {
 						Expr: intstr.IntOrString{
-							StrVal: "rate(node_disk_io_time_seconds_total{job=\"node-exporter\", device=~\"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)\"}[5m])",
+							StrVal: `rate(node_disk_io_time_seconds_total{job="node-exporter", device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)"}[5m])`,
 							Type:   intstr.Type(int64(1)),
 						},
 						Record: "instance_device:node_disk_io_time_seconds:rate5m",
 					}, {
 						Expr: intstr.IntOrString{
-							StrVal: "rate(node_disk_io_time_weighted_seconds_total{job=\"node-exporter\", device=~\"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)\"}[5m])",
+							StrVal: `rate(node_disk_io_time_weighted_seconds_total{job="node-exporter", device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)"}[5m])`,
 							Type:   intstr.Type(int64(1)),
 						},
 						Record: "instance_device:node_disk_io_time_weighted_seconds:rate5m",
@@ -3578,8 +3564,8 @@ var KubePromtheusStackKubeNodeNetworkPrometheusRule = &v1.PrometheusRule{
 			"app.kubernetes.io/instance":   "kube-promtheus-stack",
 			"app.kubernetes.io/managed-by": "Helm",
 			"app.kubernetes.io/part-of":    "kube-prometheus-stack",
-			"app.kubernetes.io/version":    "46.8.0",
-			"chart":                        "kube-prometheus-stack-46.8.0",
+			"app.kubernetes.io/version":    "47.0.0",
+			"chart":                        "kube-prometheus-stack-47.0.0",
 			"heritage":                     "Helm",
 			"release":                      "kube-promtheus-stack",
 		},
@@ -3594,12 +3580,12 @@ var KubePromtheusStackKubeNodeNetworkPrometheusRule = &v1.PrometheusRule{
 					{
 						Alert: "NodeNetworkInterfaceFlapping",
 						Annotations: map[string]string{
-							"description": "Network interface \"{{ $labels.device }}\" changing its up status often on node-exporter {{ $labels.namespace }}/{{ $labels.pod }}",
+							"description": `Network interface "{{ $labels.device }}" changing its up status often on node-exporter {{ $labels.namespace }}/{{ $labels.pod }}`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/general/nodenetworkinterfaceflapping",
 							"summary":     "Network interface is often changing its status",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "changes(node_network_up{job=\"node-exporter\",device!~\"veth.+\"}[2m]) > 2",
+							StrVal: `changes(node_network_up{job="node-exporter",device!~"veth.+"}[2m]) > 2`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("2m")),
@@ -3622,8 +3608,8 @@ var KubePromtheusStackKubeNodeRulesPrometheusRule = &v1.PrometheusRule{
 			"app.kubernetes.io/instance":   "kube-promtheus-stack",
 			"app.kubernetes.io/managed-by": "Helm",
 			"app.kubernetes.io/part-of":    "kube-prometheus-stack",
-			"app.kubernetes.io/version":    "46.8.0",
-			"chart":                        "kube-prometheus-stack-46.8.0",
+			"app.kubernetes.io/version":    "47.0.0",
+			"chart":                        "kube-prometheus-stack-47.0.0",
 			"heritage":                     "Helm",
 			"release":                      "kube-promtheus-stack",
 		},
@@ -3714,8 +3700,8 @@ var KubePromtheusStackKubePrometheusOperatorPrometheusRule = &v1.PrometheusRule{
 			"app.kubernetes.io/instance":   "kube-promtheus-stack",
 			"app.kubernetes.io/managed-by": "Helm",
 			"app.kubernetes.io/part-of":    "kube-prometheus-stack",
-			"app.kubernetes.io/version":    "46.8.0",
-			"chart":                        "kube-prometheus-stack-46.8.0",
+			"app.kubernetes.io/version":    "47.0.0",
+			"chart":                        "kube-prometheus-stack-47.0.0",
 			"heritage":                     "Helm",
 			"release":                      "kube-promtheus-stack",
 		},
@@ -3735,7 +3721,7 @@ var KubePromtheusStackKubePrometheusOperatorPrometheusRule = &v1.PrometheusRule{
 							"summary":     "Errors while performing list operations in controller.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "(sum by (cluster,controller,namespace) (rate(prometheus_operator_list_operations_failed_total{job=\"kube-promtheus-stack-kube-operator\",namespace=\"monitoring\"}[10m])) / sum by (cluster,controller,namespace) (rate(prometheus_operator_list_operations_total{job=\"kube-promtheus-stack-kube-operator\",namespace=\"monitoring\"}[10m]))) > 0.4",
+							StrVal: `(sum by (cluster,controller,namespace) (rate(prometheus_operator_list_operations_failed_total{job="kube-promtheus-stack-kube-operator",namespace="monitoring"}[10m])) / sum by (cluster,controller,namespace) (rate(prometheus_operator_list_operations_total{job="kube-promtheus-stack-kube-operator",namespace="monitoring"}[10m]))) > 0.4`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("15m")),
@@ -3748,7 +3734,7 @@ var KubePromtheusStackKubePrometheusOperatorPrometheusRule = &v1.PrometheusRule{
 							"summary":     "Errors while performing watch operations in controller.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "(sum by (cluster,controller,namespace) (rate(prometheus_operator_watch_operations_failed_total{job=\"kube-promtheus-stack-kube-operator\",namespace=\"monitoring\"}[5m])) / sum by (cluster,controller,namespace) (rate(prometheus_operator_watch_operations_total{job=\"kube-promtheus-stack-kube-operator\",namespace=\"monitoring\"}[5m]))) > 0.4",
+							StrVal: `(sum by (cluster,controller,namespace) (rate(prometheus_operator_watch_operations_failed_total{job="kube-promtheus-stack-kube-operator",namespace="monitoring"}[5m])) / sum by (cluster,controller,namespace) (rate(prometheus_operator_watch_operations_total{job="kube-promtheus-stack-kube-operator",namespace="monitoring"}[5m]))) > 0.4`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("15m")),
@@ -3761,7 +3747,7 @@ var KubePromtheusStackKubePrometheusOperatorPrometheusRule = &v1.PrometheusRule{
 							"summary":     "Last controller reconciliation failed",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "min_over_time(prometheus_operator_syncs{status=\"failed\",job=\"kube-promtheus-stack-kube-operator\",namespace=\"monitoring\"}[5m]) > 0",
+							StrVal: `min_over_time(prometheus_operator_syncs{status="failed",job="kube-promtheus-stack-kube-operator",namespace="monitoring"}[5m]) > 0`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("10m")),
@@ -3774,7 +3760,7 @@ var KubePromtheusStackKubePrometheusOperatorPrometheusRule = &v1.PrometheusRule{
 							"summary":     "Errors while reconciling controller.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "(sum by (cluster,controller,namespace) (rate(prometheus_operator_reconcile_errors_total{job=\"kube-promtheus-stack-kube-operator\",namespace=\"monitoring\"}[5m]))) / (sum by (cluster,controller,namespace) (rate(prometheus_operator_reconcile_operations_total{job=\"kube-promtheus-stack-kube-operator\",namespace=\"monitoring\"}[5m]))) > 0.1",
+							StrVal: `(sum by (cluster,controller,namespace) (rate(prometheus_operator_reconcile_errors_total{job="kube-promtheus-stack-kube-operator",namespace="monitoring"}[5m]))) / (sum by (cluster,controller,namespace) (rate(prometheus_operator_reconcile_operations_total{job="kube-promtheus-stack-kube-operator",namespace="monitoring"}[5m]))) > 0.1`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("10m")),
@@ -3787,7 +3773,7 @@ var KubePromtheusStackKubePrometheusOperatorPrometheusRule = &v1.PrometheusRule{
 							"summary":     "Errors while reconciling Prometheus.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "rate(prometheus_operator_node_address_lookup_errors_total{job=\"kube-promtheus-stack-kube-operator\",namespace=\"monitoring\"}[5m]) > 0.1",
+							StrVal: `rate(prometheus_operator_node_address_lookup_errors_total{job="kube-promtheus-stack-kube-operator",namespace="monitoring"}[5m]) > 0.1`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("10m")),
@@ -3800,7 +3786,7 @@ var KubePromtheusStackKubePrometheusOperatorPrometheusRule = &v1.PrometheusRule{
 							"summary":     "Prometheus operator not ready",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "min by (cluster,controller,namespace) (max_over_time(prometheus_operator_ready{job=\"kube-promtheus-stack-kube-operator\",namespace=\"monitoring\"}[5m]) == 0)",
+							StrVal: `min by (cluster,controller,namespace) (max_over_time(prometheus_operator_ready{job="kube-promtheus-stack-kube-operator",namespace="monitoring"}[5m]) == 0)`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("5m")),
@@ -3808,12 +3794,12 @@ var KubePromtheusStackKubePrometheusOperatorPrometheusRule = &v1.PrometheusRule{
 					}, {
 						Alert: "PrometheusOperatorRejectedResources",
 						Annotations: map[string]string{
-							"description": "Prometheus operator in {{ $labels.namespace }} namespace rejected {{ printf \"%0.0f\" $value }} {{ $labels.controller }}/{{ $labels.resource }} resources.",
+							"description": `Prometheus operator in {{ $labels.namespace }} namespace rejected {{ printf "%0.0f" $value }} {{ $labels.controller }}/{{ $labels.resource }} resources.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/prometheus-operator/prometheusoperatorrejectedresources",
 							"summary":     "Resources rejected by Prometheus operator",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "min_over_time(prometheus_operator_managed_resources{state=\"rejected\",job=\"kube-promtheus-stack-kube-operator\",namespace=\"monitoring\"}[5m]) > 0",
+							StrVal: `min_over_time(prometheus_operator_managed_resources{state="rejected",job="kube-promtheus-stack-kube-operator",namespace="monitoring"}[5m]) > 0`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("5m")),
@@ -3836,8 +3822,8 @@ var KubePromtheusStackKubePrometheusPrometheusRule = &v1.PrometheusRule{
 			"app.kubernetes.io/instance":   "kube-promtheus-stack",
 			"app.kubernetes.io/managed-by": "Helm",
 			"app.kubernetes.io/part-of":    "kube-prometheus-stack",
-			"app.kubernetes.io/version":    "46.8.0",
-			"chart":                        "kube-prometheus-stack-46.8.0",
+			"app.kubernetes.io/version":    "47.0.0",
+			"chart":                        "kube-prometheus-stack-47.0.0",
 			"heritage":                     "Helm",
 			"release":                      "kube-promtheus-stack",
 		},
@@ -3890,7 +3876,7 @@ max_over_time(prometheus_config_last_reload_successful{job="kube-promtheus-stack
 					}, {
 						Alert: "PrometheusErrorSendingAlertsToSomeAlertmanagers",
 						Annotations: map[string]string{
-							"description": "{{ printf \"%.1f\" $value }}% errors while sending alerts from Prometheus {{$labels.namespace}}/{{$labels.pod}} to Alertmanager {{$labels.alertmanager}}.",
+							"description": `{{ printf "%.1f" $value }}% errors while sending alerts from Prometheus {{$labels.namespace}}/{{$labels.pod}} to Alertmanager {{$labels.alertmanager}}.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/prometheus/prometheuserrorsendingalertstosomealertmanagers",
 							"summary":     "Prometheus has encountered more than 1% errors sending alerts to a specific Alertmanager.",
 						},
@@ -3933,7 +3919,7 @@ max_over_time(prometheus_notifications_alertmanagers_discovered{job="kube-promth
 							"summary":     "Prometheus has issues reloading blocks from disk.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "increase(prometheus_tsdb_reloads_failures_total{job=\"kube-promtheus-stack-kube-prometheus\",namespace=\"monitoring\"}[3h]) > 0",
+							StrVal: `increase(prometheus_tsdb_reloads_failures_total{job="kube-promtheus-stack-kube-prometheus",namespace="monitoring"}[3h]) > 0`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("4h")),
@@ -3946,7 +3932,7 @@ max_over_time(prometheus_notifications_alertmanagers_discovered{job="kube-promth
 							"summary":     "Prometheus has issues compacting blocks.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "increase(prometheus_tsdb_compactions_failed_total{job=\"kube-promtheus-stack-kube-prometheus\",namespace=\"monitoring\"}[3h]) > 0",
+							StrVal: `increase(prometheus_tsdb_compactions_failed_total{job="kube-promtheus-stack-kube-prometheus",namespace="monitoring"}[3h]) > 0`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("4h")),
@@ -3977,12 +3963,12 @@ and
 					}, {
 						Alert: "PrometheusDuplicateTimestamps",
 						Annotations: map[string]string{
-							"description": "Prometheus {{$labels.namespace}}/{{$labels.pod}} is dropping {{ printf \"%.4g\" $value  }} samples/s with different values but duplicated timestamp.",
+							"description": `Prometheus {{$labels.namespace}}/{{$labels.pod}} is dropping {{ printf "%.4g" $value  }} samples/s with different values but duplicated timestamp.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/prometheus/prometheusduplicatetimestamps",
 							"summary":     "Prometheus is dropping samples with duplicate timestamps.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "rate(prometheus_target_scrapes_sample_duplicate_timestamp_total{job=\"kube-promtheus-stack-kube-prometheus\",namespace=\"monitoring\"}[5m]) > 0",
+							StrVal: `rate(prometheus_target_scrapes_sample_duplicate_timestamp_total{job="kube-promtheus-stack-kube-prometheus",namespace="monitoring"}[5m]) > 0`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("10m")),
@@ -3990,12 +3976,12 @@ and
 					}, {
 						Alert: "PrometheusOutOfOrderTimestamps",
 						Annotations: map[string]string{
-							"description": "Prometheus {{$labels.namespace}}/{{$labels.pod}} is dropping {{ printf \"%.4g\" $value  }} samples/s with timestamps arriving out of order.",
+							"description": `Prometheus {{$labels.namespace}}/{{$labels.pod}} is dropping {{ printf "%.4g" $value  }} samples/s with timestamps arriving out of order.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/prometheus/prometheusoutofordertimestamps",
 							"summary":     "Prometheus drops samples with out-of-order timestamps.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "rate(prometheus_target_scrapes_sample_out_of_order_total{job=\"kube-promtheus-stack-kube-prometheus\",namespace=\"monitoring\"}[5m]) > 0",
+							StrVal: `rate(prometheus_target_scrapes_sample_out_of_order_total{job="kube-promtheus-stack-kube-prometheus",namespace="monitoring"}[5m]) > 0`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("10m")),
@@ -4003,7 +3989,7 @@ and
 					}, {
 						Alert: "PrometheusRemoteStorageFailures",
 						Annotations: map[string]string{
-							"description": "Prometheus {{$labels.namespace}}/{{$labels.pod}} failed to send {{ printf \"%.1f\" $value }}% of the samples to {{ $labels.remote_name}}:{{ $labels.url }}",
+							"description": `Prometheus {{$labels.namespace}}/{{$labels.pod}} failed to send {{ printf "%.1f" $value }}% of the samples to {{ $labels.remote_name}}:{{ $labels.url }}`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/prometheus/prometheusremotestoragefailures",
 							"summary":     "Prometheus fails to send samples to remote storage.",
 						},
@@ -4028,7 +4014,7 @@ and
 					}, {
 						Alert: "PrometheusRemoteWriteBehind",
 						Annotations: map[string]string{
-							"description": "Prometheus {{$labels.namespace}}/{{$labels.pod}} remote write is {{ printf \"%.1f\" $value }}s behind for {{ $labels.remote_name}}:{{ $labels.url }}.",
+							"description": `Prometheus {{$labels.namespace}}/{{$labels.pod}} remote write is {{ printf "%.1f" $value }}s behind for {{ $labels.remote_name}}:{{ $labels.url }}.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/prometheus/prometheusremotewritebehind",
 							"summary":     "Prometheus remote write is behind.",
 						},
@@ -4071,12 +4057,12 @@ and
 					}, {
 						Alert: "PrometheusRuleFailures",
 						Annotations: map[string]string{
-							"description": "Prometheus {{$labels.namespace}}/{{$labels.pod}} has failed to evaluate {{ printf \"%.0f\" $value }} rules in the last 5m.",
+							"description": `Prometheus {{$labels.namespace}}/{{$labels.pod}} has failed to evaluate {{ printf "%.0f" $value }} rules in the last 5m.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/prometheus/prometheusrulefailures",
 							"summary":     "Prometheus is failing rule evaluations.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "increase(prometheus_rule_evaluation_failures_total{job=\"kube-promtheus-stack-kube-prometheus\",namespace=\"monitoring\"}[5m]) > 0",
+							StrVal: `increase(prometheus_rule_evaluation_failures_total{job="kube-promtheus-stack-kube-prometheus",namespace="monitoring"}[5m]) > 0`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("15m")),
@@ -4084,12 +4070,12 @@ and
 					}, {
 						Alert: "PrometheusMissingRuleEvaluations",
 						Annotations: map[string]string{
-							"description": "Prometheus {{$labels.namespace}}/{{$labels.pod}} has missed {{ printf \"%.0f\" $value }} rule group evaluations in the last 5m.",
+							"description": `Prometheus {{$labels.namespace}}/{{$labels.pod}} has missed {{ printf "%.0f" $value }} rule group evaluations in the last 5m.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/prometheus/prometheusmissingruleevaluations",
 							"summary":     "Prometheus is missing rule evaluations due to slow rule group evaluation.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "increase(prometheus_rule_group_iterations_missed_total{job=\"kube-promtheus-stack-kube-prometheus\",namespace=\"monitoring\"}[5m]) > 0",
+							StrVal: `increase(prometheus_rule_group_iterations_missed_total{job="kube-promtheus-stack-kube-prometheus",namespace="monitoring"}[5m]) > 0`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("15m")),
@@ -4097,12 +4083,12 @@ and
 					}, {
 						Alert: "PrometheusTargetLimitHit",
 						Annotations: map[string]string{
-							"description": "Prometheus {{$labels.namespace}}/{{$labels.pod}} has dropped {{ printf \"%.0f\" $value }} targets because the number of targets exceeded the configured target_limit.",
+							"description": `Prometheus {{$labels.namespace}}/{{$labels.pod}} has dropped {{ printf "%.0f" $value }} targets because the number of targets exceeded the configured target_limit.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/prometheus/prometheustargetlimithit",
 							"summary":     "Prometheus has dropped targets because some scrape configs have exceeded the targets limit.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "increase(prometheus_target_scrape_pool_exceeded_target_limit_total{job=\"kube-promtheus-stack-kube-prometheus\",namespace=\"monitoring\"}[5m]) > 0",
+							StrVal: `increase(prometheus_target_scrape_pool_exceeded_target_limit_total{job="kube-promtheus-stack-kube-prometheus",namespace="monitoring"}[5m]) > 0`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("15m")),
@@ -4110,12 +4096,12 @@ and
 					}, {
 						Alert: "PrometheusLabelLimitHit",
 						Annotations: map[string]string{
-							"description": "Prometheus {{$labels.namespace}}/{{$labels.pod}} has dropped {{ printf \"%.0f\" $value }} targets because some samples exceeded the configured label_limit, label_name_length_limit or label_value_length_limit.",
+							"description": `Prometheus {{$labels.namespace}}/{{$labels.pod}} has dropped {{ printf "%.0f" $value }} targets because some samples exceeded the configured label_limit, label_name_length_limit or label_value_length_limit.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/prometheus/prometheuslabellimithit",
 							"summary":     "Prometheus has dropped targets because some scrape configs have exceeded the labels limit.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "increase(prometheus_target_scrape_pool_exceeded_label_limits_total{job=\"kube-promtheus-stack-kube-prometheus\",namespace=\"monitoring\"}[5m]) > 0",
+							StrVal: `increase(prometheus_target_scrape_pool_exceeded_label_limits_total{job="kube-promtheus-stack-kube-prometheus",namespace="monitoring"}[5m]) > 0`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("15m")),
@@ -4123,12 +4109,12 @@ and
 					}, {
 						Alert: "PrometheusScrapeBodySizeLimitHit",
 						Annotations: map[string]string{
-							"description": "Prometheus {{$labels.namespace}}/{{$labels.pod}} has failed {{ printf \"%.0f\" $value }} scrapes in the last 5m because some targets exceeded the configured body_size_limit.",
+							"description": `Prometheus {{$labels.namespace}}/{{$labels.pod}} has failed {{ printf "%.0f" $value }} scrapes in the last 5m because some targets exceeded the configured body_size_limit.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/prometheus/prometheusscrapebodysizelimithit",
 							"summary":     "Prometheus has dropped some targets that exceeded body size limit.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "increase(prometheus_target_scrapes_exceeded_body_size_limit_total{job=\"kube-promtheus-stack-kube-prometheus\",namespace=\"monitoring\"}[5m]) > 0",
+							StrVal: `increase(prometheus_target_scrapes_exceeded_body_size_limit_total{job="kube-promtheus-stack-kube-prometheus",namespace="monitoring"}[5m]) > 0`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("15m")),
@@ -4136,12 +4122,12 @@ and
 					}, {
 						Alert: "PrometheusScrapeSampleLimitHit",
 						Annotations: map[string]string{
-							"description": "Prometheus {{$labels.namespace}}/{{$labels.pod}} has failed {{ printf \"%.0f\" $value }} scrapes in the last 5m because some targets exceeded the configured sample_limit.",
+							"description": `Prometheus {{$labels.namespace}}/{{$labels.pod}} has failed {{ printf "%.0f" $value }} scrapes in the last 5m because some targets exceeded the configured sample_limit.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/prometheus/prometheusscrapesamplelimithit",
 							"summary":     "Prometheus has failed scrapes that have exceeded the configured sample limit.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "increase(prometheus_target_scrapes_exceeded_sample_limit_total{job=\"kube-promtheus-stack-kube-prometheus\",namespace=\"monitoring\"}[5m]) > 0",
+							StrVal: `increase(prometheus_target_scrapes_exceeded_sample_limit_total{job="kube-promtheus-stack-kube-prometheus",namespace="monitoring"}[5m]) > 0`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("15m")),
@@ -4149,12 +4135,12 @@ and
 					}, {
 						Alert: "PrometheusTargetSyncFailure",
 						Annotations: map[string]string{
-							"description": "{{ printf \"%.0f\" $value }} targets in Prometheus {{$labels.namespace}}/{{$labels.pod}} have failed to sync because invalid configuration was supplied.",
+							"description": `{{ printf "%.0f" $value }} targets in Prometheus {{$labels.namespace}}/{{$labels.pod}} have failed to sync because invalid configuration was supplied.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/prometheus/prometheustargetsyncfailure",
 							"summary":     "Prometheus has failed to sync targets.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "increase(prometheus_target_sync_failed_total{job=\"kube-promtheus-stack-kube-prometheus\",namespace=\"monitoring\"}[30m]) > 0",
+							StrVal: `increase(prometheus_target_sync_failed_total{job="kube-promtheus-stack-kube-prometheus",namespace="monitoring"}[30m]) > 0`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("5m")),
@@ -4167,7 +4153,7 @@ and
 							"summary":     "Prometheus is reaching its maximum capacity serving concurrent requests.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: "avg_over_time(prometheus_engine_queries{job=\"kube-promtheus-stack-kube-prometheus\",namespace=\"monitoring\"}[5m]) / max_over_time(prometheus_engine_queries_concurrent_max{job=\"kube-promtheus-stack-kube-prometheus\",namespace=\"monitoring\"}[5m]) > 0.8",
+							StrVal: `avg_over_time(prometheus_engine_queries{job="kube-promtheus-stack-kube-prometheus",namespace="monitoring"}[5m]) / max_over_time(prometheus_engine_queries_concurrent_max{job="kube-promtheus-stack-kube-prometheus",namespace="monitoring"}[5m]) > 0.8`,
 							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("15m")),
@@ -4175,21 +4161,13 @@ and
 					}, {
 						Alert: "PrometheusErrorSendingAlertsToAnyAlertmanager",
 						Annotations: map[string]string{
-							"description": "{{ printf \"%.1f\" $value }}% minimum errors while sending alerts from Prometheus {{$labels.namespace}}/{{$labels.pod}} to any Alertmanager.",
+							"description": `{{ printf "%.1f" $value }}% minimum errors while sending alerts from Prometheus {{$labels.namespace}}/{{$labels.pod}} to any Alertmanager.`,
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/prometheus/prometheuserrorsendingalertstoanyalertmanager",
 							"summary":     "Prometheus encounters more than 3% errors sending alerts to any Alertmanager.",
 						},
 						Expr: intstr.IntOrString{
-							StrVal: `
-min without (alertmanager) (
-  rate(prometheus_notifications_errors_total{job="kube-promtheus-stack-kube-prometheus",namespace="monitoring",alertmanager!~""}[5m])
-/
-  rate(prometheus_notifications_sent_total{job="kube-promtheus-stack-kube-prometheus",namespace="monitoring",alertmanager!~""}[5m])
-)
-* 100
-> 3
-`,
-							Type: intstr.Type(int64(1)),
+							StrVal: "min without (alertmanager) (\n  rate(prometheus_notifications_errors_total{job=\"kube-promtheus-stack-kube-prometheus\",namespace=\"monitoring\",alertmanager!~``}[5m])\n/\n  rate(prometheus_notifications_sent_total{job=\"kube-promtheus-stack-kube-prometheus\",namespace=\"monitoring\",alertmanager!~``}[5m])\n)\n* 100\n> 3",
+							Type:   intstr.Type(int64(1)),
 						},
 						For:    P(v1.Duration("15m")),
 						Labels: map[string]string{"severity": "critical"},

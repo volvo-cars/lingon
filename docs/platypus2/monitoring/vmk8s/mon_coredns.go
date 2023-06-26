@@ -6,10 +6,26 @@ package vmk8s
 import (
 	"github.com/VictoriaMetrics/operator/api/victoriametrics/v1beta1"
 	"github.com/volvo-cars/lingon/pkg/kube"
+	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
+
+const (
+	CDNSPort     = 9153
+	CDNSPortName = "http-metrics"
+)
+
+var CDNS = &Metadata{
+	Name:      "coredns", // linked to the name of the JobLabel
+	Namespace: namespace,
+	Instance:  "coredns-" + namespace,
+	Component: "monitoring",
+	PartOf:    appName,
+	Version:   version,
+	ManagedBy: "lingon",
+}
 
 type MonCoreDNS struct {
 	kube.App
@@ -29,66 +45,40 @@ func NewMonCoreDNS() *MonCoreDNS {
 
 var CoreDNSSVC = &corev1.Service{
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "vmk8s-victoria-metrics-k8s-stack-coredns",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-			"jobLabel":                     "coredns",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-coredns",
-		Namespace: "kube-system",
+		Labels:    CDNS.Labels(),
+		Name:      CDNS.Name,
+		Namespace: CDNS.Namespace,
 	},
 	Spec: corev1.ServiceSpec{
-		ClusterIP: "None",
+		ClusterIP: corev1.ClusterIPNone,
 		Ports: []corev1.ServicePort{
 			{
-				Name:       "http-metrics",
-				Port:       int32(9153),
-				Protocol:   corev1.Protocol("TCP"),
-				TargetPort: intstr.IntOrString{IntVal: int32(9153)},
+				Name:       CDNSPortName,
+				Port:       int32(CDNSPort),
+				Protocol:   corev1.ProtocolTCP,
+				TargetPort: intstr.FromInt(CDNSPort),
 			},
 		},
 		Selector: map[string]string{"k8s-app": "kube-dns"},
 	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "Service",
-	},
+	TypeMeta: ku.TypeServiceV1,
 }
 
 var CoreDNSScrape = &v1beta1.VMServiceScrape{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-coredns",
-		Namespace: "monitoring",
-	},
+	TypeMeta:   TypeVMServiceScrapeV1Beta1,
+	ObjectMeta: CDNS.ObjectMeta(),
 	Spec: v1beta1.VMServiceScrapeSpec{
 		Endpoints: []v1beta1.Endpoint{
 			{
-				BearerTokenFile: "/var/run/secrets/kubernetes.io/serviceaccount/token",
-				Port:            "http-metrics",
+				BearerTokenFile: PathSA + "/token",
+				Port:            CDNSPortName,
 			},
 		},
-		NamespaceSelector: v1beta1.NamespaceSelector{MatchNames: []string{"kube-system"}},
-		Selector: metav1.LabelSelector{
-			MatchLabels: map[string]string{
-				"app":                        "vmk8s-victoria-metrics-k8s-stack-coredns",
-				"app.kubernetes.io/instance": "vmk8s",
-			},
+		NamespaceSelector: v1beta1.NamespaceSelector{
+			MatchNames: []string{ku.NSKubeSystem}, // kube-system
 		},
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "operator.victoriametrics.com/v1beta1",
-		Kind:       "VMServiceScrape",
+		JobLabel: ku.AppLabelName,
+		Selector: metav1.LabelSelector{MatchLabels: CDNS.MatchLabels()},
 	},
 }
 
@@ -1656,20 +1646,12 @@ var CoreDNSDashboardCM = &corev1.ConfigMap{
 `,
 	},
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "victoria-metrics-k8s-stack-grafana",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"grafana_dashboard":            "1",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-k8s-system-coredns",
-		Namespace: "monitoring",
+		Labels: ku.MergeLabels(
+			CDNS.Labels(),
+			map[string]string{DashboardLabel: "1"},
+		),
+		Name:      CDNS.Name,
+		Namespace: CDNS.Namespace,
 	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "ConfigMap",
-	},
+	TypeMeta: ku.TypeConfigMapV1,
 }

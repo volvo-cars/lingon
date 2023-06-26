@@ -12,15 +12,9 @@ import (
 
 var CadvisorNodeScrape = &v1beta1.VMNodeScrape{
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-cadvisor",
-		Namespace: "monitoring",
+		Labels:    RulesLabels,
+		Name:      Single.Name + "-cadvisor",
+		Namespace: Single.Namespace,
 	},
 	Spec: v1beta1.VMNodeScrapeSpec{
 		BearerTokenFile: "/var/run/secrets/kubernetes.io/serviceaccount/token",
@@ -71,15 +65,9 @@ var CadvisorNodeScrape = &v1beta1.VMNodeScrape{
 
 var KubeletNodeScrape = &v1beta1.VMNodeScrape{
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-kubelet",
-		Namespace: "monitoring",
+		Labels:    RulesLabels,
+		Name:      Single.Name + "-kubelet",
+		Namespace: Single.Namespace,
 	},
 	Spec: v1beta1.VMNodeScrapeSpec{
 		BearerTokenFile: "/var/run/secrets/kubernetes.io/serviceaccount/token",
@@ -129,15 +117,9 @@ var KubeletNodeScrape = &v1beta1.VMNodeScrape{
 
 var ProbesNodeScrape = &v1beta1.VMNodeScrape{
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-probes",
-		Namespace: "monitoring",
+		Labels:    RulesLabels,
+		Name:      Single.Name + "-probes",
+		Namespace: Single.Namespace,
 	},
 	Spec: v1beta1.VMNodeScrapeSpec{
 		BearerTokenFile: "/var/run/secrets/kubernetes.io/serviceaccount/token",

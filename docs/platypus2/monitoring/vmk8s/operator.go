@@ -6,12 +6,68 @@ package vmk8s
 import (
 	"github.com/VictoriaMetrics/operator/api/victoriametrics/v1beta1"
 	"github.com/volvo-cars/lingon/pkg/kube"
+	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
+	"github.com/volvo-cars/lingoneks/meta"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
+
+var O = Core()
+
+func Core() VMOpMeta {
+	OpPort := 8080
+	OpPortName := "http"
+	OpWHPort := 9443
+	OpWHPortName := "webhook"
+
+	return VMOpMeta{
+		Metadata: meta.Metadata{
+			Name:      "victoria-metrics-operator",
+			Namespace: namespace,
+			Instance:  "victoria-metrics-operator-" + namespace,
+			Component: "operator",
+			PartOf:    appName,
+			Version:   "0.34.1",
+			ManagedBy: "lingon",
+			Img: meta.ContainerImg{
+				Registry: "docker.io",
+				Image:    "victoriametrics/operator",
+				Tag:      "v0.34.1",
+			},
+		},
+		P: meta.NetPort{
+			Container: corev1.ContainerPort{
+				ContainerPort: int32(OpPort),
+				Name:          OpPortName,
+			},
+			Service: corev1.ServicePort{
+				Name:       OpPortName,
+				Port:       int32(OpPort),
+				TargetPort: intstr.FromInt(OpPort),
+			},
+		},
+		WH: meta.NetPort{
+			Container: corev1.ContainerPort{
+				Name:          OpWHPortName,
+				ContainerPort: int32(OpWHPort),
+			},
+			Service: corev1.ServicePort{
+				Name:       OpWHPortName,
+				Port:       int32(443),
+				TargetPort: intstr.FromInt(OpWHPort),
+			},
+		},
+	}
+}
+
+type VMOpMeta struct {
+	meta.Metadata
+	WH meta.NetPort
+	P  meta.NetPort
+}
 
 type Operator struct {
 	kube.App
@@ -29,47 +85,47 @@ type Operator struct {
 
 func NewOperator() *Operator {
 	return &Operator{
-		CR:          OperatorCR,
-		CRB:         OperatorCRB,
-		Deploy:      OperatorDeploy,
-		RB:          OperatorRB,
+		CR: OperatorCR,
+		CRB: ku.BindClusterRole(
+			O.Name,
+			OperatorSA,
+			OperatorCR,
+			O.Labels(),
+		),
+		Deploy: OperatorDeploy,
+		RB: ku.BindRole(
+			O.Name,
+			OperatorSA,
+			OperatorRole,
+			O.Labels(),
+		),
 		Role:        OperatorRole,
 		SA:          OperatorSA,
 		SVC:         OperatorSVC,
-		DashboardCM: OperatorDashboardCM,
+		DashboardCM: DashboardVMOperator,
 		Scrape:      OperatorScrape,
 	}
 }
 
 var OperatorDeploy = &appsv1.Deployment{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-operator",
-			"helm.sh/chart":                "victoria-metrics-operator-0.23.1",
-		},
-		Name:      "vmk8s-victoria-metrics-operator",
-		Namespace: "monitoring",
-	},
+	TypeMeta:   ku.TypeDeploymentV1,
+	ObjectMeta: O.ObjectMeta(),
 	Spec: appsv1.DeploymentSpec{
 		Replicas: P(int32(1)),
 		Selector: &metav1.LabelSelector{
-			MatchLabels: map[string]string{
-				"app.kubernetes.io/instance": "vmk8s",
-				"app.kubernetes.io/name":     "victoria-metrics-operator",
-			},
+			MatchLabels: O.MatchLabels(),
 		},
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
-				Labels: map[string]string{
-					"app.kubernetes.io/instance": "vmk8s",
-					"app.kubernetes.io/name":     "victoria-metrics-operator",
-				},
+				Labels: O.MatchLabels(),
 			},
 			Spec: corev1.PodSpec{
+				ServiceAccountName: OperatorSA.Name,
 				Containers: []corev1.Container{
 					{
+						Image:           O.Img.URL(),
+						ImagePullPolicy: corev1.PullIfNotPresent,
+						Name:            O.Name,
 						Args: []string{
 							"--zap-log-level=info",
 							"--enable-leader-election",
@@ -77,108 +133,28 @@ var OperatorDeploy = &appsv1.Deployment{
 						Command: []string{"manager"},
 						Env: []corev1.EnvVar{
 							{Name: "WATCH_NAMESPACE"},
-							{
-								Name:      "POD_NAME",
-								ValueFrom: &corev1.EnvVarSource{FieldRef: &corev1.ObjectFieldSelector{FieldPath: "metadata.name"}},
-							},
-							{
-								Name:  "OPERATOR_NAME",
-								Value: "victoria-metrics-operator",
-							},
-							{
-								Name:  "VM_ENABLEDPROMETHEUSCONVERTER_PODMONITOR",
-								Value: "false",
-							},
-							{
-								Name:  "VM_ENABLEDPROMETHEUSCONVERTER_SERVICESCRAPE",
-								Value: "false",
-							},
-							{
-								Name:  "VM_ENABLEDPROMETHEUSCONVERTER_PROMETHEUSRULE",
-								Value: "false",
-							},
-							{
-								Name:  "VM_ENABLEDPROMETHEUSCONVERTER_PROBE",
-								Value: "false",
-							},
-							{
-								Name:  "VM_ENABLEDPROMETHEUSCONVERTER_ALERTMANAGERCONFIG",
-								Value: "false",
-							},
-							{
-								Name:  "VM_PSPAUTOCREATEENABLED",
-								Value: "true",
-							},
-							{
-								Name:  "VM_ENABLEDPROMETHEUSCONVERTEROWNERREFERENCES",
-								Value: "false",
-							},
+							ku.EnvVarDownAPI("POD_NAME", "metadata.name"),
+							{Name: "OPERATOR_NAME", Value: O.Name},
+							// See https://github.com/VictoriaMetrics/operator/blob/master/vars.MD
+
 						},
-						Image:           "victoriametrics/operator:v0.34.1",
-						ImagePullPolicy: corev1.PullIfNotPresent,
-						Name:            "victoria-metrics-operator",
+
 						Ports: []corev1.ContainerPort{
-							{
-								ContainerPort: int32(8080),
-								Name:          "http",
-								Protocol:      corev1.Protocol("TCP"),
-							}, {
-								ContainerPort: int32(9443),
-								Name:          "webhook",
-								Protocol:      corev1.Protocol("TCP"),
-							},
+							O.P.Container,
+							O.WH.Container,
 						},
 					},
 				},
-				ServiceAccountName: "vmk8s-victoria-metrics-operator",
 			},
 		},
 	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "apps/v1",
-		Kind:       "Deployment",
-	},
 }
 
-var OperatorRB = &rbacv1.RoleBinding{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-operator",
-			"helm.sh/chart":                "victoria-metrics-operator-0.23.1",
-		},
-		Name:      "vmk8s-victoria-metrics-operator",
-		Namespace: "monitoring",
-	},
-	RoleRef: rbacv1.RoleRef{
-		APIGroup: "rbac.authorization.k8s.io",
-		Kind:     "Role",
-		Name:     "vmk8s-victoria-metrics-operator",
-	},
-	Subjects: []rbacv1.Subject{
-		{
-			Kind:      "ServiceAccount",
-			Name:      "vmk8s-victoria-metrics-operator",
-			Namespace: "monitoring",
-		},
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "rbac.authorization.k8s.io/v1",
-		Kind:       "RoleBinding",
-	},
-}
+var OperatorSA = O.ServiceAccount()
 
 var OperatorCR = &rbacv1.ClusterRole{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-operator",
-			"helm.sh/chart":                "victoria-metrics-operator-0.23.1",
-		},
-		Name: "vmk8s-victoria-metrics-operator",
-	},
+	TypeMeta:   ku.TypeClusterRoleV1,
+	ObjectMeta: O.ObjectMetaNoNS(),
 	Rules: []rbacv1.PolicyRule{
 		{
 			APIGroups: []string{""},
@@ -577,23 +553,11 @@ var OperatorCR = &rbacv1.ClusterRole{
 			Verbs:     []string{"get", "list"},
 		},
 	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "rbac.authorization.k8s.io/v1",
-		Kind:       "ClusterRole",
-	},
 }
 
 var OperatorRole = &rbacv1.Role{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-operator",
-			"helm.sh/chart":                "victoria-metrics-operator-0.23.1",
-		},
-		Name:      "vmk8s-victoria-metrics-operator",
-		Namespace: "monitoring",
-	},
+	TypeMeta:   ku.TypeRoleV1,
+	ObjectMeta: O.ObjectMeta(),
 	Rules: []rbacv1.PolicyRule{
 		{
 			APIGroups: []string{""},
@@ -621,77 +585,34 @@ var OperatorRole = &rbacv1.Role{
 			Verbs:     []string{"create", "get", "update"},
 		},
 	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "rbac.authorization.k8s.io/v1",
-		Kind:       "Role",
-	},
 }
 
 var OperatorSVC = &corev1.Service{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-operator",
-			"helm.sh/chart":                "victoria-metrics-operator-0.23.1",
-		},
-		Name:      "vmk8s-victoria-metrics-operator",
-		Namespace: "monitoring",
-	},
+	TypeMeta:   ku.TypeServiceV1,
+	ObjectMeta: O.ObjectMeta(),
 	Spec: corev1.ServiceSpec{
 		Ports: []corev1.ServicePort{
-			{
-				Name:       "http",
-				Port:       int32(8080),
-				Protocol:   corev1.Protocol("TCP"),
-				TargetPort: intstr.IntOrString{IntVal: int32(8080)},
-			}, {
-				Name:       "webhook",
-				Port:       int32(443),
-				TargetPort: intstr.IntOrString{IntVal: int32(9443)},
-			},
+			O.P.Service,
+			O.WH.Service,
 		},
-		Selector: map[string]string{
-			"app.kubernetes.io/instance": "vmk8s",
-			"app.kubernetes.io/name":     "victoria-metrics-operator",
-		},
-		Type: corev1.ServiceType("ClusterIP"),
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "Service",
+		Selector: O.MatchLabels(),
+		Type:     corev1.ServiceTypeClusterIP,
 	},
 }
 
-var OperatorCRB = &rbacv1.ClusterRoleBinding{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-operator",
-			"helm.sh/chart":                "victoria-metrics-operator-0.23.1",
+var OperatorScrape = &v1beta1.VMServiceScrape{
+	TypeMeta:   TypeVMServiceScrapeV1Beta1,
+	ObjectMeta: O.ObjectMeta(),
+	Spec: v1beta1.VMServiceScrapeSpec{
+		Endpoints: []v1beta1.Endpoint{{Port: O.P.Service.Name}},
+		NamespaceSelector: v1beta1.NamespaceSelector{
+			MatchNames: []string{O.Namespace},
 		},
-		Name: "vmk8s-victoria-metrics-operator",
-	},
-	RoleRef: rbacv1.RoleRef{
-		APIGroup: "rbac.authorization.k8s.io",
-		Kind:     "ClusterRole",
-		Name:     "vmk8s-victoria-metrics-operator",
-	},
-	Subjects: []rbacv1.Subject{
-		{
-			Kind:      "ServiceAccount",
-			Name:      "vmk8s-victoria-metrics-operator",
-			Namespace: "monitoring",
-		},
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "rbac.authorization.k8s.io/v1",
-		Kind:       "ClusterRoleBinding",
+		Selector: metav1.LabelSelector{MatchLabels: O.MatchLabels()},
 	},
 }
 
-var OperatorDashboardCM = &corev1.ConfigMap{
+var DashboardVMOperator = &corev1.ConfigMap{
 	Data: map[string]string{
 		"operator.json": `
 {
@@ -2059,65 +1980,12 @@ var OperatorDashboardCM = &corev1.ConfigMap{
 `,
 	},
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "victoria-metrics-k8s-stack-grafana",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"grafana_dashboard":            "1",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-operator",
-		Namespace: "monitoring",
+		Labels: ku.MergeLabels(
+			O.Labels(),
+			map[string]string{DashboardLabel: "1"},
+		),
+		Name:      O.Name,
+		Namespace: O.Namespace,
 	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "ConfigMap",
-	},
-}
-
-var OperatorSA = &corev1.ServiceAccount{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-operator",
-			"helm.sh/chart":                "victoria-metrics-operator-0.23.1",
-		},
-		Name:      "vmk8s-victoria-metrics-operator",
-		Namespace: "monitoring",
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "ServiceAccount",
-	},
-}
-
-var OperatorScrape = &v1beta1.VMServiceScrape{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-operator",
-		Namespace: "monitoring",
-	},
-	Spec: v1beta1.VMServiceScrapeSpec{
-		Endpoints:         []v1beta1.Endpoint{{Port: "http"}},
-		NamespaceSelector: v1beta1.NamespaceSelector{MatchNames: []string{"monitoring"}},
-		Selector: metav1.LabelSelector{
-			MatchLabels: map[string]string{
-				"app.kubernetes.io/instance": "vmk8s",
-				"app.kubernetes.io/name":     "victoria-metrics-operator",
-			},
-		},
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "operator.victoriametrics.com/v1beta1",
-		Kind:       "VMServiceScrape",
-	},
+	TypeMeta: ku.TypeConfigMapV1,
 }

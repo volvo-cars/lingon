@@ -30,7 +30,7 @@ VALUES_DIR="$ROOT_DIR"/docs/platypus2/scripts
 TEMPD="$VALUES_DIR"/out
 KYGO="$TEMPD"/kygo
 
-DEBUG=0
+DEBUG=1
 pushd "$ROOT_DIR"
 
 
@@ -51,20 +51,21 @@ function tool() {
 }
 
 function install_repo() {
-  helm repo add external-secrets https://charts.external-secrets.io
-  helm repo add external-dns https://kubernetes-sigs.github.io/external-dns/
-  helm repo add eks https://aws.github.io/eks-charts
+  helm repo add autoscaler https://kubernetes.github.io/autoscaler
   helm repo add aws-ebs-csi-driver https://kubernetes-sigs.github.io/aws-ebs-csi-driver
   helm repo add aws-efs-csi-driver https://kubernetes-sigs.github.io/aws-efs-csi-driver
-  helm repo add kube-state-metrics https://kubernetes.github.io/kube-state-metrics
-  helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-  helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server
-  helm repo add autoscaler https://kubernetes.github.io/autoscaler
-  helm repo add nats https://nats-io.github.io/k8s/helm/charts/
   helm repo add benthos https://benthosdev.github.io/benthos-helm-chart/
-  helm repo add vm https://victoriametrics.github.io/helm-charts/
+  helm repo add eks https://aws.github.io/eks-charts
+  helm repo add external-secrets https://charts.external-secrets.io
+  helm repo add external-dns https://kubernetes-sigs.github.io/external-dns/
   helm repo add grafana https://grafana.github.io/helm-charts
+  helm repo add jetstack https://charts.jetstack.io
+  helm repo add kube-state-metrics https://kubernetes.github.io/kube-state-metrics
+  helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server
+  helm repo add nats https://nats-io.github.io/k8s/helm/charts/
+  helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
   helm repo add vector https://helm.vector.dev
+  helm repo add vm https://victoriametrics.github.io/helm-charts/
 
 
   helm repo update
@@ -100,6 +101,14 @@ function manifests() {
 #    $KYGO -out "awslb" -app awslb -pkg awslb
 
   #
+  # CERT-MANAGER
+  #
+
+  helm template cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace \
+    --version "1.12" --set global.leaderElection.namespace=cert-manager | \
+    $KYGO -out "certmanager" -app cert-manager -pkg certmanager
+
+  #
   # CSI - AWS EFS & EBS
   #
   helm template aws-efs-csi-driver  aws-efs-csi-driver/aws-efs-csi-driver \
@@ -113,37 +122,61 @@ function manifests() {
     $KYGO -out "csi/ebs" -app ebs -pkg ebs
 
   #
+  # CLUSTER AUTOSCALER
+  #
+  helm template autoscaler autoscaler/cluster-autoscaler  --set 'autoDiscovery.clusterName'="REPLACE_ME"  | \
+    $KYGO -out "autoscaler" -pkg autoscaler -app autoscaler
+
+
+  #
   # MONITORING
   #
+
+  # METRICS_SERVER
   helm template metrics-server metrics-server/metrics-server --namespace=monitoring --values="$VALUES_DIR"/metrics-server.values.yaml | \
     $KYGO -out "monitoring/metrics-server" -app metrics-server -pkg metricsserver
 
+  # PROMETHEUS CRDs
   helm template promcrd prometheus-community/prometheus-operator-crds | \
     $KYGO -out "monitoring/promcrd" -app prometheus -pkg promcrd -group=false -clean-name=false
 
+  # KUBE_STATE_METRICS
+  helm template ksm prometheus-community/kube-state-metrics --namespace=monitoring --values="$VALUES_DIR"/ksm.values.yaml | \
+    $KYGO -out "monitoring/kubestatemetrics" -app kube-state-metrics -pkg ksm
+
+  # KUBE_PROMETHEUS_STACK
   helm template kube-promtheus-stack prometheus-community/kube-prometheus-stack --namespace=monitoring | \
     $KYGO -out "monitoring/promstack" -app kubeprometheusstack -pkg promstack
 
+  # VICTORIA METRICS SINGLE
   helm template vm vm/victoria-metrics-single --namespace=monitoring --values "$VALUES_DIR"/victoriametrics-single.values.yaml | \
-    $KYGO -out "monitoring/victoriametrics" -app victoria-metrics -pkg victoriametrics
+    $KYGO -out "monitoring/vmsingle" -app victoria-metrics -pkg vmsingle
 
+  # VICTORIA METRICS CRDs
   wget https://raw.githubusercontent.com/VictoriaMetrics/helm-charts/master/charts/victoria-metrics-k8s-stack/crds/crd.yaml -O - | \
     $KYGO -out "monitoring/vmcrd" -app victoriametrics -pkg vmcrd -group=false -clean-name=false
 
+  # VICTORIA METRICS K8S STACK
   helm template vmk8s vm/victoria-metrics-k8s-stack --namespace=monitoring --values "$VALUES_DIR"/vmk8s.values.yaml | \
     $KYGO -out "monitoring/vmk8s" -app vmk8s -pkg vmk8s
 
-  helm template grafana grafana/grafana --namespace=monitoring | \
+  # VICTORIA METRICS OPERATOR
+  helm template vmop vm/victoria-metrics-operator --namespace=monitoring --values "$VALUES_DIR"/vmop.values.yaml | \
+    $KYGO -out "monitoring/vmop" -app vmop -pkg vmop
+
+  # GRAFANA
+  helm template grafana grafana/grafana --namespace=monitoring --values "$VALUES_DIR"/grafana.values.yaml | \
     $KYGO -out "monitoring/grafana" -app grafana -pkg grafana
 
-  helm template vector vector/vector --namespace=monitoring | \
+  # VECTOR
+  helm template vector vector/vector --namespace=monitoring --values "$VALUES_DIR"/vector.values.yaml | \
     $KYGO -out "monitoring/vector" -app vector -pkg vector
 
   #
   # NATS
   #
   helm template nats nats/nats --namespace=nats --values "$VALUES_DIR"/nats.values.yaml | \
-    $KYGO -out "nats" -app nats -pkg nats
+    $KYGO -out "nats/nats" -app nats -pkg nats
 
   helm template surveyor nats/surveyor --namespace=surveyor --values "$VALUES_DIR"/surveyor.values.yaml | \
     $KYGO -out "nats/surveyor" -app surveyor -pkg surveyor
@@ -170,7 +203,7 @@ function manifests() {
     --set controller.resources.limits.memory=1Gi | \
      $KYGO -out "karpenter" -app karpenter -pkg karpenter
 
-  # CRDs
+  # KARPENTER CRDs
   {
     wget https://raw.githubusercontent.com/aws/karpenter/main/pkg/apis/crds/karpenter.sh_provisioners.yaml -O -
     wget https://raw.githubusercontent.com/aws/karpenter/main/pkg/apis/crds/karpenter.sh_machines.yaml -O -
@@ -178,9 +211,6 @@ function manifests() {
   } >> karpenter/mani.yaml
 
   $KYGO -in karpenter/mani.yaml -out "karpenter/crd" -pkg karpentercrd -app karpenter -group=false -clean-name=false
-
-  helm template autoscaler autoscaler/cluster-autoscaler  --set 'autoDiscovery.clusterName'="REPLACE_ME"  | \
-    $KYGO -out "autoscaler" -pkg autoscaler -app autoscaler
 
   popd
 

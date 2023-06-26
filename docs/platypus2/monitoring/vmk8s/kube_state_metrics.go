@@ -6,12 +6,32 @@ package vmk8s
 import (
 	"github.com/VictoriaMetrics/operator/api/victoriametrics/v1beta1"
 	"github.com/volvo-cars/lingon/pkg/kube"
+	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
+
+const (
+	KSMVersion  = "2.9.2"
+	KSMPort     = 8080
+	KSMPortName = "http"
+)
+
+var KSM = &Metadata{
+	Name:      "kube-state-metrics",
+	Namespace: namespace,
+	Instance:  "kube-state-metrics-" + namespace,
+	Component: "metrics",
+	PartOf:    appName,
+	Version:   KSMVersion,
+	ManagedBy: "lingon",
+	Registry:  "registry.k8s.io",
+	Image:     "kube-state-metrics/kube-state-metrics",
+	Tag:       "v" + KSMVersion,
+}
 
 type KubeStateMetrics struct {
 	kube.App
@@ -38,74 +58,62 @@ func NewKubeStateMetrics() *KubeStateMetrics {
 }
 
 var KubeStateMetricsDeploy = &appsv1.Deployment{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/component":  "metrics",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "kube-state-metrics",
-			"app.kubernetes.io/part-of":    "kube-state-metrics",
-			"app.kubernetes.io/version":    "2.7.0",
-			"helm.sh/chart":                "kube-state-metrics-4.24.0",
-		},
-		Name:      "vmk8s-kube-state-metrics",
-		Namespace: "monitoring",
-	},
+	TypeMeta:   ku.TypeDeploymentV1,
+	ObjectMeta: KSM.ObjectMeta(),
 	Spec: appsv1.DeploymentSpec{
 		Replicas: P(int32(1)),
 		Selector: &metav1.LabelSelector{
-			MatchLabels: map[string]string{
-				"app.kubernetes.io/instance": "vmk8s",
-				"app.kubernetes.io/name":     "kube-state-metrics",
-			},
+			MatchLabels: KSM.MatchLabels(),
 		},
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
-				Labels: map[string]string{
-					"app.kubernetes.io/component":  "metrics",
-					"app.kubernetes.io/instance":   "vmk8s",
-					"app.kubernetes.io/managed-by": "Helm",
-					"app.kubernetes.io/name":       "kube-state-metrics",
-					"app.kubernetes.io/part-of":    "kube-state-metrics",
-					"app.kubernetes.io/version":    "2.7.0",
-					"helm.sh/chart":                "kube-state-metrics-4.24.0",
-				},
+				Labels: KSM.Labels(),
 			},
 			Spec: corev1.PodSpec{
+				ServiceAccountName: KubeStateMetricsSA.Name,
 				Containers: []corev1.Container{
 					{
 						Args: []string{
-							"--port=8080",
-							"--resources=certificatesigningrequests,configmaps,cronjobs,daemonsets,deployments,endpoints,horizontalpodautoscalers,ingresses,jobs,leases,limitranges,mutatingwebhookconfigurations,namespaces,networkpolicies,nodes,persistentvolumeclaims,persistentvolumes,poddisruptionbudgets,pods,replicasets,replicationcontrollers,resourcequotas,secrets,services,statefulsets,storageclasses,validatingwebhookconfigurations,volumeattachments",
+							"--port=" + d(KSMPort),
+							"--resources=certificatesigningrequests," +
+								"configmaps,cronjobs,daemonsets,deployments," +
+								"endpoints,horizontalpodautoscalers,ingresses," +
+								"jobs,leases,limitranges," +
+								"mutatingwebhookconfigurations,namespaces," +
+								"networkpolicies,nodes,persistentvolumeclaims," +
+								"persistentvolumes,poddisruptionbudgets,pods," +
+								"replicasets,replicationcontrollers," +
+								"resourcequotas,secrets,services," +
+								"statefulsets,storageclasses," +
+								"validatingwebhookconfigurations," +
+								"volumeattachments",
 						},
-						Image:           "registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.7.0",
+						Image:           KSM.ContainerURL(),
 						ImagePullPolicy: corev1.PullIfNotPresent,
 						LivenessProbe: &corev1.Probe{
 							InitialDelaySeconds: int32(5),
-							ProbeHandler: corev1.ProbeHandler{
-								HTTPGet: &corev1.HTTPGetAction{
-									Path: "/healthz",
-									Port: intstr.IntOrString{IntVal: int32(8080)},
-								},
-							},
+							ProbeHandler: ku.ProbeHTTP(
+								ku.PathHealthz, KSMPort,
+							),
 							TimeoutSeconds: int32(5),
 						},
-						Name: "kube-state-metrics",
+						Name: KSM.Name,
+						Resources: ku.Resources(
+							"200m",
+							"300Mi",
+							"200m",
+							"300Mi",
+						),
 						Ports: []corev1.ContainerPort{
 							{
-								ContainerPort: int32(8080),
-								Name:          "http",
+								ContainerPort: int32(KSMPort),
+								Name:          KSMPortName,
 							},
 						},
 						ReadinessProbe: &corev1.Probe{
 							InitialDelaySeconds: int32(5),
-							ProbeHandler: corev1.ProbeHandler{
-								HTTPGet: &corev1.HTTPGetAction{
-									Path: "/",
-									Port: intstr.IntOrString{IntVal: int32(8080)},
-								},
-							},
-							TimeoutSeconds: int32(5),
+							ProbeHandler:        ku.ProbeHTTP("/", KSMPort),
+							TimeoutSeconds:      int32(5),
 						},
 					},
 				},
@@ -114,117 +122,49 @@ var KubeStateMetricsDeploy = &appsv1.Deployment{
 					RunAsGroup: P(int64(65534)),
 					RunAsUser:  P(int64(65534)),
 				},
-				ServiceAccountName: "vmk8s-kube-state-metrics",
 			},
 		},
 	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "apps/v1",
-		Kind:       "Deployment",
-	},
 }
 
-var KubeStateMetricsCRB = &rbacv1.ClusterRoleBinding{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/component":  "metrics",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "kube-state-metrics",
-			"app.kubernetes.io/part-of":    "kube-state-metrics",
-			"app.kubernetes.io/version":    "2.7.0",
-			"helm.sh/chart":                "kube-state-metrics-4.24.0",
-		},
-		Name: "vmk8s-kube-state-metrics",
-	},
-	RoleRef: rbacv1.RoleRef{
-		APIGroup: "rbac.authorization.k8s.io",
-		Kind:     "ClusterRole",
-		Name:     "vmk8s-kube-state-metrics",
-	},
-	Subjects: []rbacv1.Subject{
-		{
-			Kind:      "ServiceAccount",
-			Name:      "vmk8s-kube-state-metrics",
-			Namespace: "monitoring",
-		},
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "rbac.authorization.k8s.io/v1",
-		Kind:       "ClusterRoleBinding",
-	},
-}
+var KubeStateMetricsCRB = ku.BindClusterRole(
+	KSM.Name,
+	KubeStateMetricsSA,
+	KubeStateMetricsCR,
+	KSM.Labels(),
+)
 
 var KubeStateMetricsSVC = &corev1.Service{
-	ObjectMeta: metav1.ObjectMeta{
-		Annotations: map[string]string{"prometheus.io/scrape": "true"},
-		Labels: map[string]string{
-			"app.kubernetes.io/component":  "metrics",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "kube-state-metrics",
-			"app.kubernetes.io/part-of":    "kube-state-metrics",
-			"app.kubernetes.io/version":    "2.7.0",
-			"helm.sh/chart":                "kube-state-metrics-4.24.0",
-		},
-		Name:      "vmk8s-kube-state-metrics",
-		Namespace: "monitoring",
-	},
+	TypeMeta: ku.TypeServiceV1,
+	ObjectMeta: KSM.ObjectMetaAnnotations(
+		map[string]string{"prometheus.io/scrape": "true"},
+		// TODO: check! probably a leftover from kube-prometheus-stack
+		// ku.AnnotationPrometheus("/",KSMPort),
+	),
 	Spec: corev1.ServiceSpec{
 		Ports: []corev1.ServicePort{
 			{
-				Name:       "http",
-				Port:       int32(8080),
-				Protocol:   corev1.Protocol("TCP"),
-				TargetPort: intstr.IntOrString{IntVal: int32(8080)},
+				Name:       KSMPortName,
+				Port:       int32(KSMPort),
+				Protocol:   corev1.ProtocolTCP,
+				TargetPort: intstr.FromInt(KSMPort),
 			},
 		},
-		Selector: map[string]string{
-			"app.kubernetes.io/instance": "vmk8s",
-			"app.kubernetes.io/name":     "kube-state-metrics",
-		},
-		Type: corev1.ServiceType("ClusterIP"),
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "Service",
+		Selector: KSM.MatchLabels(),
+		Type:     corev1.ServiceTypeClusterIP,
 	},
 }
 
-var KubeStateMetricsSA = &corev1.ServiceAccount{
-	ImagePullSecrets: []corev1.LocalObjectReference{},
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/component":  "metrics",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "kube-state-metrics",
-			"app.kubernetes.io/part-of":    "kube-state-metrics",
-			"app.kubernetes.io/version":    "2.7.0",
-			"helm.sh/chart":                "kube-state-metrics-4.24.0",
-		},
-		Name:      "vmk8s-kube-state-metrics",
-		Namespace: "monitoring",
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "ServiceAccount",
-	},
-}
+var KubeStateMetricsSA = ku.ServiceAccount(
+	KSM.Name,
+	KSM.Namespace,
+	KSM.Labels(),
+	nil,
+)
 
 var KubeStateMetricsCR = &rbacv1.ClusterRole{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/component":  "metrics",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "kube-state-metrics",
-			"app.kubernetes.io/part-of":    "kube-state-metrics",
-			"app.kubernetes.io/version":    "2.7.0",
-			"helm.sh/chart":                "kube-state-metrics-4.24.0",
-		},
-		Name: "vmk8s-kube-state-metrics",
-	},
+	TypeMeta:   ku.TypeClusterRoleV1,
+	ObjectMeta: KSM.ObjectMetaNoNS(),
 	Rules: []rbacv1.PolicyRule{
 		{
 			APIGroups: []string{"certificates.k8s.io"},
@@ -340,29 +280,15 @@ var KubeStateMetricsCR = &rbacv1.ClusterRole{
 			Verbs:     []string{"list", "watch"},
 		},
 	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "rbac.authorization.k8s.io/v1",
-		Kind:       "ClusterRole",
-	},
 }
 
 var KubeStateMetricsRules = &v1beta1.VMRule{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-kube-state-metrics",
-		Namespace: "monitoring",
-	},
+	TypeMeta:   TypeVMRuleV1Beta1,
+	ObjectMeta: KSM.ObjectMeta(),
 	Spec: v1beta1.VMRuleSpec{
 		Groups: []v1beta1.RuleGroup{
 			{
-				Name: "kube-state-metrics",
+				Name: KSM.Name,
 				Rules: []v1beta1.Rule{
 					{
 						Alert: "KubeStateMetricsListErrors",
@@ -372,11 +298,11 @@ var KubeStateMetricsRules = &v1beta1.VMRule{
 							"summary":     "kube-state-metrics is experiencing errors in list operations.",
 						},
 						Expr: `
-								(sum(rate(kube_state_metrics_list_total{job="kube-state-metrics",result="error"}[5m]))
-								  /
-								sum(rate(kube_state_metrics_list_total{job="kube-state-metrics"}[5m])))
-								> 0.01
-								`,
+(sum(rate(kube_state_metrics_list_total{job="kube-state-metrics",result="error"}[5m]))
+  /
+sum(rate(kube_state_metrics_list_total{job="kube-state-metrics"}[5m])))
+> 0.01
+`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "critical"},
 					}, {
@@ -387,11 +313,11 @@ var KubeStateMetricsRules = &v1beta1.VMRule{
 							"summary":     "kube-state-metrics is experiencing errors in watch operations.",
 						},
 						Expr: `
-								(sum(rate(kube_state_metrics_watch_total{job="kube-state-metrics",result="error"}[5m]))
-								  /
-								sum(rate(kube_state_metrics_watch_total{job="kube-state-metrics"}[5m])))
-								> 0.01
-								`,
+(sum(rate(kube_state_metrics_watch_total{job="kube-state-metrics",result="error"}[5m]))
+  /
+sum(rate(kube_state_metrics_watch_total{job="kube-state-metrics"}[5m])))
+> 0.01
+`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "critical"},
 					}, {
@@ -401,7 +327,7 @@ var KubeStateMetricsRules = &v1beta1.VMRule{
 							"runbook_url": "https://runbooks.prometheus-operator.dev/runbooks/kube-state-metrics/kubestatemetricsshardingmismatch",
 							"summary":     "kube-state-metrics sharding is misconfigured.",
 						},
-						Expr:   "stdvar (kube_state_metrics_total_shards{job=\"kube-state-metrics\"}) != 0",
+						Expr:   `stdvar (kube_state_metrics_total_shards{job="kube-state-metrics"}) != 0`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "critical"},
 					}, {
@@ -412,11 +338,11 @@ var KubeStateMetricsRules = &v1beta1.VMRule{
 							"summary":     "kube-state-metrics shards are missing.",
 						},
 						Expr: `
-								2^max(kube_state_metrics_total_shards{job="kube-state-metrics"}) - 1
-								  -
-								sum( 2 ^ max by (shard_ordinal) (kube_state_metrics_shard_ordinal{job="kube-state-metrics"}) )
-								!= 0
-								`,
+2^max(kube_state_metrics_total_shards{job="kube-state-metrics"}) - 1
+  -
+sum( 2 ^ max by (shard_ordinal) (kube_state_metrics_shard_ordinal{job="kube-state-metrics"}) )
+!= 0
+`,
 						For:    "15m",
 						Labels: map[string]string{"severity": "critical"},
 					},
@@ -424,24 +350,11 @@ var KubeStateMetricsRules = &v1beta1.VMRule{
 			},
 		},
 	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "operator.victoriametrics.com/v1beta1",
-		Kind:       "VMRule",
-	},
 }
 
 var KubeStateMetricsScrape = &v1beta1.VMServiceScrape{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-kube-state-metrics",
-		Namespace: "monitoring",
-	},
+	TypeMeta:   TypeVMServiceScrapeV1Beta1,
+	ObjectMeta: KSM.ObjectMeta(),
 	Spec: v1beta1.VMServiceScrapeSpec{
 		Endpoints: []v1beta1.Endpoint{
 			{
@@ -452,19 +365,10 @@ var KubeStateMetricsScrape = &v1beta1.VMServiceScrape{
 						Regex:  "(uid|container_id|image_id)",
 					},
 				},
-				Port: "http",
+				Port: KSMPortName,
 			},
 		},
-		JobLabel: "app.kubernetes.io/name",
-		Selector: metav1.LabelSelector{
-			MatchLabels: map[string]string{
-				"app.kubernetes.io/instance": "vmk8s",
-				"app.kubernetes.io/name":     "kube-state-metrics",
-			},
-		},
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "operator.victoriametrics.com/v1beta1",
-		Kind:       "VMServiceScrape",
+		JobLabel: ku.AppLabelName, // "app.kubernetes.io/name",
+		Selector: metav1.LabelSelector{MatchLabels: KSM.MatchLabels()},
 	},
 }

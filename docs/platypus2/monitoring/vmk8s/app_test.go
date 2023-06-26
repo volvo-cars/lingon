@@ -17,7 +17,11 @@ func TestApp(t *testing.T) {
 	app := New()
 	tu.AssertNoError(
 		t,
-		kube.Export(app, kube.WithExportOutputDirectory("out")),
+		kube.Export(
+			app,
+			kube.WithExportOutputDirectory("out"),
+			kube.WithExportExplodeManifests(true),
+		),
 		"export",
 	)
 }

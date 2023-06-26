@@ -7,58 +7,51 @@ import (
 	"os"
 	"testing"
 
+	"github.com/volvo-cars/lingon/pkg/kube"
 	tu "github.com/volvo-cars/lingon/pkg/testutil"
 	"github.com/volvo-cars/lingoneks/monitoring/metricsserver"
 	"github.com/volvo-cars/lingoneks/monitoring/promcrd"
-	"github.com/volvo-cars/lingoneks/monitoring/promstack"
-	"github.com/volvo-cars/lingoneks/monitoring/vmcrd"
 	"github.com/volvo-cars/lingoneks/monitoring/vmk8s"
+	"github.com/volvo-cars/lingoneks/monitoring/vmop"
+	"github.com/volvo-cars/lingoneks/monitoring/vmop/vmcrd"
 )
 
 func TestMonitoringExport(t *testing.T) {
-	folders := []string{
-		"out/1_promcrd",
-		"out/2_metrics-server",
-		"out/3_promstack",
-		"out/4_vmcrd",
-		"out/5_vmk8s",
+	tests := map[string]kube.Exporter{
+		"out/1_promcrd":      promcrd.New(),
+		"out/1_vmcrd":        vmcrd.New(),
+		"out/2_vmop":         vmop.New(),
+		"out/metrics-server": metricsserver.New(),
+		"out/vmk8s":          vmk8s.New(),
 	}
-	for _, f := range folders {
+	for f, km := range tests {
 		_ = os.RemoveAll(f)
+
+		tu.AssertNoError(
+			t,
+			kube.Export(km, kube.WithExportOutputDirectory(f)),
+			f,
+		)
 	}
-
-	pcrd := promcrd.New()
-	tu.AssertNoError(t, pcrd.Export(folders[0]), "prometheus crd")
-
-	ms := metricsserver.New()
-	tu.AssertNoError(t, ms.Export(folders[1]), "metrics-server")
-
-	ps := promstack.New()
-	tu.AssertNoError(t, ps.Export(folders[2]), "prometheus stack")
-
-	vmcrds := vmcrd.New()
-	tu.AssertNoError(t, vmcrds.Export(folders[3]), "victoria metrics crds")
-
-	vm := vmk8s.New()
-	tu.AssertNoError(t, vm.Export(folders[4]), "victoria metrics stack")
 }
 
 // // TODO: THIS IS INTEGRATION and needs KWOK
 // func TestMonitoringDeploy(t *testing.T) {
 // 	ctx := context.Background()
 //
-// 	// pcrd := promcrd.New()
-// 	// tu.AssertNoError(t, pcrd.Apply(ctx), "prometheus crd")
+// 	type Applyer interface {
+// 		Lingon()
+// 		Apply(ctx2 context.Context) error
+// 	}
+// 	tests := map[string]Applyer{
+// 		"out/1_promcrd":      promcrd.New(),
+// 		"out/2_vmop":         vmop.New(),
+// 		"out/metrics-server": metricsserver.New(),
+// 		"out/vmk8s":          vmk8s.New(),
+// 	}
+// 	for f, km := range tests {
+// 		_ = os.RemoveAll(f)
 //
-// 	// ms := metricsserver.New()
-// 	// tu.AssertNoError(t, ms.Apply(ctx), "metrics-server")
-// 	//
-// 	// ps := promstack.New()
-// 	// tu.AssertNoError(t, ps.Apply(ctx), "prometheus stack")
-//
-// 	vmcrds := vmcrd.New()
-// 	tu.AssertNoError(t, vmcrds.Apply(ctx), "victoria metrics crds")
-//
-// 	vm := vmk8s.New()
-// 	tu.AssertNoError(t, vm.Apply(ctx), "victoria metrics stack")
+// 		tu.AssertNoError(t, km.Apply(ctx), f)
+// 	}
 // }

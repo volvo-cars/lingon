@@ -4,8 +4,11 @@
 package vmk8s
 
 import (
+	"fmt"
+
 	"github.com/VictoriaMetrics/operator/api/victoriametrics/v1beta1"
 	"github.com/volvo-cars/lingon/pkg/kube"
+	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -13,107 +16,136 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+const (
+	GrafanaVersion             = "9.5.3"
+	GrafanaSideCarImg          = "quay.io/kiwigrid/k8s-sidecar:1.19.2"
+	GrafanaPort                = 3000
+	GrafanaPortName            = "service"
+	DashboardLabel             = "grafana_dashboard"
+	DataSourceLabel            = "grafana_datasource"
+	defaultDashboardConfigName = "grafana-default-dashboards"
+	curlImg                    = "curlimages/curl:7.85.0"
+)
+
+var Graf = &Metadata{
+	Name:      "grafana",
+	Namespace: namespace,
+	Instance:  "grafana" + namespace,
+	Component: "dashboards",
+	PartOf:    appName,
+	Version:   GrafanaVersion,
+	ManagedBy: "lingon",
+	Registry:  "docker.io",
+	Image:     "grafana/grafana",
+	Tag:       GrafanaVersion,
+}
+
 type Grafana struct {
 	kube.App
 
-	CM                 *corev1.ConfigMap
-	CR                 *rbacv1.ClusterRole
-	CRB                *rbacv1.ClusterRoleBinding
-	ConfigDashboardsCM *corev1.ConfigMap
-	Deploy             *appsv1.Deployment
-	RB                 *rbacv1.RoleBinding
-	Role               *rbacv1.Role
-	SA                 *corev1.ServiceAccount
-	SVC                *corev1.Service
-	Secrets            *corev1.Secret
+	Deploy  *appsv1.Deployment
+	SVC     *corev1.Service
+	Secrets *corev1.Secret
 
+	SA   *corev1.ServiceAccount
+	CR   *rbacv1.ClusterRole
+	CRB  *rbacv1.ClusterRoleBinding
+	Role *rbacv1.Role
+	RB   *rbacv1.RoleBinding
+
+	CM                  *corev1.ConfigMap
+	ProviderCM          *corev1.ConfigMap
 	DataSourceCM        *corev1.ConfigMap
 	OverviewDashboardCM *corev1.ConfigMap
+	DefaultDashboardCM  *corev1.ConfigMap
 	GrafanaScrape       *v1beta1.VMServiceScrape
-}
-
-type GrafanaTest struct {
-	GrafanaTestCM   *corev1.ConfigMap
-	GrafanaTestPO   *corev1.Pod
-	GrafanaTestRB   *rbacv1.RoleBinding
-	GrafanaTestRole *rbacv1.Role
-	GrafanaTestSA   *corev1.ServiceAccount
-}
-
-func NewGrafanaTest() *GrafanaTest {
-	return &GrafanaTest{
-		GrafanaTestCM:   GrafanaTestCM,
-		GrafanaTestPO:   GrafanaTestPO,
-		GrafanaTestRB:   GrafanaTestRB,
-		GrafanaTestRole: GrafanaTestRole,
-		GrafanaTestSA:   GrafanaTestSA,
-	}
 }
 
 func NewGrafana() *Grafana {
 	return &Grafana{
+		Deploy:        GrafanaDeploy,
+		SVC:           GrafanaSVC,
+		Secrets:       GrafanaSecrets,
+		GrafanaScrape: GrafanaScrape,
+
+		SA:   GrafanaSA,
+		Role: GrafanaRole,
+		RB:   ku.BindRole(Graf.Name, GrafanaSA, GrafanaRole, Graf.Labels()),
+		CR:   GrafanaCR,
+		CRB: ku.BindClusterRole(
+			Graf.Name, GrafanaSA, GrafanaCR, Graf.Labels(),
+		),
+
 		CM:                  GrafanaCM,
-		CR:                  GrafanaCR,
-		CRB:                 GrafanaCRB,
-		ConfigDashboardsCM:  GrafanaProviderCM,
-		Deploy:              GrafanaDeploy,
-		RB:                  GrafanaRB,
-		Role:                GrafanaRole,
-		SA:                  GrafanaSA,
-		SVC:                 GrafanaSVC,
-		Secrets:             GrafanaSecrets,
+		ProviderCM:          GrafanaProviderCM,
 		DataSourceCM:        GrafanaDataSourceCM,
 		OverviewDashboardCM: GrafanaOverviewDashCM,
-		GrafanaScrape:       GrafanaScrape,
+		DefaultDashboardCM: ku.DataConfigMap(
+			defaultDashboardConfigName,
+			Graf.Namespace, Graf.Labels(), nil, map[string]string{},
+		),
 	}
 }
 
-var GrafanaDeploy = &appsv1.Deployment{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "grafana",
-			"app.kubernetes.io/version":    "9.3.0",
-			"helm.sh/chart":                "grafana-6.44.11",
+var GrafanaSA = ku.ServiceAccount(Graf.Name, Graf.Namespace, Graf.Labels(), nil)
+
+var GrafanaCR = &rbacv1.ClusterRole{
+	TypeMeta:   ku.TypeClusterRoleV1,
+	ObjectMeta: Graf.ObjectMetaNameSuffixNoNS("-cr"),
+	Rules: []rbacv1.PolicyRule{
+		{
+			APIGroups: []string{""},
+			Resources: []string{"configmaps", "secrets"},
+			Verbs:     []string{"get", "watch", "list"},
 		},
-		Name:      "vmk8s-grafana",
-		Namespace: "monitoring",
 	},
-	Spec: appsv1.DeploymentSpec{
-		Replicas:             P(int32(1)),
-		RevisionHistoryLimit: P(int32(10)),
-		Selector: &metav1.LabelSelector{
-			MatchLabels: map[string]string{
-				"app.kubernetes.io/instance": "vmk8s",
-				"app.kubernetes.io/name":     "grafana",
-			},
+}
+
+var GrafanaRole = &rbacv1.Role{
+	TypeMeta:   ku.TypeRoleV1,
+	ObjectMeta: Graf.ObjectMeta(),
+	Rules: []rbacv1.PolicyRule{
+		{
+			APIGroups:     []string{"extensions"},
+			ResourceNames: []string{Graf.Name},
+			Resources:     []string{"podsecuritypolicies"},
+			Verbs:         []string{"use"},
 		},
-		Strategy: appsv1.DeploymentStrategy{Type: appsv1.DeploymentStrategyType("RollingUpdate")},
+	},
+}
+
+var GrafanaDeploy = &appsv1.Deployment{
+	TypeMeta:   ku.TypeDeploymentV1,
+	ObjectMeta: Graf.ObjectMeta(),
+	Spec: appsv1.DeploymentSpec{
+		Replicas: P(int32(1)),
+		Selector: &metav1.LabelSelector{MatchLabels: Graf.MatchLabels()},
+		Strategy: appsv1.DeploymentStrategy{Type: appsv1.RollingUpdateDeploymentStrategyType},
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
 				Annotations: map[string]string{
-					"checksum/config":                       "2ececdbdce31ca013f19ea0000c079aba2a5b9fb01ec29c10c1270f073852744",
-					"checksum/dashboards-json-config":       "967e7b73376b048fc74810c99a9fda0454f0064a6b81d916c84f4d827ad8e8c7",
-					"checksum/sc-dashboard-provider-config": "fa4ef62d42c42e06a0fe021f7c9faceecdb28b48d2bc59fc6f61c46c79936f86",
-					"checksum/secret":                       "156a06b1b8ff51c3069373c417218597a672708542ce79e8513fc9aa6bade9f2",
+					"checksum/config":                         ku.HashConfig(GrafanaCM),
+					"checksum/provider":                       ku.HashConfig(GrafanaProviderCM),
+					"checksum/datasource":                     ku.HashConfig(GrafanaDataSourceCM),
+					"checksum/secret":                         ku.HashSecret(GrafanaSecrets),
+					"kubectl.kubernetes.io/default-container": Graf.Name,
 				},
-				Labels: map[string]string{
-					"app.kubernetes.io/instance": "vmk8s",
-					"app.kubernetes.io/name":     "grafana",
-				},
+				Labels: Graf.MatchLabels(),
 			},
 			Spec: corev1.PodSpec{
 				AutomountServiceAccountToken: P(true),
 				Containers: []corev1.Container{
 					{
+						Name:            "grafana-sc-dashboard",
+						Image:           GrafanaSideCarImg,
+						ImagePullPolicy: corev1.PullIfNotPresent,
 						Env: []corev1.EnvVar{
 							{
 								Name:  "METHOD",
 								Value: "WATCH",
 							}, {
 								Name:  "LABEL",
-								Value: "grafana_dashboard",
+								Value: DashboardLabel,
 							}, {
 								Name:  "FOLDER",
 								Value: "/tmp/dashboards",
@@ -122,122 +154,141 @@ var GrafanaDeploy = &appsv1.Deployment{
 								Value: "both",
 							},
 						},
-						Image:           "quay.io/kiwigrid/k8s-sidecar:1.19.2",
-						ImagePullPolicy: corev1.PullIfNotPresent,
-						Name:            "grafana-sc-dashboard",
+
 						VolumeMounts: []corev1.VolumeMount{
 							{
 								MountPath: "/tmp/dashboards",
 								Name:      "sc-dashboard-volume",
 							},
 						},
-					}, {
+					},
+					{
+						Name:            "grafana-sc-datasources",
+						Image:           GrafanaSideCarImg,
+						ImagePullPolicy: corev1.PullIfNotPresent,
 						Env: []corev1.EnvVar{
 							{
 								Name:  "METHOD",
 								Value: "WATCH",
-							}, {
+							},
+							{
 								Name:  "LABEL",
-								Value: "grafana_datasource",
-							}, {
+								Value: DataSourceLabel,
+							},
+							{
 								Name:  "FOLDER",
 								Value: "/etc/grafana/provisioning/datasources",
-							}, {
+							},
+							{
 								Name:  "RESOURCE",
 								Value: "both",
-							}, {
-								Name: "REQ_USERNAME",
-								ValueFrom: &corev1.EnvVarSource{
-									SecretKeyRef: &corev1.SecretKeySelector{
-										Key:                  "admin-user",
-										LocalObjectReference: corev1.LocalObjectReference{Name: "vmk8s-grafana"},
-									},
-								},
-							}, {
-								Name: "REQ_PASSWORD",
-								ValueFrom: &corev1.EnvVarSource{
-									SecretKeyRef: &corev1.SecretKeySelector{
-										Key:                  "admin-password",
-										LocalObjectReference: corev1.LocalObjectReference{Name: "vmk8s-grafana"},
-									},
-								},
-							}, {
-								Name:  "REQ_URL",
-								Value: "http://localhost:3000/api/admin/provisioning/datasources/reload",
-							}, {
+							},
+							{
+								Name: "REQ_URL",
+								Value: fmt.Sprintf(
+									"http://localhost:%d/api/admin/provisioning/datasources/reload",
+									GrafanaPort,
+								),
+							},
+							{
 								Name:  "REQ_METHOD",
 								Value: "POST",
 							},
+							ku.SecretEnvVar(
+								"REQ_USERNAME",
+								"admin-user",
+								GrafanaSecrets.Name,
+							),
+							ku.SecretEnvVar(
+								"REQ_PASSWORD",
+								"admin-password",
+								GrafanaSecrets.Name,
+							),
 						},
-						Image:           "quay.io/kiwigrid/k8s-sidecar:1.19.2",
-						ImagePullPolicy: corev1.PullIfNotPresent,
-						Name:            "grafana-sc-datasources",
 						VolumeMounts: []corev1.VolumeMount{
 							{
 								MountPath: "/etc/grafana/provisioning/datasources",
 								Name:      "sc-datasources-volume",
 							},
 						},
-					}, {
+					},
+					{
+						Name:            Graf.Name,
+						Image:           Graf.ContainerURL(),
+						ImagePullPolicy: corev1.PullIfNotPresent,
 						Env: []corev1.EnvVar{
+							ku.SecretEnvVar(
+								"GF_SECURITY_ADMIN_USER",
+								"admin-user",
+								GrafanaSecrets.Name,
+							),
+							ku.SecretEnvVar(
+								"GF_SECURITY_ADMIN_PASSWORD",
+								"admin-password",
+								GrafanaSecrets.Name,
+							),
 							{
-								Name: "GF_SECURITY_ADMIN_USER",
+								Name: "GF_INSTALL_PLUGINS",
 								ValueFrom: &corev1.EnvVarSource{
-									SecretKeyRef: &corev1.SecretKeySelector{
-										Key:                  "admin-user",
-										LocalObjectReference: corev1.LocalObjectReference{Name: "vmk8s-grafana"},
+									ConfigMapKeyRef: &corev1.ConfigMapKeySelector{
+										Key:                  "plugins",
+										LocalObjectReference: corev1.LocalObjectReference{Name: Graf.Name},
 									},
 								},
-							}, {
-								Name: "GF_SECURITY_ADMIN_PASSWORD",
-								ValueFrom: &corev1.EnvVarSource{
-									SecretKeyRef: &corev1.SecretKeySelector{
-										Key:                  "admin-password",
-										LocalObjectReference: corev1.LocalObjectReference{Name: "vmk8s-grafana"},
-									},
-								},
-							}, {
+							},
+							{
 								Name:  "GF_PATHS_DATA",
 								Value: "/var/lib/grafana/",
-							}, {
+							},
+							{
 								Name:  "GF_PATHS_LOGS",
 								Value: "/var/log/grafana",
-							}, {
+							},
+							{
 								Name:  "GF_PATHS_PLUGINS",
 								Value: "/var/lib/grafana/plugins",
-							}, {
+							},
+							{
 								Name:  "GF_PATHS_PROVISIONING",
 								Value: "/etc/grafana/provisioning",
 							},
 						},
-						Image:           "grafana/grafana:9.3.0",
-						ImagePullPolicy: corev1.PullIfNotPresent,
+
 						LivenessProbe: &corev1.Probe{
 							FailureThreshold:    int32(10),
 							InitialDelaySeconds: int32(60),
 							ProbeHandler: corev1.ProbeHandler{
 								HTTPGet: &corev1.HTTPGetAction{
 									Path: "/api/health",
-									Port: intstr.IntOrString{IntVal: int32(3000)},
+									Port: intstr.FromInt(GrafanaPort),
 								},
 							},
 							TimeoutSeconds: int32(30),
 						},
-						Name: "grafana",
 						Ports: []corev1.ContainerPort{
 							{
-								ContainerPort: int32(3000),
-								Name:          "grafana",
-								Protocol:      corev1.Protocol("TCP"),
+								ContainerPort: int32(GrafanaPort),
+								Name:          Graf.Name,
+								Protocol:      corev1.ProtocolTCP,
 							},
 						},
 						ReadinessProbe: &corev1.Probe{
 							ProbeHandler: corev1.ProbeHandler{
 								HTTPGet: &corev1.HTTPGetAction{
 									Path: "/api/health",
-									Port: intstr.IntOrString{IntVal: int32(3000)},
+									Port: intstr.FromInt(GrafanaPort),
 								},
 							},
+						},
+						Resources: ku.Resources(
+							"500m",
+							"128Mi",
+							"500m",
+							"128Mi",
+						),
+						SecurityContext: &corev1.SecurityContext{
+							Capabilities:   &corev1.Capabilities{Drop: []corev1.Capability{corev1.Capability("ALL")}},
+							SeccompProfile: &corev1.SeccompProfile{Type: corev1.SeccompProfileType("RuntimeDefault")},
 						},
 						VolumeMounts: []corev1.VolumeMount{
 							{
@@ -269,14 +320,15 @@ var GrafanaDeploy = &appsv1.Deployment{
 				EnableServiceLinks: P(true),
 				InitContainers: []corev1.Container{
 					{
+						Name:            "download-dashboards",
+						Image:           curlImg,
+						ImagePullPolicy: corev1.PullIfNotPresent,
+						Command:         []string{"/bin/sh"},
 						Args: []string{
 							"-c",
-							"mkdir -p /var/lib/grafana/dashboards/default && /bin/sh -x /etc/grafana/download_dashboards.sh",
+							"mkdir -p /var/lib/grafana/dashboards/default && " +
+								"/bin/sh -x /etc/grafana/download_dashboards.sh",
 						},
-						Command:         []string{"/bin/sh"},
-						Image:           "curlimages/curl:7.85.0",
-						ImagePullPolicy: corev1.PullIfNotPresent,
-						Name:            "download-dashboards",
 						VolumeMounts: []corev1.VolumeMount{
 							{
 								MountPath: "/etc/grafana/download_dashboards.sh",
@@ -288,20 +340,56 @@ var GrafanaDeploy = &appsv1.Deployment{
 							},
 						},
 					},
+					{
+						Name:            "load-vm-ds-plugin",
+						Image:           curlImg,
+						ImagePullPolicy: corev1.PullIfNotPresent,
+						Command:         []string{"/bin/sh"},
+						// FIXME: PERMISSION DENIED
+						Args: []string{
+							"-c", `
+set -ex
+
+ls -l /var/lib/grafana/
+mkdir -p /var/lib/grafana/plugins/
+chown -R 472:472 /var/lib/grafana/plugins/
+ls -l /var/lib/grafana/
+id
+touch /var/lib/grafana/plugins/fake.txt
+curl www.google.com
+# ver=$(curl -s https://api.github.com/repos/VictoriaMetrics/grafana-datasource/releases/latest | grep -oE 'v\d+\.\d+\.\d+' | head -1)
+ver="v0.2.0"
+curl -L https://github.com/VictoriaMetrics/grafana-datasource/releases/download/$ver/victoriametrics-datasource-$ver.tar.gz -o /var/lib/grafana/plugins/plugin.tar.gz
+tar -xf /var/lib/grafana/plugins/plugin.tar.gz -C /var/lib/grafana/plugins/
+rm /var/lib/grafana/plugins/plugin.tar.gz
+chown -R 472:472 /var/lib/grafana/plugins/
+
+`,
+						},
+						VolumeMounts: []corev1.VolumeMount{
+							{
+								MountPath: "/var/lib/grafana",
+								Name:      "storage",
+							},
+						},
+						SecurityContext: &corev1.SecurityContext{},
+						WorkingDir:      "/var/lib/grafana/plugins",
+					},
 				},
 				SecurityContext: &corev1.PodSecurityContext{
-					FSGroup:    P(int64(472)),
-					RunAsGroup: P(int64(472)),
-					RunAsUser:  P(int64(472)),
+					FSGroup:      P(int64(472)),
+					RunAsGroup:   P(int64(472)),
+					RunAsNonRoot: P(true),
+					RunAsUser:    P(int64(472)),
 				},
-				ServiceAccountName: "vmk8s-grafana",
+				ServiceAccountName: GrafanaSA.Name,
 				Volumes: []corev1.Volume{
 					{
 						Name:         "config",
-						VolumeSource: corev1.VolumeSource{ConfigMap: &corev1.ConfigMapVolumeSource{LocalObjectReference: corev1.LocalObjectReference{Name: "vmk8s-grafana"}}},
+						VolumeSource: corev1.VolumeSource{ConfigMap: &corev1.ConfigMapVolumeSource{LocalObjectReference: corev1.LocalObjectReference{Name: GrafanaCM.Name}}},
 					}, {
 						Name:         "dashboards-default",
-						VolumeSource: corev1.VolumeSource{ConfigMap: &corev1.ConfigMapVolumeSource{LocalObjectReference: corev1.LocalObjectReference{Name: "vmk8s-grafana-dashboards-default"}}},
+						VolumeSource: corev1.VolumeSource{ConfigMap: &corev1.ConfigMapVolumeSource{LocalObjectReference: corev1.LocalObjectReference{Name: defaultDashboardConfigName}}},
 					}, {
 						Name:         "storage",
 						VolumeSource: corev1.VolumeSource{},
@@ -310,7 +398,7 @@ var GrafanaDeploy = &appsv1.Deployment{
 						VolumeSource: corev1.VolumeSource{},
 					}, {
 						Name:         "sc-dashboard-provider",
-						VolumeSource: corev1.VolumeSource{ConfigMap: &corev1.ConfigMapVolumeSource{LocalObjectReference: corev1.LocalObjectReference{Name: "vmk8s-grafana-config-dashboards"}}},
+						VolumeSource: corev1.VolumeSource{ConfigMap: &corev1.ConfigMapVolumeSource{LocalObjectReference: corev1.LocalObjectReference{Name: GrafanaProviderCM.Name}}},
 					}, {
 						Name:         "sc-datasources-volume",
 						VolumeSource: corev1.VolumeSource{},
@@ -319,10 +407,19 @@ var GrafanaDeploy = &appsv1.Deployment{
 			},
 		},
 	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "apps/v1",
-		Kind:       "Deployment",
+}
+
+var GrafanaSVC = Graf.Service(80, GrafanaPort, GrafanaPortName)
+
+var GrafanaScrape = &v1beta1.VMServiceScrape{
+	ObjectMeta: Graf.ObjectMeta(),
+	Spec: v1beta1.VMServiceScrapeSpec{
+		Endpoints: []v1beta1.Endpoint{{Port: GrafanaPortName}},
+		Selector: metav1.LabelSelector{
+			MatchLabels: Graf.MatchLabels(),
+		},
 	},
+	TypeMeta: TypeVMServiceScrapeV1Beta1,
 }
 
 var GrafanaCM = &corev1.ConfigMap{
@@ -370,22 +467,10 @@ provisioning = /etc/grafana/provisioning
 domain = ''
 
 `,
+		"plugins": "https://grafana.com/api/plugins/marcusolsson-json-datasource/versions/1.3.2/download;marcusolsson-json-datasource",
 	},
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "grafana",
-			"app.kubernetes.io/version":    "9.3.0",
-			"helm.sh/chart":                "grafana-6.44.11",
-		},
-		Name:      "vmk8s-grafana",
-		Namespace: "monitoring",
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "ConfigMap",
-	},
+	ObjectMeta: Graf.ObjectMeta(),
+	TypeMeta:   ku.TypeConfigMapV1,
 }
 
 var GrafanaProviderCM = &corev1.ConfigMap{
@@ -405,31 +490,45 @@ providers:
       path: /tmp/dashboards
 `,
 	},
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "grafana",
-			"app.kubernetes.io/version":    "9.3.0",
-			"helm.sh/chart":                "grafana-6.44.11",
-		},
-		Name:      "vmk8s-grafana-config-dashboards",
-		Namespace: "monitoring",
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "ConfigMap",
-	},
+	ObjectMeta: Graf.ObjectMetaNameSuffix("-config-dashboards"),
+	TypeMeta:   ku.TypeConfigMapV1,
 }
 
 var GrafanaDataSourceCM = &corev1.ConfigMap{
 	Data: map[string]string{
+		//
+		// 		"datasources.yaml": `
+		// apiVersion: 1
+		// datasources:
+		// - access: proxy
+		//   isDefault: true
+		//   name: VictoriaMetrics
+		//   type: victoriametrics-datasource
+		//   url: http://victoriametrics:8428
+		// - access: proxy
+		//   isDefault: true
+		//   name: Prometheus
+		//   type: prometheus
+		//   url: http://prometheus-prometheus-server
+		// - access: proxy
+		//   editable: false
+		//   jsonData:
+		//     authType: default
+		//     defaultRegion: us-east-1
+		//   name: CloudWatch
+		//   type: cloudwatch
+		//   uid: cloudwatch
+		//
+		// `,
 		"datasource.yaml": `
 apiVersion: 1
 datasources:
 - name: VictoriaMetrics
   type: prometheus
-  url: http://vmsingle-vmk8s-victoria-metrics-k8s-stack.monitoring.svc:8429/
+  url: ` + fmt.Sprintf(
+			"http://%s.%s.svc:8429/",
+			VMDB.PrefixedName(), namespace,
+		) + `
   access: proxy
   isDefault: true
   jsonData: 
@@ -437,22 +536,14 @@ datasources:
 `,
 	},
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "victoria-metrics-k8s-stack-grafana",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"grafana_datasource":           "1",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-grafana-ds",
-		Namespace: "monitoring",
+		Labels: ku.MergeLabels(
+			Graf.Labels(),
+			map[string]string{DataSourceLabel: "1"},
+		),
+		Name:      Graf.Name + "-ds",
+		Namespace: Graf.Namespace,
 	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "ConfigMap",
-	},
+	TypeMeta: ku.TypeConfigMapV1,
 }
 
 var GrafanaSecrets = &corev1.Secret{
@@ -461,378 +552,10 @@ var GrafanaSecrets = &corev1.Secret{
 		"admin-user":     []byte("admin"),
 		"ldap-toml":      []byte(""),
 	},
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "grafana",
-			"app.kubernetes.io/version":    "9.3.0",
-			"helm.sh/chart":                "grafana-6.44.11",
-		},
-		Name:      "vmk8s-grafana",
-		Namespace: "monitoring",
-	},
-	Type: corev1.SecretType("Opaque"),
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "Secret",
-	},
+	ObjectMeta: Graf.ObjectMeta(),
+	Type:       corev1.SecretTypeOpaque,
+	TypeMeta:   ku.TypeSecretV1,
 } // TODO: SECRETS SHOULD BE STORED ELSEWHERE THAN IN THE CODE!!!!
-
-var GrafanaSVC = &corev1.Service{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "grafana",
-			"app.kubernetes.io/version":    "9.3.0",
-			"helm.sh/chart":                "grafana-6.44.11",
-		},
-		Name:      "vmk8s-grafana",
-		Namespace: "monitoring",
-	},
-	Spec: corev1.ServiceSpec{
-		Ports: []corev1.ServicePort{
-			{
-				Name:       "service",
-				Port:       int32(80),
-				Protocol:   corev1.Protocol("TCP"),
-				TargetPort: intstr.IntOrString{IntVal: int32(3000)},
-			},
-		},
-		Selector: map[string]string{
-			"app.kubernetes.io/instance": "vmk8s",
-			"app.kubernetes.io/name":     "grafana",
-		},
-		Type: corev1.ServiceType("ClusterIP"),
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "Service",
-	},
-}
-
-var GrafanaCR = &rbacv1.ClusterRole{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "grafana",
-			"app.kubernetes.io/version":    "9.3.0",
-			"helm.sh/chart":                "grafana-6.44.11",
-		},
-		Name: "vmk8s-grafana-clusterrole",
-	},
-	Rules: []rbacv1.PolicyRule{
-		{
-			APIGroups: []string{""},
-			Resources: []string{"configmaps", "secrets"},
-			Verbs:     []string{"get", "watch", "list"},
-		},
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "rbac.authorization.k8s.io/v1",
-		Kind:       "ClusterRole",
-	},
-}
-
-var GrafanaCRB = &rbacv1.ClusterRoleBinding{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "grafana",
-			"app.kubernetes.io/version":    "9.3.0",
-			"helm.sh/chart":                "grafana-6.44.11",
-		},
-		Name: "vmk8s-grafana-clusterrolebinding",
-	},
-	RoleRef: rbacv1.RoleRef{
-		APIGroup: "rbac.authorization.k8s.io",
-		Kind:     "ClusterRole",
-		Name:     "vmk8s-grafana-clusterrole",
-	},
-	Subjects: []rbacv1.Subject{
-		{
-			Kind:      "ServiceAccount",
-			Name:      "vmk8s-grafana",
-			Namespace: "monitoring",
-		},
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "rbac.authorization.k8s.io/v1",
-		Kind:       "ClusterRoleBinding",
-	},
-}
-
-var GrafanaSA = &corev1.ServiceAccount{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "grafana",
-			"app.kubernetes.io/version":    "9.3.0",
-			"helm.sh/chart":                "grafana-6.44.11",
-		},
-		Name:      "vmk8s-grafana",
-		Namespace: "monitoring",
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "ServiceAccount",
-	},
-}
-
-var GrafanaRole = &rbacv1.Role{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "grafana",
-			"app.kubernetes.io/version":    "9.3.0",
-			"helm.sh/chart":                "grafana-6.44.11",
-		},
-		Name:      "vmk8s-grafana",
-		Namespace: "monitoring",
-	},
-	Rules: []rbacv1.PolicyRule{
-		{
-			APIGroups:     []string{"extensions"},
-			ResourceNames: []string{"vmk8s-grafana"},
-			Resources:     []string{"podsecuritypolicies"},
-			Verbs:         []string{"use"},
-		},
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "rbac.authorization.k8s.io/v1",
-		Kind:       "Role",
-	},
-}
-
-var GrafanaRB = &rbacv1.RoleBinding{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "grafana",
-			"app.kubernetes.io/version":    "9.3.0",
-			"helm.sh/chart":                "grafana-6.44.11",
-		},
-		Name:      "vmk8s-grafana",
-		Namespace: "monitoring",
-	},
-	RoleRef: rbacv1.RoleRef{
-		APIGroup: "rbac.authorization.k8s.io",
-		Kind:     "Role",
-		Name:     "vmk8s-grafana",
-	},
-	Subjects: []rbacv1.Subject{
-		{
-			Kind:      "ServiceAccount",
-			Name:      "vmk8s-grafana",
-			Namespace: "monitoring",
-		},
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "rbac.authorization.k8s.io/v1",
-		Kind:       "RoleBinding",
-	},
-}
-
-var GrafanaTestCM = &corev1.ConfigMap{
-	Data: map[string]string{
-		"run.sh": `
-@test "Test Health" {
-  url="http://vmk8s-grafana/api/health"
-  code=$(wget --server-response --spider --timeout 90 --tries 10 ${url} 2>&1 | awk '/^  HTTP/{print $2}')
-  [ "$code" == "200" ]
-}
-`,
-	},
-	ObjectMeta: metav1.ObjectMeta{
-		Annotations: map[string]string{
-			"helm.sh/hook":               "test-success",
-			"helm.sh/hook-delete-policy": "before-hook-creation,hook-succeeded",
-		},
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "grafana",
-			"app.kubernetes.io/version":    "9.3.0",
-			"helm.sh/chart":                "grafana-6.44.11",
-		},
-		Name:      "vmk8s-grafana-test",
-		Namespace: "monitoring",
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "ConfigMap",
-	},
-}
-
-var GrafanaTestRole = &rbacv1.Role{
-	ObjectMeta: metav1.ObjectMeta{
-		Annotations: map[string]string{
-			"helm.sh/hook":               "test-success",
-			"helm.sh/hook-delete-policy": "before-hook-creation,hook-succeeded",
-		},
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "grafana",
-			"app.kubernetes.io/version":    "9.3.0",
-			"helm.sh/chart":                "grafana-6.44.11",
-		},
-		Name:      "vmk8s-grafana-test",
-		Namespace: "monitoring",
-	},
-	Rules: []rbacv1.PolicyRule{
-		{
-			APIGroups:     []string{"policy"},
-			ResourceNames: []string{"vmk8s-grafana-test"},
-			Resources:     []string{"podsecuritypolicies"},
-			Verbs:         []string{"use"},
-		},
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "rbac.authorization.k8s.io/v1",
-		Kind:       "Role",
-	},
-}
-
-var GrafanaTestRB = &rbacv1.RoleBinding{
-	ObjectMeta: metav1.ObjectMeta{
-		Annotations: map[string]string{
-			"helm.sh/hook":               "test-success",
-			"helm.sh/hook-delete-policy": "before-hook-creation,hook-succeeded",
-		},
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "grafana",
-			"app.kubernetes.io/version":    "9.3.0",
-			"helm.sh/chart":                "grafana-6.44.11",
-		},
-		Name:      "vmk8s-grafana-test",
-		Namespace: "monitoring",
-	},
-	RoleRef: rbacv1.RoleRef{
-		APIGroup: "rbac.authorization.k8s.io",
-		Kind:     "Role",
-		Name:     "vmk8s-grafana-test",
-	},
-	Subjects: []rbacv1.Subject{
-		{
-			Kind:      "ServiceAccount",
-			Name:      "vmk8s-grafana-test",
-			Namespace: "monitoring",
-		},
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "rbac.authorization.k8s.io/v1",
-		Kind:       "RoleBinding",
-	},
-}
-
-var GrafanaTestSA = &corev1.ServiceAccount{
-	ObjectMeta: metav1.ObjectMeta{
-		Annotations: map[string]string{
-			"helm.sh/hook":               "test-success",
-			"helm.sh/hook-delete-policy": "before-hook-creation,hook-succeeded",
-		},
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "grafana",
-			"app.kubernetes.io/version":    "9.3.0",
-			"helm.sh/chart":                "grafana-6.44.11",
-		},
-		Name:      "vmk8s-grafana-test",
-		Namespace: "monitoring",
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "ServiceAccount",
-	},
-}
-
-var GrafanaTestPO = &corev1.Pod{
-	ObjectMeta: metav1.ObjectMeta{
-		Annotations: map[string]string{
-			"helm.sh/hook":               "test-success",
-			"helm.sh/hook-delete-policy": "before-hook-creation,hook-succeeded",
-		},
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "grafana",
-			"app.kubernetes.io/version":    "9.3.0",
-			"helm.sh/chart":                "grafana-6.44.11",
-		},
-		Name:      "vmk8s-grafana-test",
-		Namespace: "monitoring",
-	},
-	Spec: corev1.PodSpec{
-		Containers: []corev1.Container{
-			{
-				Command: []string{
-					"/opt/bats/bin/bats",
-					"-t",
-					"/tests/run.sh",
-				},
-				Image:           "bats/bats:v1.4.1",
-				ImagePullPolicy: corev1.PullIfNotPresent,
-				Name:            "vmk8s-test",
-				VolumeMounts: []corev1.VolumeMount{
-					{
-						MountPath: "/tests",
-						Name:      "tests",
-						ReadOnly:  true,
-					},
-				},
-			},
-		},
-		RestartPolicy:      corev1.RestartPolicy("Never"),
-		ServiceAccountName: "vmk8s-grafana-test",
-		Volumes: []corev1.Volume{
-			{
-				Name:         "tests",
-				VolumeSource: corev1.VolumeSource{ConfigMap: &corev1.ConfigMapVolumeSource{LocalObjectReference: corev1.LocalObjectReference{Name: "vmk8s-grafana-test"}}},
-			},
-		},
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "Pod",
-	},
-}
-
-var GrafanaScrape = &v1beta1.VMServiceScrape{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-grafana",
-		Namespace: "monitoring",
-	},
-	Spec: v1beta1.VMServiceScrapeSpec{
-		Endpoints: []v1beta1.Endpoint{{Port: "service"}},
-		Selector: metav1.LabelSelector{
-			MatchLabels: map[string]string{
-				"app.kubernetes.io/instance": "vmk8s",
-				"app.kubernetes.io/name":     "grafana",
-			},
-		},
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "operator.victoriametrics.com/v1beta1",
-		Kind:       "VMServiceScrape",
-	},
-}
 
 var GrafanaOverviewDashCM = &corev1.ConfigMap{
 	Data: map[string]string{
@@ -1423,20 +1146,12 @@ var GrafanaOverviewDashCM = &corev1.ConfigMap{
 `,
 	},
 	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "victoria-metrics-k8s-stack-grafana",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"grafana_dashboard":            "1",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-grafana-overview",
-		Namespace: "monitoring",
+		Labels: ku.MergeLabels(
+			Graf.Labels(),
+			map[string]string{DashboardLabel: "1"},
+		),
+		Name:      Graf.Name + "-dash-overview",
+		Namespace: Graf.Namespace,
 	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "ConfigMap",
-	},
+	TypeMeta: ku.TypeConfigMapV1,
 }
