@@ -33,10 +33,6 @@ var (
 type Nats struct {
 	kube.App
 
-	// embedded struct
-	// CRD
-	// Surveyor
-
 	NS *corev1.Namespace
 
 	BoxDeploy          *appsv1.Deployment
@@ -47,19 +43,11 @@ type Nats struct {
 	SVC                *corev1.Service
 	ServiceMonitor     *promoperatorv1.ServiceMonitor
 	TestRequestReplyPO *corev1.Pod
-	// DashboardCM        *corev1.ConfigMap
 }
 
 // New creates a new Nats
 func New() *Nats {
 	return &Nats{
-		// CRD: CRD{
-		// 	AccountsNatsIoCRD:        jetstream.AccountsJetstreamNatsIoCRD,
-		// 	ConsumersNatsIoCRD:       jetstream.ConsumersJetstreamNatsIoCRD,
-		// 	StreamsNatsIoCRD:         jetstream.StreamsJetstreamNatsIoCRD,
-		// 	StreamtemplatesNatsIoCRD: jetstream.StreamTemplatesJetstreamNatsIoCRD,
-		// },
-		// Surveyor:           *NewSurveyor(),
 		NS: NS,
 		SA: SA,
 
@@ -100,13 +88,6 @@ func New() *Nats {
 		// DashboardCM:        DashboardNatsCM,
 	}
 }
-
-//	type CRD struct {
-//		AccountsNatsIoCRD        *apiextensionsv1.CustomResourceDefinition
-//		ConsumersNatsIoCRD       *apiextensionsv1.CustomResourceDefinition
-//		StreamsNatsIoCRD         *apiextensionsv1.CustomResourceDefinition
-//		StreamtemplatesNatsIoCRD *apiextensionsv1.CustomResourceDefinition
-//	}
 
 // Apply applies the kubernetes objects to the cluster
 func (a *Nats) Apply(ctx context.Context) error {

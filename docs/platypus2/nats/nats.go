@@ -8,6 +8,7 @@ package nats
 import (
 	"bytes"
 	"fmt"
+	"strings"
 
 	"github.com/volvo-cars/lingoneks/meta"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -26,7 +27,10 @@ const (
 	ResourceStorage = "10Gi"
 )
 
-var N = Core()
+var (
+	N          = Core()
+	configFile = "nats.conf"
+)
 
 func Core() Meta {
 	n := "nats"
@@ -50,28 +54,9 @@ func Core() Meta {
 		},
 	}
 
-	configFile := "nats.conf"
 	configBasePath := "/etc/nats-config"
 	configPath := configBasePath + "/" + configFile
-
-	c := ku.ConfigAndMount{
-		Data: natsConfig,
-		ObjectMeta: metav1.ObjectMeta{
-			Labels:    m.Labels(),
-			Name:      "nats-config",
-			Namespace: m.Namespace,
-		},
-		VolumeMount: corev1.VolumeMount{
-			Name:      "config-volume",
-			MountPath: configBasePath,
-		},
-	}
-
 	natsPIDBasePath := "/var/run/nats"
-
-	HTTP := P("http")
-	TCP := P("tcp")
-
 	np := func(p int32, name string, ap *string) meta.NetPort {
 		return meta.NetPort{
 			Container: corev1.ContainerPort{Name: name, ContainerPort: p},
@@ -80,11 +65,12 @@ func Core() Meta {
 			},
 		}
 	}
+	HTTP := P("http")
+	TCP := P("tcp")
 
-	return Meta{
+	res := Meta{
 		Metadata: m,
 
-		Config:     c,
 		ConfigFile: configFile,
 		ConfigPath: configPath,
 
@@ -116,6 +102,21 @@ func Core() Meta {
 			Tag:   sideCarV,
 		},
 	}
+	// ConfigMap and Mount
+	res.Config = ku.ConfigAndMount{
+		Data: map[string]string{res.ConfigFile: Config(res)},
+		ObjectMeta: metav1.ObjectMeta{
+			Labels:    m.Labels(),
+			Name:      "nats-config",
+			Namespace: m.Namespace,
+		},
+		VolumeMount: corev1.VolumeMount{
+			Name:      "config-volume",
+			MountPath: configBasePath,
+		},
+	}
+
+	return res
 }
 
 type Meta struct {
@@ -142,7 +143,6 @@ type Meta struct {
 
 	ConfigReloader meta.ContainerImg
 	PromExporter   meta.ContainerImg
-	// SideCarVersion string
 }
 
 var (
@@ -151,64 +151,103 @@ var (
 	ResourceMemory = d(ResourceMemNum) + ResourceMemUnit
 )
 
-func srvURLs(r int) string {
-	res := bytes.Buffer{}
-	for i := 0; i < r; i++ {
-		u := fmt.Sprintf(
-			"    nats://%s-%d.%s.%s.svc.cluster.local:%d",
-			N.Name, i, N.Name, N.Namespace,
-			N.Cluster.Service.Port,
-		)
-		res.WriteString(u)
-		res.Write([]byte("\n"))
-	}
-	return res.String()
-}
-
-var natsConfig = map[string]string{
-	N.ConfigFile: `
+func Config(n Meta) string {
+	return `
 # NATS Clients Port
-port: ` + d(N.Client.Service.Port) + `
+port: ` + d(n.Client.Container.ContainerPort) + `
 # PID file shared with configuration reloader.
-pid_file: "` + N.pidPath + `"
+pid_file: "` + n.pidPath + `"
 ###############
 #             #
 # Monitoring  #
 #             #
 ###############
-http: ` + d(N.Monitor.Container.ContainerPort) + `
-server_name:$POD_NAME
-server_tags: [
-    "mem:` + ResourceMemory + `",
-]
+` + ConfigMonitoring(
+		n.Monitor.Container.ContainerPort,
+		[]string{ResourceMemory},
+	) + `
 ###################################
 #                                 #
 # NATS JetStream                  #
 #                                 #
 ###################################
-jetstream {
-  max_mem:` + ResourceJSMem + `
-  store_dir: "` + N.storageDir + `"
-  max_file:` + ResourceStorage + `
-  unique_tag: "natsuniquetag"
-}
+` + ConfigJetStream(
+		ResourceJSMem,
+		n.storageDir,
+		ResourceStorage,
+		"natsuniquetag",
+	) + `
+
 ###################################
 #                                 #
 # NATS Full Mesh Clustering Setup #
 #                                 #
 ###################################
-cluster {
-  name: natscluster
-  port: ` + d(N.Cluster.Service.Port) + `
-  routes = [
-` + srvURLs(N.replicas) + `
-  ]
-  cluster_advertise: $CLUSTER_ADVERTISE
-  connect_retries: 120
-}
+` + ConfigCluster(
+		"natscluster",
+		n.Cluster.Container.ContainerPort,
+		n.srvURLs(n.replicas),
+		120,
+	) + `
+
 lame_duck_grace_period: 10s
 lame_duck_duration: 30s
-`,
+`
+}
+
+func (n Meta) srvURLs(r int) string {
+	var res bytes.Buffer
+	res.WriteString("\n")
+	for i := 0; i < r; i++ {
+		u := fmt.Sprintf(
+			"    nats://%s-%d.%s.%s.svc.cluster.local:%d",
+			n.Name, i, n.Name, n.Namespace,
+			n.Cluster.Service.Port,
+		)
+		res.WriteString(u)
+		res.WriteString("\n")
+	}
+	return res.String()
+}
+
+func ConfigMonitoring(port int32, tags []string) string {
+	return `
+http: ` + d(port) + `
+server_name:$POD_NAME
+server_tags: [
+  ` + strings.Join(tags, ",") + `
+]
+`
+}
+
+func ConfigJetStream(maxMem, storeDir, maxFile, uniqTag string) string {
+	return `
+jetstream {
+  max_mem:` + maxMem + `
+  store_dir: "` + storeDir + `"
+  max_file:` + maxFile + `
+  unique_tag: "` + uniqTag + `"
+}
+`
+}
+
+func ConfigCluster(
+	name string,
+	port int32,
+	routes string,
+	retries int32,
+) string {
+	return `
+cluster {
+  name: ` + name + `
+  port: ` + d(port) + `
+  routes = [
+` + routes + `
+  ]
+  cluster_advertise: $CLUSTER_ADVERTISE
+  connect_retries: ` + d(retries) + `
+}
+`
 }
 
 var SVC = &corev1.Service{

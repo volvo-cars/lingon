@@ -4,7 +4,10 @@
 package vmk8s
 
 import (
+	"errors"
 	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/VictoriaMetrics/operator/api/victoriametrics/v1beta1"
 	"github.com/volvo-cars/lingon/pkg/kube"
@@ -17,14 +20,15 @@ import (
 )
 
 const (
-	GrafanaVersion             = "9.5.3"
-	GrafanaSideCarImg          = "quay.io/kiwigrid/k8s-sidecar:1.19.2"
-	GrafanaPort                = 3000
-	GrafanaPortName            = "service"
-	DashboardLabel             = "grafana_dashboard"
-	DataSourceLabel            = "grafana_datasource"
-	defaultDashboardConfigName = "grafana-default-dashboards"
-	curlImg                    = "curlimages/curl:7.85.0"
+	GrafanaVersion                   = "9.5.3"
+	GrafanaSideCarImg                = "quay.io/kiwigrid/k8s-sidecar:1.19.2"
+	GrafanaPort                      = 3000
+	GrafanaPortName                  = "service"
+	DashboardLabel                   = "grafana_dashboard"
+	DataSourceLabel                  = "grafana_datasource"
+	defaultDashboardConfigName       = "grafana-default-dashboards"
+	curlImg                          = "curlimages/curl:7.85.0"
+	userID                     int64 = 472
 )
 
 var Graf = &Metadata{
@@ -356,7 +360,7 @@ chown -R 472:472 /var/lib/grafana/plugins/
 ls -l /var/lib/grafana/
 id
 touch /var/lib/grafana/plugins/fake.txt
-curl www.google.com
+curl -v www.google.com -o /dev/null
 # ver=$(curl -s https://api.github.com/repos/VictoriaMetrics/grafana-datasource/releases/latest | grep -oE 'v\d+\.\d+\.\d+' | head -1)
 ver="v0.2.0"
 curl -L https://github.com/VictoriaMetrics/grafana-datasource/releases/download/$ver/victoriametrics-datasource-$ver.tar.gz -o /var/lib/grafana/plugins/plugin.tar.gz
@@ -377,10 +381,10 @@ chown -R 472:472 /var/lib/grafana/plugins/
 					},
 				},
 				SecurityContext: &corev1.PodSecurityContext{
-					FSGroup:      P(int64(472)),
-					RunAsGroup:   P(int64(472)),
-					RunAsNonRoot: P(true),
-					RunAsUser:    P(int64(472)),
+					FSGroup:    P(userID),
+					RunAsGroup: P(userID),
+					// RunAsNonRoot: P(true),
+					RunAsUser: P(userID),
 				},
 				ServiceAccountName: GrafanaSA.Name,
 				Volumes: []corev1.Volume{
@@ -422,6 +426,75 @@ var GrafanaScrape = &v1beta1.VMServiceScrape{
 	TypeMeta: TypeVMServiceScrapeV1Beta1,
 }
 
+type DashSource struct {
+	Name   string
+	URL    string
+	Source string
+}
+
+const (
+	PrometheusDataSourceName      = "Prometheus"
+	VictoriaMetricsDataSourceName = "VictoriaMetrics"
+)
+
+func (d *DashSource) Validate() error {
+	if _, err := url.Parse(d.URL); err != nil {
+		return fmt.Errorf("url %s - %s: %w", d.Name, d.URL, err)
+	}
+
+	if d.Name == "" {
+		return fmt.Errorf("dashboard %s: name undefined", d.URL)
+	}
+	n := d.Name
+	n = strings.ReplaceAll(n, " ", "-")
+	n = strings.ReplaceAll(n, "/", "_")
+
+	switch d.Source {
+	case PrometheusDataSourceName:
+	case VictoriaMetricsDataSourceName:
+	default:
+		return fmt.Errorf("datasource %v: %s", d.Name, d.Source)
+	}
+	return nil
+}
+
+func downloadDashboards(dss []DashSource) string {
+	var buf strings.Builder
+	var errs error
+
+	buf.WriteString(
+		`
+#!/usr/bin/env sh
+set -euf
+mkdir -p /var/lib/grafana/dashboards/default
+`,
+	)
+
+	for _, ds := range dss {
+		if err := ds.Validate(); err != nil {
+			errs = errors.Join(errs, err)
+		}
+		buf.WriteString(
+			`
+
+curl -skf \
+--connect-timeout 60 \
+--max-time 60 \
+-H "Accept: application/json" \
+-H "Content-Type: application/json;charset=UTF-8" \
+  "` + ds.URL + `" \
+  | sed '/-- .* --/! s/"datasource":.*,/"datasource": "` + ds.Source + `",/g' \
+> "/var/lib/grafana/dashboards/default/` + ds.Name + `.json"
+`,
+		)
+	}
+	if errs != nil {
+		panic(errs)
+	}
+
+	return buf.String()
+}
+
 var GrafanaCM = &corev1.ConfigMap{
 	Data: map[string]string{
 		"dashboardproviders.yaml": `
@@ -437,20 +510,34 @@ providers:
   type: file
 
 `,
-		"download_dashboards.sh": `
-#!/usr/bin/env sh
-set -euf
-mkdir -p /var/lib/grafana/dashboards/default
-curl -skf \
---connect-timeout 60 \
---max-time 60 \
--H "Accept: application/json" \
--H "Content-Type: application/json;charset=UTF-8" \
-  "https://grafana.com/api/dashboards/1860/revisions/22/download" \
-  | sed '/-- .* --/! s/"datasource":.*,/"datasource": "VictoriaMetrics",/g' \
-> "/var/lib/grafana/dashboards/default/nodeexporter.json"
-
-`,
+		"download_dashboards.sh": downloadDashboards(
+			[]DashSource{
+				{
+					Name:   "nodeexporter",
+					URL:    "https://grafana.com/api/dashboards/1860/revisions/22/download",
+					Source: "VictoriaMetrics",
+				},
+				{
+					Name:   "karpenter-capacity-dashboard",
+					URL:    "https://karpenter.sh/v0.24.0/getting-started/getting-started-with-eksctl/karpenter-capacity-dashboard.json",
+					Source: "VictoriaMetrics",
+				},
+			},
+		),
+		// 			`
+		// #!/usr/bin/env sh
+		// set -euf
+		// mkdir -p /var/lib/grafana/dashboards/default
+		// curl -skf \
+		// --connect-timeout 60 \
+		// --max-time 60 \
+		// -H "Accept: application/json" \
+		// -H "Content-Type: application/json;charset=UTF-8" \
+		//   "https://grafana.com/api/dashboards/1860/revisions/22/download" \
+		//   | sed '/-- .* --/! s/"datasource":.*,/"datasource": "VictoriaMetrics",/g' \
+		// > "/var/lib/grafana/dashboards/default/nodeexporter.json"
+		// https://karpenter.sh/v0.24.0/getting-started/getting-started-with-eksctl/karpenter-capacity-dashboard.json
+		// `,
 		"grafana.ini": `
 [analytics]
 check_for_updates = true
@@ -523,7 +610,7 @@ var GrafanaDataSourceCM = &corev1.ConfigMap{
 		"datasource.yaml": `
 apiVersion: 1
 datasources:
-- name: VictoriaMetrics
+- name: ` + VictoriaMetricsDataSourceName + `
   type: prometheus
   url: ` + fmt.Sprintf(
 			"http://%s.%s.svc:8429/",
