@@ -23,6 +23,7 @@ import (
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
+
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -33,6 +34,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	"github.com/nats-io/nkeys"
+
 	natsv1 "github.com/volvo-cars/nope/api/v1"
 	"github.com/volvo-cars/nope/internal/controller"
 	//+kubebuilder:scaffold:imports
@@ -65,7 +67,11 @@ func main() {
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
 
-	// Ensure NATS-related configuration is set
+	// Initialize the logger before doing any validation
+	// of environment variables or command line args.
+	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+
+	// Ensure NATS-related environment variables are set.
 	var cErr error
 	natsURL, ok := os.LookupEnv("NATS_URL")
 	if !ok {
@@ -93,8 +99,6 @@ func main() {
 		setupLog.Error(err, "invalid OPERATOR_SEED")
 		os.Exit(1)
 	}
-
-	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
@@ -135,6 +139,29 @@ func main() {
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "User")
+		os.Exit(1)
+	}
+	if err = (&controller.StreamReconciler{
+		Client:       mgr.GetClient(),
+		Scheme:       mgr.GetScheme(),
+		NATSURL:      natsURL,
+		NATSCreds:    natsCreds,
+		OperatorNKey: operatorNKey,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Stream")
+		os.Exit(1)
+	}
+	// TODO: to re-nable webhooks, uncomment this.
+	// Cannot get it work locally, even with `export ENABLE_WEBHOOKS=false`
+	// if err = (&natsv1.Stream{}).SetupWebhookWithManager(mgr); err != nil {
+	// 	setupLog.Error(err, "unable to create webhook", "webhook", "Stream")
+	// 	os.Exit(1)
+	// }
+	if err = (&controller.ConsumerReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Consumer")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder

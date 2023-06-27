@@ -37,6 +37,58 @@ rules:
 - apiGroups:
   - nope.volvocars.com
   resources:
+  - consumers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - nope.volvocars.com
+  resources:
+  - consumers/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - nope.volvocars.com
+  resources:
+  - consumers/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - nope.volvocars.com
+  resources:
+  - streams
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - nope.volvocars.com
+  resources:
+  - streams/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - nope.volvocars.com
+  resources:
+  - streams/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - nope.volvocars.com
+  resources:
   - users
   verbs:
   - create

@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	ts, err := natsutil.NewTestServer("./jwt")
+	ts, err := natsutil.NewTestServer(natsutil.WithDir("./jwt"))
 	if err != nil {
 		slog.Error("creating NATS test server: ", "error", err)
 		os.Exit(1)

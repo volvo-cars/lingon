@@ -1,0 +1,34 @@
+# Copyright (c) 2023 Volvo Car Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# permissions for end users to edit consumers.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: consumer-editor-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: nope
+    app.kubernetes.io/part-of: nope
+    app.kubernetes.io/managed-by: kustomize
+  name: consumer-editor-role
+rules:
+- apiGroups:
+  - nope.volvocars.com
+  resources:
+  - consumers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - nope.volvocars.com
+  resources:
+  - consumers/status
+  verbs:
+  - get

@@ -1,5 +1,7 @@
 module github.com/volvo-cars/nope
 
+replace github.com/volvo-cars/lingon => ../../
+
 go 1.19
 
 require (
@@ -10,6 +12,8 @@ require (
 	github.com/onsi/ginkgo/v2 v2.9.5
 	github.com/onsi/gomega v1.27.7
 	github.com/volvo-cars/lingon v0.0.0-20230620123651-0b5705e2a939
+	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
+	k8s.io/api v0.28.0-alpha.3
 	k8s.io/apimachinery v0.28.0-alpha.3
 	k8s.io/client-go v0.28.0-alpha.3
 	sigs.k8s.io/controller-runtime v0.15.0
@@ -69,7 +73,6 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
 	golang.org/x/crypto v0.10.0 // indirect
-	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1 // indirect
 	golang.org/x/mod v0.11.0 // indirect
 	golang.org/x/net v0.11.0 // indirect
 	golang.org/x/oauth2 v0.9.0 // indirect
@@ -84,7 +87,6 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/api v0.28.0-alpha.3 // indirect
 	k8s.io/apiextensions-apiserver v0.27.3 // indirect
 	k8s.io/component-base v0.27.3 // indirect
 	k8s.io/klog/v2 v2.100.1 // indirect

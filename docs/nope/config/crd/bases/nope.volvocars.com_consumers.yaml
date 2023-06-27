@@ -8,20 +8,20 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.11.3
   creationTimestamp: null
-  name: users.nope.volvocars.com
+  name: consumers.nope.volvocars.com
 spec:
   group: nope.volvocars.com
   names:
-    kind: User
-    listKind: UserList
-    plural: users
-    singular: user
+    kind: Consumer
+    listKind: ConsumerList
+    plural: consumers
+    singular: consumer
   scope: Namespaced
   versions:
   - name: v1
     schema:
       openAPIV3Schema:
-        description: User is the Schema for the users API
+        description: Consumer is the Schema for the consumers API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -36,26 +36,20 @@ spec:
           metadata:
             type: object
           spec:
-            description: UserSpec defines the desired state of User
+            description: ConsumerSpec defines the desired state of Consumer
             properties:
-              account:
-                description: Account is the account this user belongs to.
-                type: string
               name:
-                description: Name of the user.
+                description: Name is the name of the consumer
+                type: string
+              stream:
+                description: Stream to which the consumer belongs
                 type: string
             type: object
           status:
-            description: UserStatus defines the observed state of User
+            description: ConsumerStatus defines the observed state of Consumer
             properties:
-              jwt:
-                type: string
-              nkeySeed:
-                format: byte
-                type: string
-              subject:
-                description: ID of the NATS account this resource owns. The ID is
-                  also the public key and the subject of the JWT.
+              name:
+                description: Name of the consumer
                 type: string
             type: object
         type: object

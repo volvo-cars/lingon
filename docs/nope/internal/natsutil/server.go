@@ -5,6 +5,7 @@ package natsutil
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
 	"testing"
@@ -16,7 +17,10 @@ import (
 )
 
 func StartTestServer(t *testing.T) TestServer {
-	ts, err := NewTestServer(t.TempDir())
+	ts, err := NewTestServer(
+		WithDir(t.TempDir()),
+		WithFindAvailablePort(true),
+	)
 	if err != nil {
 		t.Fatal("creating test server: ", err)
 	}
@@ -43,7 +47,22 @@ func (t TestServer) StartUntilReady() error {
 	return nil
 }
 
-func NewTestServer(dir string) (TestServer, error) {
+func NewTestServer(opts ...ServerOption) (TestServer, error) {
+	sOpt := serverOptionDefaults
+	for _, opt := range opts {
+		opt(&sOpt)
+	}
+	if sOpt.Dir == "" {
+		return TestServer{}, fmt.Errorf("dir is required")
+	}
+	if sOpt.FindAvailablePort {
+		port, err := findAvailablePort()
+		if err != nil {
+			return TestServer{}, fmt.Errorf("finding available port: %w", err)
+		}
+		sOpt.Port = port
+	}
+
 	jwtAuth, err := bootstrapServerJWTAuth()
 	if err != nil {
 		return TestServer{}, fmt.Errorf("bootstrapping server JWT auth: %w", err)
@@ -63,8 +82,8 @@ func NewTestServer(dir string) (TestServer, error) {
 	// 	// JetStream: true,
 	// }
 
-	natsConf := generateNATSConf(jwtAuth, dir)
-	natsConfFile := filepath.Join(dir, "resolver.conf")
+	natsConf := generateNATSConf(jwtAuth, sOpt.Dir)
+	natsConfFile := filepath.Join(sOpt.Dir, "resolver.conf")
 	if err := os.MkdirAll(filepath.Dir(natsConfFile), os.ModePerm); err != nil {
 		return TestServer{}, fmt.Errorf("creating dir for nats conf file: %w", err)
 	}
@@ -72,20 +91,21 @@ func NewTestServer(dir string) (TestServer, error) {
 		return TestServer{}, fmt.Errorf("writing nats conf: %w", err)
 	}
 
-	opts := &server.Options{}
-	if err := opts.ProcessConfigFile(natsConfFile); err != nil {
+	nsOpts := &server.Options{}
+	if err := nsOpts.ProcessConfigFile(natsConfFile); err != nil {
 		return TestServer{}, fmt.Errorf("processing config file: %w", err)
 	}
-	opts.SystemAccount = jwtAuth.SysAccountPublicKey
-	opts.Debug = true
-	opts.Port = 4222
-	opts.JetStream = true
+	nsOpts.SystemAccount = jwtAuth.SysAccountPublicKey
+	nsOpts.Debug = true
+	nsOpts.Port = sOpt.Port
+	nsOpts.JetStream = true
+	nsOpts.StoreDir = sOpt.Dir
 
 	if err := os.RemoveAll(natsConfFile); err != nil {
 		return TestServer{}, fmt.Errorf("removing NATS conf file %s: %w", natsConfFile, err)
 	}
 
-	ns, err := server.NewServer(opts)
+	ns, err := server.NewServer(nsOpts)
 	if err != nil {
 		return TestServer{}, fmt.Errorf("new server: %w", err)
 	}
@@ -95,6 +115,39 @@ func NewTestServer(dir string) (TestServer, error) {
 		NS:   ns,
 		Auth: jwtAuth,
 	}, nil
+}
+
+type ServerOption func(*serverOption)
+
+type serverOption struct {
+	FindAvailablePort bool
+	Port              int
+
+	Dir string
+}
+
+var serverOptionDefaults = serverOption{
+	FindAvailablePort: false,
+	Port:              4222,
+	Dir:               "",
+}
+
+func WithFindAvailablePort(enabled bool) ServerOption {
+	return func(so *serverOption) {
+		so.FindAvailablePort = enabled
+	}
+}
+
+func WithPort(port int) ServerOption {
+	return func(so *serverOption) {
+		so.Port = port
+	}
+}
+
+func WithDir(dir string) ServerOption {
+	return func(so *serverOption) {
+		so.Dir = dir
+	}
 }
 
 type serverJWTAuth struct {
@@ -249,4 +302,14 @@ resolver_preload: {
 		ja.SysAccountPublicKey,
 		ja.SysAccountJWT,
 	)
+}
+
+func findAvailablePort() (int, error) {
+	l, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		return -1, fmt.Errorf("listen: %w", err)
+	}
+	l.Close()
+
+	return l.Addr().(*net.TCPAddr).Port, nil
 }
