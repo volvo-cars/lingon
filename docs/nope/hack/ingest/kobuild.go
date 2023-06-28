@@ -42,7 +42,7 @@ func KoBuild(cfg KoBuildConfig) error {
 	}
 
 	cmd := exec.Command("ko", "build", "--push=false", "--local", "--bare")
-	// cmd.Env = []string{fmt.Sprintf("KO_DOCKER_REPO=%s", "platypus/ingestion")}
+	cmd.Env = append(os.Environ(), fmt.Sprintf("KO_DOCKER_REPO=%s", "platypus/ingestion"))
 	cmd.Dir = cfg.Workdir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

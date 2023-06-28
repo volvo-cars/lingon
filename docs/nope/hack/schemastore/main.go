@@ -2,14 +2,14 @@ package main
 
 import (
 	"errors"
+	"flag"
 	"os"
-	"path/filepath"
-	"strconv"
+	"strings"
 
 	"github.com/nats-io/nats.go"
 	"github.com/volvo-cars/nope/hack/ingest"
-	"github.com/volvo-cars/nope/hack/ingest/templates"
 	"golang.org/x/exp/slog"
+	"golang.org/x/tools/txtar"
 )
 
 const (
@@ -17,8 +17,24 @@ const (
 )
 
 func main() {
+	var (
+		schema string
+		dir    string
+		in     fileList
+	)
+
+	flag.StringVar(&schema, "schema", "", "name of the schema")
+	flag.StringVar(&dir, "dir", "", "relative directory for the input files")
+	flag.Var(&in, "in", "file to include in the schema")
+	flag.Parse()
 
 	var cErr error
+	if schema == "" {
+		cErr = errors.Join(cErr, errors.New("schema name is required"))
+	}
+	if len(in) == 0 {
+		cErr = errors.Join(cErr, errors.New("input file name is required"))
+	}
 	// Check environment variables
 	natsURL, ok := os.LookupEnv("NATS_URL")
 	if !ok {
@@ -58,39 +74,32 @@ func main() {
 		slog.Error("getting bucket", "error", err)
 		os.Exit(1)
 	}
-	watcher, err := bucket.WatchAll(nats.IgnoreDeletes())
+	ar, err := ingest.PackTxtar(dir, in)
 	if err != nil {
-		slog.Error("watching bucket", "error", err)
+		slog.Error("packing txtar", "error", err)
 		os.Exit(1)
 	}
-	defer watcher.Stop()
 
-	slog.Info(
-		"watching nats bucket",
-		"bucket", bucket.Bucket(),
-	)
-	for kve := range watcher.Updates() {
-		if kve == nil {
-			continue
-		}
-		switch op := kve.Operation(); op {
-		case nats.KeyValuePut:
-			slog.Info("put", "key", kve.Key(), "value", kve.Value())
-
-			workdir := filepath.Join("out", kve.Key(), strconv.FormatUint(kve.Revision(), 10))
-			err := ingest.KoBuild(ingest.KoBuildConfig{
-				Workdir:        workdir,
-				GoServiceTxtar: templates.IngestionTxtar,
-				Schema: ingest.Schema{
-					Name:  kve.Key(),
-					Txtar: kve.Value(),
-				},
-			})
-			if err != nil {
-				slog.Error("building", "error", err)
-			}
-		default:
-			slog.Info("unknown operation", "operation", op)
-		}
+	rev, err := bucket.Put(schema, txtar.Format(ar))
+	if err != nil {
+		slog.Error("putting schema", "error", err)
+		os.Exit(1)
 	}
+	slog.Info(
+		"schema stored",
+		"bucket", bucket,
+		"schema", schema,
+		"revision", rev,
+	)
+}
+
+type fileList []string
+
+func (i *fileList) String() string {
+	return strings.Join(*i, ", ")
+}
+
+func (i *fileList) Set(value string) error {
+	*i = append(*i, value)
+	return nil
 }
