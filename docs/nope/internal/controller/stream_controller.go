@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/nats-io/nats.go"
@@ -40,9 +41,8 @@ type StreamReconciler struct {
 	Scheme *runtime.Scheme
 
 	// NATS related configs
-	NATSURL      string
-	NATSCreds    string
-	OperatorNKey []byte
+	NATSURL   string
+	NATSCreds string
 }
 
 //+kubebuilder:rbac:groups=nope.volvocars.com,resources=streams,verbs=get;list;watch;create;update;patch;delete
@@ -60,6 +60,7 @@ type StreamReconciler struct {
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.14.4/pkg/reconcile
 func (r *StreamReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
+	finalizer := "stream.nope.volvocars.com/finalizer"
 
 	// Get the Stream resource.
 	var stream v1.Stream
@@ -106,6 +107,25 @@ func (r *StreamReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	if err != nil {
 		logger.Error(err, "unable to connect to NATS server")
 		return ctrl.Result{}, fmt.Errorf("connecting to NATS server: %w", err)
+	}
+
+	// Check if the stream is being deleted.
+	if !stream.ObjectMeta.DeletionTimestamp.IsZero() {
+		logger.Info("stream is being deleted")
+		// Stream is being deleted.
+		if controllerutil.ContainsFinalizer(&stream, finalizer) {
+			if err := bla.DeleteStream(nc, stream.Spec.Name); err != nil {
+				return ctrl.Result{}, fmt.Errorf("deleting stream: %w", err)
+			}
+			controllerutil.RemoveFinalizer(&stream, finalizer)
+			if err := r.Update(ctx, &stream); err != nil {
+				return ctrl.Result{}, fmt.Errorf("updating stream: %w", err)
+			}
+			logger.Info("stream deleted and finalizer removed")
+		}
+		logger.Info("finish reconciliation as the stream is being deleted")
+		// Finish reconciliation as the object is being deleted.
+		return ctrl.Result{}, nil
 	}
 
 	var managedStream *bla.Stream

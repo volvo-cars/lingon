@@ -52,12 +52,12 @@ func SyncConsumer(nc *nats.Conn, consumer *Consumer, req ConsumerRequest) (*Cons
 	}, nil
 }
 
-func DeleteConsumer(nc *nats.Conn, req ConsumerRequest) error {
+func DeleteConsumer(nc *nats.Conn, stream string, consumer string) error {
 	js, err := nc.JetStream()
 	if err != nil {
 		return fmt.Errorf("getting jetstream: %w", err)
 	}
-	if err := js.DeleteConsumer(req.Stream, req.Name); err != nil {
+	if err := js.DeleteConsumer(stream, consumer); err != nil {
 		return fmt.Errorf("deleting consumer: %w", err)
 	}
 	return nil

@@ -21,6 +21,9 @@ import (
 	"fmt"
 	"time"
 
+	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -28,6 +31,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
+	"github.com/nats-io/jwt/v2"
 	natsv1 "github.com/volvo-cars/nope/api/v1"
 	v1 "github.com/volvo-cars/nope/api/v1"
 	"github.com/volvo-cars/nope/internal/bla"
@@ -117,6 +121,29 @@ func (r *UserReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 	syncdUser, err := bla.SyncUser(account.Status.NKeySeed, managedUser, userReq)
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("syncing NATS user %s/%s: %w", user.Namespace, user.Name, err)
+	}
+
+	// Create secret containing the user's credentials
+	userCreds, err := jwt.FormatUserConfig(syncdUser.JWT, syncdUser.NKey)
+	if err != nil {
+		return ctrl.Result{}, fmt.Errorf("formatting user credentials: %w", err)
+	}
+	userSecret := corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      fmt.Sprintf("%s-creds", user.Name),
+			Namespace: user.Namespace,
+		},
+		Data: map[string][]byte{
+			"user.creds": userCreds,
+		},
+	}
+	if err := r.Client.Update(ctx, &userSecret); err != nil {
+		if !apierrors.IsNotFound(err) {
+			return ctrl.Result{}, fmt.Errorf("updating user secret %s/%s: %w", userSecret.Namespace, userSecret.Name, err)
+		}
+		if err := r.Client.Create(ctx, &userSecret); err != nil {
+			return ctrl.Result{}, fmt.Errorf("creating user secret %s/%s: %w", userSecret.Namespace, userSecret.Name, err)
+		}
 	}
 
 	user.Status = v1.UserStatus{

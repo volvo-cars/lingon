@@ -81,9 +81,9 @@ func main() {
 	if !ok {
 		cErr = errors.Join(cErr, errors.New("NATS_CREDS not set"))
 	}
-	operatorSeed, ok := os.LookupEnv("OPERATOR_SEED")
+	operatorSeed, ok := os.LookupEnv("NATS_OPERATOR_SEED")
 	if !ok {
-		cErr = errors.Join(cErr, errors.New("OPERATOR_SEED not set"))
+		cErr = errors.Join(cErr, errors.New("NATS_OPERATOR_SEED not set"))
 	}
 	if cErr != nil {
 		setupLog.Error(cErr, "required environment variables not set")
@@ -91,12 +91,12 @@ func main() {
 	}
 	operatorNKey, err := os.ReadFile(operatorSeed)
 	if err != nil {
-		setupLog.Error(err, "reading OPERATOR_SEED")
+		setupLog.Error(err, "reading NATS_OPERATOR_SEED")
 		os.Exit(1)
 	}
 	// Try to parse the operator seed to ensure it is valid
 	if _, err := nkeys.FromSeed(operatorNKey); err != nil {
-		setupLog.Error(err, "invalid OPERATOR_SEED")
+		setupLog.Error(err, "invalid NATS_OPERATOR_SEED")
 		os.Exit(1)
 	}
 
@@ -142,11 +142,10 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&controller.StreamReconciler{
-		Client:       mgr.GetClient(),
-		Scheme:       mgr.GetScheme(),
-		NATSURL:      natsURL,
-		NATSCreds:    natsCreds,
-		OperatorNKey: operatorNKey,
+		Client:    mgr.GetClient(),
+		Scheme:    mgr.GetScheme(),
+		NATSURL:   natsURL,
+		NATSCreds: natsCreds,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Stream")
 		os.Exit(1)
@@ -158,8 +157,10 @@ func main() {
 	// 	os.Exit(1)
 	// }
 	if err = (&controller.ConsumerReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Client:    mgr.GetClient(),
+		Scheme:    mgr.GetScheme(),
+		NATSURL:   natsURL,
+		NATSCreds: natsCreds,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Consumer")
 		os.Exit(1)

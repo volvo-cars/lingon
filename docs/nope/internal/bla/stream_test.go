@@ -95,20 +95,17 @@ func TestStream(t *testing.T) {
 	t.Run("update consumer", func(t *testing.T) {
 		consumer, err = bla.SyncConsumer(nc, consumer, bla.ConsumerRequest{
 			Stream: stream.Name,
-			Name:   "MY_CONSUMER",
+			Name:   consumer.Name,
 		})
 		tu.AssertNoError(t, err, "creating consumer")
 	})
 	t.Run("update deleted consumer", func(t *testing.T) {
-		delErr := bla.DeleteConsumer(nc, bla.ConsumerRequest{
-			Stream: stream.Name,
-			Name:   "MY_CONSUMER",
-		})
+		delErr := bla.DeleteConsumer(nc, stream.Name, consumer.Name)
 		tu.AssertNoError(t, delErr, "deleting consumer")
 		var err error
 		consumer, err = bla.SyncConsumer(nc, consumer, bla.ConsumerRequest{
 			Stream: stream.Name,
-			Name:   "MY_CONSUMER",
+			Name:   consumer.Name,
 		})
 		tu.AssertNoError(t, err, "creating consumer")
 	})

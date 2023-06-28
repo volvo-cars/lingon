@@ -9,6 +9,14 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const (
+	AccountName   = "sample"
+	UserName      = "sample"
+	StreamName    = "sample"
+	StreamSubject = "sample"
+	ConsumerName  = "sample"
+)
+
 func NewApp() kube.Exporter {
 	account := &v1.Account{
 		TypeMeta: metav1.TypeMeta{
@@ -16,7 +24,7 @@ func NewApp() kube.Exporter {
 			APIVersion: "nope.volvocars.com/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "sample",
+			Name: AccountName,
 			Labels: map[string]string{
 				"app.kubernetes.io/name":       "sample",
 				"app.kubernetes.io/instance":   "sample",
@@ -29,7 +37,7 @@ func NewApp() kube.Exporter {
 			},
 		},
 		Spec: v1.AccountSpec{
-			Name: "sample",
+			Name: AccountName,
 		},
 	}
 
@@ -39,7 +47,7 @@ func NewApp() kube.Exporter {
 			APIVersion: "nope.volvocars.com/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "sample",
+			Name: UserName,
 			Labels: map[string]string{
 				"app.kubernetes.io/name":       "sample",
 				"app.kubernetes.io/instance":   "sample",
@@ -53,7 +61,7 @@ func NewApp() kube.Exporter {
 		},
 		Spec: v1.UserSpec{
 			Account: account.Name,
-			Name:    "sample",
+			Name:    UserName,
 		},
 	}
 
@@ -63,7 +71,7 @@ func NewApp() kube.Exporter {
 			APIVersion: "nope.volvocars.com/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "sample",
+			Name: StreamName,
 			Labels: map[string]string{
 				"app.kubernetes.io/name":       "sample",
 				"app.kubernetes.io/instance":   "sample",
@@ -77,8 +85,8 @@ func NewApp() kube.Exporter {
 		},
 		Spec: v1.StreamSpec{
 			Account:  account.Name,
-			Name:     "sample",
-			Subjects: []string{"sample"},
+			Name:     StreamName,
+			Subjects: []string{StreamSubject},
 		},
 	}
 
@@ -88,7 +96,7 @@ func NewApp() kube.Exporter {
 			APIVersion: "nope.volvocars.com/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "sample",
+			Name: ConsumerName,
 			Labels: map[string]string{
 				"app.kubernetes.io/name":       "sample",
 				"app.kubernetes.io/instance":   "sample",
@@ -102,7 +110,7 @@ func NewApp() kube.Exporter {
 		},
 		Spec: v1.ConsumerSpec{
 			Stream: stream.Name,
-			Name:   "sample",
+			Name:   ConsumerName,
 		},
 	}
 
