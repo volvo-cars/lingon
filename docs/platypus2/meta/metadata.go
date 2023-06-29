@@ -93,6 +93,11 @@ func SetAnnotations(
 	return o
 }
 
+func PatchLabels(o metav1.ObjectMeta, key, value string) metav1.ObjectMeta {
+	o.Labels = ku.MergeLabels(o.Labels, map[string]string{key: value})
+	return o
+}
+
 func (b Metadata) ObjectMetaNameSuffix(s string) metav1.ObjectMeta {
 	n := b.Name + "-" + s
 	if len(n) > MAX_CHAR {

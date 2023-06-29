@@ -20,7 +20,9 @@ import (
 	karpentercrd "github.com/volvo-cars/lingoneks/karpenter/crd"
 	"github.com/volvo-cars/lingoneks/monitoring/metricsserver"
 	"github.com/volvo-cars/lingoneks/monitoring/promcrd"
-	"github.com/volvo-cars/lingoneks/monitoring/promstack"
+	"github.com/volvo-cars/lingoneks/monitoring/vmcrd"
+	"github.com/volvo-cars/lingoneks/monitoring/vmk8s"
+	"github.com/volvo-cars/lingoneks/monitoring/vmop"
 	"github.com/volvo-cars/lingoneks/nats"
 	"github.com/volvo-cars/lingoneks/terraclient"
 	"golang.org/x/exp/slog"
@@ -279,23 +281,23 @@ func run(p runParams) error {
 	StepSep("k8s crds")
 
 	if err := kubeExportApply(
-		ctx,
-		promcrd.New(),
-		"promcrd",
-		kctlOpts,
-		serverSide,
-		"apply", "-f", "-",
+		ctx, promcrd.New(), "promcrd", kctlOpts,
+		serverSide, "apply", "-f", "-",
+	); err != nil {
+		return err
+	}
+
+	if err := kubeExportApply(
+		ctx, vmcrd.New(), "vmcrd", kctlOpts,
+		serverSide, "apply", "-f", "-",
 	); err != nil {
 		return err
 	}
 
 	if err := kubeExportApply(
 		ctx,
-		karpentercrd.New(),
-		"karpentercrd",
-		kctlOpts,
-		serverSide,
-		"apply", "-f", "-",
+		karpentercrd.New(), "karpentercrd", kctlOpts,
+		serverSide, "apply", "-f", "-",
 	); err != nil {
 		return err
 	}
@@ -318,12 +320,8 @@ func run(p runParams) error {
 	kap := karpenter.New(karOpts)
 
 	if err := kubeExportApply(
-		ctx,
-		kap,
-		"karpenter",
-		kctlOpts,
-		serverSide,
-		"apply", "-f", "-",
+		ctx, kap, "karpenter", kctlOpts,
+		serverSide, "apply", "-f", "-",
 	); err != nil {
 		return err
 	}
@@ -406,12 +404,8 @@ func run(p runParams) error {
 	}
 
 	if err := kubeExportApply(
-		ctx,
-		awsAuth,
-		"aws-auth",
-		kctlOpts,
-		serverSide,
-		"apply", "-f", "-",
+		ctx, awsAuth, "aws-auth", kctlOpts,
+		serverSide, "apply", "-f", "-",
 		"--force-conflicts", // Required to become owner
 	); err != nil {
 		return err
@@ -441,7 +435,7 @@ func run(p runParams) error {
 		return finishAndDestroy(ctx, p, tf)
 	}
 
-	// MONITORING - kube-prometheus-stack
+	// MONITORING
 
 	StepSep("k8s metrics-server")
 
@@ -452,10 +446,19 @@ func run(p runParams) error {
 		return err
 	}
 
-	StepSep("k8s kube-prometheus-stack")
+	StepSep("k8s victoria-metrics operator")
 
 	if err := kubeExportApply(
-		ctx, promstack.New(), "promstack", kctlOpts,
+		ctx, vmop.New(), "vmop", kctlOpts,
+		"apply", "-f", "-",
+	); err != nil {
+		return err
+	}
+
+	StepSep("k8s victoria-metrics")
+
+	if err := kubeExportApply(
+		ctx, vmk8s.New(), "vmk8s", kctlOpts,
 		"apply", "-f", "-",
 	); err != nil {
 		return err
@@ -505,6 +508,21 @@ func run(p runParams) error {
 			return err
 		}
 
+		if err := kubeExportApply(
+			ctx, metricsserver.New(), "metricsserver", kctlOpts,
+			"delete", "-f", "-",
+		); err != nil {
+			return err
+		}
+
+		StepSep("k8s victoria-metrics")
+
+		if err := kubeExportApply(
+			ctx, vmk8s.New(), "vmk8s", kctlOpts,
+			"delete", "-f", "-",
+		); err != nil {
+			return err
+		}
 		return finishAndDestroy(ctx, p, tf)
 	}
 

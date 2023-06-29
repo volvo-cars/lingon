@@ -78,6 +78,7 @@ type Meta struct {
 type MetricsServer struct {
 	kube.App
 
+	NS                        *corev1.Namespace
 	AuthReaderRB              *rbacv1.RoleBinding
 	Deploy                    *appsv1.Deployment
 	SA                        *corev1.ServiceAccount
@@ -93,6 +94,7 @@ type MetricsServer struct {
 // New creates a new MetricsServer
 func New() *MetricsServer {
 	return &MetricsServer{
+		NS:                        ku.Namespace(M.Namespace, nil, nil),
 		AuthReaderRB:              AuthReaderRB,
 		Deploy:                    Deploy,
 		SA:                        SA,

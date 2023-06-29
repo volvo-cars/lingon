@@ -11,6 +11,7 @@ import (
 )
 
 var CadvisorNodeScrape = &v1beta1.VMNodeScrape{
+	TypeMeta: TypeVMNodeScrape,
 	ObjectMeta: metav1.ObjectMeta{
 		Labels:    RulesLabels,
 		Name:      Single.Name + "-cadvisor",
@@ -57,13 +58,10 @@ var CadvisorNodeScrape = &v1beta1.VMNodeScrape{
 			InsecureSkipVerify: true,
 		},
 	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "operator.victoriametrics.com/v1beta1",
-		Kind:       "VMNodeScrape",
-	},
 }
 
 var KubeletNodeScrape = &v1beta1.VMNodeScrape{
+	TypeMeta: TypeVMNodeScrape,
 	ObjectMeta: metav1.ObjectMeta{
 		Labels:    RulesLabels,
 		Name:      Single.Name + "-kubelet",
@@ -109,13 +107,10 @@ var KubeletNodeScrape = &v1beta1.VMNodeScrape{
 			InsecureSkipVerify: true,
 		},
 	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "operator.victoriametrics.com/v1beta1",
-		Kind:       "VMNodeScrape",
-	},
 }
 
 var ProbesNodeScrape = &v1beta1.VMNodeScrape{
+	TypeMeta: TypeVMNodeScrape,
 	ObjectMeta: metav1.ObjectMeta{
 		Labels:    RulesLabels,
 		Name:      Single.Name + "-probes",
@@ -161,9 +156,5 @@ var ProbesNodeScrape = &v1beta1.VMNodeScrape{
 			CAFile:             "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
 			InsecureSkipVerify: true,
 		},
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "operator.victoriametrics.com/v1beta1",
-		Kind:       "VMNodeScrape",
 	},
 }

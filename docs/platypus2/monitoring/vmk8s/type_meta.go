@@ -19,3 +19,8 @@ var TypeVMSingleV1Beta1 = metav1.TypeMeta{
 	APIVersion: "operator.victoriametrics.com/v1beta1",
 	Kind:       "VMSingle",
 }
+
+var TypeVMNodeScrape = metav1.TypeMeta{
+	APIVersion: "operator.victoriametrics.com/v1beta1",
+	Kind:       "VMNodeScrape",
+}

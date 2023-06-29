@@ -7,6 +7,7 @@ import (
 	"github.com/VictoriaMetrics/operator/api/victoriametrics/v1beta1"
 	"github.com/volvo-cars/lingon/pkg/kube"
 	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
+	"github.com/volvo-cars/lingoneks/meta"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -17,7 +18,7 @@ const (
 	KCMPortName = "http-metrics"
 )
 
-var KCM = &Metadata{
+var KCM = &meta.Metadata{
 	Name:      "kube-controller-manager", // linked to the name of the JobLabel
 	Namespace: namespace,
 	Instance:  "kube-controller-manager-" + namespace,

@@ -7,10 +7,11 @@ import (
 	"github.com/VictoriaMetrics/operator/api/victoriametrics/v1beta1"
 	"github.com/volvo-cars/lingon/pkg/kube"
 	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
+	"github.com/volvo-cars/lingoneks/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var AS = &Metadata{
+var AS = &meta.Metadata{
 	Name:      "apiserver", // name linked to the job name in queries
 	Namespace: namespace,
 	Instance:  "apiserver" + namespace,

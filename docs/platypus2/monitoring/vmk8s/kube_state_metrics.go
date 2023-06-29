@@ -7,6 +7,7 @@ import (
 	"github.com/VictoriaMetrics/operator/api/victoriametrics/v1beta1"
 	"github.com/volvo-cars/lingon/pkg/kube"
 	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
+	"github.com/volvo-cars/lingoneks/meta"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -20,7 +21,7 @@ const (
 	KSMPortName = "http"
 )
 
-var KSM = &Metadata{
+var KSM = &meta.Metadata{
 	Name:      "kube-state-metrics",
 	Namespace: namespace,
 	Instance:  "kube-state-metrics-" + namespace,
@@ -28,9 +29,11 @@ var KSM = &Metadata{
 	PartOf:    appName,
 	Version:   KSMVersion,
 	ManagedBy: "lingon",
-	Registry:  "registry.k8s.io",
-	Image:     "kube-state-metrics/kube-state-metrics",
-	Tag:       "v" + KSMVersion,
+	Img: meta.ContainerImg{
+		Registry: "registry.k8s.io",
+		Image:    "kube-state-metrics/kube-state-metrics",
+		Tag:      "v" + KSMVersion,
+	},
 }
 
 type KubeStateMetrics struct {
@@ -88,7 +91,7 @@ var KubeStateMetricsDeploy = &appsv1.Deployment{
 								"validatingwebhookconfigurations," +
 								"volumeattachments",
 						},
-						Image:           KSM.ContainerURL(),
+						Image:           KSM.Img.URL(),
 						ImagePullPolicy: corev1.PullIfNotPresent,
 						LivenessProbe: &corev1.Probe{
 							InitialDelaySeconds: int32(5),

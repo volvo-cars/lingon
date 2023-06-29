@@ -34,6 +34,9 @@ const (
 var d = func(i int) string { return fmt.Sprintf("%d", i) }
 
 // Vmk8S contains kubernetes manifests
+//
+// the original documentation is https://github.com/VictoriaMetrics/helm-charts/tree/master/charts/victoria-metrics-k8s-stack
+
 type Vmk8S struct {
 	kube.App
 

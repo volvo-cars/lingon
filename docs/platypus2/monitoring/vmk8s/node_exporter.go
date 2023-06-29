@@ -9,6 +9,7 @@ import (
 	"github.com/VictoriaMetrics/operator/api/victoriametrics/v1beta1"
 	"github.com/volvo-cars/lingon/pkg/kube"
 	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
+	"github.com/volvo-cars/lingoneks/meta"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -21,7 +22,7 @@ const (
 	NodeExportVersion  = "1.4.0"
 )
 
-var NE = &Metadata{
+var NE = &meta.Metadata{
 	Name:      "node-exporter", // linked to the name of the JobLabel in VMServiceScrape
 	Namespace: namespace,
 	Instance:  "node-exporter-" + namespace,
@@ -29,9 +30,11 @@ var NE = &Metadata{
 	PartOf:    appName,
 	Version:   NodeExportVersion,
 	ManagedBy: "lingon",
-	Registry:  "quay.io",
-	Image:     "prometheus/node-exporter",
-	Tag:       "v" + NodeExportVersion,
+	Img: meta.ContainerImg{
+		Registry: "quay.io",
+		Image:    "prometheus/node-exporter",
+		Tag:      "v" + NodeExportVersion,
+	},
 }
 
 type NodeExporter struct {
@@ -56,11 +59,23 @@ func NewNodeExporter() *NodeExporter {
 	}
 }
 
-var NodeExporterSVC = NE.Service(
-	NodeExportPort,
-	NodeExportPort,
-	NodeExportPortName,
-)
+var NodeExporterSVC = &corev1.Service{
+	TypeMeta:   ku.TypeServiceV1,
+	ObjectMeta: NE.ObjectMeta(),
+	Spec: corev1.ServiceSpec{
+		Ports: []corev1.ServicePort{
+			{
+				Name:       NodeExportPortName,
+				Port:       int32(NodeExportPort),
+				Protocol:   corev1.ProtocolTCP,
+				TargetPort: intstr.FromInt(NodeExportPort),
+			},
+		},
+		Selector: NE.MatchLabels(),
+		Type:     corev1.ServiceTypeClusterIP,
+	},
+}
+
 var NodeExporterSA = NE.ServiceAccount()
 
 var NodeExporterDS = &appsv1.DaemonSet{
@@ -87,7 +102,7 @@ var NodeExporterDS = &appsv1.DaemonSet{
 						Env: []corev1.EnvVar{
 							{Name: "HOST_IP", Value: "0.0.0.0"},
 						},
-						Image:           NE.ContainerURL(),
+						Image:           NE.Img.URL(),
 						ImagePullPolicy: corev1.PullIfNotPresent,
 						LivenessProbe: &corev1.Probe{
 							ProbeHandler: ku.ProbeHTTP("/", NodeExportPort),
@@ -131,12 +146,13 @@ var NodeExporterDS = &appsv1.DaemonSet{
 					RunAsUser:    P(int64(65534)),
 				},
 				ServiceAccountName: NodeExporterSA.Name,
-				Tolerations: []corev1.Toleration{
-					{
-						Effect:   corev1.TaintEffectNoSchedule,
-						Operator: corev1.TolerationOpExists,
-					},
-				},
+				// This does not work with Fargate
+				// Tolerations: []corev1.Toleration{
+				// 	{
+				// 		Effect:   corev1.TaintEffectNoSchedule,
+				// 		Operator: corev1.TolerationOpExists,
+				// 	},
+				// },
 				Volumes: []corev1.Volume{
 					{
 						Name:         "proc",
