@@ -614,15 +614,9 @@ providers:
 
 var GrafanaDataSourceCM = &corev1.ConfigMap{
 	Data: map[string]string{
-		//
 		// 		"datasources.yaml": `
 		// apiVersion: 1
 		// datasources:
-		// - access: proxy
-		//   isDefault: true
-		//   name: VictoriaMetrics
-		//   type: victoriametrics-datasource
-		//   url: http://victoriametrics:8428
 		// - access: proxy
 		//   isDefault: true
 		//   name: Prometheus
