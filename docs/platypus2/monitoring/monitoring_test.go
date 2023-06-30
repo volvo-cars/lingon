@@ -34,24 +34,3 @@ func TestMonitoringExport(t *testing.T) {
 		)
 	}
 }
-
-// // TODO: THIS IS INTEGRATION and needs KWOK
-// func TestMonitoringDeploy(t *testing.T) {
-// 	ctx := context.Background()
-//
-// 	type Applyer interface {
-// 		Lingon()
-// 		Apply(ctx2 context.Context) error
-// 	}
-// 	tests := map[string]Applyer{
-// 		"out/1_promcrd":      promcrd.New(),
-// 		"out/2_vmop":         vmop.New(),
-// 		"out/metrics-server": metricsserver.New(),
-// 		"out/vmk8s":          vmk8s.New(),
-// 	}
-// 	for f, km := range tests {
-// 		_ = os.RemoveAll(f)
-//
-// 		tu.AssertNoError(t, km.Apply(ctx), f)
-// 	}
-// }

@@ -91,9 +91,11 @@ type MetricsServer struct {
 	V1Beta1MetricsAPIServices *apiregistrationv1.APIService
 }
 
+type MetricsServerOption func(server *MetricsServer) *MetricsServer
+
 // New creates a new MetricsServer
-func New() *MetricsServer {
-	return &MetricsServer{
+func New(opts ...MetricsServerOption) *MetricsServer {
+	m := &MetricsServer{
 		NS:                        ku.Namespace(M.Namespace, nil, nil),
 		AuthReaderRB:              AuthReaderRB,
 		Deploy:                    Deploy,
@@ -106,6 +108,12 @@ func New() *MetricsServer {
 		SystemCRB:                 SystemCRB,
 		V1Beta1MetricsAPIServices: MetricsAPIServices,
 	}
+
+	for _, o := range opts {
+		m = o(m)
+	}
+
+	return m
 }
 
 // Apply applies the kubernetes objects to the cluster

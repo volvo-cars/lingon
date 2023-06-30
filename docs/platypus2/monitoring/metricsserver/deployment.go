@@ -119,3 +119,16 @@ var Deploy = &appsv1.Deployment{
 		},
 	},
 }
+
+func PatchDeployInsecureTLS(deploy *appsv1.Deployment) *appsv1.Deployment {
+	d := deploy.DeepCopy()
+
+	if d.Spec.Template.Spec.Containers == nil {
+		panic("deployment " + d.Name + " no container defined in deployment")
+	}
+	d.Spec.Template.Spec.Containers[0].Args = append(
+		d.Spec.Template.Spec.Containers[0].Args,
+		"--kubelet-insecure-tls",
+	)
+	return d
+}

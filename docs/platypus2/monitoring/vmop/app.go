@@ -174,7 +174,11 @@ func (a *VMOperator) Export(dir string) error {
 
 // Apply applies the kubernetes objects contained in Exporter to the cluster
 func Apply(ctx context.Context, km kube.Exporter) error {
-	cmd := exec.CommandContext(ctx, "kubectl", "apply", "-f", "-")
+	cmd := exec.CommandContext(
+		ctx, "kubectl",
+		"apply", "--server-side=true",
+		"-f", "-",
+	)
 	cmd.Env = os.Environ()        // inherit environment in case we need to use kubectl from a container
 	stdin, err := cmd.StdinPipe() // pipe to pass data to kubectl
 	if err != nil {
