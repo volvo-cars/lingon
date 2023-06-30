@@ -6,9 +6,11 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/nats-io/nats.go"
-	"github.com/volvo-cars/nope/hack/ingest"
 	"github.com/volvo-cars/nope/hack/ingest/templates"
+
+	"github.com/volvo-cars/nope/hack/ingest"
+
+	"github.com/nats-io/nats.go"
 	"golang.org/x/exp/slog"
 )
 

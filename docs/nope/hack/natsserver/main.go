@@ -4,6 +4,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -14,8 +15,13 @@ import (
 )
 
 func main() {
+	var (
+		out string
+	)
+	flag.StringVar(&out, "out", "out", "output directory")
+	flag.Parse()
 
-	absOut, err := filepath.Abs("out")
+	absOut, err := filepath.Abs(out)
 	if err != nil {
 		slog.Error("getting absolute path for out: ", "error", err)
 		os.Exit(1)

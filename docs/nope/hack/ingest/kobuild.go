@@ -11,6 +11,7 @@ import (
 	"golang.org/x/tools/txtar"
 )
 
+// Schema is a protobuf schema.
 type Schema struct {
 	// Name of the schema
 	Name string
@@ -28,7 +29,8 @@ type KoBuildConfig struct {
 }
 
 func KoBuild(cfg KoBuildConfig) error {
-	if err := UnpackTxtar(cfg.Workdir, cfg.GoServiceTxtar); err != nil {
+	// Unpack the Go service txtar first, which the proto files will be built into.
+	if err := unpackTxtar(cfg.Workdir, cfg.GoServiceTxtar); err != nil {
 		return fmt.Errorf("unpacking txtar: %w", err)
 	}
 
@@ -67,7 +69,7 @@ type protoBuildConfig struct {
 
 func protoBuild(cfg protoBuildConfig) error {
 
-	if err := UnpackTxtar(cfg.Workdir, cfg.Schema.Txtar); err != nil {
+	if err := unpackTxtar(cfg.Workdir, cfg.Schema.Txtar); err != nil {
 		return fmt.Errorf("unpacking txtar: %w", err)
 	}
 
@@ -94,25 +96,22 @@ func protoBuild(cfg protoBuildConfig) error {
 	return nil
 }
 
-// PackTxtar takes a list of files and creates a [txtar.Archive] for them.
-func PackTxtar(dir string, files []string) (*txtar.Archive, error) {
-	var archive txtar.Archive
-	for _, file := range files {
-		path := filepath.Join(dir, file)
-		contents, err := os.ReadFile(path)
-		if err != nil {
-			return nil, fmt.Errorf("reading proto file %s: %w", path, err)
-		}
-		ttFile := txtar.File{
-			Name: file,
-			Data: contents,
-		}
-		archive.Files = append(archive.Files, ttFile)
-	}
-	return &archive, nil
+func bufGenerateYAML(pkg string, out string) string {
+	return fmt.Sprintf(`version: v1
+managed:
+  enabled: true
+  go_package_prefix:
+    default: %s
+
+plugins:
+- plugin: buf.build/protocolbuffers/go:v1.31.0
+  out: %s
+  opt:
+  - paths=source_relative
+`, pkg, out)
 }
 
-func UnpackTxtar(dir string, contents []byte) error {
+func unpackTxtar(dir string, contents []byte) error {
 	ar := txtar.Parse(contents)
 	if len(ar.Files) == 0 {
 		return fmt.Errorf("txtar archive contains no files")
@@ -130,19 +129,4 @@ func UnpackTxtar(dir string, contents []byte) error {
 		}
 	}
 	return nil
-}
-
-func bufGenerateYAML(pkg string, out string) string {
-	return fmt.Sprintf(`version: v1
-managed:
-  enabled: true
-  go_package_prefix:
-    default: %s
-
-plugins:
-- plugin: buf.build/protocolbuffers/go:v1.31.0
-  out: %s
-  opt:
-  - paths=source_relative
-`, pkg, out)
 }

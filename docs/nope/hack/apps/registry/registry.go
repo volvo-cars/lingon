@@ -1,4 +1,4 @@
-package test
+package registry
 
 import (
 	"github.com/volvo-cars/lingon/pkg/kube"

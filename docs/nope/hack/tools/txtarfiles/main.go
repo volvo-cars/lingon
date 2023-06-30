@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/volvo-cars/nope/hack/ingest"
+	"github.com/volvo-cars/nope/internal/bla"
 	"golang.org/x/exp/slog"
 	"golang.org/x/tools/txtar"
 )
@@ -31,7 +31,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	ar, err := ingest.PackTxtar(dir, in)
+	ar, err := bla.PackTxtar(dir, in)
 	if err != nil {
 		slog.Error("creating txtar", "error", err)
 		os.Exit(1)

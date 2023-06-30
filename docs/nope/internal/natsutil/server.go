@@ -35,7 +35,7 @@ func StartTestServer(t *testing.T) TestServer {
 
 type TestServer struct {
 	NS   *server.Server
-	Auth serverJWTAuth
+	Auth ServerJWTAuth
 }
 
 func (t TestServer) StartUntilReady() error {
@@ -63,9 +63,15 @@ func NewTestServer(opts ...ServerOption) (TestServer, error) {
 		sOpt.Port = port
 	}
 
-	jwtAuth, err := bootstrapServerJWTAuth()
-	if err != nil {
-		return TestServer{}, fmt.Errorf("bootstrapping server JWT auth: %w", err)
+	var jwtAuth ServerJWTAuth
+	if sOpt.UseJWTAuth {
+		jwtAuth = sOpt.JWTAuth
+	} else {
+		var err error
+		jwtAuth, err = BootstrapServerJWTAuth()
+		if err != nil {
+			return TestServer{}, fmt.Errorf("bootstrapping server JWT auth: %w", err)
+		}
 	}
 
 	// dirAccResolver, err := server.NewDirAccResolver(t.TempDir(), 0, 2*time.Minute, server.NoDelete)
@@ -124,6 +130,9 @@ type serverOption struct {
 	Port              int
 
 	Dir string
+
+	JWTAuth    ServerJWTAuth
+	UseJWTAuth bool
 }
 
 var serverOptionDefaults = serverOption{
@@ -150,62 +159,75 @@ func WithDir(dir string) ServerOption {
 	}
 }
 
-type serverJWTAuth struct {
-	OperatorNKey      []byte
-	OperatorKeyPair   nkeys.KeyPair
-	OperatorPublicKey string
-	OperatorJWT       string
-
-	SysAccountNKey      []byte
-	SysAccountKeyPair   nkeys.KeyPair
-	SysAccountPublicKey string
-	SysAccountJWT       string
-
-	SysUserNKey      []byte
-	SysUserKeyPair   nkeys.KeyPair
-	SysUserPublicKey string
-	SysUserJWT       string
+func WithJWTAuth(jwtAuth ServerJWTAuth) ServerOption {
+	return func(so *serverOption) {
+		so.JWTAuth = jwtAuth
+		so.UseJWTAuth = true
+	}
 }
 
-func bootstrapServerJWTAuth() (serverJWTAuth, error) {
+type ServerJWTAuth struct {
+	// AccountServerURL is the configured `account_server_url` for the operator
+	AccountServerURL string `json:"account_server_url"`
+
+	OperatorNKey      []byte        `json:"operator_nkey"`
+	OperatorKeyPair   nkeys.KeyPair `json:"-"`
+	OperatorPublicKey string        `json:"operator_public_key"`
+	OperatorJWT       string        `json:"operator_jwt"`
+
+	SysAccountNKey      []byte        `json:"sys_account_nkey"`
+	SysAccountKeyPair   nkeys.KeyPair `json:"-"`
+	SysAccountPublicKey string        `json:"sys_account_public_key"`
+	SysAccountJWT       string        `json:"sys_account_jwt"`
+
+	SysUserNKey      []byte        `json:"sys_user_nkey"`
+	SysUserKeyPair   nkeys.KeyPair `json:"-"`
+	SysUserPublicKey string        `json:"sys_user_public_key"`
+	SysUserJWT       string        `json:"sys_user_jwt"`
+}
+
+func BootstrapServerJWTAuth() (ServerJWTAuth, error) {
+	host := "0.0.0.0"
 	port := 4222
+
+	accountServerURL := fmt.Sprintf("nats://%s:%d", host, port)
 
 	// Create operator
 	okp, err := nkeys.CreateOperator()
 	if err != nil {
-		return serverJWTAuth{}, fmt.Errorf("creating operator key pair: %w", err)
+		return ServerJWTAuth{}, fmt.Errorf("creating operator key pair: %w", err)
 	}
 	oseed, err := okp.Seed()
 	if err != nil {
-		return serverJWTAuth{}, fmt.Errorf("getting seed for operator: %w", err)
+		return ServerJWTAuth{}, fmt.Errorf("getting seed for operator: %w", err)
 	}
 	opk, err := okp.PublicKey()
 	if err != nil {
-		return serverJWTAuth{}, fmt.Errorf("getting operator public key: %w", err)
+		return ServerJWTAuth{}, fmt.Errorf("getting operator public key: %w", err)
 	}
 
 	// Create system account
 	sakp, err := nkeys.CreateAccount()
 	if err != nil {
-		return serverJWTAuth{}, fmt.Errorf("creating system account key pair: %w", err)
+		return ServerJWTAuth{}, fmt.Errorf("creating system account key pair: %w", err)
 	}
 	saseed, err := sakp.Seed()
 	if err != nil {
-		return serverJWTAuth{}, fmt.Errorf("getting seed for system account: %w", err)
+		return ServerJWTAuth{}, fmt.Errorf("getting seed for system account: %w", err)
 	}
 	sapk, err := sakp.PublicKey()
 	if err != nil {
-		return serverJWTAuth{}, fmt.Errorf("getting system account public key: %w", err)
+		return ServerJWTAuth{}, fmt.Errorf("getting system account public key: %w", err)
 	}
 
 	// Create operator JWT
 	oc := jwt.NewOperatorClaims(opk)
 	oc.Name = "test"
-	oc.AccountServerURL = fmt.Sprintf("nats://0.0.0.0:%d", port)
+	oc.AccountServerURL = accountServerURL
 	oc.SystemAccount = sapk
 	ojwt, err := oc.Encode(okp)
 	if err != nil {
-		return serverJWTAuth{}, fmt.Errorf("encoding operator JWT: %w", err)
+		return ServerJWTAuth{}, fmt.Errorf("encoding operator JWT: %w", err)
 	}
 
 	// Create system account JWT
@@ -235,17 +257,17 @@ func bootstrapServerJWTAuth() (serverJWTAuth, error) {
 	})
 	sajwt, err := sac.Encode(okp)
 	if err != nil {
-		return serverJWTAuth{}, fmt.Errorf("encoding system account JWT: %w", err)
+		return ServerJWTAuth{}, fmt.Errorf("encoding system account JWT: %w", err)
 	}
 
 	// Create system user
 	sukp, err := nkeys.CreateUser()
 	if err != nil {
-		return serverJWTAuth{}, fmt.Errorf("creating system user: %w", err)
+		return ServerJWTAuth{}, fmt.Errorf("creating system user: %w", err)
 	}
 	supk, err := sukp.PublicKey()
 	if err != nil {
-		return serverJWTAuth{}, fmt.Errorf("getting system user public key: %w", err)
+		return ServerJWTAuth{}, fmt.Errorf("getting system user public key: %w", err)
 	}
 	// Create system user JWT
 	suc := jwt.NewUserClaims(supk)
@@ -254,15 +276,17 @@ func bootstrapServerJWTAuth() (serverJWTAuth, error) {
 
 	sujwt, err := suc.Encode(sakp)
 	if err != nil {
-		return serverJWTAuth{}, fmt.Errorf("encoding system user JWT: %w", err)
+		return ServerJWTAuth{}, fmt.Errorf("encoding system user JWT: %w", err)
 	}
 
 	suseed, err := sukp.Seed()
 	if err != nil {
-		return serverJWTAuth{}, fmt.Errorf("getting seed for system user: %w", err)
+		return ServerJWTAuth{}, fmt.Errorf("getting seed for system user: %w", err)
 	}
 
-	return serverJWTAuth{
+	return ServerJWTAuth{
+		AccountServerURL: accountServerURL,
+
 		OperatorNKey:      oseed,
 		OperatorKeyPair:   okp,
 		OperatorPublicKey: opk,
@@ -280,7 +304,7 @@ func bootstrapServerJWTAuth() (serverJWTAuth, error) {
 	}, nil
 }
 
-func generateNATSConf(ja serverJWTAuth, dir string) string {
+func generateNATSConf(ja ServerJWTAuth, dir string) string {
 	const natsConf = `
 operator: %s
 
