@@ -19,7 +19,7 @@ const (
 )
 
 var KP = &meta.Metadata{
-	Name:      "kube-proxy", // linked to the name of the JobLabel
+	Name:      "kube-proxy",
 	Namespace: namespace,
 	Instance:  "kube-proxy-" + namespace,
 	Component: "monitoring",
@@ -75,12 +75,11 @@ var KubeProxyScrape = &v1beta1.VMServiceScrape{
 				TLSConfig:       &v1beta1.TLSConfig{CAFile: PathSA + "/ca.crt"},
 			},
 		},
-		// JobLabel:          "jobLabel",
-		JobLabel: ku.AppLabelName,
+		JobLabel: "k8s-app",
 		NamespaceSelector: v1beta1.NamespaceSelector{
 			MatchNames: []string{ku.NSKubeSystem}, // kube-system
 		},
-		Selector: metav1.LabelSelector{MatchLabels: KP.MatchLabels()},
+		Selector: metav1.LabelSelector{MatchLabels: map[string]string{"k8s-app": "kube-proxy"}},
 	},
 	TypeMeta: TypeVMServiceScrapeV1Beta1,
 }

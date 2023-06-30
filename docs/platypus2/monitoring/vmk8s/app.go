@@ -27,8 +27,6 @@ const (
 	appName            = "victoriametrics"
 	VMSinglePort       = 8429
 	VMAlertManagerPort = 9093
-	OperatorVersion    = "0.34.1"
-	OperatorImg        = "victoriametrics/operator:v" + OperatorVersion
 )
 
 var d = func(i int) string { return fmt.Sprintf("%d", i) }

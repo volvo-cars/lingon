@@ -6,22 +6,27 @@
 package vmk8s
 
 import (
+	"fmt"
+
 	"github.com/VictoriaMetrics/operator/api/victoriametrics/v1beta1"
 	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var VMAgent = &v1beta1.VMAgent{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels:    RulesLabels,
-		Name:      "victoria-metrics-agent",
-		Namespace: Single.Namespace,
-	},
+	ObjectMeta: Single.ObjectMetaNameSuffix("vmagent"),
 	Spec: v1beta1.VMAgentSpec{
-		ExternalLabels:     map[string]string{"cluster": "cluster-name"},
-		ExtraArgs:          map[string]string{"promscrape.streamParse": "true"},
-		Image:              v1beta1.Image{Tag: "v1.91.2"},
-		RemoteWrite:        []v1beta1.VMAgentRemoteWriteSpec{{URL: "http://vmsingle-vmk8s-victoria-metrics-k8s-stack.monitoring.svc:8429/api/v1/write"}},
+		ExternalLabels: map[string]string{"cluster": "cluster-name"},
+		ExtraArgs:      map[string]string{"promscrape.streamParse": "true"},
+		Image:          v1beta1.Image{Tag: "v" + version},
+		RemoteWrite: []v1beta1.VMAgentRemoteWriteSpec{
+			{
+				URL: fmt.Sprintf(
+					"http://%s.%s.svc:%s/api/v1/write",
+					VMDB.PrefixedName(), VMDB.Namespace, VMDB.Spec.Port,
+				),
+			},
+		},
 		ScrapeInterval:     "25s",
 		SelectAllByDefault: true,
 		Resources:          ku.Resources("200m", "128Mi", "200m", "128Mi"),
@@ -33,18 +38,7 @@ var VMAgent = &v1beta1.VMAgent{
 }
 
 var VMAgentAlertRules = &v1beta1.VMRule{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app":                          "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/instance":   "vmk8s",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "victoria-metrics-k8s-stack",
-			"app.kubernetes.io/version":    "v1.91.2",
-			"helm.sh/chart":                "victoria-metrics-k8s-stack-0.16.3",
-		},
-		Name:      "vmk8s-victoria-metrics-k8s-stack-vmagent",
-		Namespace: "monitoring",
-	},
+	ObjectMeta: Single.ObjectMetaNameSuffix("vmagent-alert-rules"),
 	Spec: v1beta1.VMRuleSpec{
 		Groups: []v1beta1.RuleGroup{
 			{
@@ -174,8 +168,5 @@ vmagent_relabel_config_last_reload_successful != 1
 			},
 		},
 	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "operator.victoriametrics.com/v1beta1",
-		Kind:       "VMRule",
-	},
+	TypeMeta: TypeVMRuleV1Beta1,
 }

@@ -7,16 +7,11 @@ package vmk8s
 
 import (
 	"github.com/VictoriaMetrics/operator/api/victoriametrics/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var CadvisorNodeScrape = &v1beta1.VMNodeScrape{
-	TypeMeta: TypeVMNodeScrape,
-	ObjectMeta: metav1.ObjectMeta{
-		Labels:    RulesLabels,
-		Name:      Single.Name + "-cadvisor",
-		Namespace: Single.Namespace,
-	},
+	TypeMeta:   TypeVMNodeScrape,
+	ObjectMeta: Single.ObjectMetaNameSuffix("cadvisor-nodescrape"),
 	Spec: v1beta1.VMNodeScrapeSpec{
 		BearerTokenFile: "/var/run/secrets/kubernetes.io/serviceaccount/token",
 		HonorLabels:     true,
@@ -61,12 +56,8 @@ var CadvisorNodeScrape = &v1beta1.VMNodeScrape{
 }
 
 var KubeletNodeScrape = &v1beta1.VMNodeScrape{
-	TypeMeta: TypeVMNodeScrape,
-	ObjectMeta: metav1.ObjectMeta{
-		Labels:    RulesLabels,
-		Name:      Single.Name + "-kubelet",
-		Namespace: Single.Namespace,
-	},
+	TypeMeta:   TypeVMNodeScrape,
+	ObjectMeta: Single.ObjectMetaNameSuffix("kubelet-nodescrape"),
 	Spec: v1beta1.VMNodeScrapeSpec{
 		BearerTokenFile: "/var/run/secrets/kubernetes.io/serviceaccount/token",
 		HonorLabels:     true,
@@ -110,12 +101,8 @@ var KubeletNodeScrape = &v1beta1.VMNodeScrape{
 }
 
 var ProbesNodeScrape = &v1beta1.VMNodeScrape{
-	TypeMeta: TypeVMNodeScrape,
-	ObjectMeta: metav1.ObjectMeta{
-		Labels:    RulesLabels,
-		Name:      Single.Name + "-probes",
-		Namespace: Single.Namespace,
-	},
+	TypeMeta:   TypeVMNodeScrape,
+	ObjectMeta: Single.ObjectMetaNameSuffix("probes"),
 	Spec: v1beta1.VMNodeScrapeSpec{
 		BearerTokenFile: "/var/run/secrets/kubernetes.io/serviceaccount/token",
 		HonorLabels:     true,

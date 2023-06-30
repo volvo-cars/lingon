@@ -73,7 +73,7 @@ pid_file: ""
 http: 0
 server_name:$POD_NAME
 server_tags: [
-  4Gi
+  "4Gi"
 ]
 
 ###################################
@@ -160,7 +160,7 @@ pid_file: "mypath"
 http: 54321
 server_name:$POD_NAME
 server_tags: [
-  4Gi
+  "4Gi"
 ]
 
 ###################################

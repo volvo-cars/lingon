@@ -20,7 +20,7 @@ const (
 )
 
 var KSC = &meta.Metadata{
-	Name:      "kube-scheduler", // linked to the name of the JobLabel
+	Name:      "kube-scheduler",
 	Namespace: namespace,
 	Instance:  "kube-scheduler-" + namespace,
 	Component: "monitoring",
@@ -59,12 +59,13 @@ var KubeSchedulerScrape = &v1beta1.VMServiceScrape{
 				TLSConfig:       &v1beta1.TLSConfig{CAFile: PathSA + "/ca.crt"},
 			},
 		},
-		// JobLabel is linked to [ku.AppLabelName] which is defined by [KSC.Name]
-		JobLabel: ku.AppLabelName, // jobLabel
+		JobLabel: "component",
 		NamespaceSelector: v1beta1.NamespaceSelector{
 			MatchNames: []string{ku.NSKubeSystem}, // kube-system
 		},
-		Selector: metav1.LabelSelector{MatchLabels: KSC.MatchLabels()},
+		Selector: metav1.LabelSelector{
+			MatchLabels: map[string]string{"component": "kube-scheduler"},
+		},
 	},
 }
 

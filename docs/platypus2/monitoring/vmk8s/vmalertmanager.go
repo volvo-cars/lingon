@@ -60,6 +60,7 @@ var AlertManager = &v1beta1.VMAlertmanager{
 		Image:              v1beta1.Image{Tag: AlertManagerVersion},
 		RoutePrefix:        "/",
 		SelectAllByDefault: true,
+		Resources:          ku.Resources("500m", "512Mi", "500m", "512Mi"),
 		Templates: []v1beta1.ConfigMapKeyReference{
 			{
 				Key:                  "monzo.tmpl",
@@ -78,8 +79,8 @@ var Alert = &v1beta1.VMAlert{
 	Spec: v1beta1.VMAlertSpec{
 		Datasource: v1beta1.VMAlertDatasourceSpec{
 			URL: fmt.Sprintf(
-				"http://%s.%s.svc:%d/",
-				VMDB.PrefixedName(), VMDB.Namespace, VMSinglePort,
+				"http://%s.%s.svc:%s/",
+				VMDB.PrefixedName(), VMDB.Namespace, VMDB.Spec.Port,
 			),
 		},
 		EvaluationInterval: "15s",
@@ -99,14 +100,14 @@ var Alert = &v1beta1.VMAlert{
 		Resources: ku.Resources("200m", "128Mi", "200m", "128Mi"),
 		RemoteRead: &v1beta1.VMAlertRemoteReadSpec{
 			URL: fmt.Sprintf(
-				"http://%s.%s.svc:%d/",
-				VMDB.PrefixedName(), VMDB.Namespace, VMSinglePort,
+				"http://%s.%s.svc:%s/",
+				VMDB.PrefixedName(), VMDB.Namespace, VMDB.Spec.Port,
 			),
 		},
 		RemoteWrite: &v1beta1.VMAlertRemoteWriteSpec{
 			URL: fmt.Sprintf(
-				"http://%s.%s.svc:%d/api/v1/write",
-				VMDB.PrefixedName(), VMDB.Namespace, VMSinglePort,
+				"http://%s.%s.svc:%s/api/v1/write",
+				VMDB.PrefixedName(), VMDB.Namespace, VMDB.Spec.Port,
 			),
 		},
 		SelectAllByDefault: true,
@@ -226,7 +227,7 @@ templates:
 } // TODO: SECRETS SHOULD BE STORED ELSEWHERE THAN IN THE CODE!!!!
 
 var AlertManagerRules = &v1beta1.VMRule{
-	ObjectMeta: AM.ObjectMetaNameSuffix("-rules"),
+	ObjectMeta: AM.ObjectMetaNameSuffix("rules"),
 	Spec: v1beta1.VMRuleSpec{
 		Groups: []v1beta1.RuleGroup{
 			{

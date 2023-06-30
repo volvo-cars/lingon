@@ -659,7 +659,7 @@
             "uid": "${datasource}"
           },
           "exemplar": false,
-          "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=\"$pod\", image!=\"\"}[$__rate_interval])) / sum(kube_pod_container_resource_requests{namespace=\"$namespace\", pod=\"$pod\", unit=\"core\"})",
+          "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=\"$pod\", image!=\"\"}[$__interval])) / sum(kube_pod_container_resource_requests{namespace=\"$namespace\", pod=\"$pod\", unit=\"core\"})",
           "instant": true,
           "interval": "$resolution",
           "legendFormat": "Requests",
@@ -728,7 +728,7 @@
             "uid": "${datasource}"
           },
           "exemplar": false,
-          "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=\"$pod\", image!=\"\"}[$__rate_interval])) / sum(kube_pod_container_resource_limits{namespace=\"$namespace\", pod=\"$pod\", unit=\"core\"})",
+          "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=\"$pod\", image!=\"\"}[$__interval])) / sum(kube_pod_container_resource_limits{namespace=\"$namespace\", pod=\"$pod\", unit=\"core\"})",
           "instant": true,
           "interval": "$resolution",
           "legendFormat": "Limits",
@@ -1043,7 +1043,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=\"$pod\", image!=\"\", container!=\"\"}[$__rate_interval])) by (container)",
+          "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=\"$pod\", image!=\"\", container!=\"\"}[$__interval])) by (container)",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -1258,7 +1258,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=\"$pod\", image!=\"\"}[$__rate_interval])) by (container) / sum(kube_pod_container_resource_requests{namespace=\"$namespace\", pod=\"$pod\", unit=\"core\"}) by (container)",
+          "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=\"$pod\", image!=\"\"}[$__interval])) by (container) / sum(kube_pod_container_resource_requests{namespace=\"$namespace\", pod=\"$pod\", unit=\"core\"}) by (container)",
           "interval": "$resolution",
           "legendFormat": "{{ container }}  REQUESTS",
           "range": true,
@@ -1270,7 +1270,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=\"$pod\", image!=\"\"}[$__rate_interval])) by (container) / sum(kube_pod_container_resource_limits{namespace=\"$namespace\", pod=\"$pod\", unit=\"core\"}) by (container)",
+          "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=\"$pod\", image!=\"\"}[$__interval])) by (container) / sum(kube_pod_container_resource_limits{namespace=\"$namespace\", pod=\"$pod\", unit=\"core\"}) by (container)",
           "hide": false,
           "legendFormat": "{{ container }}  LIMITS",
           "range": true,
@@ -1517,7 +1517,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=\"$pod\", image!=\"\", container!=\"\"}[$__rate_interval])) by (container)",
+          "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=\"$pod\", image!=\"\", container!=\"\"}[$__interval])) by (container)",
           "interval": "$resolution",
           "legendFormat": "{{ container }}",
           "range": true,
@@ -1728,7 +1728,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "sum(rate(container_cpu_cfs_throttled_seconds_total{namespace=~\"$namespace\", pod=\"$pod\", image!=\"\", container!=\"\"}[$__rate_interval])) by (container)",
+          "expr": "sum(rate(container_cpu_cfs_throttled_seconds_total{namespace=~\"$namespace\", pod=\"$pod\", image!=\"\", container!=\"\"}[$__interval])) by (container)",
           "interval": "$resolution",
           "legendFormat": "{{ container }}",
           "range": true,
@@ -1849,7 +1849,7 @@
             "uid": "${datasource}"
           },
           "exemplar": true,
-          "expr": "sum(rate(container_network_receive_bytes_total{namespace=\"$namespace\", pod=\"$pod\"}[$__rate_interval]))",
+          "expr": "sum(rate(container_network_receive_bytes_total{namespace=\"$namespace\", pod=\"$pod\"}[$__interval]))",
           "interval": "$resolution",
           "legendFormat": "Received",
           "refId": "A"
@@ -1860,7 +1860,7 @@
             "uid": "${datasource}"
           },
           "exemplar": true,
-          "expr": "- sum(rate(container_network_transmit_bytes_total{namespace=\"$namespace\", pod=\"$pod\"}[$__rate_interval]))",
+          "expr": "- sum(rate(container_network_transmit_bytes_total{namespace=\"$namespace\", pod=\"$pod\"}[$__interval]))",
           "interval": "$resolution",
           "legendFormat": "Transmitted",
           "refId": "B"
@@ -1954,7 +1954,7 @@
             "uid": "${datasource}"
           },
           "exemplar": true,
-          "expr": "sum(rate(container_network_receive_packets_total{namespace=\"$namespace\", pod=\"$pod\"}[$__rate_interval]))",
+          "expr": "sum(rate(container_network_receive_packets_total{namespace=\"$namespace\", pod=\"$pod\"}[$__interval]))",
           "interval": "$resolution",
           "legendFormat": "Received",
           "refId": "A"
@@ -1965,7 +1965,7 @@
             "uid": "${datasource}"
           },
           "exemplar": true,
-          "expr": "- sum(rate(container_network_transmit_packets_total{namespace=\"$namespace\", pod=\"$pod\"}[$__rate_interval]))",
+          "expr": "- sum(rate(container_network_transmit_packets_total{namespace=\"$namespace\", pod=\"$pod\"}[$__interval]))",
           "interval": "$resolution",
           "legendFormat": "Transmitted",
           "refId": "B"
@@ -2059,7 +2059,7 @@
             "uid": "${datasource}"
           },
           "exemplar": true,
-          "expr": "sum(rate(container_network_receive_packets_dropped_total{namespace=\"$namespace\", pod=\"$pod\"}[$__rate_interval]))",
+          "expr": "sum(rate(container_network_receive_packets_dropped_total{namespace=\"$namespace\", pod=\"$pod\"}[$__interval]))",
           "interval": "$resolution",
           "legendFormat": "Received",
           "refId": "A"
@@ -2070,7 +2070,7 @@
             "uid": "${datasource}"
           },
           "exemplar": true,
-          "expr": "- sum(rate(container_network_transmit_packets_dropped_total{namespace=\"$namespace\", pod=\"$pod\"}[$__rate_interval]))",
+          "expr": "- sum(rate(container_network_transmit_packets_dropped_total{namespace=\"$namespace\", pod=\"$pod\"}[$__interval]))",
           "interval": "$resolution",
           "legendFormat": "Transmitted",
           "refId": "B"
@@ -2164,7 +2164,7 @@
             "uid": "${datasource}"
           },
           "exemplar": true,
-          "expr": "sum(rate(container_network_receive_errors_total{namespace=\"$namespace\", pod=\"$pod\"}[$__rate_interval]))",
+          "expr": "sum(rate(container_network_receive_errors_total{namespace=\"$namespace\", pod=\"$pod\"}[$__interval]))",
           "interval": "$resolution",
           "legendFormat": "Received",
           "refId": "A"
@@ -2175,7 +2175,7 @@
             "uid": "${datasource}"
           },
           "exemplar": true,
-          "expr": "- sum(rate(container_network_transmit_errors_total{namespace=\"$namespace\", pod=\"$pod\"}[$__rate_interval]))",
+          "expr": "- sum(rate(container_network_transmit_errors_total{namespace=\"$namespace\", pod=\"$pod\"}[$__interval]))",
           "interval": "$resolution",
           "legendFormat": "Transmitted",
           "refId": "B"

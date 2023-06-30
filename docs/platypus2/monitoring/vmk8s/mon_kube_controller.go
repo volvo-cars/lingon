@@ -59,12 +59,11 @@ var KubeControllerScrape = &v1beta1.VMServiceScrape{
 				},
 			},
 		},
-		// JobLabel:          "jobLabel",
-		JobLabel: ku.AppLabelName,
+		JobLabel: "component",
 		NamespaceSelector: v1beta1.NamespaceSelector{
 			MatchNames: []string{ku.NSKubeSystem}, // kube-system
 		},
-		Selector: metav1.LabelSelector{MatchLabels: KCM.MatchLabels()},
+		Selector: metav1.LabelSelector{MatchLabels: map[string]string{"component": "kube-controller-manager"}},
 	},
 }
 

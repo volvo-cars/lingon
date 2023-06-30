@@ -491,7 +491,6 @@ func run(p runParams) error {
 	// This needs to come last,
 	// in case the state is in sync but destroy flag was passed
 	if p.Destroy {
-
 		if err := kubeExportApply(
 			ctx, nats.New(), "nats", kctlOpts,
 			"delete", "-f", "-",
@@ -500,7 +499,6 @@ func run(p runParams) error {
 		}
 
 		// Benthos processing
-
 		if err := kubeExportApply(
 			ctx, benthos.New(benthos.BenthosArgs{}), "benthos", kctlOpts,
 			"delete", "-f", "-",
@@ -523,6 +521,7 @@ func run(p runParams) error {
 		); err != nil {
 			return err
 		}
+
 		return finishAndDestroy(ctx, p, tf)
 	}
 

@@ -17,7 +17,7 @@ import (
 
 const (
 	CDNSPort     = 9153
-	CDNSPortName = "http-metrics"
+	CDNSPortName = "metrics"
 )
 
 var CDNS = &meta.Metadata{
@@ -50,7 +50,7 @@ var CoreDNSSVC = &corev1.Service{
 	ObjectMeta: metav1.ObjectMeta{
 		Labels:    CDNS.Labels(),
 		Name:      CDNS.Name,
-		Namespace: CDNS.Namespace,
+		Namespace: ku.NSKubeSystem,
 	},
 	Spec: corev1.ServiceSpec{
 		ClusterIP: corev1.ClusterIPNone,
@@ -80,6 +80,7 @@ var CoreDNSScrape = &v1beta1.VMServiceScrape{
 		NamespaceSelector: v1beta1.NamespaceSelector{
 			MatchNames: []string{ku.NSKubeSystem}, // kube-system
 		},
+		// JobLabel: "k8s-app",
 		JobLabel: ku.AppLabelName,
 		Selector: metav1.LabelSelector{MatchLabels: CDNS.MatchLabels()},
 	},

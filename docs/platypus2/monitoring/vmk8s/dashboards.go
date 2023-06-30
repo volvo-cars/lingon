@@ -54,7 +54,7 @@ var (
 	//go:embed dashboards/k8s-views-pods.json
 	k8sPodsDash        string
 	DashboardK8SPodsCM = LoadDashAsCM(
-		"k8s-views-pods.json ",
+		"k8s-views-pods.json",
 		k8sPodsDash,
 		Graf.ObjectMetaNameSuffix("k8s-pods"),
 	)
@@ -75,7 +75,7 @@ var (
 		Graf.ObjectMetaNameSuffix("dash-overview"),
 	)
 
-	//go:embed dashboards/coredns.json
+	//go:embed dashboards/k8s-system-coredns.json
 	corednsDash string
 
 	CoreDNSDashboardCM = LoadDashAsCM(

@@ -60,11 +60,8 @@ func NewVicMet() *VicMet {
 // Note that a "vmsingle-" prefix is added to the name.
 // See https://github.com/VictoriaMetrics/operator/blob/4c97f70c9a775d2bfff401862acabd5452ef0cf8/api/v1beta1/vmsingle_types.go#L326
 var VMDB = &v1beta1.VMSingle{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels:    Single.Labels(),
-		Name:      Single.Name,
-		Namespace: namespace,
-	},
+	TypeMeta:   TypeVMSingleV1Beta1,
+	ObjectMeta: Single.ObjectMeta(),
 	Spec: v1beta1.VMSingleSpec{
 		Image:        v1beta1.Image{Tag: "v" + Single.Version},
 		ReplicaCount: P(int32(1)),
@@ -77,7 +74,8 @@ var VMDB = &v1beta1.VMSingle{
 		},
 		RetentionPeriod: "14",
 		Resources:       ku.Resources("1", "512Mi", "1", "512Mi"),
-		Port:            d(VMSinglePort),
+		// Resources:       ku.Resources("4", "8Gi", "4", "8Gi"),
+		Port: d(VMSinglePort),
 		Storage: &corev1.PersistentVolumeClaimSpec{
 			AccessModes: []corev1.PersistentVolumeAccessMode{
 				corev1.ReadWriteOnce,
@@ -89,7 +87,6 @@ var VMDB = &v1beta1.VMSingle{
 			},
 		},
 	},
-	TypeMeta: TypeVMSingleV1Beta1,
 }
 
 var VMSingleAlertRules = &v1beta1.VMRule{

@@ -118,7 +118,12 @@ var NodeExporterDS = &appsv1.DaemonSet{
 						ReadinessProbe: &corev1.Probe{
 							ProbeHandler: ku.ProbeHTTP("/", NodeExportPort),
 						},
-						Resources: ku.Resources("1", "300Mi", "1", "300Mi"),
+						Resources: ku.Resources(
+							"250m",
+							"300Mi",
+							"250m",
+							"300Mi",
+						),
 						VolumeMounts: []corev1.VolumeMount{
 							{
 								MountPath: "/host/proc",

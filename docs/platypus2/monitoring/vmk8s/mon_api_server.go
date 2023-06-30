@@ -57,13 +57,11 @@ var APIServerScrape = &v1beta1.VMServiceScrape{
 				},
 			},
 		},
-		// JobLabel:          "component",
-		JobLabel:          ku.AppLabelName,
-		NamespaceSelector: v1beta1.NamespaceSelector{MatchNames: []string{ku.NSDefault}},
+		JobLabel:          "component",
+		NamespaceSelector: v1beta1.NamespaceSelector{MatchNames: []string{ku.NSKubeSystem}},
 		Selector: metav1.LabelSelector{
 			MatchLabels: map[string]string{
-				"component": "apiserver",
-				"provider":  "kubernetes",
+				"component": "kube-apiserver",
 			},
 		},
 	},

@@ -1,41 +1,41 @@
 {
-  "__inputs": [],
   "__elements": {},
+  "__inputs": [],
   "__requires": [
     {
-      "type": "panel",
       "id": "barchart",
       "name": "Bar chart",
+      "type": "panel",
       "version": ""
     },
     {
-      "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
+      "type": "grafana",
       "version": "9.0.4"
     },
     {
-      "type": "datasource",
       "id": "prometheus",
       "name": "Prometheus",
+      "type": "datasource",
       "version": "1.0.0"
     },
     {
-      "type": "panel",
       "id": "stat",
       "name": "Stat",
+      "type": "panel",
       "version": ""
     },
     {
-      "type": "panel",
       "id": "table",
       "name": "Table",
+      "type": "panel",
       "version": ""
     },
     {
-      "type": "panel",
       "id": "timeseries",
       "name": "Time series",
+      "type": "panel",
       "version": ""
     }
   ],
@@ -619,6 +619,22 @@
                 "value": 101
               }
             ]
+          },
+          {
+            "properties": [
+              {
+                "id": "",
+                "value": ""
+              }
+            ]
+          },
+          {
+            "properties": [
+              {
+                "id": "",
+                "value": ""
+              }
+            ]
           }
         ]
       },
@@ -740,6 +756,22 @@
               {
                 "id": "custom.width",
                 "value": 150
+              }
+            ]
+          },
+          {
+            "properties": [
+              {
+                "id": "",
+                "value": ""
+              }
+            ]
+          },
+          {
+            "properties": [
+              {
+                "id": "",
+                "value": ""
               }
             ]
           }
@@ -1359,7 +1391,7 @@
                 "uid": "$ds"
               },
               "editorMode": "code",
-              "expr": "sum(rollup_rate(vm_backups_uploaded_bytes_total[$__rate_interval])) by (rollup)",
+              "expr": "sum(rollup_rate(vm_backups_uploaded_bytes_total[$__interval])) by (rollup)",
               "legendFormat": "__auto",
               "range": true,
               "refId": "A"
@@ -1670,6 +1702,7 @@
         },
         "hide": 0,
         "includeAll": false,
+        "label": "",
         "multi": false,
         "name": "ds",
         "options": [],
@@ -1689,6 +1722,7 @@
         "definition": "label_values(vm_app_version{version=~\"^vmbackupmanager.*\"}, job)",
         "hide": 0,
         "includeAll": true,
+        "label": "",
         "multi": true,
         "name": "job",
         "options": [],
@@ -1714,6 +1748,7 @@
         "definition": "label_values(vm_app_version{job=~\"$job\"}, instance)",
         "hide": 0,
         "includeAll": true,
+        "label": "",
         "multi": true,
         "name": "instance",
         "options": [],
@@ -1721,7 +1756,7 @@
           "query": "label_values(vm_app_version{job=~\"$job\"}, instance)",
           "refId": "VictoriaMetrics-instance-Variable-Query"
         },
-        "refresh": 1,
+        "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
         "sort": 0,
@@ -1731,13 +1766,19 @@
         "useTags": false
       },
       {
+        "current": null,
         "datasource": {
           "type": "prometheus",
           "uid": "$ds"
         },
         "filters": [],
         "hide": 0,
+        "label": "",
+        "multi": false,
         "name": "adhoc",
+        "options": [],
+        "query": null,
+        "refresh": 0,
         "skipUrlSync": false,
         "type": "adhoc"
       }

@@ -159,10 +159,7 @@ sum(rate(etcd_http_received_total{job=~".*etcd.*"}[5m])) BY (method)
 			},
 		},
 	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "operator.victoriametrics.com/v1beta1",
-		Kind:       "VMRule",
-	},
+	TypeMeta: TypeVMRuleV1Beta1,
 }
 
 var ETCDSvc = &corev1.Service{
@@ -198,12 +195,11 @@ var ETCDScrape = &v1beta1.VMServiceScrape{
 				TLSConfig:       &v1beta1.TLSConfig{CAFile: PathSA + "/ca.crt"},
 			},
 		},
-		// JobLabel: "jobLabel",
-		JobLabel: ku.AppLabelName,
+		JobLabel: "component",
 		NamespaceSelector: v1beta1.NamespaceSelector{
 			MatchNames: []string{ku.NSKubeSystem}, // kube-system
 		},
-		Selector: metav1.LabelSelector{MatchLabels: ET.MatchLabels()},
+		Selector: metav1.LabelSelector{MatchLabels: map[string]string{"component": "etcd"}},
 	},
 	TypeMeta: TypeVMServiceScrapeV1Beta1,
 }

@@ -1,14 +1,5 @@
 {
-  "__inputs": [
-    {
-      "name": "DS_PROMETHEUS",
-      "label": "Prometheus",
-      "description": "",
-      "type": "datasource",
-      "pluginId": "prometheus",
-      "pluginName": "Prometheus"
-    }
-  ],
+  "__inputs": [],
   "__elements": [],
   "__requires": [
     {
@@ -137,9 +128,10 @@
           "fields": "",
           "values": false
         },
-        "showUnfilled": true
+        "showUnfilled": true,
+        "valueMode": "color"
       },
-      "pluginVersion": "9.3.8",
+      "pluginVersion": "9.5.3",
       "targets": [
         {
           "datasource": {
@@ -148,7 +140,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "avg(1-rate(node_cpu_seconds_total{mode=\"idle\"}[$__rate_interval]))",
+          "expr": "avg(1-rate(node_cpu_seconds_total{mode=\"idle\"}[$__interval]))",
           "interval": "",
           "legendFormat": "Real",
           "range": true,
@@ -233,9 +225,10 @@
           "values": false
         },
         "showUnfilled": true,
-        "text": {}
+        "text": {},
+        "valueMode": "color"
       },
-      "pluginVersion": "9.3.8",
+      "pluginVersion": "9.5.3",
       "targets": [
         {
           "datasource": {
@@ -321,7 +314,7 @@
         "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "9.3.8",
+      "pluginVersion": "9.5.3",
       "targets": [
         {
           "datasource": {
@@ -623,7 +616,7 @@
         "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "9.3.8",
+      "pluginVersion": "9.5.3",
       "targets": [
         {
           "datasource": {
@@ -683,7 +676,7 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "9.3.8",
+      "pluginVersion": "9.5.3",
       "targets": [
         {
           "datasource": {
@@ -692,7 +685,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "sum(1-rate(node_cpu_seconds_total{mode=\"idle\"}[$__rate_interval]))",
+          "expr": "sum(1-rate(node_cpu_seconds_total{mode=\"idle\"}[$__interval]))",
           "interval": "",
           "legendFormat": "Real",
           "range": true,
@@ -782,7 +775,7 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "9.3.8",
+      "pluginVersion": "9.5.3",
       "targets": [
         {
           "datasource": {
@@ -880,7 +873,7 @@
         "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "9.3.8",
+      "pluginVersion": "9.5.3",
       "targets": [
         {
           "datasource": {
@@ -1223,7 +1216,7 @@
             "uid": "${datasource}"
           },
           "exemplar": true,
-          "expr": "avg(1-rate(node_cpu_seconds_total{mode=\"idle\"}[$__rate_interval]))",
+          "expr": "avg(1-rate(node_cpu_seconds_total{mode=\"idle\"}[$__interval]))",
           "interval": "$resolution",
           "legendFormat": "CPU usage in %",
           "refId": "A"
@@ -1432,7 +1425,7 @@
             "uid": "${datasource}"
           },
           "exemplar": true,
-          "expr": "sum(rate(container_cpu_usage_seconds_total{image!=\"\"}[$__rate_interval])) by (namespace)",
+          "expr": "sum(rate(container_cpu_usage_seconds_total{image!=\"\"}[$__interval])) by (namespace)",
           "interval": "$resolution",
           "legendFormat": "{{ namespace }}",
           "refId": "A"
@@ -1633,7 +1626,7 @@
             "uid": "${datasource}"
           },
           "exemplar": true,
-          "expr": "avg(1-rate(node_cpu_seconds_total{mode=\"idle\"}[$__rate_interval])) by (instance)",
+          "expr": "avg(1-rate(node_cpu_seconds_total{mode=\"idle\"}[$__interval])) by (instance)",
           "interval": "$resolution",
           "legendFormat": "{{ node }}",
           "refId": "A"
@@ -1841,7 +1834,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "sum(rate(container_cpu_cfs_throttled_seconds_total{image!=\"\"}[$__rate_interval])) by (namespace) > 0",
+          "expr": "sum(rate(container_cpu_cfs_throttled_seconds_total{image!=\"\"}[$__interval])) by (namespace) > 0",
           "interval": "$resolution",
           "legendFormat": "{{ namespace }}",
           "range": true,
@@ -1948,7 +1941,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "sum(rate(node_cpu_core_throttles_total[$__rate_interval])) by (instance)",
+          "expr": "sum(rate(node_cpu_core_throttles_total[$__interval])) by (instance)",
           "interval": "$resolution",
           "legendFormat": "{{ instance }}",
           "range": true,
@@ -2062,7 +2055,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "sum(rate(node_network_receive_bytes_total{device!~\"lxc.*|veth.*\"}[$__rate_interval])) by (device)",
+          "expr": "sum(rate(node_network_receive_bytes_total{device!~\"lxc.*|veth.*\"}[$__interval])) by (device)",
           "interval": "$resolution",
           "legendFormat": "Received : {{ device }}",
           "range": true,
@@ -2075,7 +2068,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "- sum(rate(node_network_transmit_bytes_total{device!~\"lxc.*|veth.*\"}[$__rate_interval]))  by (device)",
+          "expr": "- sum(rate(node_network_transmit_bytes_total{device!~\"lxc.*|veth.*\"}[$__interval]))  by (device)",
           "interval": "$resolution",
           "legendFormat": "Transmitted : {{ device }}",
           "range": true,
@@ -2171,7 +2164,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "sum(rate(node_network_receive_drop_total[$__rate_interval]))",
+          "expr": "sum(rate(node_network_receive_drop_total[$__interval]))",
           "interval": "$resolution",
           "legendFormat": "Packets dropped (receive)",
           "range": true,
@@ -2184,7 +2177,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "- sum(rate(node_network_transmit_drop_total[$__rate_interval]))",
+          "expr": "- sum(rate(node_network_transmit_drop_total[$__interval]))",
           "interval": "$resolution",
           "legendFormat": "Packets dropped (transmit)",
           "range": true,
@@ -2280,7 +2273,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "sum(rate(container_network_receive_bytes_total[$__rate_interval])) by (namespace)",
+          "expr": "sum(rate(container_network_receive_bytes_total[$__interval])) by (namespace)",
           "interval": "$resolution",
           "legendFormat": "Received : {{ namespace }}",
           "range": true,
@@ -2292,7 +2285,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "- sum(rate(container_network_transmit_bytes_total[$__rate_interval])) by (namespace)",
+          "expr": "- sum(rate(container_network_transmit_bytes_total[$__interval])) by (namespace)",
           "hide": false,
           "interval": "$resolution",
           "legendFormat": "Transmitted : {{ namespace }}",
@@ -2348,8 +2341,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2389,7 +2381,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "sum(rate(node_network_receive_bytes_total[$__rate_interval])) by (instance)",
+          "expr": "sum(rate(node_network_receive_bytes_total[$__interval])) by (instance)",
           "interval": "$resolution",
           "legendFormat": "Received bytes in {{ instance }}",
           "range": true,
@@ -2401,7 +2393,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "- sum(rate(node_network_transmit_bytes_total[$__rate_interval])) by (instance)",
+          "expr": "- sum(rate(node_network_transmit_bytes_total[$__interval])) by (instance)",
           "hide": false,
           "interval": "$resolution",
           "legendFormat": "Transmitted bytes in {{ instance }}",
@@ -2499,7 +2491,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "sum(rate(node_network_receive_bytes_total{device!~\"lxc.*|veth.*|lo\"}[$__rate_interval])) by (instance)",
+          "expr": "sum(rate(node_network_receive_bytes_total{device!~\"lxc.*|veth.*|lo\"}[$__interval])) by (instance)",
           "interval": "$resolution",
           "legendFormat": "Received bytes in {{ instance }}",
           "range": true,
@@ -2511,7 +2503,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "- sum(rate(node_network_transmit_bytes_total{device!~\"lxc.*|veth.*|lo\"}[$__rate_interval])) by (instance)",
+          "expr": "- sum(rate(node_network_transmit_bytes_total{device!~\"lxc.*|veth.*|lo\"}[$__interval])) by (instance)",
           "hide": false,
           "interval": "$resolution",
           "legendFormat": "Transmitted bytes in {{ instance }}",
@@ -2609,7 +2601,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "sum(rate(node_network_receive_bytes_total{device=\"lo\"}[$__rate_interval])) by (instance)",
+          "expr": "sum(rate(node_network_receive_bytes_total{device=\"lo\"}[$__interval])) by (instance)",
           "interval": "$resolution",
           "legendFormat": "Received bytes in {{ instance }}",
           "range": true,
@@ -2621,7 +2613,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "- sum(rate(node_network_transmit_bytes_total{device=\"lo\"}[$__rate_interval])) by (instance)",
+          "expr": "- sum(rate(node_network_transmit_bytes_total{device=\"lo\"}[$__interval])) by (instance)",
           "hide": false,
           "interval": "$resolution",
           "legendFormat": "Transmitted bytes in {{ instance }}",
@@ -2634,7 +2626,7 @@
     }
   ],
   "refresh": "30s",
-  "schemaVersion": 37,
+  "schemaVersion": 38,
   "style": "dark",
   "tags": [
     "Kubernetes",
@@ -2645,15 +2637,15 @@
       {
         "current": {
           "selected": false,
-          "text": "Prometheus",
-          "value": "Prometheus"
+          "text": "VictoriaMetrics",
+          "value": "VictoriaMetrics"
         },
         "hide": 0,
         "includeAll": false,
         "multi": false,
         "name": "datasource",
         "options": [],
-        "query": "prometheus",
+        "query": "victoriametrics-datasource",
         "queryValue": "",
         "refresh": 1,
         "regex": "",

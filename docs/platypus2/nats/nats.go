@@ -215,7 +215,7 @@ func ConfigMonitoring(port int32, tags []string) string {
 http: ` + d(port) + `
 server_name:$POD_NAME
 server_tags: [
-  ` + strings.Join(tags, ",") + `
+  "` + strings.Join(tags, ",") + `"
 ]
 `
 }

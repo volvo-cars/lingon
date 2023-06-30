@@ -1,35 +1,35 @@
 {
-  "__inputs": [],
   "__elements": {},
+  "__inputs": [],
   "__requires": [
     {
-      "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
+      "type": "grafana",
       "version": "9.2.6"
     },
     {
-      "type": "datasource",
       "id": "prometheus",
       "name": "Prometheus",
+      "type": "datasource",
       "version": "1.0.0"
     },
     {
-      "type": "panel",
       "id": "stat",
       "name": "Stat",
+      "type": "panel",
       "version": ""
     },
     {
-      "type": "panel",
       "id": "table",
       "name": "Table",
+      "type": "panel",
       "version": ""
     },
     {
-      "type": "panel",
       "id": "timeseries",
       "name": "Time series",
+      "type": "panel",
       "version": ""
     }
   ],
@@ -526,6 +526,22 @@
                 "value": "Count"
               }
             ]
+          },
+          {
+            "properties": [
+              {
+                "id": "",
+                "value": ""
+              }
+            ]
+          },
+          {
+            "properties": [
+              {
+                "id": "",
+                "value": ""
+              }
+            ]
           }
         ]
       },
@@ -562,6 +578,7 @@
           "refId": "A"
         }
       ],
+      "title": "",
       "type": "table"
     },
     {
@@ -657,7 +674,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum(min_over_time(up{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval])) by (job)",
+          "expr": "sum(min_over_time(up{job=~\"$job\", instance=~\"$instance\"}[$__interval])) by (job)",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -787,7 +804,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum(increase(vmalert_alerts_fired_total{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval])) by(job)",
+          "expr": "sum(increase(vmalert_alerts_fired_total{job=~\"$job\", instance=~\"$instance\"}[$__interval])) by(job)",
           "interval": "",
           "legendFormat": "{{job}}",
           "range": true,
@@ -890,7 +907,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "topk_max($topk, max(sum(\n    rate(vmalert_iteration_duration_seconds_sum{job=~\"$job\", instance=~\"$instance\", group=~\"$group\"}[$__rate_interval])\n/\n    rate(vmalert_iteration_duration_seconds_count{job=~\"$job\", instance=~\"$instance\", group=~\"$group\"}[$__rate_interval])\n) by(job, instance, group)) \nby(job, group))",
+          "expr": "topk_max($topk, max(sum(\n    rate(vmalert_iteration_duration_seconds_sum{job=~\"$job\", instance=~\"$instance\", group=~\"$group\"}[$__interval])\n/\n    rate(vmalert_iteration_duration_seconds_count{job=~\"$job\", instance=~\"$instance\", group=~\"$group\"}[$__interval])\n) by(job, instance, group)) \nby(job, group))",
           "interval": "",
           "legendFormat": "{{group}} ({{job}})",
           "range": true,
@@ -991,7 +1008,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum(rate(vmalert_execution_total{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval])) by (job)",
+          "expr": "sum(rate(vmalert_execution_total{job=~\"$job\", instance=~\"$instance\"}[$__interval])) by (job)",
           "interval": "",
           "legendFormat": "{{job}}",
           "range": true,
@@ -1092,7 +1109,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum(rate(vmalert_execution_errors_total{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval])) by(job) > 0",
+          "expr": "sum(rate(vmalert_execution_errors_total{job=~\"$job\", instance=~\"$instance\"}[$__interval])) by(job) > 0",
           "interval": "",
           "legendFormat": "__auto",
           "range": true,
@@ -1154,6 +1171,22 @@
               {
                 "id": "custom.hidden",
                 "value": true
+              }
+            ]
+          },
+          {
+            "properties": [
+              {
+                "id": "",
+                "value": ""
+              }
+            ]
+          },
+          {
+            "properties": [
+              {
+                "id": "",
+                "value": ""
               }
             ]
           }
@@ -1345,7 +1378,7 @@
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "max(\n  rate(process_cpu_seconds_total{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval]) \n  / \n  vm_available_cpu_cores{job=~\"$job\", instance=~\"$instance\"}\n) by(job)",
+              "expr": "max(\n  rate(process_cpu_seconds_total{job=~\"$job\", instance=~\"$instance\"}[$__interval]) \n  / \n  vm_available_cpu_cores{job=~\"$job\", instance=~\"$instance\"}\n) by(job)",
               "format": "time_series",
               "interval": "",
               "intervalFactor": 1,
@@ -1459,7 +1492,7 @@
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "max(\n    max_over_time(process_resident_memory_bytes{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval])\n    /\n    vm_available_memory_bytes{job=~\"$job\", instance=~\"$instance\"}\n) by(job)",
+              "expr": "max(\n    max_over_time(process_resident_memory_bytes{job=~\"$job\", instance=~\"$instance\"}[$__interval])\n    /\n    vm_available_memory_bytes{job=~\"$job\", instance=~\"$instance\"}\n) by(job)",
               "interval": "",
               "legendFormat": "__auto",
               "range": true,
@@ -1564,7 +1597,7 @@
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "max(\n    max_over_time(process_open_fds{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval])\n    /\n    process_max_fds{job=~\"$job\", instance=~\"$instance\"}\n) by(job)",
+              "expr": "max(\n    max_over_time(process_open_fds{job=~\"$job\", instance=~\"$instance\"}[$__interval])\n    /\n    process_max_fds{job=~\"$job\", instance=~\"$instance\"}\n) by(job)",
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
@@ -2108,7 +2141,7 @@
                 "uid": "$ds"
               },
               "exemplar": false,
-              "expr": "sum(rate(vmalert_alerts_send_errors_total{job=~\"$job\", instance=~\"$instance\", group=~\"$group\"}[$__rate_interval])) by(instance, addr) > 0",
+              "expr": "sum(rate(vmalert_alerts_send_errors_total{job=~\"$job\", instance=~\"$instance\", group=~\"$group\"}[$__interval])) by(instance, addr) > 0",
               "interval": "",
               "legendFormat": "{{instance}} => {{addr}}",
               "refId": "A"
@@ -2209,7 +2242,7 @@
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "sum(rate(vmalert_alerts_sent_total{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval])) by(job, addr) > 0",
+              "expr": "sum(rate(vmalert_alerts_sent_total{job=~\"$job\", instance=~\"$instance\"}[$__interval])) by(job, addr) > 0",
               "interval": "",
               "legendFormat": "{{job}} => {{addr}}",
               "range": true,
@@ -2658,7 +2691,7 @@
                 "uid": "$ds"
               },
               "editorMode": "code",
-              "expr": "sum(rate(vmalert_remotewrite_sent_rows_total{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval])) by(job)",
+              "expr": "sum(rate(vmalert_remotewrite_sent_rows_total{job=~\"$job\", instance=~\"$instance\"}[$__interval])) by(job)",
               "legendFormat": "__auto",
               "range": true,
               "refId": "A"
@@ -2751,7 +2784,7 @@
                 "uid": "$ds"
               },
               "editorMode": "code",
-              "expr": "sum(rate(vmalert_remotewrite_dropped_rows_total{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval])) by(job) > 0",
+              "expr": "sum(rate(vmalert_remotewrite_dropped_rows_total{job=~\"$job\", instance=~\"$instance\"}[$__interval])) by(job) > 0",
               "legendFormat": "__auto",
               "range": true,
               "refId": "A"
@@ -2782,6 +2815,7 @@
         },
         "hide": 0,
         "includeAll": false,
+        "label": "",
         "multi": false,
         "name": "ds",
         "options": [],
@@ -2801,6 +2835,7 @@
         "definition": "label_values(vm_app_version{version=~\"^vmalert.*\"}, job)",
         "hide": 0,
         "includeAll": true,
+        "label": "",
         "multi": true,
         "name": "job",
         "options": [],
@@ -2824,6 +2859,7 @@
         "definition": "label_values(vm_app_version{job=~\"$job\"}, instance)",
         "hide": 0,
         "includeAll": true,
+        "label": "",
         "multi": true,
         "name": "instance",
         "options": [],
@@ -2847,6 +2883,7 @@
         "definition": "label_values(vmalert_iteration_duration_seconds{job=~\"$job\", instance=~\"$instance\"}, group)",
         "hide": 0,
         "includeAll": true,
+        "label": "",
         "multi": true,
         "name": "group",
         "options": [],
@@ -2854,7 +2891,7 @@
           "query": "label_values(vmalert_iteration_duration_seconds{job=~\"$job\", instance=~\"$instance\"}, group)",
           "refId": "StandardVariableQuery"
         },
-        "refresh": 1,
+        "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
         "sort": 0,
@@ -2868,9 +2905,40 @@
         },
         "hide": 0,
         "includeAll": false,
+        "label": "",
         "multi": false,
         "name": "topk",
         "options": [
+          {
+            "selected": true,
+            "text": "5",
+            "value": "5"
+          },
+          {
+            "selected": false,
+            "text": "10",
+            "value": "10"
+          },
+          {
+            "selected": false,
+            "text": "20",
+            "value": "20"
+          },
+          {
+            "selected": false,
+            "text": "30",
+            "value": "30"
+          },
+          {
+            "selected": false,
+            "text": "40",
+            "value": "40"
+          },
+          {
+            "selected": false,
+            "text": "50",
+            "value": "50"
+          },
           {
             "selected": true,
             "text": "5",
@@ -2904,17 +2972,24 @@
         ],
         "query": "5, 10, 20, 30, 40, 50",
         "queryValue": "",
+        "refresh": 0,
         "skipUrlSync": false,
         "type": "custom"
       },
       {
+        "current": null,
         "datasource": {
           "type": "prometheus",
           "uid": "$ds"
         },
         "filters": [],
         "hide": 0,
+        "label": "",
+        "multi": false,
         "name": "adhoc",
+        "options": [],
+        "query": null,
+        "refresh": 0,
         "skipUrlSync": false,
         "type": "adhoc"
       }

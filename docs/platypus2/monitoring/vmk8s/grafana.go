@@ -541,7 +541,7 @@ mkdir -p /var/lib/grafana/plugins/
 # ver=$(curl -s https://api.github.com/repos/VictoriaMetrics/grafana-datasource/releases/latest | grep -oE 'v\d+\.\d+\.\d+' | head -1)
 ver="v0.2.0"
 curl -L https://github.com/VictoriaMetrics/grafana-datasource/releases/download/$ver/victoriametrics-datasource-$ver.tar.gz -o /var/lib/grafana/plugins/plugin.tar.gz
-tar -xf /var/lib/grafana/plugins/plugin.tar.gz -C /var/lib/grafana/plugins/
+tar -xzf /var/lib/grafana/plugins/plugin.tar.gz -C /var/lib/grafana/plugins/
 rm -f /var/lib/grafana/plugins/plugin.tar.gz
 chown -R 472:472 /var/lib/grafana/plugins/
 `

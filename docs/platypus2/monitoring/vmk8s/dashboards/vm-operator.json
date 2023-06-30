@@ -110,7 +110,7 @@
         "content": "<div style=\"text-align: center;\">$version</div>",
         "mode": "markdown"
       },
-      "pluginVersion": "9.2.2",
+      "pluginVersion": "9.5.3",
       "targets": [
         {
           "datasource": {
@@ -173,7 +173,7 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "9.2.2",
+      "pluginVersion": "9.5.3",
       "targets": [
         {
           "datasource": {
@@ -239,7 +239,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "9.2.2",
+      "pluginVersion": "9.5.3",
       "targets": [
         {
           "datasource": {
@@ -296,7 +296,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "9.2.2",
+      "pluginVersion": "9.5.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -311,7 +311,7 @@
             "uid": "$ds"
           },
           "editorMode": "code",
-          "expr": "sum(rate(controller_runtime_reconcile_total{job=~\"$job\",instance=~\"$instance\",result=~\"requeue_after|requeue|success\"}[$__rate_interval])) by(controller)",
+          "expr": "sum(rate(controller_runtime_reconcile_total{job=~\"$job\",instance=~\"$instance\",result=~\"requeue_after|requeue|success\"}[$__interval])) by(controller)",
           "legendFormat": "{{controller}}",
           "range": true,
           "refId": "A"
@@ -384,7 +384,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "9.2.2",
+      "pluginVersion": "9.5.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -399,7 +399,7 @@
             "uid": "$ds"
           },
           "editorMode": "code",
-          "expr": "sum(rate(operator_log_messages_total{job=~\"$job\",instance=~\"$instance\"}[$__rate_interval])) by (level)",
+          "expr": "sum(rate(operator_log_messages_total{job=~\"$job\",instance=~\"$instance\"}[$__interval])) by (level)",
           "legendFormat": "{{label_name}}",
           "range": true,
           "refId": "A"
@@ -498,7 +498,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "8.3.2",
+      "pluginVersion": "9.5.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -514,7 +514,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum(rate(controller_runtime_reconcile_errors_total{job=~\"$job\",instance=~\"$instance\"}[$__rate_interval])) by(controller) > 0 ",
+          "expr": "sum(rate(controller_runtime_reconcile_errors_total{job=~\"$job\",instance=~\"$instance\"}[$__interval])) by(controller) > 0 ",
           "instant": false,
           "legendFormat": "{{controller}}",
           "range": true,
@@ -526,7 +526,7 @@
             "uid": "$ds"
           },
           "editorMode": "code",
-          "expr": "sum(rate(controller_runtime_reconcile_total{job=~\"$job\",instance=~\"$instance\",result=\"error\"}[$__rate_interval])) by(controller) > 0",
+          "expr": "sum(rate(controller_runtime_reconcile_total{job=~\"$job\",instance=~\"$instance\",result=\"error\"}[$__interval])) by(controller) > 0",
           "hide": false,
           "legendFormat": "{{label_name}}",
           "range": true,
@@ -599,7 +599,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "8.3.2",
+      "pluginVersion": "9.5.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -614,7 +614,7 @@
             "uid": "$ds"
           },
           "editorMode": "code",
-          "expr": "sum(rate(operator_reconcile_throttled_events_total[$__rate_interval])) by(controller)",
+          "expr": "sum(rate(operator_reconcile_throttled_events_total[$__interval])) by(controller)",
           "legendFormat": "{{controller}}",
           "range": true,
           "refId": "A"
@@ -687,7 +687,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "8.3.2",
+      "pluginVersion": "9.5.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -782,7 +782,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "8.3.2",
+      "pluginVersion": "9.5.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -797,7 +797,7 @@
             "uid": "$ds"
           },
           "editorMode": "code",
-          "expr": "histogram_quantile(0.99,sum(rate(controller_runtime_reconcile_time_seconds_bucket[$__rate_interval])) by(le,controller) )",
+          "expr": "histogram_quantile(0.99,sum(rate(controller_runtime_reconcile_time_seconds_bucket[$__interval])) by(le,controller) )",
           "legendFormat": "q.99 {{controller}}",
           "range": true,
           "refId": "A"
@@ -901,7 +901,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "8.3.2",
+      "pluginVersion": "9.5.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -1023,7 +1023,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "8.3.2",
+      "pluginVersion": "9.5.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -1038,7 +1038,7 @@
             "uid": "$ds"
           },
           "editorMode": "code",
-          "expr": "rate(process_cpu_seconds_total{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval])",
+          "expr": "rate(process_cpu_seconds_total{job=~\"$job\", instance=~\"$instance\"}[$__interval])",
           "legendFormat": "CPU cores used",
           "range": true,
           "refId": "A"
@@ -1109,7 +1109,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "8.3.2",
+      "pluginVersion": "9.5.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -1202,7 +1202,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "8.3.2",
+      "pluginVersion": "9.5.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -1217,7 +1217,7 @@
             "uid": "$ds"
           },
           "editorMode": "code",
-          "expr": "sum(rate(go_gc_duration_seconds_sum{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval]))\n/\nsum(rate(go_gc_duration_seconds_count{job=~\"$job\", instance=~\"$instance\"}[$__rate_interval]))",
+          "expr": "sum(rate(go_gc_duration_seconds_sum{job=~\"$job\", instance=~\"$instance\"}[$__interval]))\n/\nsum(rate(go_gc_duration_seconds_count{job=~\"$job\", instance=~\"$instance\"}[$__interval]))",
           "legendFormat": "avg gc duration",
           "range": true,
           "refId": "A"
@@ -1255,7 +1255,7 @@
     }
   ],
   "refresh": "",
-  "schemaVersion": 37,
+  "schemaVersion": 38,
   "style": "dark",
   "tags": [
     "operator",
@@ -1266,15 +1266,15 @@
       {
         "current": {
           "selected": false,
-          "text": "cloud-c15",
-          "value": "cloud-c15"
+          "text": "VictoriaMetrics",
+          "value": "VictoriaMetrics"
         },
         "hide": 0,
         "includeAll": false,
         "multi": false,
         "name": "ds",
         "options": [],
-        "query": "prometheus",
+        "query": "victoriametrics-datasource",
         "queryValue": "",
         "refresh": 1,
         "regex": "",
@@ -1282,7 +1282,11 @@
         "type": "datasource"
       },
       {
-        "current": {},
+        "current": {
+          "selected": false,
+          "text": "victoria-metrics-operator",
+          "value": "victoria-metrics-operator"
+        },
         "datasource": {
           "type": "prometheus",
           "uid": "$ds"
@@ -1304,7 +1308,11 @@
         "type": "query"
       },
       {
-        "current": {},
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
         "datasource": {
           "type": "prometheus",
           "uid": "$ds"
@@ -1326,7 +1334,12 @@
         "type": "query"
       },
       {
-        "current": {},
+        "current": {
+          "isNone": true,
+          "selected": false,
+          "text": "None",
+          "value": ""
+        },
         "datasource": {
           "type": "prometheus",
           "uid": "$ds"
@@ -1357,6 +1370,6 @@
   "timezone": "",
   "title": "VictoriaMetrics - operator",
   "uid": "1H179hunk",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }
