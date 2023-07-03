@@ -51,7 +51,6 @@ function tool() {
 }
 
 function install_repo() {
-  helm repo add autoscaler https://kubernetes.github.io/autoscaler
   helm repo add aws-ebs-csi-driver https://kubernetes-sigs.github.io/aws-ebs-csi-driver
   helm repo add aws-efs-csi-driver https://kubernetes-sigs.github.io/aws-efs-csi-driver
   helm repo add benthos https://benthosdev.github.io/benthos-helm-chart/
@@ -90,17 +89,6 @@ function manifests() {
     $KYGO -out "externaldns" -app external-dns -pkg externaldns
 
   #
-  # AWS LB
-  #
-  # using IAM Roles for service account
-#  helm template aws-load-balancer-controller eks/aws-load-balancer-controller \
-#    --set clusterName=my-cluster \
-#    -n kube-system \
-#    --set serviceAccount.create=false \
-#    --set serviceAccount.name=aws-load-balancer-controller | \
-#    $KYGO -out "awslb" -app awslb -pkg awslb
-
-  #
   # CERT-MANAGER
   #
 
@@ -120,12 +108,6 @@ function manifests() {
 
   kustomize build "https://github.com/kubernetes-sigs/aws-ebs-csi-driver//deploy/kubernetes/overlays/stable/ecr-public/?ref=v1.19.0" | \
     $KYGO -out "csi/ebs" -app ebs -pkg ebs
-
-  #
-  # CLUSTER AUTOSCALER
-  #
-  helm template autoscaler autoscaler/cluster-autoscaler  --set 'autoDiscovery.clusterName'="REPLACE_ME"  | \
-    $KYGO -out "autoscaler" -pkg autoscaler -app autoscaler
 
 
   #

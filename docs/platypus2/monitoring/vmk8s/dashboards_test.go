@@ -85,26 +85,18 @@ func TestDashboardsDownload(t *testing.T) {
 	for _, src := range srcDash {
 		resp, err := c.Get(src.URL)
 		tu.AssertNoError(t, err, "url", src.URL)
-		buf, err := io.ReadAll(resp.Body)
+		// buf, err := io.ReadAll(resp.Body)
 		tu.AssertNoError(t, err, "read body", src.URL)
-		err = LintDashboards(filepath.Join("dashboards", src.Name), buf, true)
-		if err != nil {
-			t.Log("dashboards", src.Name, "has errors")
-		}
-		// file, err := os.Create(filepath.Join("dashboards", src.Name))
-		// tu.AssertNoError(t, err, "create file", src.Name)
-		// _, err = io.Copy(file, resp.Body)
-		// tu.AssertNoError(t, err, "copying", src.Name)
-		// _ = file.Close()
+		file, err := os.Create(filepath.Join("dashboards", src.Name))
+		tu.AssertNoError(t, err, "create file", src.Name)
+		_, err = io.Copy(file, resp.Body)
+		tu.AssertNoError(t, err, "copying", src.Name)
+		_ = file.Close()
 		_ = resp.Body.Close()
 	}
 }
 
 func LintDashboards(path string, buf []byte, autofix bool) error {
-	// buf, err := os.ReadFile(path)
-	// if err != nil {
-	// 	return fmt.Errorf("read file %s: %w", path, err)
-	// }
 	dashboard, err := lint.NewDashboard(buf)
 	if err != nil {
 		return fmt.Errorf("parse dashboard %s: %w", path, err)
