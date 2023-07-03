@@ -66,7 +66,7 @@ var mod = func() string {
 }()
 
 func main() {
-	var cover, lint, doc, examples, fix, nodiff, pr, scan, release bool
+	var cover, lint, doc, examples, fix, nodiff, pr, scan, release, update bool
 	flag.BoolVar(&cover, "cover", false, "tests with coverage")
 	flag.BoolVar(
 		&lint,
@@ -91,9 +91,13 @@ func main() {
 	flag.BoolVar(&pr, "pr", false, "run pull request checks: -fix + go test")
 	flag.BoolVar(&scan, "scan", false, "scan for vulnerabilities")
 	flag.BoolVar(&release, "release", false, "create a new release")
+	flag.BoolVar(&update, "update", false, "update dependencies")
 
 	flag.Parse()
 
+	if update {
+		Update()
+	}
 	if cover {
 		CoverP()
 	}
@@ -121,6 +125,12 @@ func main() {
 	if nodiff {
 		// should be last
 		HasGitDiff()
+	}
+}
+
+func iferr(err error) {
+	if err != nil {
+		panic(err)
 	}
 }
 
@@ -222,12 +232,6 @@ func DocExamples() {
 	fmt.Println("📝 testing examples")
 	docRun("go", "test", mod, "-v", recDir)
 	fmt.Println("✅ docs generated and examples tested")
-}
-
-func iferr(err error) {
-	if err != nil {
-		panic(err)
-	}
 }
 
 func Go(args ...string) error {

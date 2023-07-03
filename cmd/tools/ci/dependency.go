@@ -17,6 +17,16 @@ const (
 	signOffDependabot = "Signed-off-by: dependabot[bot] <support@github.com>"
 )
 
+func Update() {
+	fmt.Println("⤴️ update deps")
+	iferr(Go("get", "-u", recDir))
+	iferr(Go("mod", "tidy"))
+	fmt.Println("⤴️ update deps docs")
+	docRun("go", "get", "-u", recDir)
+	docRun("go", "mod", "tidy")
+	fmt.Println("✅ update deps done")
+}
+
 func isUpdatingGoModOnly() bool {
 	ff, err := listModifiedFiles()
 	if err != nil {
