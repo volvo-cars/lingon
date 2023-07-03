@@ -10,7 +10,7 @@ require (
 	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/hcl/v2 v2.17.0
 	github.com/hashicorp/terraform-exec v0.18.1
-	github.com/hashicorp/terraform-json v0.17.0
+	github.com/hashicorp/terraform-json v0.17.1
 	github.com/imdario/mergo v0.3.16
 	github.com/rogpeppe/go-internal v1.11.0
 	github.com/tidwall/gjson v1.14.4
