@@ -11,9 +11,9 @@ import (
 	"sort"
 
 	"github.com/dave/jennifer/jen"
-	"github.com/rogpeppe/go-internal/txtar"
 	"github.com/veggiemonk/strcase"
 	"golang.org/x/exp/slog"
+	"golang.org/x/tools/txtar"
 	"mvdan.cc/gofumpt/format"
 )
 
@@ -241,7 +241,7 @@ func writeTxtar(ar *txtar.Archive) error {
 
 	// each files path is already prefixed with the output dir, using "." as
 	// all the files will be written in relation to it.
-	if err = txtar.Write(ar, "."); err != nil {
+	if err = write(ar, "."); err != nil {
 		return fmt.Errorf("write: %w", err)
 	}
 	return nil

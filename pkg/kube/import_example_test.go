@@ -11,9 +11,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/rogpeppe/go-internal/txtar"
 	"github.com/volvo-cars/lingon/pkg/kube"
 	"github.com/volvo-cars/lingon/pkg/kubeutil"
+	"golang.org/x/tools/txtar"
 )
 
 func ExampleImport() {

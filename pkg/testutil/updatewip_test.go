@@ -13,9 +13,10 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/rogpeppe/go-internal/txtar"
 	"github.com/volvo-cars/lingon/pkg/kube"
 	"github.com/volvo-cars/lingon/pkg/kubeutil"
+	tu "github.com/volvo-cars/lingon/pkg/testutil"
+	"golang.org/x/tools/txtar"
 	"k8s.io/apimachinery/pkg/runtime"
 	"mvdan.cc/gofumpt/format"
 )
@@ -114,10 +115,10 @@ func diffLatest(
 		return "", fmt.Errorf("write diff: %w", err)
 	}
 
-	if err := txtar.Write(arc, destDir); err != nil {
+	if err := tu.Write(arc, destDir); err != nil {
 		return "", fmt.Errorf("write current: %w", err)
 	}
-	if err := txtar.Write(aru, destDir); err != nil {
+	if err := tu.Write(aru, destDir); err != nil {
 		return "", fmt.Errorf("write latest: %w", err)
 	}
 	return d, err

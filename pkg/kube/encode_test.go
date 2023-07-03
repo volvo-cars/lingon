@@ -9,9 +9,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/rogpeppe/go-internal/txtar"
 	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
 	tu "github.com/volvo-cars/lingon/pkg/testutil"
+	"golang.org/x/tools/txtar"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"

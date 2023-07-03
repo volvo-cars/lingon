@@ -7,8 +7,8 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/rogpeppe/go-internal/txtar"
 	tu "github.com/volvo-cars/lingon/pkg/testutil"
+	"golang.org/x/tools/txtar"
 )
 
 func TestFolder2Txtar(t *testing.T) {

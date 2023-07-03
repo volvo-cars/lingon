@@ -14,8 +14,8 @@ import (
 	"testing"
 
 	tfjson "github.com/hashicorp/terraform-json"
-	"github.com/rogpeppe/go-internal/txtar"
 	tu "github.com/volvo-cars/lingon/pkg/testutil"
+	"golang.org/x/tools/txtar"
 )
 
 type TxtarConfig struct {

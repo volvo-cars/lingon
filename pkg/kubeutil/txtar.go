@@ -7,7 +7,7 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/rogpeppe/go-internal/txtar"
+	"golang.org/x/tools/txtar"
 	kyaml "sigs.k8s.io/yaml"
 )
 

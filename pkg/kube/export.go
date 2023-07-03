@@ -8,9 +8,10 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 
-	"github.com/rogpeppe/go-internal/txtar"
 	"github.com/volvo-cars/lingon/pkg/kubeutil"
+	"golang.org/x/tools/txtar"
 )
 
 type goky struct {
@@ -140,9 +141,51 @@ resources:`
 	}
 
 	// write to multiple files (txtar format)
-	if err = txtar.Write(g.ar, "."); err != nil {
+	if err = write(g.ar, "."); err != nil {
 		return fmt.Errorf("write txtar: %w", err)
 	}
 
 	return err
+}
+
+// Following code taken from https://github.com/rogpeppe/go-internal
+// as it is now deprecated in favor of
+// https://github.com/golang/tools/blob/master/txtar/archive.go
+
+// Write writes each File in an Archive to the given directory, returning any
+// errors encountered. An error is also returned in the event a file would be
+// written outside of dir.
+func write(a *txtar.Archive, dir string) error {
+	for _, f := range a.Files {
+		fp := filepath.Clean(filepath.FromSlash(f.Name))
+		if isAbs(fp) || strings.HasPrefix(fp, ".."+string(filepath.Separator)) {
+			return fmt.Errorf("%q: outside parent directory", f.Name)
+		}
+		fp = filepath.Join(dir, fp)
+
+		if err := os.MkdirAll(filepath.Dir(fp), 0o777); err != nil {
+			return err
+		}
+		// Avoid overwriting existing files by using O_EXCL.
+		out, err := os.OpenFile(fp, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o666)
+		if err != nil {
+			return err
+		}
+
+		_, err = out.Write(f.Data)
+		cerr := out.Close()
+		if err != nil {
+			return err
+		}
+		if cerr != nil {
+			return cerr
+		}
+	}
+	return nil
+}
+
+func isAbs(p string) bool {
+	// Note: under Windows, filepath.IsAbs(`\foo`) returns false,
+	// so we need to check for that case specifically.
+	return filepath.IsAbs(p) || strings.HasPrefix(p, string(filepath.Separator))
 }

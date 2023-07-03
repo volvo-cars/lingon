@@ -15,11 +15,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/rogpeppe/go-internal/txtar"
 	"github.com/volvo-cars/lingon/pkg/kube"
 	"github.com/volvo-cars/lingon/pkg/kubeutil"
 	tu "github.com/volvo-cars/lingon/pkg/testutil"
 	"golang.org/x/exp/slog"
+	"golang.org/x/tools/txtar"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiextensionsbeta "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"

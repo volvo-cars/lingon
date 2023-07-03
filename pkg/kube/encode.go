@@ -10,10 +10,10 @@ import (
 	"reflect"
 	"sort"
 
-	"github.com/rogpeppe/go-internal/txtar"
 	"github.com/tidwall/sjson"
 	"github.com/veggiemonk/strcase"
 	"github.com/volvo-cars/lingon/pkg/kubeutil"
+	"golang.org/x/tools/txtar"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	kyaml "sigs.k8s.io/yaml"
