@@ -17,7 +17,7 @@ require (
 	github.com/hashicorp/terraform-json v0.17.0
 	github.com/hexops/valast v1.4.3
 	github.com/invopop/yaml v0.2.0
-	github.com/rogpeppe/go-internal v1.10.0
+	github.com/rogpeppe/go-internal v1.11.0
 	github.com/stretchr/testify v1.8.2
 	github.com/volvo-cars/lingon v0.0.0-20230529063938-b0e805ee081f
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1

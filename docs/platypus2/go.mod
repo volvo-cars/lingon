@@ -18,7 +18,7 @@ require (
 	github.com/nats-io/nats.go v1.27.0
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.66.0
 	github.com/prometheus/client_golang v1.16.0
-	github.com/rogpeppe/go-internal v1.10.0
+	github.com/rogpeppe/go-internal v1.11.0
 	github.com/tidwall/gjson v1.14.4
 	github.com/volvo-cars/lingon v0.0.0-20230619090824-9949466806e9
 	github.com/zeitlinger/conflate v0.0.0-20230622100834-279724abda8c

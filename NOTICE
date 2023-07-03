@@ -29,7 +29,7 @@ github.com/mattn/go-isatty v0.0.19 : MIT
 github.com/mitchellh/go-wordwrap v1.0.1 : MIT
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd : Apache-2.0
 github.com/modern-go/reflect2 v1.0.2 : Apache-2.0
-github.com/rogpeppe/go-internal/txtar v1.10.0 : BSD-3-Clause
+github.com/rogpeppe/go-internal/txtar v1.11.0 : BSD-3-Clause
 github.com/tidwall/gjson v1.14.4 : MIT
 github.com/tidwall/match v1.1.1 : MIT
 github.com/tidwall/pretty v1.2.1 : MIT
@@ -117,7 +117,7 @@ github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd
 
 github.com/modern-go/reflect2 v1.0.2
 
-github.com/rogpeppe/go-internal/txtar v1.10.0
+github.com/rogpeppe/go-internal/txtar v1.11.0
 
 github.com/tidwall/gjson v1.14.4
 
@@ -3271,7 +3271,7 @@ Apache-2.0
 ---
 
 BSD-3-Clause
-(github.com/rogpeppe/go-internal/txtar v1.10.0)
+(github.com/rogpeppe/go-internal/txtar v1.11.0)
 
 Copyright (c) 2018 The Go Authors. All rights reserved.
 
