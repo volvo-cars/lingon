@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"os"
 
-	aws "github.com/golingon/terraproviders/aws/5.0.1"
-	"github.com/golingon/terraproviders/aws/5.0.1/provider"
+	aws "github.com/golingon/terraproviders/aws/5.6.2"
+	"github.com/golingon/terraproviders/aws/5.6.2/provider"
 	"github.com/volvo-cars/lingon/pkg/terra"
 	"github.com/volvo-cars/lingoneks/infra"
 	"github.com/volvo-cars/lingoneks/terraclient"

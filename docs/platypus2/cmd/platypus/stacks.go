@@ -8,8 +8,8 @@ import (
 	"os"
 	"os/exec"
 
-	aws "github.com/golingon/terraproviders/aws/5.0.1"
-	"github.com/golingon/terraproviders/aws/5.0.1/provider"
+	aws "github.com/golingon/terraproviders/aws/5.6.2"
+	"github.com/golingon/terraproviders/aws/5.6.2/provider"
 	"github.com/volvo-cars/lingoneks/infra"
 	"github.com/volvo-cars/lingoneks/karpenter"
 	"github.com/volvo-cars/lingoneks/terraclient"

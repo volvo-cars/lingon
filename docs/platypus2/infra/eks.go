@@ -6,9 +6,9 @@ package infra
 import (
 	"fmt"
 
-	aws "github.com/golingon/terraproviders/aws/5.0.1"
-	"github.com/golingon/terraproviders/aws/5.0.1/dataiampolicydocument"
-	"github.com/golingon/terraproviders/aws/5.0.1/ekscluster"
+	aws "github.com/golingon/terraproviders/aws/5.6.2"
+	"github.com/golingon/terraproviders/aws/5.6.2/dataiampolicydocument"
+	"github.com/golingon/terraproviders/aws/5.6.2/ekscluster"
 	tls "github.com/golingon/terraproviders/tls/4.0.4"
 	"github.com/volvo-cars/lingon/pkg/terra"
 )

@@ -6,7 +6,7 @@ package infra
 import (
 	"fmt"
 
-	aws "github.com/golingon/terraproviders/aws/5.0.1"
+	aws "github.com/golingon/terraproviders/aws/5.6.2"
 	"github.com/volvo-cars/lingon/pkg/terra"
 )
 
