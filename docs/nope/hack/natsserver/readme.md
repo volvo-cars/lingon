@@ -6,12 +6,13 @@ What makes this special is that it generates an operator, system account and sys
 
 Why? Because we need this for testing the operator.
 
+For convenience, it outputs a `out/.env` file which can be sourced to get your environment setup for running the operator.
+
 ## WARNING
 
 Run this from this directory because there is no path handling right now.
 
 ```bash
-
 cd hack/natsserver
 go run main.go
 ```

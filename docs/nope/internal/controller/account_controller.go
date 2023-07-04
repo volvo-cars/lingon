@@ -66,15 +66,19 @@ func (r *AccountReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
+	// TODO: should the nats connection be created and shared across reconcilers?
+	// Or should each reconciler maintain its own nats connection?
+	//
+	// We would require a mutex to (re)establish a lost connection.
 	nc, err := nats.Connect(r.NATSURL, nats.UserCredentials(r.NATSCreds))
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("connecting to NATS: %w", err)
 	}
 
-	// Check if the account is being deleted
+	// Check if the account is being deleted.
 	if !account.ObjectMeta.DeletionTimestamp.IsZero() {
 		logger.Info("account is being deleted")
-		// Account is being deleted
+		// Account is being deleted.
 		if controllerutil.ContainsFinalizer(&account, finalizer) {
 			if err := bla.DeleteAccount(nc, r.OperatorNKey, account.Status.ID); err != nil {
 				return ctrl.Result{}, fmt.Errorf("deleting NATS account: %w", err)
@@ -86,12 +90,12 @@ func (r *AccountReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			logger.Info("account deleted and finalizer removed")
 		}
 		logger.Info("finish reconciliation as the account is being deleted")
-		// Finish reconciliation as the object is being deleted
+		// Finish reconciliation as the object is being deleted.
 		return ctrl.Result{}, nil
 	}
 
 	logger.Info("checking NATS account")
-	// Else proceed with reconciliation
+	// Else proceed with reconciliation.
 	var managedAccount *bla.Account
 	if account.Status.ID != "" {
 		managedAccount = &bla.Account{
@@ -101,7 +105,7 @@ func (r *AccountReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	}
 
-	// Create the account request an sync the account
+	// Create the account request an sync the account.
 	accountReq := bla.AccountRequest{
 		Name: account.Name,
 	}
@@ -111,7 +115,7 @@ func (r *AccountReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	}
 	logger.Info("checking NATS account service user")
 	// We also need to sync the account user, which we use to manage streams and consumers
-	// in the account
+	// in the account.
 	var serviceUser *bla.User
 	if account.Status.ServiceUser != nil {
 		serviceUser = &bla.User{

@@ -13,7 +13,7 @@ resources:
     namespaced: true
   controller: true
   domain: volvocars.com
-  group: nats
+  group: nope
   kind: Account
   path: github.com/volvo-cars/nope/api/v1
   version: v1
@@ -22,8 +22,30 @@ resources:
     namespaced: true
   controller: true
   domain: volvocars.com
-  group: nats
+  group: nope
   kind: User
+  path: github.com/volvo-cars/nope/api/v1
+  version: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: volvocars.com
+  group: nope
+  kind: Stream
+  path: github.com/volvo-cars/nope/api/v1
+  version: v1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: volvocars.com
+  group: nope
+  kind: Consumer
   path: github.com/volvo-cars/nope/api/v1
   version: v1
 version: "3"

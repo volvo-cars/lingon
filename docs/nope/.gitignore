@@ -26,3 +26,6 @@ config/samples/**.yaml
 *.swp
 *.swo
 *~
+
+# NATS user credentials for testing
+user.creds
