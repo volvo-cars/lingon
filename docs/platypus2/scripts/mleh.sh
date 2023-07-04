@@ -65,7 +65,7 @@ function install_repo() {
   helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
   helm repo add vector https://helm.vector.dev
   helm repo add vm https://victoriametrics.github.io/helm-charts/
-
+  helm repo add kedacore https://kedacore.github.io/charts
 
   helm repo update
 }
@@ -168,6 +168,11 @@ function manifests() {
 
   wget https://github.com/nats-io/nack/releases/latest/download/crds.yml -O - | \
     $KYGO -out "nats/jetstream" -app jetstream -pkg jetstream -group=false -clean-name=false
+
+
+  # KEDA
+  helm template keda kedacore/keda --namespace=keda --values "$VALUES_DIR"/keda.values.yaml | \
+    $KYGO -out keda -app keda -pkg keda
 
   #
   # Karpenter
