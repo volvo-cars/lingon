@@ -42,8 +42,10 @@ type VicMet struct {
 	DashboardVictoriaMetricsCM *corev1.ConfigMap
 }
 
-func NewVicMet() *VicMet {
-	return &VicMet{
+type VicMetOption func(server *VicMet) *VicMet
+
+func NewVicMet(opts ...VicMetOption) *VicMet {
+	vm := &VicMet{
 		DB:                         VMDB,
 		Agent:                      VMAgent,
 		SA:                         VictoriaMetricsSA,
@@ -54,6 +56,11 @@ func NewVicMet() *VicMet {
 		DashboardBackupManagerCM:   DashboardBackupManagerCM,
 		DashboardAgentCM:           DashboardAgentCM,
 	}
+
+	for _, o := range opts {
+		vm = o(vm)
+	}
+	return vm
 }
 
 // VMDB is a single instance of Victoria Metrics DB.
@@ -73,9 +80,8 @@ var VMDB = &v1beta1.VMSingle{
 			),
 		},
 		RetentionPeriod: "14",
-		Resources:       ku.Resources("1", "512Mi", "1", "512Mi"),
-		// Resources:       ku.Resources("4", "8Gi", "4", "8Gi"),
-		Port: d(VMSinglePort),
+		Resources:       ku.Resources("4", "8Gi", "4", "8Gi"),
+		Port:            d(VMSinglePort),
 		Storage: &corev1.PersistentVolumeClaimSpec{
 			AccessModes: []corev1.PersistentVolumeAccessMode{
 				corev1.ReadWriteOnce,

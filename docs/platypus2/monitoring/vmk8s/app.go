@@ -65,9 +65,11 @@ type Vmk8S struct {
 	VicMet *VicMet
 }
 
+type Vmk8sOpts func(s *Vmk8S) *Vmk8S
+
 // New creates a new Vmk8S
-func New() *Vmk8S {
-	return &Vmk8S{
+func New(opts ...Vmk8sOpts) *Vmk8S {
+	v := &Vmk8S{
 		// Operator:         NewOperator(),
 		Grafana:          NewGrafana(),
 		KubeStateMetrics: NewKubeStateMetrics(),
@@ -94,6 +96,11 @@ func New() *Vmk8S {
 
 		VicMet: NewVicMet(),
 	}
+	for _, o := range opts {
+		v = o(v)
+	}
+
+	return v
 }
 
 var VictoriaMetricsSA = ku.ServiceAccount(

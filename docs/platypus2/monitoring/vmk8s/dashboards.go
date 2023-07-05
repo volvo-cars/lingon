@@ -27,13 +27,16 @@ func LoadDashAsCM(
 }
 
 var (
-	//go:embed dashboards/backupmanager.json
-	backupmanagerDash        string
-	DashboardBackupManagerCM = LoadDashAsCM(
-		"backupmanager.json",
-		backupmanagerDash,
-		Graf.ObjectMetaNameSuffix("backup-manager-dash"),
+
+	//go:embed dashboards/grafana-overview.json
+	grafanaOverviewDash   string
+	GrafanaOverviewDashCM = LoadDashAsCM(
+		"grafana-overview.json",
+		grafanaOverviewDash,
+		Graf.ObjectMetaNameSuffix("dash-overview"),
 	)
+
+	// KUBERNETES
 
 	//go:embed dashboards/k8s-views-global.json
 	k8sGlobalDash        string
@@ -59,22 +62,6 @@ var (
 		Graf.ObjectMetaNameSuffix("k8s-pods"),
 	)
 
-	//go:embed dashboards/vm-operator.json
-	vmOperatorDash      string
-	DashboardVMOperator = LoadDashAsCM(
-		"vm-operator.json",
-		vmOperatorDash,
-		Graf.ObjectMetaNameSuffix("vm-operator"),
-	)
-
-	//go:embed dashboards/grafana-overview.json
-	grafanaOverviewDash   string
-	GrafanaOverviewDashCM = LoadDashAsCM(
-		"grafana-overview.json",
-		grafanaOverviewDash,
-		Graf.ObjectMetaNameSuffix("dash-overview"),
-	)
-
 	//go:embed dashboards/k8s-system-coredns.json
 	corednsDash string
 
@@ -84,7 +71,25 @@ var (
 		CDNS.ObjectMetaNameSuffix("dash"),
 	)
 
-	// go:embed dashboards/vmagent.json
+	// VICTORIA METRICS
+
+	//go:embed dashboards/vm-operator.json
+	vmOperatorDash      string
+	DashboardVMOperator = LoadDashAsCM(
+		"vm-operator.json",
+		vmOperatorDash,
+		Graf.ObjectMetaNameSuffix("vm-operator"),
+	)
+
+	//go:embed dashboards/backupmanager.json
+	backupmanagerDash        string
+	DashboardBackupManagerCM = LoadDashAsCM(
+		"backupmanager.json",
+		backupmanagerDash,
+		Graf.ObjectMetaNameSuffix("backup-manager-dash"),
+	)
+
+	//go:embed dashboards/vmagent.json
 	vmAgentDash      string
 	DashboardAgentCM = LoadDashAsCM(
 		"vmagent.json",
@@ -114,5 +119,57 @@ var (
 		"victoriametrics.json",
 		victoriaMetricsDash,
 		Single.ObjectMetaNameSuffix("vmsingle-dash"),
+	)
+
+	// NATS
+
+	//go:embed dashboards/nats-dash.json
+	natsDash        string
+	DashboardNatsCM = LoadDashAsCM(
+		"nats.json",
+		natsDash,
+		Graf.ObjectMetaNameSuffix("nats-dash"),
+	)
+
+	//go:embed dashboards/nats-jetstream-dash.json
+	natsJSDash        string
+	DashboardNatsJSCM = LoadDashAsCM(
+		"nats-jetstream.json",
+		natsJSDash,
+		Graf.ObjectMetaNameSuffix("nats-jetstream-dash"),
+	)
+
+	// KARPENTER
+
+	//go:embed dashboards/karpenter-performance-dashboard.json
+	karpenterPerfDash        string
+	DashboardKarpenterPerfCM = LoadDashAsCM(
+		"karpenter-performance.json",
+		karpenterPerfDash,
+		Graf.ObjectMetaNameSuffix("karpenter-perf-dash"),
+	)
+
+	//go:embed dashboards/karpenter-controllers.json
+	karpenterControllersDash        string
+	DashboardKarpenterControllersCM = LoadDashAsCM(
+		"karpenter-controllers.json",
+		karpenterControllersDash,
+		Graf.ObjectMetaNameSuffix("karpenter-controller-dash"),
+	)
+
+	//go:embed dashboards/karpenter-controllers-allocation.json
+	karpenterCtrlAllocationDash        string
+	DashboardKarpenterCtrlAllocationCM = LoadDashAsCM(
+		"karpenter-controllers-allocation.json",
+		karpenterCtrlAllocationDash,
+		Graf.ObjectMetaNameSuffix("karpenter-allocation-dash"),
+	)
+
+	//go:embed dashboards/karpenter-capacity-dashboard.json
+	karpenterCapacityDash        string
+	DashboardKarpenterCapacityCM = LoadDashAsCM(
+		"karpenter-capacity.json",
+		karpenterCapacityDash,
+		Graf.ObjectMetaNameSuffix("karpenter-capacity-dash"),
 	)
 )

@@ -10,9 +10,11 @@ import (
 	"flag"
 	"os"
 	"os/exec"
+	"strings"
 	"testing"
 	"time"
 
+	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
 	tu "github.com/volvo-cars/lingon/pkg/testutil"
 	"github.com/volvo-cars/lingoneks/monitoring/metricsserver"
 	"github.com/volvo-cars/lingoneks/monitoring/promcrd"
@@ -94,7 +96,11 @@ func TestKindDeploy(t *testing.T) {
 		cluster.CreateWithWaitForReady(30*time.Second),
 	)
 	if err != nil {
-		t.Errorf("unable to create kind test cluster: %v", err)
+		if strings.Contains(err.Error(), "already exist for a cluster") {
+			t.Log("ALREADY STARTED --> redeploying")
+		} else {
+			t.Fatalf("unable to create kind test cluster: %v", err)
+		}
 	}
 	// If internal is true, this will contain the internal IP etc.
 	// If internal is false, this will contain the host IP etc.
@@ -102,7 +108,7 @@ func TestKindDeploy(t *testing.T) {
 	// internal := false
 	err = provider.ExportKubeConfig(clusterName, kubeConfigPath, false)
 	if err != nil {
-		t.Errorf("unable to export test kube config: %v", err)
+		t.Fatalf("unable to export test kube config: %v", err)
 	}
 
 	tu.AssertNoError(t, os.Setenv("KUBECONFIG", kubeConfigPath), "set env ")
@@ -126,7 +132,18 @@ func TestKindDeploy(t *testing.T) {
 		App  Applyer
 	}
 
-	vm := vmk8s.New()
+	vm := vmk8s.New(
+		func(s *vmk8s.Vmk8S) *vmk8s.Vmk8S {
+			res := s
+			res.VicMet.DB.Spec.Resources = ku.Resources(
+				"1",
+				"512Mi",
+				"1",
+				"512Mi",
+			)
+			return res
+		},
+	)
 	tests := []deployApp{
 		{Name: "promcrd", App: promcrd.New()},
 		{Name: "vmcrd", App: vmcrd.New()},

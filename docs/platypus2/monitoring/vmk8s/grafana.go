@@ -27,6 +27,7 @@ const (
 	GrafanaPort                      = 3000
 	GrafanaPortName                  = "service"
 	DashboardLabel                   = "grafana_dashboard"
+	DashboardFolderLabel             = "k8s-sidecar-target-directory"
 	DataSourceLabel                  = "grafana_datasource"
 	defaultDashboardConfigName       = "grafana-default-dashboards"
 	curlImg                          = "curlimages/curl:7.85.0"
@@ -66,12 +67,21 @@ type Grafana struct {
 	Role *rbacv1.Role
 	RB   *rbacv1.RoleBinding
 
+	GrafanaScrape *v1beta1.VMServiceScrape
+
 	CM                  *corev1.ConfigMap
 	ProviderCM          *corev1.ConfigMap
 	DataSourceCM        *corev1.ConfigMap
 	OverviewDashboardCM *corev1.ConfigMap
 	DefaultDashboardCM  *corev1.ConfigMap
-	GrafanaScrape       *v1beta1.VMServiceScrape
+
+	DashboardNatsCM   *corev1.ConfigMap
+	DashboardNatsJSCM *corev1.ConfigMap
+
+	DashboardKarpenterPerfCM           *corev1.ConfigMap
+	DashboardKarpenterControllersCM    *corev1.ConfigMap
+	DashboardKarpenterCtrlAllocationCM *corev1.ConfigMap
+	DashboardKarpenterCapacityCM       *corev1.ConfigMap
 }
 
 func NewGrafana() *Grafana {
@@ -97,6 +107,14 @@ func NewGrafana() *Grafana {
 			defaultDashboardConfigName,
 			Graf.Namespace, Graf.Labels(), nil, map[string]string{},
 		),
+
+		DashboardNatsCM:   DashboardNatsCM,
+		DashboardNatsJSCM: DashboardNatsJSCM,
+
+		DashboardKarpenterCapacityCM:       DashboardKarpenterCapacityCM,
+		DashboardKarpenterCtrlAllocationCM: DashboardKarpenterCtrlAllocationCM,
+		DashboardKarpenterPerfCM:           DashboardKarpenterPerfCM,
+		DashboardKarpenterControllersCM:    DashboardKarpenterControllersCM,
 	}
 }
 
@@ -323,37 +341,38 @@ var GrafanaDeploy = &appsv1.Deployment{
 
 				EnableServiceLinks: P(true),
 				InitContainers: []corev1.Container{
-					{
-						Name:            "download-dashboards",
-						Image:           curlImg,
-						ImagePullPolicy: corev1.PullIfNotPresent,
-						Command:         []string{"/bin/sh"},
-						Args: []string{
-							"-c",
-							"mkdir -p /var/lib/grafana/dashboards/default && " +
-								// If it is not created here,
-								// it will be assigned root ownership ¯\_(ツ)_/¯.
-								"mkdir -p /var/lib/grafana/plugins && " +
-								"/bin/sh -x /etc/grafana/download_dashboards.sh",
-						},
-						VolumeMounts: []corev1.VolumeMount{
-							{
-								MountPath: "/etc/grafana/download_dashboards.sh",
-								Name:      "config",
-								SubPath:   "download_dashboards.sh",
-							}, {
-								MountPath: "/var/lib/grafana",
-								Name:      "storage",
-							},
-						},
-					},
+					// {
+					// 	Name:            "download-dashboards",
+					// 	Image:           curlImg,
+					// 	ImagePullPolicy: corev1.PullIfNotPresent,
+					// 	Command:         []string{"/bin/sh"},
+					// 	Args: []string{
+					// 		"-c",
+					// 		"mkdir -p /var/lib/grafana/dashboards/default && " +
+					// 			// If it is not created here,
+					// 			// it will be assigned root ownership ¯\_(ツ)_/¯.
+					// 			"mkdir -p /var/lib/grafana/plugins && " +
+					// 			"/bin/sh -x /etc/grafana/download_dashboards.sh",
+					// 	},
+					// 	VolumeMounts: []corev1.VolumeMount{
+					// 		{
+					// 			MountPath: "/etc/grafana/download_dashboards.sh",
+					// 			Name:      "config",
+					// 			SubPath:   "download_dashboards.sh",
+					// 		}, {
+					// 			MountPath: "/var/lib/grafana",
+					// 			Name:      "storage",
+					// 		},
+					// 	},
+					// },
 					{
 						Name:            "load-vm-ds-plugin",
 						Image:           curlImg,
 						ImagePullPolicy: corev1.PullIfNotPresent,
 						Command:         []string{"/bin/sh"},
 						Args: []string{
-							"-c", "mkdir -p /var/lib/grafana/plugins && " +
+							"-c",
+							"mkdir -p /var/lib/grafana/plugins && " +
 								"/bin/sh -x /etc/grafana/download_vm_ds.sh",
 						},
 						VolumeMounts: []corev1.VolumeMount{
@@ -366,7 +385,7 @@ var GrafanaDeploy = &appsv1.Deployment{
 								SubPath:   "download_vm_ds.sh",
 							},
 						},
-						WorkingDir: "/var/lib/grafana/plugins",
+						// WorkingDir: "/var/lib/grafana/plugins",
 					},
 				},
 				SecurityContext: &corev1.PodSecurityContext{
@@ -439,6 +458,7 @@ type DashSource struct {
 const (
 	PrometheusDataSourceName      = "Prometheus"
 	VictoriaMetricsDataSourceName = "VictoriaMetrics"
+	VictoriaMetricsDataSourceID   = "victoriametrics-datasource"
 )
 
 func (d *DashSource) Validate() error {
@@ -515,7 +535,7 @@ providers:
 
 const grafanaINI = `
 [plugins]
-allow_loading_unsigned_plugins = victoriametrics-datasource
+allow_loading_unsigned_plugins = ` + VictoriaMetricsDataSourceID + `
 [analytics]
 check_for_updates = true
 [grafana_net]
@@ -533,11 +553,16 @@ domain = ''
 `
 
 const downloadVMDSsh = `
+#!/usr/bin/env sh
+
 set -euxf
 
 ls -R -l /var/lib/grafana/
 id
 mkdir -p /var/lib/grafana/plugins/
+chown -R 472:472 /var/lib/grafana/plugins/
+mkdir -p /var/lib/grafana/dashboards/default
+# getting rate-limited by github
 # ver=$(curl -s https://api.github.com/repos/VictoriaMetrics/grafana-datasource/releases/latest | grep -oE 'v\d+\.\d+\.\d+' | head -1)
 ver="v0.2.0"
 curl -L https://github.com/VictoriaMetrics/grafana-datasource/releases/download/$ver/victoriametrics-datasource-$ver.tar.gz -o /var/lib/grafana/plugins/plugin.tar.gz
@@ -552,42 +577,42 @@ var GrafanaCM = &corev1.ConfigMap{
 	Data: map[string]string{
 		"grafana.ini": grafanaINI,
 
-		"plugins": "https://grafana.com/api/plugins/marcusolsson-json-datasource/versions/1.3.2/download;marcusolsson-json-datasource",
+		"plugins": "https://grafana.com/api/plugins/marcusolsson-json-datasource/versions/1.3.6/download;marcusolsson-json-datasource",
 
 		"dashboardproviders.yaml": dashboardProvidersYaml,
 
 		"download_vm_ds.sh": downloadVMDSsh,
 
-		"download_dashboards.sh": downloadDashboards(
-			[]DashSource{
-				{
-					Name:   "nodeexporter",
-					URL:    "https://grafana.com/api/dashboards/1860/revisions/22/download",
-					Source: VictoriaMetricsDataSourceName,
-				},
-				// Karpenter dashboards
-				{
-					Name:   "karpenter-performance-dashboard",
-					URL:    "https://raw.githubusercontent.com/aws/karpenter/main/website/content/en/v0.28/getting-started/getting-started-with-karpenter/karpenter-performance-dashboard.json",
-					Source: VictoriaMetricsDataSourceName,
-				},
-				{
-					Name:   "karpenter-controllers",
-					URL:    "https://raw.githubusercontent.com/aws/karpenter/main/website/content/en/v0.28/getting-started/getting-started-with-karpenter/karpenter-controllers.json",
-					Source: VictoriaMetricsDataSourceName,
-				},
-				{
-					Name:   "karpenter-controllers-allocation",
-					URL:    "https://raw.githubusercontent.com/aws/karpenter/main/website/content/en/v0.28/getting-started/getting-started-with-karpenter/karpenter-controllers-allocation.json",
-					Source: VictoriaMetricsDataSourceName,
-				},
-				{
-					Name:   "karpenter-capacity-dashboard",
-					URL:    "https://raw.githubusercontent.com/aws/karpenter/main/website/content/en/v0.28/getting-started/getting-started-with-karpenter/karpenter-capacity-dashboard.json",
-					Source: VictoriaMetricsDataSourceName,
-				},
-			},
-		),
+		// "download_dashboards.sh": downloadDashboards(
+		// 	[]DashSource{
+		// 		// {
+		// 		// 	Name:   "nodeexporter",
+		// 		// 	URL:    "https://grafana.com/api/dashboards/1860/revisions/22/download",
+		// 		// 	Source: VictoriaMetricsDataSourceName,
+		// 		// },
+		// 		// // Karpenter dashboards
+		// 		// {
+		// 		// 	Name:   "karpenter-performance-dashboard",
+		// 		// 	URL:    "https://raw.githubusercontent.com/aws/karpenter/main/website/content/en/v0.28/getting-started/getting-started-with-karpenter/karpenter-performance-dashboard.json",
+		// 		// 	Source: VictoriaMetricsDataSourceName,
+		// 		// },
+		// 		// {
+		// 		// 	Name:   "karpenter-controllers",
+		// 		// 	URL:    "https://raw.githubusercontent.com/aws/karpenter/main/website/content/en/v0.28/getting-started/getting-started-with-karpenter/karpenter-controllers.json",
+		// 		// 	Source: VictoriaMetricsDataSourceName,
+		// 		// },
+		// 		// {
+		// 		// 	Name:   "karpenter-controllers-allocation",
+		// 		// 	URL:    "https://raw.githubusercontent.com/aws/karpenter/main/website/content/en/v0.28/getting-started/getting-started-with-karpenter/karpenter-controllers-allocation.json",
+		// 		// 	Source: VictoriaMetricsDataSourceName,
+		// 		// },
+		// 		// {
+		// 		// 	Name:   "karpenter-capacity-dashboard",
+		// 		// 	URL:    "https://raw.githubusercontent.com/aws/karpenter/main/website/content/en/v0.28/getting-started/getting-started-with-karpenter/karpenter-capacity-dashboard.json",
+		// 		// 	Source: VictoriaMetricsDataSourceName,
+		// 		// },
+		// 	},
+		// ),
 	},
 }
 
@@ -636,13 +661,21 @@ var GrafanaDataSourceCM = &corev1.ConfigMap{
 apiVersion: 1
 datasources:
 - name: ` + VictoriaMetricsDataSourceName + `
-  type: victoriametrics-datasource
+  type: ` + VictoriaMetricsDataSourceID + `
   url: ` + fmt.Sprintf(
 			"http://%s.%s.svc:8429/",
 			VMDB.PrefixedName(), namespace,
 		) + `
   access: proxy
   isDefault: true
+- access: proxy
+  isDefault: false
+  name: Prometheus
+  type: prometheus
+  url: ` + fmt.Sprintf(
+			"http://%s.%s.svc:8429/",
+			VMDB.PrefixedName(), namespace,
+		) + `
 `,
 	},
 	ObjectMeta: metav1.ObjectMeta{

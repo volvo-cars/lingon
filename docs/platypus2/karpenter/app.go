@@ -6,6 +6,7 @@ package karpenter
 import (
 	"github.com/volvo-cars/lingon/pkg/kube"
 	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
+	"github.com/volvo-cars/lingoneks/meta"
 	ar "k8s.io/api/admissionregistration/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -43,6 +44,34 @@ const (
 	PortWebhookSvc  = 443
 	PortWebhookCtnr = 8443
 )
+
+var KA = Core()
+
+func Core() Meta {
+	m := meta.Metadata{
+		Name:      "karpenter",
+		Namespace: "karpenter",
+		Instance:  "karpenter",
+		Component: "karpenter",
+		PartOf:    "karpenter",
+		Version:   Version,
+		ManagedBy: "lingon",
+		Img: meta.ContainerImg{
+			Registry: "public.ecr.aws/karpenter",
+			Image:    "controller",
+			Sha:      "f9023101d05d0c0c6a5d67f19b8ecf754bf97cb4e94b41d9d80a75ee5be5150c",
+			Tag:      "v" + Version,
+		},
+	}
+	return Meta{
+		Metadata: m,
+	}
+}
+
+type Meta struct {
+	meta.Metadata
+	P meta.NetPort
+}
 
 var commonLabels = map[string]string{
 	ku.AppLabelInstance:  AppName,

@@ -3,7 +3,10 @@
     "list": [
       {
         "builtIn": 1,
-        "datasource": "-- Grafana --",
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
@@ -11,8 +14,7 @@
         "target": {
           "limit": 100,
           "matchAny": false,
-          "tags": [
-          ],
+          "tags": [],
           "type": "dashboard"
         },
         "type": "dashboard"
@@ -20,19 +22,19 @@
     ]
   },
   "editable": true,
-  "gnetId": null,
+  "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 3085,
-  "iteration": 1631554945276,
-  "links": [
-  ],
+  "links": [],
+  "liveNow": false,
   "panels": [
     {
-      "datasource": "$datasource",
+      "datasource": {
+        "type": "grafana",
+        "uid": "grafana"
+      },
       "fieldConfig": {
         "defaults": {
-          "mappings": [
-          ],
+          "mappings": [],
           "noValue": "0",
           "thresholds": {
             "mode": "absolute",
@@ -48,8 +50,7 @@
             ]
           }
         },
-        "overrides": [
-        ]
+        "overrides": []
       },
       "gridPos": {
         "h": 5,
@@ -70,31 +71,30 @@
           "fields": "",
           "values": false
         },
-        "text": {
-        },
+        "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.1.3",
+      "pluginVersion": "9.5.3",
       "targets": [
         {
-          "expr": "grafana_alerting_result_total{job=~\"$job\", instance=~\"$instance\", state=\"alerting\"}",
-          "instant": true,
-          "interval": "",
-          "legendFormat": "",
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
           "refId": "A"
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Firing Alerts",
       "type": "stat"
     },
     {
-      "datasource": "$datasource",
+      "datasource": {
+        "type": "grafana",
+        "uid": "grafana"
+      },
       "fieldConfig": {
         "defaults": {
-          "mappings": [
-          ],
+          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -109,8 +109,7 @@
             ]
           }
         },
-        "overrides": [
-        ]
+        "overrides": []
       },
       "gridPos": {
         "h": 5,
@@ -131,34 +130,35 @@
           "fields": "",
           "values": false
         },
-        "text": {
-        },
+        "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.1.3",
+      "pluginVersion": "9.5.3",
       "targets": [
         {
-          "expr": "sum(grafana_stat_totals_dashboard{job=~\"$job\", instance=~\"$instance\"})",
-          "interval": "",
-          "legendFormat": "",
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
           "refId": "A"
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Dashboards",
       "type": "stat"
     },
     {
-      "datasource": "$datasource",
+      "datasource": {
+        "uid": "$datasource"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {
-            "align": null,
-            "displayMode": "auto"
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
           },
-          "mappings": [
-          ],
+          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -173,8 +173,7 @@
             ]
           }
         },
-        "overrides": [
-        ]
+        "overrides": []
       },
       "gridPos": {
         "h": 5,
@@ -184,11 +183,23 @@
       },
       "id": 10,
       "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
         "showHeader": true
       },
-      "pluginVersion": "8.1.3",
+      "pluginVersion": "9.5.3",
       "targets": [
         {
+          "datasource": {
+            "uid": "$datasource"
+          },
           "expr": "grafana_build_info{job=~\"$job\", instance=~\"$instance\"}",
           "instant": true,
           "interval": "",
@@ -196,14 +207,15 @@
           "refId": "A"
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Build Info",
       "transformations": [
         {
           "id": "labelsToFields",
-          "options": {
-          }
+          "options": {}
+        },
+        {
+          "id": "merge",
+          "options": {}
         },
         {
           "id": "organize",
@@ -232,27 +244,25 @@
               "revision": 5,
               "version": 3
             },
-            "renameByName": {
-            }
+            "renameByName": {}
           }
         }
       ],
       "type": "table"
     },
     {
-      "aliasColors": {
-      },
+      "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "$datasource",
+      "datasource": {
+        "uid": "$datasource"
+      },
       "fieldConfig": {
         "defaults": {
-          "links": [
-          ]
+          "links": []
         },
-        "overrides": [
-        ]
+        "overrides": []
       },
       "fill": 1,
       "fillGradient": 0,
@@ -280,29 +290,27 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "8.1.3",
+      "pluginVersion": "9.5.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
-      "seriesOverrides": [
-      ],
+      "seriesOverrides": [],
       "spaceLength": 10,
       "stack": true,
       "steppedLine": false,
       "targets": [
         {
+          "datasource": {
+            "uid": "$datasource"
+          },
           "expr": "sum by (status_code) (irate(grafana_http_request_duration_seconds_count{job=~\"$job\", instance=~\"$instance\"}[1m])) ",
           "interval": "",
           "legendFormat": "{{status_code}}",
           "refId": "A"
         }
       ],
-      "thresholds": [
-      ],
-      "timeFrom": null,
-      "timeRegions": [
-      ],
-      "timeShift": null,
+      "thresholds": [],
+      "timeRegions": [],
       "title": "RPS",
       "tooltip": {
         "shared": true,
@@ -311,52 +319,41 @@
       },
       "type": "graph",
       "xaxis": {
-        "buckets": null,
         "mode": "time",
-        "name": null,
         "show": true,
-        "values": [
-        ]
+        "values": []
       },
       "yaxes": [
         {
           "$$hashKey": "object:157",
           "format": "reqps",
-          "label": null,
           "logBase": 1,
-          "max": null,
-          "min": null,
           "show": true
         },
         {
           "$$hashKey": "object:158",
           "format": "short",
-          "label": null,
           "logBase": 1,
-          "max": null,
-          "min": null,
           "show": false
         }
       ],
       "yaxis": {
-        "align": false,
-        "alignLevel": null
+        "align": false
       }
     },
     {
-      "aliasColors": {
-      },
+      "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "$datasource",
+      "datasource": {
+        "uid": "$datasource"
+      },
       "fieldConfig": {
         "defaults": {
-          "links": [
-          ]
+          "links": []
         },
-        "overrides": [
-        ]
+        "overrides": []
       },
       "fill": 1,
       "fillGradient": 0,
@@ -384,17 +381,19 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "8.1.3",
+      "pluginVersion": "9.5.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
-      "seriesOverrides": [
-      ],
+      "seriesOverrides": [],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": false,
       "targets": [
         {
+          "datasource": {
+            "uid": "$datasource"
+          },
           "exemplar": true,
           "expr": "histogram_quantile(0.99, sum(irate(grafana_http_request_duration_seconds_bucket{instance=~\"$instance\", job=~\"$job\"}[$__interval])) by (le)) * 1",
           "interval": "",
@@ -402,6 +401,9 @@
           "refId": "A"
         },
         {
+          "datasource": {
+            "uid": "$datasource"
+          },
           "exemplar": true,
           "expr": "histogram_quantile(0.50, sum(irate(grafana_http_request_duration_seconds_bucket{instance=~\"$instance\", job=~\"$job\"}[$__interval])) by (le)) * 1",
           "interval": "",
@@ -409,6 +411,9 @@
           "refId": "B"
         },
         {
+          "datasource": {
+            "uid": "$datasource"
+          },
           "exemplar": true,
           "expr": "sum(irate(grafana_http_request_duration_seconds_sum{instance=~\"$instance\", job=~\"$job\"}[$__interval])) * 1 / sum(irate(grafana_http_request_duration_seconds_count{instance=~\"$instance\", job=~\"$job\"}[$__interval]))",
           "interval": "",
@@ -416,12 +421,8 @@
           "refId": "C"
         }
       ],
-      "thresholds": [
-      ],
-      "timeFrom": null,
-      "timeRegions": [
-      ],
-      "timeShift": null,
+      "thresholds": [],
+      "timeRegions": [],
       "title": "Request Latency",
       "tooltip": {
         "shared": true,
@@ -430,61 +431,47 @@
       },
       "type": "graph",
       "xaxis": {
-        "buckets": null,
         "mode": "time",
-        "name": null,
         "show": true,
-        "values": [
-        ]
+        "values": []
       },
       "yaxes": [
         {
           "$$hashKey": "object:210",
           "format": "ms",
-          "label": null,
           "logBase": 1,
-          "max": null,
-          "min": null,
           "show": true
         },
         {
           "$$hashKey": "object:211",
           "format": "short",
-          "label": null,
           "logBase": 1,
-          "max": null,
-          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false,
-        "alignLevel": null
+        "align": false
       }
     }
   ],
-  "schemaVersion": 30,
+  "refresh": "",
+  "schemaVersion": 38,
   "style": "dark",
-  "tags": [
-  ],
+  "tags": [],
   "templating": {
     "list": [
       {
         "current": {
           "selected": true,
-          "text": "dev-cortex",
-          "value": "dev-cortex"
+          "text": "-- Grafana --",
+          "value": "-- Grafana --"
         },
-        "description": null,
-        "error": null,
         "hide": 0,
         "includeAll": false,
-        "label": null,
         "multi": false,
         "name": "datasource",
-        "options": [
-        ],
-        "query": "prometheus",
+        "options": [],
+        "query": "grafana",
         "queryValue": "",
         "refresh": 1,
         "regex": "",
@@ -495,24 +482,18 @@
         "allValue": ".*",
         "current": {
           "selected": false,
-          "text": [
-            "default/grafana"
-          ],
-          "value": [
-            "default/grafana"
-          ]
+          "text": "All",
+          "value": "$__all"
         },
-        "datasource": "$datasource",
+        "datasource": {
+          "uid": "$datasource"
+        },
         "definition": "label_values(grafana_build_info, job)",
-        "description": null,
-        "error": null,
         "hide": 0,
         "includeAll": true,
-        "label": null,
         "multi": true,
         "name": "job",
-        "options": [
-        ],
+        "options": [],
         "query": {
           "query": "label_values(grafana_build_info, job)",
           "refId": "Billing Admin-job-Variable-Query"
@@ -533,17 +514,15 @@
           "text": "All",
           "value": "$__all"
         },
-        "datasource": "$datasource",
+        "datasource": {
+          "uid": "$datasource"
+        },
         "definition": "label_values(grafana_build_info, instance)",
-        "description": null,
-        "error": null,
         "hide": 0,
         "includeAll": true,
-        "label": null,
         "multi": true,
         "name": "instance",
-        "options": [
-        ],
+        "options": [],
         "query": {
           "query": "label_values(grafana_build_info, instance)",
           "refId": "Billing Admin-instance-Variable-Query"
@@ -579,5 +558,6 @@
   "timezone": "utc",
   "title": "Grafana Overview",
   "uid": "6be0s85Mk",
-  "version": 2
+  "version": 1,
+  "weekStart": ""
 }
