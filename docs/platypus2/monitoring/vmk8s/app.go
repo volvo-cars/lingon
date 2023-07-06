@@ -50,19 +50,31 @@ type Vmk8S struct {
 	MonETCD           *MonETCD
 	MonKubeController *MonKubeController
 	MonKubeProxy      *MonKubeProxy
+	VicMet            *VicMet
+
+	CadvisorNodeScrape *v1beta1.VMNodeScrape
+	ProbesNodeScrape   *v1beta1.VMNodeScrape
+	KubeletNodeScrape  *v1beta1.VMNodeScrape
 
 	K8SRules *K8SRules
 
 	DashboardK8SGlobalCM     *corev1.ConfigMap
 	DashboardK8SNamespacesCM *corev1.ConfigMap
 	DashboardK8SPodsCM       *corev1.ConfigMap
-	DashboardVMOperatorCM    *corev1.ConfigMap
+	DashboardK8sNodes        *corev1.ConfigMap
 
-	CadvisorNodeScrape *v1beta1.VMNodeScrape
-	ProbesNodeScrape   *v1beta1.VMNodeScrape
-	KubeletNodeScrape  *v1beta1.VMNodeScrape
+	DashboardVMOperatorCM *corev1.ConfigMap
+	// DashboardBackupManagerCM   *corev1.ConfigMap
+	DashboardAgentCM           *corev1.ConfigMap
+	DashboardVictoriaMetricsCM *corev1.ConfigMap
 
-	VicMet *VicMet
+	DashboardNatsCM   *corev1.ConfigMap
+	DashboardNatsJSCM *corev1.ConfigMap
+
+	DashboardKarpenterPerfCM           *corev1.ConfigMap
+	DashboardKarpenterControllersCM    *corev1.ConfigMap
+	DashboardKarpenterCtrlAllocationCM *corev1.ConfigMap
+	DashboardKarpenterCapacityCM       *corev1.ConfigMap
 }
 
 type Vmk8sOpts func(s *Vmk8S) *Vmk8S
@@ -82,6 +94,7 @@ func New(opts ...Vmk8sOpts) *Vmk8S {
 		MonKubeController: NewMonKubeController(),
 		MonCoreDNS:        NewMonCoreDNS(),
 		MonETCD:           NewMonETCD(),
+		VicMet:            NewVicMet(),
 
 		K8SRules: NewK8SRules(),
 
@@ -92,9 +105,20 @@ func New(opts ...Vmk8sOpts) *Vmk8S {
 		DashboardK8SGlobalCM:     DashboardK8SGlobalCM,
 		DashboardK8SNamespacesCM: DashboardK8SNamespacesCM,
 		DashboardK8SPodsCM:       DashboardK8SPodsCM,
-		DashboardVMOperatorCM:    DashboardVMOperator,
+		DashboardK8sNodes:        DashboardK8sNodes,
 
-		VicMet: NewVicMet(),
+		DashboardVMOperatorCM:      DashboardVMOperator,
+		DashboardVictoriaMetricsCM: DashboardVictoriaMetricsCM,
+		// DashboardBackupManagerCM:   DashboardBackupManagerCM,
+		DashboardAgentCM: DashboardAgentCM,
+
+		DashboardNatsCM:   DashboardNatsCM,
+		DashboardNatsJSCM: DashboardNatsJSCM,
+
+		DashboardKarpenterCapacityCM:       DashboardKarpenterCapacityCM,
+		DashboardKarpenterCtrlAllocationCM: DashboardKarpenterCtrlAllocationCM,
+		DashboardKarpenterPerfCM:           DashboardKarpenterPerfCM,
+		DashboardKarpenterControllersCM:    DashboardKarpenterControllersCM,
 	}
 	for _, o := range opts {
 		v = o(v)

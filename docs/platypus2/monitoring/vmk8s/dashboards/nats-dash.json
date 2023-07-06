@@ -25,12 +25,15 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": null,
   "links": [],
   "liveNow": false,
   "panels": [
     {
       "collapsed": false,
+      "datasource": {
+        "type": "victoriametrics-datasource",
+        "uid": "${datasource}"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -39,13 +42,22 @@
       },
       "id": 10,
       "panels": [],
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-datasource",
+            "uid": "${datasource}"
+          },
+          "refId": "A"
+        }
+      ],
       "title": "OS Metrics",
       "type": "row"
     },
     {
       "datasource": {
         "type": "victoriametrics-datasource",
-        "uid": "$datasource"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -53,6 +65,8 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
@@ -114,15 +128,21 @@
             "max"
           ],
           "displayMode": "table",
-          "placement": "bottom"
+          "placement": "bottom",
+          "showLegend": true
         },
         "tooltip": {
-          "mode": "single"
+          "mode": "single",
+          "sort": "none"
         }
       },
       "pluginVersion": "8.3.4",
       "targets": [
         {
+          "datasource": {
+            "type": "victoriametrics-datasource",
+            "uid": "${datasource}"
+          },
           "expr": "gnatsd_varz_cpu",
           "intervalFactor": 2,
           "legendFormat": "{{server_id}}",
@@ -137,7 +157,7 @@
     {
       "datasource": {
         "type": "victoriametrics-datasource",
-        "uid": "$datasource"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -145,6 +165,8 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
@@ -206,15 +228,21 @@
             "max"
           ],
           "displayMode": "table",
-          "placement": "bottom"
+          "placement": "bottom",
+          "showLegend": true
         },
         "tooltip": {
-          "mode": "single"
+          "mode": "single",
+          "sort": "none"
         }
       },
       "pluginVersion": "8.3.4",
       "targets": [
         {
+          "datasource": {
+            "type": "victoriametrics-datasource",
+            "uid": "${datasource}"
+          },
           "expr": "gnatsd_varz_mem",
           "intervalFactor": 2,
           "legendFormat": "{{server_id}}",
@@ -228,6 +256,10 @@
     },
     {
       "collapsed": false,
+      "datasource": {
+        "type": "victoriametrics-datasource",
+        "uid": "${datasource}"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -236,13 +268,22 @@
       },
       "id": 11,
       "panels": [],
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-datasource",
+            "uid": "${datasource}"
+          },
+          "refId": "A"
+        }
+      ],
       "title": "Throughput",
       "type": "row"
     },
     {
       "datasource": {
         "type": "victoriametrics-datasource",
-        "uid": "$datasource"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -250,6 +291,8 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
@@ -309,15 +352,21 @@
             "lastNotNull"
           ],
           "displayMode": "table",
-          "placement": "bottom"
+          "placement": "bottom",
+          "showLegend": true
         },
         "tooltip": {
-          "mode": "single"
+          "mode": "single",
+          "sort": "none"
         }
       },
       "pluginVersion": "8.3.4",
       "targets": [
         {
+          "datasource": {
+            "type": "victoriametrics-datasource",
+            "uid": "${datasource}"
+          },
           "expr": "gnatsd_varz_in_bytes",
           "intervalFactor": 2,
           "legendFormat": "{{server_id}}",
@@ -332,7 +381,7 @@
     {
       "datasource": {
         "type": "victoriametrics-datasource",
-        "uid": "$datasource"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -340,6 +389,8 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
@@ -399,15 +450,21 @@
             "lastNotNull"
           ],
           "displayMode": "table",
-          "placement": "bottom"
+          "placement": "bottom",
+          "showLegend": true
         },
         "tooltip": {
-          "mode": "single"
+          "mode": "single",
+          "sort": "none"
         }
       },
       "pluginVersion": "8.3.4",
       "targets": [
         {
+          "datasource": {
+            "type": "victoriametrics-datasource",
+            "uid": "${datasource}"
+          },
           "expr": "gnatsd_varz_in_msgs",
           "intervalFactor": 2,
           "legendFormat": "{{server_id}}",
@@ -422,7 +479,7 @@
     {
       "datasource": {
         "type": "victoriametrics-datasource",
-        "uid": "$datasource"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -430,6 +487,8 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
@@ -489,15 +548,21 @@
             "lastNotNull"
           ],
           "displayMode": "table",
-          "placement": "bottom"
+          "placement": "bottom",
+          "showLegend": true
         },
         "tooltip": {
-          "mode": "single"
+          "mode": "single",
+          "sort": "none"
         }
       },
       "pluginVersion": "8.3.4",
       "targets": [
         {
+          "datasource": {
+            "type": "victoriametrics-datasource",
+            "uid": "${datasource}"
+          },
           "expr": "gnatsd_varz_out_bytes",
           "intervalFactor": 2,
           "legendFormat": "{{server_id}}",
@@ -512,7 +577,7 @@
     {
       "datasource": {
         "type": "victoriametrics-datasource",
-        "uid": "$datasource"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -520,6 +585,8 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
@@ -579,15 +646,21 @@
             "lastNotNull"
           ],
           "displayMode": "table",
-          "placement": "bottom"
+          "placement": "bottom",
+          "showLegend": true
         },
         "tooltip": {
-          "mode": "single"
+          "mode": "single",
+          "sort": "none"
         }
       },
       "pluginVersion": "8.3.4",
       "targets": [
         {
+          "datasource": {
+            "type": "victoriametrics-datasource",
+            "uid": "${datasource}"
+          },
           "expr": "gnatsd_varz_out_msgs",
           "intervalFactor": 2,
           "legendFormat": "{{server_id}}",
@@ -601,6 +674,10 @@
     },
     {
       "collapsed": false,
+      "datasource": {
+        "type": "victoriametrics-datasource",
+        "uid": "${datasource}"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -609,13 +686,22 @@
       },
       "id": 12,
       "panels": [],
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-datasource",
+            "uid": "${datasource}"
+          },
+          "refId": "A"
+        }
+      ],
       "title": "Client Metrics",
       "type": "row"
     },
     {
       "datasource": {
         "type": "victoriametrics-datasource",
-        "uid": "$datasource"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -623,6 +709,8 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
@@ -685,15 +773,21 @@
             "max"
           ],
           "displayMode": "table",
-          "placement": "bottom"
+          "placement": "bottom",
+          "showLegend": true
         },
         "tooltip": {
-          "mode": "single"
+          "mode": "single",
+          "sort": "none"
         }
       },
       "pluginVersion": "8.3.4",
       "targets": [
         {
+          "datasource": {
+            "type": "victoriametrics-datasource",
+            "uid": "${datasource}"
+          },
           "expr": "gnatsd_varz_connections",
           "intervalFactor": 1,
           "legendFormat": "{{server_id}}",
@@ -708,7 +802,7 @@
     {
       "datasource": {
         "type": "victoriametrics-datasource",
-        "uid": "$datasource"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -716,6 +810,8 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
@@ -778,15 +874,21 @@
             "max"
           ],
           "displayMode": "table",
-          "placement": "bottom"
+          "placement": "bottom",
+          "showLegend": true
         },
         "tooltip": {
-          "mode": "single"
+          "mode": "single",
+          "sort": "none"
         }
       },
       "pluginVersion": "8.3.4",
       "targets": [
         {
+          "datasource": {
+            "type": "victoriametrics-datasource",
+            "uid": "${datasource}"
+          },
           "expr": "gnatsd_varz_subscriptions",
           "hide": false,
           "intervalFactor": 2,
@@ -802,7 +904,7 @@
     {
       "datasource": {
         "type": "victoriametrics-datasource",
-        "uid": "$datasource"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -810,6 +912,8 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
@@ -872,15 +976,21 @@
             "max"
           ],
           "displayMode": "table",
-          "placement": "bottom"
+          "placement": "bottom",
+          "showLegend": true
         },
         "tooltip": {
-          "mode": "single"
+          "mode": "single",
+          "sort": "none"
         }
       },
       "pluginVersion": "8.3.4",
       "targets": [
         {
+          "datasource": {
+            "type": "victoriametrics-datasource",
+            "uid": "${datasource}"
+          },
           "expr": "gnatsd_varz_slow_consumers",
           "intervalFactor": 1,
           "legendFormat": "{{server_id}}",
@@ -893,10 +1003,10 @@
       "type": "timeseries"
     }
   ],
-  "refresh": false,
-  "schemaVersion": 34,
+  "refresh": "",
+  "schemaVersion": 38,
   "style": "dark",
-  "tags": [],
+  "tags": ["nats", "data"],
   "templating": {
     "list": [
       {

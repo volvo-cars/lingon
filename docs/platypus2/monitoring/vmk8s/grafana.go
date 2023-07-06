@@ -5,7 +5,6 @@ package vmk8s
 
 import (
 	_ "embed"
-	"errors"
 	"fmt"
 	"net/url"
 	"strings"
@@ -19,6 +18,7 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	kyaml "sigs.k8s.io/yaml"
 )
 
 const (
@@ -32,10 +32,19 @@ const (
 	defaultDashboardConfigName       = "grafana-default-dashboards"
 	curlImg                          = "curlimages/curl:7.85.0"
 	userID                     int64 = 472
+	pluginsPath                      = "/var/lib/grafana/plugins"
 )
 
 func PatchDashLabels(o metav1.ObjectMeta) metav1.ObjectMeta {
 	o.Labels = ku.MergeLabels(o.Labels, map[string]string{DashboardLabel: "1"})
+	return o
+}
+
+func PatchDashFolder(o metav1.ObjectMeta, folder string) metav1.ObjectMeta {
+	o.Annotations = ku.MergeLabels(
+		o.Annotations,
+		map[string]string{DashboardFolderLabel: folder},
+	)
 	return o
 }
 
@@ -74,14 +83,6 @@ type Grafana struct {
 	DataSourceCM        *corev1.ConfigMap
 	OverviewDashboardCM *corev1.ConfigMap
 	DefaultDashboardCM  *corev1.ConfigMap
-
-	DashboardNatsCM   *corev1.ConfigMap
-	DashboardNatsJSCM *corev1.ConfigMap
-
-	DashboardKarpenterPerfCM           *corev1.ConfigMap
-	DashboardKarpenterControllersCM    *corev1.ConfigMap
-	DashboardKarpenterCtrlAllocationCM *corev1.ConfigMap
-	DashboardKarpenterCapacityCM       *corev1.ConfigMap
 }
 
 func NewGrafana() *Grafana {
@@ -99,22 +100,14 @@ func NewGrafana() *Grafana {
 			Graf.Name, GrafanaSA, GrafanaCR, Graf.Labels(),
 		),
 
-		CM:                  GrafanaCM,
-		ProviderCM:          GrafanaProviderCM,
-		DataSourceCM:        GrafanaDataSourceCM,
+		CM:                  GrafCAM.ConfigMap(),
+		ProviderCM:          SideCarProvider.ConfigMap(),
+		DataSourceCM:        GrafanaDataSource.ConfigMap(),
 		OverviewDashboardCM: GrafanaOverviewDashCM,
 		DefaultDashboardCM: ku.DataConfigMap(
 			defaultDashboardConfigName,
 			Graf.Namespace, Graf.Labels(), nil, map[string]string{},
 		),
-
-		DashboardNatsCM:   DashboardNatsCM,
-		DashboardNatsJSCM: DashboardNatsJSCM,
-
-		DashboardKarpenterCapacityCM:       DashboardKarpenterCapacityCM,
-		DashboardKarpenterCtrlAllocationCM: DashboardKarpenterCtrlAllocationCM,
-		DashboardKarpenterPerfCM:           DashboardKarpenterPerfCM,
-		DashboardKarpenterControllersCM:    DashboardKarpenterControllersCM,
 	}
 }
 
@@ -145,6 +138,141 @@ var GrafanaRole = &rbacv1.Role{
 	},
 }
 
+var SideCarDashboard = corev1.Container{
+	Name:            "grafana-sc-dashboard",
+	Image:           GrafanaSideCarImg,
+	ImagePullPolicy: corev1.PullIfNotPresent,
+	Env: []corev1.EnvVar{
+		{Name: "METHOD", Value: "WATCH"},
+		{Name: "LABEL", Value: DashboardLabel},
+		{Name: "FOLDER", Value: "/tmp/dashboards"},
+		{Name: "RESOURCE", Value: "both"},
+	},
+	VolumeMounts: []corev1.VolumeMount{VolumeDashboards.VolumeMount},
+}
+
+var SideCarDataSource = corev1.Container{
+	Name:            "grafana-sc-datasources",
+	Image:           GrafanaSideCarImg,
+	ImagePullPolicy: corev1.PullIfNotPresent,
+	Env: []corev1.EnvVar{
+		{Name: "METHOD", Value: "WATCH"},
+		{Name: "LABEL", Value: DataSourceLabel},
+		{Name: "RESOURCE", Value: "both"},
+		{Name: "REQ_METHOD", Value: "POST"},
+		{
+			Name: "FOLDER",
+			// Value: "/etc/grafana/provisioning/datasources",
+			Value: VolumeDataSource.VolumeMount.MountPath,
+		},
+		{
+			Name: "REQ_URL",
+			Value: fmt.Sprintf(
+				"http://localhost:%d/api/admin/provisioning/datasources/reload",
+				GrafanaPort,
+			),
+		},
+		ku.SecretEnvVar(
+			"REQ_USERNAME", "admin-user", GrafanaSecrets.Name,
+		),
+		ku.SecretEnvVar(
+			"REQ_PASSWORD", "admin-password", GrafanaSecrets.Name,
+		),
+	},
+	VolumeMounts: []corev1.VolumeMount{VolumeDataSource.VolumeMount},
+}
+
+var InitContainerPlugins = corev1.Container{
+	Name:            "load-vm-ds-plugin",
+	Image:           curlImg,
+	ImagePullPolicy: corev1.PullIfNotPresent,
+	Command:         []string{"/bin/sh"},
+	Args: []string{
+		"-c",
+		"mkdir -p " + pluginsPath + " && " +
+			"/bin/sh -x " + VolumeMountScripts.MountPath,
+	},
+	VolumeMounts: []corev1.VolumeMount{
+		VolumeStorage.VolumeMount,
+		VolumeMountScripts,
+	},
+	// WorkingDir: "/var/lib/grafana/plugins", // this causes the folder to be owned by root
+}
+
+var GrafanaContainer = corev1.Container{
+	Name:            Graf.Name,
+	Image:           Graf.Img.URL(),
+	ImagePullPolicy: corev1.PullIfNotPresent,
+	Env: []corev1.EnvVar{
+		ku.SecretEnvVar(
+			"GF_SECURITY_ADMIN_USER", "admin-user", GrafanaSecrets.Name,
+		),
+		ku.SecretEnvVar(
+			"GF_SECURITY_ADMIN_PASSWORD", "admin-password", GrafanaSecrets.Name,
+		),
+		GrafCAM.EnvConfigMapRef("GF_INSTALL_PLUGINS", "plugins"),
+		// {
+		// 	Name: "GF_INSTALL_PLUGINS",
+		// 	ValueFrom: &corev1.EnvVarSource{
+		// 		ConfigMapKeyRef: &corev1.ConfigMapKeySelector{
+		// 			Key:                  "plugins",
+		// 			LocalObjectReference: corev1.LocalObjectReference{Name: Graf.Name},
+		// 		},
+		// 	},
+		// },
+		{Name: "GF_PATHS_DATA", Value: "/var/lib/grafana/"},
+		{Name: "GF_PATHS_LOGS", Value: "/var/log/grafana"},
+		{Name: "GF_PATHS_PLUGINS", Value: pluginsPath},
+		{Name: "GF_PATHS_PROVISIONING", Value: "/etc/grafana/provisioning"},
+	},
+
+	LivenessProbe: &corev1.Probe{
+		FailureThreshold:    int32(10),
+		InitialDelaySeconds: int32(60),
+		ProbeHandler: corev1.ProbeHandler{
+			HTTPGet: &corev1.HTTPGetAction{
+				Path: "/api/health",
+				Port: intstr.FromInt(GrafanaPort),
+			},
+		},
+		TimeoutSeconds: int32(30),
+	},
+	Ports: []corev1.ContainerPort{
+		{
+			ContainerPort: int32(GrafanaPort),
+			Name:          Graf.Name,
+			Protocol:      corev1.ProtocolTCP,
+		},
+	},
+	ReadinessProbe: &corev1.Probe{
+		ProbeHandler: corev1.ProbeHandler{
+			HTTPGet: &corev1.HTTPGetAction{
+				Path: "/api/health",
+				Port: intstr.FromInt(GrafanaPort),
+			},
+		},
+	},
+	Resources: ku.Resources(
+		"500m", "128Mi", "500m", "128Mi",
+	),
+	SecurityContext: &corev1.SecurityContext{
+		Capabilities: &corev1.Capabilities{
+			Drop: []corev1.Capability{corev1.Capability("ALL")},
+		},
+		SeccompProfile: &corev1.SeccompProfile{
+			Type: corev1.SeccompProfileType("RuntimeDefault"),
+		},
+	},
+	VolumeMounts: []corev1.VolumeMount{
+		VolumeMountGrafanaIni,
+		VolumeStorage.VolumeMount,
+		SideCarProvider.VolumeMount,
+		VolumeDashboards.VolumeMount,
+		VolumeDashProvider,
+		VolumeDataSource.VolumeMount,
+	},
+}
+
 var GrafanaDeploy = &appsv1.Deployment{
 	TypeMeta:   ku.TypeDeploymentV1,
 	ObjectMeta: Graf.ObjectMeta(),
@@ -155,239 +283,23 @@ var GrafanaDeploy = &appsv1.Deployment{
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
 				Annotations: map[string]string{
-					"checksum/config":                         ku.HashConfig(GrafanaCM),
-					"checksum/provider":                       ku.HashConfig(GrafanaProviderCM),
-					"checksum/datasource":                     ku.HashConfig(GrafanaDataSourceCM),
+					"checksum/config":                         GrafCAM.Hash(),
+					"checksum/provider":                       SideCarProvider.Hash(),
+					"checksum/datasource":                     GrafanaDataSource.Hash(),
 					"checksum/secret":                         ku.HashSecret(GrafanaSecrets),
-					"kubectl.kubernetes.io/default-container": Graf.Name,
+					"kubectl.kubernetes.io/default-container": GrafanaContainer.Name,
 				},
 				Labels: Graf.MatchLabels(),
 			},
 			Spec: corev1.PodSpec{
 				AutomountServiceAccountToken: P(true),
 				Containers: []corev1.Container{
-					{
-						Name:            "grafana-sc-dashboard",
-						Image:           GrafanaSideCarImg,
-						ImagePullPolicy: corev1.PullIfNotPresent,
-						Env: []corev1.EnvVar{
-							{Name: "METHOD", Value: "WATCH"},
-							{Name: "LABEL", Value: DashboardLabel},
-							{Name: "FOLDER", Value: "/tmp/dashboards"},
-							{Name: "RESOURCE", Value: "both"},
-						},
-						VolumeMounts: []corev1.VolumeMount{
-							{
-								MountPath: "/tmp/dashboards",
-								Name:      "sc-dashboard-volume",
-							},
-						},
-					},
-					{
-						Name:            "grafana-sc-datasources",
-						Image:           GrafanaSideCarImg,
-						ImagePullPolicy: corev1.PullIfNotPresent,
-						Env: []corev1.EnvVar{
-							{
-								Name:  "METHOD",
-								Value: "WATCH",
-							},
-							{
-								Name:  "LABEL",
-								Value: DataSourceLabel,
-							},
-							{
-								Name:  "FOLDER",
-								Value: "/etc/grafana/provisioning/datasources",
-							},
-							{
-								Name:  "RESOURCE",
-								Value: "both",
-							},
-							{
-								Name: "REQ_URL",
-								Value: fmt.Sprintf(
-									"http://localhost:%d/api/admin/provisioning/datasources/reload",
-									GrafanaPort,
-								),
-							},
-							{
-								Name:  "REQ_METHOD",
-								Value: "POST",
-							},
-							ku.SecretEnvVar(
-								"REQ_USERNAME",
-								"admin-user",
-								GrafanaSecrets.Name,
-							),
-							ku.SecretEnvVar(
-								"REQ_PASSWORD",
-								"admin-password",
-								GrafanaSecrets.Name,
-							),
-						},
-						VolumeMounts: []corev1.VolumeMount{
-							{
-								MountPath: "/etc/grafana/provisioning/datasources",
-								Name:      "sc-datasources-volume",
-							},
-						},
-					},
-					{
-						Name:            Graf.Name,
-						Image:           Graf.Img.URL(),
-						ImagePullPolicy: corev1.PullIfNotPresent,
-						Env: []corev1.EnvVar{
-							ku.SecretEnvVar(
-								"GF_SECURITY_ADMIN_USER",
-								"admin-user",
-								GrafanaSecrets.Name,
-							),
-							ku.SecretEnvVar(
-								"GF_SECURITY_ADMIN_PASSWORD",
-								"admin-password",
-								GrafanaSecrets.Name,
-							),
-							{
-								Name: "GF_INSTALL_PLUGINS",
-								ValueFrom: &corev1.EnvVarSource{
-									ConfigMapKeyRef: &corev1.ConfigMapKeySelector{
-										Key:                  "plugins",
-										LocalObjectReference: corev1.LocalObjectReference{Name: Graf.Name},
-									},
-								},
-							},
-							{
-								Name:  "GF_PATHS_DATA",
-								Value: "/var/lib/grafana/",
-							},
-							{
-								Name:  "GF_PATHS_LOGS",
-								Value: "/var/log/grafana",
-							},
-							{
-								Name:  "GF_PATHS_PLUGINS",
-								Value: "/var/lib/grafana/plugins",
-							},
-							{
-								Name:  "GF_PATHS_PROVISIONING",
-								Value: "/etc/grafana/provisioning",
-							},
-						},
-
-						LivenessProbe: &corev1.Probe{
-							FailureThreshold:    int32(10),
-							InitialDelaySeconds: int32(60),
-							ProbeHandler: corev1.ProbeHandler{
-								HTTPGet: &corev1.HTTPGetAction{
-									Path: "/api/health",
-									Port: intstr.FromInt(GrafanaPort),
-								},
-							},
-							TimeoutSeconds: int32(30),
-						},
-						Ports: []corev1.ContainerPort{
-							{
-								ContainerPort: int32(GrafanaPort),
-								Name:          Graf.Name,
-								Protocol:      corev1.ProtocolTCP,
-							},
-						},
-						ReadinessProbe: &corev1.Probe{
-							ProbeHandler: corev1.ProbeHandler{
-								HTTPGet: &corev1.HTTPGetAction{
-									Path: "/api/health",
-									Port: intstr.FromInt(GrafanaPort),
-								},
-							},
-						},
-						Resources: ku.Resources(
-							"500m", "128Mi", "500m", "128Mi",
-						),
-						SecurityContext: &corev1.SecurityContext{
-							Capabilities: &corev1.Capabilities{
-								Drop: []corev1.Capability{corev1.Capability("ALL")},
-							},
-							SeccompProfile: &corev1.SeccompProfile{
-								Type: corev1.SeccompProfileType("RuntimeDefault"),
-							},
-						},
-						VolumeMounts: []corev1.VolumeMount{
-							{
-								MountPath: "/etc/grafana/grafana.ini",
-								Name:      "config",
-								SubPath:   "grafana.ini",
-							}, {
-								MountPath: "/var/lib/grafana",
-								Name:      "storage",
-							}, {
-								MountPath: "/etc/grafana/provisioning/dashboards/dashboardproviders.yaml",
-								Name:      "config",
-								SubPath:   "dashboardproviders.yaml",
-							}, {
-								MountPath: "/tmp/dashboards",
-								Name:      "sc-dashboard-volume",
-							}, {
-								MountPath: "/etc/grafana/provisioning/dashboards/sc-dashboardproviders.yaml",
-								Name:      "sc-dashboard-provider",
-								SubPath:   "provider.yaml",
-							}, {
-								MountPath: "/etc/grafana/provisioning/datasources",
-								Name:      "sc-datasources-volume",
-							},
-						},
-					},
+					SideCarDashboard,
+					SideCarDataSource,
+					GrafanaContainer,
 				},
-
 				EnableServiceLinks: P(true),
-				InitContainers: []corev1.Container{
-					// {
-					// 	Name:            "download-dashboards",
-					// 	Image:           curlImg,
-					// 	ImagePullPolicy: corev1.PullIfNotPresent,
-					// 	Command:         []string{"/bin/sh"},
-					// 	Args: []string{
-					// 		"-c",
-					// 		"mkdir -p /var/lib/grafana/dashboards/default && " +
-					// 			// If it is not created here,
-					// 			// it will be assigned root ownership ¯\_(ツ)_/¯.
-					// 			"mkdir -p /var/lib/grafana/plugins && " +
-					// 			"/bin/sh -x /etc/grafana/download_dashboards.sh",
-					// 	},
-					// 	VolumeMounts: []corev1.VolumeMount{
-					// 		{
-					// 			MountPath: "/etc/grafana/download_dashboards.sh",
-					// 			Name:      "config",
-					// 			SubPath:   "download_dashboards.sh",
-					// 		}, {
-					// 			MountPath: "/var/lib/grafana",
-					// 			Name:      "storage",
-					// 		},
-					// 	},
-					// },
-					{
-						Name:            "load-vm-ds-plugin",
-						Image:           curlImg,
-						ImagePullPolicy: corev1.PullIfNotPresent,
-						Command:         []string{"/bin/sh"},
-						Args: []string{
-							"-c",
-							"mkdir -p /var/lib/grafana/plugins && " +
-								"/bin/sh -x /etc/grafana/download_vm_ds.sh",
-						},
-						VolumeMounts: []corev1.VolumeMount{
-							{
-								MountPath: "/var/lib/grafana",
-								Name:      "storage",
-							}, {
-								MountPath: "/etc/grafana/download_vm_ds.sh",
-								Name:      "config",
-								SubPath:   "download_vm_ds.sh",
-							},
-						},
-						// WorkingDir: "/var/lib/grafana/plugins",
-					},
-				},
+				InitContainers:     []corev1.Container{InitContainerPlugins},
 				SecurityContext: &corev1.PodSecurityContext{
 					FSGroup:      P(userID),
 					RunAsGroup:   P(userID),
@@ -397,24 +309,20 @@ var GrafanaDeploy = &appsv1.Deployment{
 				ServiceAccountName: GrafanaSA.Name,
 				Volumes: []corev1.Volume{
 					{
-						Name:         "config",
-						VolumeSource: corev1.VolumeSource{ConfigMap: &corev1.ConfigMapVolumeSource{LocalObjectReference: corev1.LocalObjectReference{Name: GrafanaCM.Name}}},
-					}, {
-						Name:         "dashboards-default",
-						VolumeSource: corev1.VolumeSource{ConfigMap: &corev1.ConfigMapVolumeSource{LocalObjectReference: corev1.LocalObjectReference{Name: defaultDashboardConfigName}}},
-					}, {
-						Name:         "storage",
-						VolumeSource: corev1.VolumeSource{},
-					}, {
-						Name:         "sc-dashboard-volume",
-						VolumeSource: corev1.VolumeSource{},
-					}, {
-						Name:         "sc-dashboard-provider",
-						VolumeSource: corev1.VolumeSource{ConfigMap: &corev1.ConfigMapVolumeSource{LocalObjectReference: corev1.LocalObjectReference{Name: GrafanaProviderCM.Name}}},
-					}, {
-						Name:         "sc-datasources-volume",
-						VolumeSource: corev1.VolumeSource{},
+						Name: "dashboards-default",
+						VolumeSource: corev1.VolumeSource{
+							ConfigMap: &corev1.ConfigMapVolumeSource{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: defaultDashboardConfigName,
+								},
+							},
+						},
 					},
+					GrafCAM.VolumeAndMount().Volume(),
+					VolumeStorage.Volume(),
+					VolumeDashboards.Volume(),
+					SideCarProvider.VolumeAndMount().Volume(),
+					VolumeDataSource.Volume(),
 				},
 			},
 		},
@@ -442,9 +350,7 @@ var GrafanaScrape = &v1beta1.VMServiceScrape{
 	ObjectMeta: Graf.ObjectMeta(),
 	Spec: v1beta1.VMServiceScrapeSpec{
 		Endpoints: []v1beta1.Endpoint{{Port: GrafanaPortName}},
-		Selector: metav1.LabelSelector{
-			MatchLabels: Graf.MatchLabels(),
-		},
+		Selector:  metav1.LabelSelector{MatchLabels: Graf.MatchLabels()},
 	},
 	TypeMeta: TypeVMServiceScrapeV1Beta1,
 }
@@ -482,44 +388,6 @@ func (d *DashSource) Validate() error {
 	return nil
 }
 
-func downloadDashboards(dss []DashSource) string {
-	var buf strings.Builder
-	var errs error
-
-	buf.WriteString(
-		`
-#!/usr/bin/env sh
-set -euf
-mkdir -p /var/lib/grafana/dashboards/default
-ls -Rl /var/lib/grafana/
-`,
-	)
-
-	for _, ds := range dss {
-		if err := ds.Validate(); err != nil {
-			errs = errors.Join(errs, err)
-		}
-		buf.WriteString(
-			`
-
-curl -skf \
---connect-timeout 60 \
---max-time 60 \
--H "Accept: application/json" \
--H "Content-Type: application/json;charset=UTF-8" \
-  "` + ds.URL + `" \
-  | sed '/-- .* --/! s/"datasource":.*,/"datasource": "` + ds.Source + `",/g' \
-> "/var/lib/grafana/dashboards/default/` + ds.Name + `.json"
-`,
-		)
-	}
-	if errs != nil {
-		panic(errs)
-	}
-
-	return buf.String()
-}
-
 const dashboardProvidersYaml = `
 apiVersion: 1
 providers:
@@ -545,80 +413,100 @@ mode = console
 [paths]
 data = /var/lib/grafana/
 logs = /var/log/grafana
-plugins = /var/lib/grafana/plugins
+plugins = ` + pluginsPath + `
 provisioning = /etc/grafana/provisioning
 [server]
 domain = ''
 
 `
 
-const downloadVMDSsh = `
+func d64(i int64) string { return fmt.Sprintf("%d", i) }
+
+var downloadVMDSsh = `
 #!/usr/bin/env sh
 
 set -euxf
 
 ls -R -l /var/lib/grafana/
 id
-mkdir -p /var/lib/grafana/plugins/
-chown -R 472:472 /var/lib/grafana/plugins/
+mkdir -p ` + pluginsPath + `/
+chown -R ` + d64(userID) + `:` + d64(userID) + ` ` + pluginsPath + `/
 mkdir -p /var/lib/grafana/dashboards/default
 # getting rate-limited by github
 # ver=$(curl -s https://api.github.com/repos/VictoriaMetrics/grafana-datasource/releases/latest | grep -oE 'v\d+\.\d+\.\d+' | head -1)
 ver="v0.2.0"
 curl -L https://github.com/VictoriaMetrics/grafana-datasource/releases/download/$ver/victoriametrics-datasource-$ver.tar.gz -o /var/lib/grafana/plugins/plugin.tar.gz
-tar -xzf /var/lib/grafana/plugins/plugin.tar.gz -C /var/lib/grafana/plugins/
-rm -f /var/lib/grafana/plugins/plugin.tar.gz
-chown -R 472:472 /var/lib/grafana/plugins/
+tar -xzf ` + pluginsPath + `/plugin.tar.gz -C ` + pluginsPath + `/
+rm -f ` + pluginsPath + `/plugin.tar.gz
+chown -R ` + d64(userID) + `:` + d64(userID) + ` ` + pluginsPath + `/
 `
 
-var GrafanaCM = &corev1.ConfigMap{
-	ObjectMeta: Graf.ObjectMeta(),
-	TypeMeta:   ku.TypeConfigMapV1,
+var VolumeMountScripts = corev1.VolumeMount{
+	MountPath: "/etc/grafana/download_vm_ds.sh",
+	Name:      GrafCAM.VolumeMount.Name,
+	SubPath:   scriptsName,
+}
+
+const scriptsName = "download_vm_ds.sh"
+
+var VolumeMountGrafanaIni = corev1.VolumeMount{
+	MountPath: "/etc/grafana/grafana.ini",
+	Name:      GrafCAM.VolumeMount.Name,
+	SubPath:   "grafana.ini",
+}
+
+var VolumeDashProvider = corev1.VolumeMount{
+	MountPath: "/etc/grafana/provisioning/dashboards/sc-" + filenameProviders,
+	Name:      GrafCAM.VolumeMount.Name,
+	SubPath:   filenameProviders,
+}
+
+var GrafCAM = ku.ConfigAndMount{
+	ObjectMeta:  Graf.ObjectMeta(),
+	VolumeMount: corev1.VolumeMount{Name: "config"},
 	Data: map[string]string{
-		"grafana.ini": grafanaINI,
-
-		"plugins": "https://grafana.com/api/plugins/marcusolsson-json-datasource/versions/1.3.6/download;marcusolsson-json-datasource",
-
-		"dashboardproviders.yaml": dashboardProvidersYaml,
-
-		"download_vm_ds.sh": downloadVMDSsh,
-
-		// "download_dashboards.sh": downloadDashboards(
-		// 	[]DashSource{
-		// 		// {
-		// 		// 	Name:   "nodeexporter",
-		// 		// 	URL:    "https://grafana.com/api/dashboards/1860/revisions/22/download",
-		// 		// 	Source: VictoriaMetricsDataSourceName,
-		// 		// },
-		// 		// // Karpenter dashboards
-		// 		// {
-		// 		// 	Name:   "karpenter-performance-dashboard",
-		// 		// 	URL:    "https://raw.githubusercontent.com/aws/karpenter/main/website/content/en/v0.28/getting-started/getting-started-with-karpenter/karpenter-performance-dashboard.json",
-		// 		// 	Source: VictoriaMetricsDataSourceName,
-		// 		// },
-		// 		// {
-		// 		// 	Name:   "karpenter-controllers",
-		// 		// 	URL:    "https://raw.githubusercontent.com/aws/karpenter/main/website/content/en/v0.28/getting-started/getting-started-with-karpenter/karpenter-controllers.json",
-		// 		// 	Source: VictoriaMetricsDataSourceName,
-		// 		// },
-		// 		// {
-		// 		// 	Name:   "karpenter-controllers-allocation",
-		// 		// 	URL:    "https://raw.githubusercontent.com/aws/karpenter/main/website/content/en/v0.28/getting-started/getting-started-with-karpenter/karpenter-controllers-allocation.json",
-		// 		// 	Source: VictoriaMetricsDataSourceName,
-		// 		// },
-		// 		// {
-		// 		// 	Name:   "karpenter-capacity-dashboard",
-		// 		// 	URL:    "https://raw.githubusercontent.com/aws/karpenter/main/website/content/en/v0.28/getting-started/getting-started-with-karpenter/karpenter-capacity-dashboard.json",
-		// 		// 	Source: VictoriaMetricsDataSourceName,
-		// 		// },
-		// 	},
-		// ),
+		"grafana.ini":     grafanaINI,
+		"plugins":         "https://grafana.com/api/plugins/marcusolsson-json-datasource/versions/1.3.6/download;marcusolsson-json-datasource",
+		filenameProviders: dashboardProvidersYaml,
+		scriptsName:       downloadVMDSsh,
 	},
 }
 
-var GrafanaProviderCM = &corev1.ConfigMap{
+const filenameProviders = "dashboardproviders.yaml"
+
+var VolumeDataSource = ku.VolumeAndMount{
+	VolumeMount: corev1.VolumeMount{
+		MountPath: "/etc/grafana/provisioning/datasources",
+		Name:      "sc-datasources-volume",
+	},
+	VolumeSource: corev1.VolumeSource{},
+}
+
+var VolumeStorage = ku.VolumeAndMount{
+	VolumeMount: corev1.VolumeMount{
+		MountPath: "/var/lib/grafana",
+		Name:      "storage",
+	},
+	VolumeSource: corev1.VolumeSource{},
+}
+
+var VolumeDashboards = ku.VolumeAndMount{
+	VolumeMount: corev1.VolumeMount{
+		MountPath: "/tmp/dashboards",
+		Name:      "sc-dashboard-volume",
+	},
+	VolumeSource: corev1.VolumeSource{},
+}
+
+var SideCarProvider = ku.ConfigAndMount{
+	ObjectMeta: Graf.ObjectMetaNameSuffix("sidecar-provider"),
+	VolumeMount: corev1.VolumeMount{
+		Name:      "sc-dashboard-provider",
+		MountPath: "/etc/grafana/provisioning/dashboards/" + filenameProviders,
+		SubPath:   filenameProviders,
+	},
 	Data: map[string]string{
-		"provider.yaml": `
+		filenameProviders: `
 apiVersion: 1
 providers:
   - name: 'sidecarProvider'
@@ -629,64 +517,67 @@ providers:
     allowUiUpdates: false
     updateIntervalSeconds: 30
     options:
-      foldersFromFilesStructure: false
+      foldersFromFilesStructure: true
       path: /tmp/dashboards
 `,
 	},
-	ObjectMeta: Graf.ObjectMetaNameSuffix("-config-dashboards"),
-	TypeMeta:   ku.TypeConfigMapV1,
 }
 
-var GrafanaDataSourceCM = &corev1.ConfigMap{
-	Data: map[string]string{
-		// 		"datasources.yaml": `
-		// apiVersion: 1
-		// datasources:
-		// - access: proxy
-		//   isDefault: true
-		//   name: Prometheus
-		//   type: prometheus
-		//   url: http://prometheus-prometheus-server
-		// - access: proxy
-		//   editable: false
-		//   jsonData:
-		//     authType: default
-		//     defaultRegion: us-east-1
-		//   name: CloudWatch
-		//   type: cloudwatch
-		//   uid: cloudwatch
-		//
-		// `,
-		"datasource.yaml": `
-apiVersion: 1
-datasources:
-- name: ` + VictoriaMetricsDataSourceName + `
-  type: ` + VictoriaMetricsDataSourceID + `
-  url: ` + fmt.Sprintf(
-			"http://%s.%s.svc:8429/",
-			VMDB.PrefixedName(), namespace,
-		) + `
-  access: proxy
-  isDefault: true
-- access: proxy
-  isDefault: false
-  name: Prometheus
-  type: prometheus
-  url: ` + fmt.Sprintf(
-			"http://%s.%s.svc:8429/",
-			VMDB.PrefixedName(), namespace,
-		) + `
-`,
+type GrafDSConfigFile struct {
+	APIVersion  int              `json:"apiVersion"`
+	DataSources []GrafDataSource `json:"datasources"`
+}
+
+type GrafDataSource struct {
+	Access    string `json:"access"`
+	IsDefault bool   `json:"isDefault"`
+	Name      string `json:"name"`
+	Type      string `json:"type"`
+	URL       string `json:"url"`
+}
+
+var GrafDSConfig = GrafDSConfigFile{
+	APIVersion: 1,
+	DataSources: []GrafDataSource{
+		{
+			Name:      VictoriaMetricsDataSourceName,
+			Type:      VictoriaMetricsDataSourceID,
+			Access:    "proxy",
+			IsDefault: true,
+			URL: fmt.Sprintf(
+				"http://%s.%s.svc:%d/",
+				VMDB.PrefixedName(),
+				VMDB.Namespace,
+				VMSinglePort,
+			),
+		},
+		{
+			Name:      PrometheusDataSourceName,
+			Type:      "prometheus",
+			Access:    "proxy",
+			IsDefault: false,
+			URL: fmt.Sprintf(
+				"http://%s.%s.svc:%d/",
+				VMDB.PrefixedName(),
+				VMDB.Namespace,
+				VMSinglePort,
+			),
+		},
 	},
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: ku.MergeLabels(
-			Graf.Labels(),
-			map[string]string{DataSourceLabel: "1"},
-		),
-		Name:      Graf.Name + "-ds",
-		Namespace: Graf.Namespace,
-	},
-	TypeMeta: ku.TypeConfigMapV1,
+}
+
+func YamlMust(a any) string {
+	res, err := kyaml.Marshal(a)
+	if err != nil {
+		panic("encoding to yaml: " + err.Error())
+	}
+	return string(res)
+}
+
+var GrafanaDataSource = ku.ConfigAndMount{
+	ObjectMeta:  Graf.ObjectMetaNameSuffix("datasources"),
+	VolumeMount: corev1.VolumeMount{},
+	Data:        map[string]string{"datasource.yaml": YamlMust(GrafDSConfig)},
 }
 
 var GrafanaSecrets = &corev1.Secret{

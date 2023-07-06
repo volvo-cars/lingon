@@ -457,7 +457,7 @@
   "refresh": "",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": [],
+  "tags": ["grafana", "overview"],
   "templating": {
     "list": [
       {

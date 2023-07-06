@@ -21,13 +21,12 @@
     "editable": true,
     "fiscalYearStartMonth": 0,
     "graphTooltip": 2,
-    "id": 6,
     "links": [],
     "liveNow": true,
     "panels": [
         {
             "datasource": {
-                "type": "prometheus",
+                "type": "victoriametrics-datasource",
                 "uid": "${datasource}"
             },
             "description": "",
@@ -37,6 +36,8 @@
                         "mode": "palette-classic"
                     },
                     "custom": {
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
                         "axisLabel": "",
                         "axisPlacement": "auto",
                         "barAlignment": 0,
@@ -96,7 +97,8 @@
                         "lastNotNull"
                     ],
                     "displayMode": "table",
-                    "placement": "right"
+                    "placement": "right",
+                    "showLegend": true
                 },
                 "tooltip": {
                     "mode": "multi",
@@ -107,7 +109,7 @@
             "targets": [
                 {
                     "datasource": {
-                        "type": "prometheus",
+                        "type": "victoriametrics-datasource",
                         "uid": "${datasource}"
                     },
                     "editorMode": "builder",
@@ -125,7 +127,7 @@
         },
         {
             "datasource": {
-                "type": "prometheus",
+                "type": "victoriametrics-datasource",
                 "uid": "${datasource}"
             },
             "description": "",
@@ -135,6 +137,8 @@
                         "mode": "palette-classic"
                     },
                     "custom": {
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
                         "axisLabel": "",
                         "axisPlacement": "auto",
                         "barAlignment": 0,
@@ -194,7 +198,8 @@
                         "lastNotNull"
                     ],
                     "displayMode": "table",
-                    "placement": "right"
+                    "placement": "right",
+                    "showLegend": true
                 },
                 "tooltip": {
                     "mode": "single",
@@ -204,7 +209,7 @@
             "targets": [
                 {
                     "datasource": {
-                        "type": "prometheus",
+                        "type": "victoriametrics-datasource",
                         "uid": "${datasource}"
                     },
                     "editorMode": "builder",
@@ -220,7 +225,7 @@
         },
         {
             "datasource": {
-                "type": "prometheus",
+                "type": "victoriametrics-datasource",
                 "uid": "${datasource}"
             },
             "description": "",
@@ -230,6 +235,8 @@
                         "mode": "palette-classic"
                     },
                     "custom": {
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
                         "axisLabel": "",
                         "axisPlacement": "auto",
                         "barAlignment": 0,
@@ -289,7 +296,8 @@
                         "lastNotNull"
                     ],
                     "displayMode": "table",
-                    "placement": "right"
+                    "placement": "right",
+                    "showLegend": true
                 },
                 "tooltip": {
                     "mode": "single",
@@ -299,7 +307,7 @@
             "targets": [
                 {
                     "datasource": {
-                        "type": "prometheus",
+                        "type": "victoriametrics-datasource",
                         "uid": "${datasource}"
                     },
                     "editorMode": "builder",
@@ -315,7 +323,7 @@
         },
         {
             "datasource": {
-                "type": "prometheus",
+                "type": "victoriametrics-datasource",
                 "uid": "${datasource}"
             },
             "fieldConfig": {
@@ -324,6 +332,8 @@
                         "mode": "palette-classic"
                     },
                     "custom": {
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
                         "axisLabel": "",
                         "axisPlacement": "auto",
                         "barAlignment": 0,
@@ -381,7 +391,8 @@
                         "last"
                     ],
                     "displayMode": "table",
-                    "placement": "right"
+                    "placement": "right",
+                    "showLegend": true
                 },
                 "tooltip": {
                     "mode": "single",
@@ -391,7 +402,7 @@
             "targets": [
                 {
                     "datasource": {
-                        "type": "prometheus",
+                        "type": "victoriametrics-datasource",
                         "uid": "${datasource}"
                     },
                     "editorMode": "code",
@@ -406,7 +417,7 @@
         },
         {
             "datasource": {
-                "type": "prometheus",
+                "type": "victoriametrics-datasource",
                 "uid": "${datasource}"
             },
             "fieldConfig": {
@@ -415,6 +426,8 @@
                         "mode": "palette-classic"
                     },
                     "custom": {
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
                         "axisLabel": "",
                         "axisPlacement": "auto",
                         "barAlignment": 0,
@@ -470,7 +483,8 @@
                 "legend": {
                     "calcs": [],
                     "displayMode": "table",
-                    "placement": "right"
+                    "placement": "right",
+                    "showLegend": true
                 },
                 "tooltip": {
                     "mode": "single",
@@ -480,7 +494,7 @@
             "targets": [
                 {
                     "datasource": {
-                        "type": "prometheus",
+                        "type": "victoriametrics-datasource",
                         "uid": "${datasource}"
                     },
                     "editorMode": "code",
@@ -495,7 +509,7 @@
         },
         {
             "datasource": {
-                "type": "prometheus",
+                "type": "victoriametrics-datasource",
                 "uid": "${datasource}"
             },
             "fieldConfig": {
@@ -505,7 +519,9 @@
                     },
                     "custom": {
                         "align": "left",
-                        "displayMode": "auto",
+                        "cellOptions": {
+                            "type": "auto"
+                        },
                         "inspect": false
                     },
                     "mappings": [],
@@ -531,8 +547,11 @@
                         },
                         "properties": [
                             {
-                                "id": "custom.displayMode",
-                                "value": "gradient-gauge"
+                                "id": "custom.cellOptions",
+                                "value": {
+                                    "mode": "gradient",
+                                    "type": "gauge"
+                                }
                             },
                             {
                                 "id": "min",
@@ -570,7 +589,9 @@
             },
             "id": 10,
             "options": {
+                "cellHeight": "sm",
                 "footer": {
+                    "countRows": false,
                     "fields": "",
                     "reducer": [
                         "sum"
@@ -579,11 +600,11 @@
                 },
                 "showHeader": true
             },
-            "pluginVersion": "9.0.5",
+            "pluginVersion": "9.5.3",
             "targets": [
                 {
                     "datasource": {
-                        "type": "prometheus",
+                        "type": "victoriametrics-datasource",
                         "uid": "${datasource}"
                     },
                     "editorMode": "code",
@@ -597,7 +618,7 @@
                 },
                 {
                     "datasource": {
-                        "type": "prometheus",
+                        "type": "victoriametrics-datasource",
                         "uid": "${datasource}"
                     },
                     "editorMode": "code",
@@ -611,7 +632,7 @@
                 },
                 {
                     "datasource": {
-                        "type": "prometheus",
+                        "type": "victoriametrics-datasource",
                         "uid": "${datasource}"
                     },
                     "editorMode": "code",
@@ -626,7 +647,7 @@
                 },
                 {
                     "datasource": {
-                        "type": "prometheus",
+                        "type": "victoriametrics-datasource",
                         "uid": "${datasource}"
                     },
                     "editorMode": "code",
@@ -640,7 +661,7 @@
                 },
                 {
                     "datasource": {
-                        "type": "prometheus",
+                        "type": "victoriametrics-datasource",
                         "uid": "${datasource}"
                     },
                     "editorMode": "code",
@@ -723,7 +744,7 @@
         },
         {
             "datasource": {
-                "type": "prometheus",
+                "type": "victoriametrics-datasource",
                 "uid": "${datasource}"
             },
             "fieldConfig": {
@@ -732,6 +753,8 @@
                         "mode": "palette-classic"
                     },
                     "custom": {
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
                         "axisLabel": "",
                         "axisPlacement": "auto",
                         "barAlignment": 0,
@@ -789,8 +812,9 @@
             "options": {
                 "legend": {
                     "calcs": [],
-                    "displayMode": "hidden",
-                    "placement": "bottom"
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": false
                 },
                 "tooltip": {
                     "mode": "single",
@@ -800,7 +824,7 @@
             "targets": [
                 {
                     "datasource": {
-                        "type": "prometheus",
+                        "type": "victoriametrics-datasource",
                         "uid": "${datasource}"
                     },
                     "editorMode": "code",
@@ -815,7 +839,7 @@
         },
         {
             "datasource": {
-                "type": "prometheus",
+                "type": "victoriametrics-datasource",
                 "uid": "${datasource}"
             },
             "fieldConfig": {
@@ -825,7 +849,9 @@
                     },
                     "custom": {
                         "align": "left",
-                        "displayMode": "auto",
+                        "cellOptions": {
+                            "type": "auto"
+                        },
                         "inspect": false
                     },
                     "mappings": [],
@@ -863,8 +889,11 @@
                         },
                         "properties": [
                             {
-                                "id": "custom.displayMode",
-                                "value": "gradient-gauge"
+                                "id": "custom.cellOptions",
+                                "value": {
+                                    "mode": "gradient",
+                                    "type": "gauge"
+                                }
                             },
                             {
                                 "id": "unit",
@@ -922,7 +951,9 @@
             },
             "id": 4,
             "options": {
+                "cellHeight": "sm",
                 "footer": {
+                    "countRows": false,
                     "fields": "",
                     "reducer": [
                         "sum"
@@ -937,11 +968,11 @@
                     }
                 ]
             },
-            "pluginVersion": "9.0.5",
+            "pluginVersion": "9.5.3",
             "targets": [
                 {
                     "datasource": {
-                        "type": "prometheus",
+                        "type": "victoriametrics-datasource",
                         "uid": "${datasource}"
                     },
                     "editorMode": "code",
@@ -956,7 +987,7 @@
                 },
                 {
                     "datasource": {
-                        "type": "prometheus",
+                        "type": "victoriametrics-datasource",
                         "uid": "${datasource}"
                     },
                     "editorMode": "code",
@@ -971,7 +1002,7 @@
                 },
                 {
                     "datasource": {
-                        "type": "prometheus",
+                        "type": "victoriametrics-datasource",
                         "uid": "${datasource}"
                     },
                     "editorMode": "code",
@@ -986,7 +1017,7 @@
                 },
                 {
                     "datasource": {
-                        "type": "prometheus",
+                        "type": "victoriametrics-datasource",
                         "uid": "${datasource}"
                     },
                     "editorMode": "code",
@@ -1199,12 +1230,30 @@
             "type": "table"
         }
     ],
-    "refresh": false,
-    "schemaVersion": 36,
+    "refresh": "",
+    "schemaVersion": 38,
     "style": "dark",
-    "tags": [],
+    "tags": ["aws", "karpenter"],
     "templating": {
         "list": [
+            {
+                "current": {
+                    "selected": true,
+                    "text": "VictoriaMetrics",
+                    "value": "VictoriaMetrics"
+                },
+                "hide": 0,
+                "includeAll": false,
+                "multi": false,
+                "name": "datasource",
+                "options": [],
+                "query": "victoriametrics-datasource",
+                "queryValue": "",
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "type": "datasource"
+            },
             {
                 "current": {
                     "selected": true,
@@ -1216,7 +1265,7 @@
                     ]
                 },
                 "datasource": {
-                    "type": "prometheus",
+                    "type": "victoriametrics-datasource",
                     "uid": "${datasource}"
                 },
                 "definition": "label_values(karpenter_nodes_allocatable, provisioner)",
@@ -1246,7 +1295,7 @@
                     ]
                 },
                 "datasource": {
-                    "type": "prometheus",
+                    "type": "victoriametrics-datasource",
                     "uid": "${datasource}"
                 },
                 "definition": "label_values(karpenter_nodes_allocatable, zone)",
@@ -1276,7 +1325,7 @@
                     ]
                 },
                 "datasource": {
-                    "type": "prometheus",
+                    "type": "victoriametrics-datasource",
                     "uid": "${datasource}"
                 },
                 "definition": "label_values(karpenter_nodes_allocatable, arch)",
@@ -1306,7 +1355,7 @@
                     ]
                 },
                 "datasource": {
-                    "type": "prometheus",
+                    "type": "victoriametrics-datasource",
                     "uid": "${datasource}"
                 },
                 "definition": "label_values(karpenter_nodes_allocatable, capacity_type)",
@@ -1336,7 +1385,7 @@
                     ]
                 },
                 "datasource": {
-                    "type": "prometheus",
+                    "type": "victoriametrics-datasource",
                     "uid": "${datasource}"
                 },
                 "definition": "label_values(karpenter_nodes_allocatable, instance_type)",
@@ -1406,24 +1455,6 @@
                 "queryValue": "",
                 "skipUrlSync": false,
                 "type": "custom"
-            },
-            {
-                "current": {
-                    "selected": false,
-                    "text": "Prometheus",
-                    "value": "Prometheus"
-                },
-                "hide": 2,
-                "includeAll": false,
-                "label": "Data Source",
-                "multi": false,
-                "name": "datasource",
-                "options": [],
-                "query": "prometheus",
-                "refresh": 1,
-                "regex": "",
-                "skipUrlSync": false,
-                "type": "datasource"
             }
         ]
     },
@@ -1435,6 +1466,6 @@
     "timezone": "",
     "title": "Karpenter Capacity",
     "uid": "ta8I9Q67z",
-    "version": 4,
+    "version": 1,
     "weekStart": ""
 }

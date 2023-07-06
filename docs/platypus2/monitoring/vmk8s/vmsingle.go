@@ -31,30 +31,24 @@ var Single = &meta.Metadata{
 type VicMet struct {
 	kube.App
 
-	DB                         *v1beta1.VMSingle
-	Agent                      *v1beta1.VMAgent
-	SA                         *corev1.ServiceAccount
-	SingleAlerts               *v1beta1.VMRule
-	HealthAlerts               *v1beta1.VMRule
-	AgentAlertRules            *v1beta1.VMRule
-	DashboardBackupManagerCM   *corev1.ConfigMap
-	DashboardAgentCM           *corev1.ConfigMap
-	DashboardVictoriaMetricsCM *corev1.ConfigMap
+	DB              *v1beta1.VMSingle
+	Agent           *v1beta1.VMAgent
+	SA              *corev1.ServiceAccount
+	SingleAlerts    *v1beta1.VMRule
+	HealthAlerts    *v1beta1.VMRule
+	AgentAlertRules *v1beta1.VMRule
 }
 
 type VicMetOption func(server *VicMet) *VicMet
 
 func NewVicMet(opts ...VicMetOption) *VicMet {
 	vm := &VicMet{
-		DB:                         VMDB,
-		Agent:                      VMAgent,
-		SA:                         VictoriaMetricsSA,
-		AgentAlertRules:            VMAgentAlertRules,
-		HealthAlerts:               VMHealthAlertRules,
-		SingleAlerts:               VMSingleAlertRules,
-		DashboardVictoriaMetricsCM: DashboardVictoriaMetricsCM,
-		DashboardBackupManagerCM:   DashboardBackupManagerCM,
-		DashboardAgentCM:           DashboardAgentCM,
+		DB:              VMDB,
+		Agent:           VMAgent,
+		SA:              VictoriaMetricsSA,
+		AgentAlertRules: VMAgentAlertRules,
+		HealthAlerts:    VMHealthAlertRules,
+		SingleAlerts:    VMSingleAlertRules,
 	}
 
 	for _, o := range opts {

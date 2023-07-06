@@ -14,9 +14,12 @@ import (
 )
 
 func LoadDashAsCM(
-	filename, dashJSON string,
+	filename, dashJSON, folder string,
 	o metav1.ObjectMeta,
 ) *corev1.ConfigMap {
+	if folder != FolderGeneral {
+		o = PatchDashFolder(o, folder)
+	}
 	return &corev1.ConfigMap{
 		TypeMeta:   ku.TypeConfigMapV1,
 		ObjectMeta: PatchDashLabels(o),
@@ -26,13 +29,21 @@ func LoadDashAsCM(
 	}
 }
 
+const (
+	FolderGeneral    = ""
+	FolderKubernetes = "Kubernetes"
+	FolderVM         = "VictoriaMetrics"
+	FolderNats       = "NATS"
+	FolderKarpenter  = "Karpeneter"
+)
+
 var (
 
 	//go:embed dashboards/grafana-overview.json
 	grafanaOverviewDash   string
 	GrafanaOverviewDashCM = LoadDashAsCM(
 		"grafana-overview.json",
-		grafanaOverviewDash,
+		grafanaOverviewDash, FolderGeneral,
 		Graf.ObjectMetaNameSuffix("dash-overview"),
 	)
 
@@ -42,7 +53,7 @@ var (
 	k8sGlobalDash        string
 	DashboardK8SGlobalCM = LoadDashAsCM(
 		"k8s-views-global.json",
-		k8sGlobalDash,
+		k8sGlobalDash, FolderKubernetes,
 		Graf.ObjectMetaNameSuffix("k8s-global"),
 	)
 
@@ -50,7 +61,7 @@ var (
 	k8sNSDash                string
 	DashboardK8SNamespacesCM = LoadDashAsCM(
 		"k8s-views-namespaces.json",
-		k8sNSDash,
+		k8sNSDash, FolderKubernetes,
 		Graf.ObjectMetaNameSuffix("k8s-namespaces"),
 	)
 
@@ -58,17 +69,25 @@ var (
 	k8sPodsDash        string
 	DashboardK8SPodsCM = LoadDashAsCM(
 		"k8s-views-pods.json",
-		k8sPodsDash,
+		k8sPodsDash, FolderKubernetes,
 		Graf.ObjectMetaNameSuffix("k8s-pods"),
 	)
 
 	//go:embed dashboards/k8s-system-coredns.json
-	corednsDash string
-
+	corednsDash        string
 	CoreDNSDashboardCM = LoadDashAsCM(
 		"k8s-coredns.json",
-		corednsDash,
+		corednsDash, FolderKubernetes,
 		CDNS.ObjectMetaNameSuffix("dash"),
+	)
+
+	//go:embed dashboards/k8s-resources-node.json
+	k8sResourcesNode  string
+	DashboardK8sNodes = LoadDashAsCM(
+		"k8s-node.json",
+		k8sResourcesNode,
+		FolderKubernetes,
+		Graf.ObjectMetaNameSuffix("k8s-nodes"),
 	)
 
 	// VICTORIA METRICS
@@ -77,23 +96,23 @@ var (
 	vmOperatorDash      string
 	DashboardVMOperator = LoadDashAsCM(
 		"vm-operator.json",
-		vmOperatorDash,
-		Graf.ObjectMetaNameSuffix("vm-operator"),
+		vmOperatorDash, FolderVM,
+		Graf.ObjectMetaNameSuffix("vm-operator-dash"),
 	)
 
-	//go:embed dashboards/backupmanager.json
-	backupmanagerDash        string
-	DashboardBackupManagerCM = LoadDashAsCM(
-		"backupmanager.json",
-		backupmanagerDash,
-		Graf.ObjectMetaNameSuffix("backup-manager-dash"),
-	)
+	// //go:embed dashboards/backupmanager.json
+	// backupmanagerDash        string
+	// DashboardBackupManagerCM = LoadDashAsCM(
+	// 	"backupmanager.json",
+	// 	backupmanagerDash, FolderVM,
+	// 	Graf.ObjectMetaNameSuffix("backup-manager-dash"),
+	// )
 
 	//go:embed dashboards/vmagent.json
 	vmAgentDash      string
 	DashboardAgentCM = LoadDashAsCM(
 		"vmagent.json",
-		vmAgentDash,
+		vmAgentDash, FolderVM,
 		Graf.ObjectMetaNameSuffix("vmagent"),
 	)
 
@@ -101,7 +120,7 @@ var (
 	alertManagerOverviewDash   string
 	AlertManagerOverviewDashCM = LoadDashAsCM(
 		"alertmanager-overview.json",
-		alertManagerOverviewDash,
+		alertManagerOverviewDash, FolderVM,
 		AM.ObjectMetaNameSuffix("vmalert-overview-dash"),
 	)
 
@@ -109,7 +128,7 @@ var (
 	alertManagerDash        string
 	AlertManagerDashboardCM = LoadDashAsCM(
 		"vmalert.json",
-		alertManagerDash,
+		alertManagerDash, FolderVM,
 		AM.ObjectMetaNameSuffix("vmalert-dash"),
 	)
 
@@ -117,7 +136,7 @@ var (
 	victoriaMetricsDash        string
 	DashboardVictoriaMetricsCM = LoadDashAsCM(
 		"victoriametrics.json",
-		victoriaMetricsDash,
+		victoriaMetricsDash, FolderVM,
 		Single.ObjectMetaNameSuffix("vmsingle-dash"),
 	)
 
@@ -127,7 +146,7 @@ var (
 	natsDash        string
 	DashboardNatsCM = LoadDashAsCM(
 		"nats.json",
-		natsDash,
+		natsDash, FolderNats,
 		Graf.ObjectMetaNameSuffix("nats-dash"),
 	)
 
@@ -135,7 +154,7 @@ var (
 	natsJSDash        string
 	DashboardNatsJSCM = LoadDashAsCM(
 		"nats-jetstream.json",
-		natsJSDash,
+		natsJSDash, FolderNats,
 		Graf.ObjectMetaNameSuffix("nats-jetstream-dash"),
 	)
 
@@ -145,7 +164,7 @@ var (
 	karpenterPerfDash        string
 	DashboardKarpenterPerfCM = LoadDashAsCM(
 		"karpenter-performance.json",
-		karpenterPerfDash,
+		karpenterPerfDash, FolderKarpenter,
 		Graf.ObjectMetaNameSuffix("karpenter-perf-dash"),
 	)
 
@@ -153,7 +172,7 @@ var (
 	karpenterControllersDash        string
 	DashboardKarpenterControllersCM = LoadDashAsCM(
 		"karpenter-controllers.json",
-		karpenterControllersDash,
+		karpenterControllersDash, FolderKarpenter,
 		Graf.ObjectMetaNameSuffix("karpenter-controller-dash"),
 	)
 
@@ -161,7 +180,7 @@ var (
 	karpenterCtrlAllocationDash        string
 	DashboardKarpenterCtrlAllocationCM = LoadDashAsCM(
 		"karpenter-controllers-allocation.json",
-		karpenterCtrlAllocationDash,
+		karpenterCtrlAllocationDash, FolderKarpenter,
 		Graf.ObjectMetaNameSuffix("karpenter-allocation-dash"),
 	)
 
@@ -169,7 +188,7 @@ var (
 	karpenterCapacityDash        string
 	DashboardKarpenterCapacityCM = LoadDashAsCM(
 		"karpenter-capacity.json",
-		karpenterCapacityDash,
+		karpenterCapacityDash, FolderKarpenter,
 		Graf.ObjectMetaNameSuffix("karpenter-capacity-dash"),
 	)
 )

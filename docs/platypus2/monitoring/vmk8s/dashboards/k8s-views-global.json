@@ -2590,8 +2590,8 @@
   "schemaVersion": 38,
   "style": "dark",
   "tags": [
-    "Kubernetes",
-    "Prometheus"
+    "overview",
+    "kubernetes"
   ],
   "templating": {
     "list": [
