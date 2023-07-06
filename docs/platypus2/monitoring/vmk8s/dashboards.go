@@ -132,10 +132,10 @@ var (
 		AM.ObjectMetaNameSuffix("vmalert-dash"),
 	)
 
-	//go:embed dashboards/victoriametrics.json
+	//go:embed dashboards/vmsingle.json
 	victoriaMetricsDash        string
 	DashboardVictoriaMetricsCM = LoadDashAsCM(
-		"victoriametrics.json",
+		"vmsingle.json",
 		victoriaMetricsDash, FolderVM,
 		Single.ObjectMetaNameSuffix("vmsingle-dash"),
 	)

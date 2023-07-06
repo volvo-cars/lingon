@@ -6,8 +6,6 @@ package vmk8s
 import (
 	_ "embed"
 	"fmt"
-	"net/url"
-	"strings"
 
 	"github.com/VictoriaMetrics/operator/api/victoriametrics/v1beta1"
 	"github.com/volvo-cars/lingon/pkg/kube"
@@ -34,6 +32,11 @@ const (
 	userID                     int64 = 472
 	pluginsPath                      = "/var/lib/grafana/plugins"
 )
+
+func PatchDataSourceLabels(o metav1.ObjectMeta) metav1.ObjectMeta {
+	o.Labels = ku.MergeLabels(o.Labels, map[string]string{DataSourceLabel: "1"})
+	return o
+}
 
 func PatchDashLabels(o metav1.ObjectMeta) metav1.ObjectMeta {
 	o.Labels = ku.MergeLabels(o.Labels, map[string]string{DashboardLabel: "1"})
@@ -196,7 +199,8 @@ var InitContainerPlugins = corev1.Container{
 		VolumeStorage.VolumeMount,
 		VolumeMountScripts,
 	},
-	// WorkingDir: "/var/lib/grafana/plugins", // this causes the folder to be owned by root
+	// BUG: this causes the folder to be owned by root
+	// WorkingDir: "/var/lib/grafana/plugins",
 }
 
 var GrafanaContainer = corev1.Container{
@@ -211,15 +215,6 @@ var GrafanaContainer = corev1.Container{
 			"GF_SECURITY_ADMIN_PASSWORD", "admin-password", GrafanaSecrets.Name,
 		),
 		GrafCAM.EnvConfigMapRef("GF_INSTALL_PLUGINS", "plugins"),
-		// {
-		// 	Name: "GF_INSTALL_PLUGINS",
-		// 	ValueFrom: &corev1.EnvVarSource{
-		// 		ConfigMapKeyRef: &corev1.ConfigMapKeySelector{
-		// 			Key:                  "plugins",
-		// 			LocalObjectReference: corev1.LocalObjectReference{Name: Graf.Name},
-		// 		},
-		// 	},
-		// },
 		{Name: "GF_PATHS_DATA", Value: "/var/lib/grafana/"},
 		{Name: "GF_PATHS_LOGS", Value: "/var/log/grafana"},
 		{Name: "GF_PATHS_PLUGINS", Value: pluginsPath},
@@ -253,7 +248,7 @@ var GrafanaContainer = corev1.Container{
 		},
 	},
 	Resources: ku.Resources(
-		"500m", "128Mi", "500m", "128Mi",
+		"500m", "256Mi", "500m", "256Mi",
 	),
 	SecurityContext: &corev1.SecurityContext{
 		Capabilities: &corev1.Capabilities{
@@ -319,9 +314,9 @@ var GrafanaDeploy = &appsv1.Deployment{
 						},
 					},
 					GrafCAM.VolumeAndMount().Volume(),
+					SideCarProvider.VolumeAndMount().Volume(),
 					VolumeStorage.Volume(),
 					VolumeDashboards.Volume(),
-					SideCarProvider.VolumeAndMount().Volume(),
 					VolumeDataSource.Volume(),
 				},
 			},
@@ -355,51 +350,23 @@ var GrafanaScrape = &v1beta1.VMServiceScrape{
 	TypeMeta: TypeVMServiceScrapeV1Beta1,
 }
 
-type DashSource struct {
-	Name   string
-	URL    string
-	Source string
+var GrafCAM = ku.ConfigAndMount{
+	ObjectMeta:  Graf.ObjectMeta(),
+	VolumeMount: corev1.VolumeMount{Name: "config"},
+	Data: map[string]string{
+		"grafana.ini":     grafanaINI,
+		"plugins":         "https://grafana.com/api/plugins/marcusolsson-json-datasource/versions/1.3.6/download;marcusolsson-json-datasource",
+		filenameProviders: dashboardProvidersYaml,
+		scriptsName:       downloadVMDSsh,
+	},
 }
 
 const (
 	PrometheusDataSourceName      = "Prometheus"
+	PrometheusDataSourceID        = "prometheus"
 	VictoriaMetricsDataSourceName = "VictoriaMetrics"
 	VictoriaMetricsDataSourceID   = "victoriametrics-datasource"
 )
-
-func (d *DashSource) Validate() error {
-	if _, err := url.Parse(d.URL); err != nil {
-		return fmt.Errorf("url %s - %s: %w", d.Name, d.URL, err)
-	}
-
-	if d.Name == "" {
-		return fmt.Errorf("dashboard %s: name undefined", d.URL)
-	}
-	n := d.Name
-	n = strings.ReplaceAll(n, " ", "-")
-	n = strings.ReplaceAll(n, "/", "_")
-
-	switch d.Source {
-	case PrometheusDataSourceName:
-	case VictoriaMetricsDataSourceName:
-	default:
-		return fmt.Errorf("datasource %v: %s", d.Name, d.Source)
-	}
-	return nil
-}
-
-const dashboardProvidersYaml = `
-apiVersion: 1
-providers:
-- disableDeletion: false
-  editable: true
-  folder: ""
-  name: default
-  options:
-    path: /var/lib/grafana/dashboards/default
-  orgId: 1
-  type: file
-`
 
 const grafanaINI = `
 [plugins]
@@ -455,21 +422,23 @@ var VolumeMountGrafanaIni = corev1.VolumeMount{
 	SubPath:   "grafana.ini",
 }
 
+const dashboardProvidersYaml = `
+apiVersion: 1
+providers:
+- disableDeletion: false
+  editable: true
+  folder: ""
+  name: default
+  options:
+    path: /var/lib/grafana/dashboards/default
+  orgId: 1
+  type: file
+`
+
 var VolumeDashProvider = corev1.VolumeMount{
 	MountPath: "/etc/grafana/provisioning/dashboards/sc-" + filenameProviders,
 	Name:      GrafCAM.VolumeMount.Name,
 	SubPath:   filenameProviders,
-}
-
-var GrafCAM = ku.ConfigAndMount{
-	ObjectMeta:  Graf.ObjectMeta(),
-	VolumeMount: corev1.VolumeMount{Name: "config"},
-	Data: map[string]string{
-		"grafana.ini":     grafanaINI,
-		"plugins":         "https://grafana.com/api/plugins/marcusolsson-json-datasource/versions/1.3.6/download;marcusolsson-json-datasource",
-		filenameProviders: dashboardProvidersYaml,
-		scriptsName:       downloadVMDSsh,
-	},
 }
 
 const filenameProviders = "dashboardproviders.yaml"
@@ -553,7 +522,7 @@ var GrafDSConfig = GrafDSConfigFile{
 		},
 		{
 			Name:      PrometheusDataSourceName,
-			Type:      "prometheus",
+			Type:      PrometheusDataSourceID,
 			Access:    "proxy",
 			IsDefault: false,
 			URL: fmt.Sprintf(
@@ -575,7 +544,7 @@ func YamlMust(a any) string {
 }
 
 var GrafanaDataSource = ku.ConfigAndMount{
-	ObjectMeta:  Graf.ObjectMetaNameSuffix("datasources"),
+	ObjectMeta:  PatchDataSourceLabels(Graf.ObjectMetaNameSuffix("datasources")),
 	VolumeMount: corev1.VolumeMount{},
 	Data:        map[string]string{"datasource.yaml": YamlMust(GrafDSConfig)},
 }

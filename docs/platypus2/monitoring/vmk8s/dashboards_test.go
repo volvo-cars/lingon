@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,6 +26,33 @@ const (
 	vmRepo    = "/VictoriaMetrics/VictoriaMetrics/master"
 	dotdcRepo = "/dotdc/grafana-dashboards-kubernetes/master"
 )
+
+type DashSource struct {
+	Name   string
+	URL    string
+	Source string
+}
+
+func (d *DashSource) Validate() error {
+	if _, err := url.Parse(d.URL); err != nil {
+		return fmt.Errorf("url %s - %s: %w", d.Name, d.URL, err)
+	}
+
+	if d.Name == "" {
+		return fmt.Errorf("dashboard %s: name undefined", d.URL)
+	}
+	n := d.Name
+	n = strings.ReplaceAll(n, " ", "-")
+	n = strings.ReplaceAll(n, "/", "_")
+
+	switch d.Source {
+	case PrometheusDataSourceName:
+	case VictoriaMetricsDataSourceName:
+	default:
+		return fmt.Errorf("datasource %v: %s", d.Name, d.Source)
+	}
+	return nil
+}
 
 var srcDash = []DashSource{
 	// VICTORIA METRICS DASHBOARDS URLS
