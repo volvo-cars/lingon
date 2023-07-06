@@ -9,14 +9,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const dnsRoleName = AppName + "-dns"
-
 var DnsRole = &rbacv1.Role{
 	TypeMeta: kubeutil.TypeRoleV1,
 	ObjectMeta: metav1.ObjectMeta{
-		Name:      dnsRoleName,
+		Name:      KA.Name + "-dns",
 		Namespace: kubeutil.NSKubeSystem,
-		Labels:    commonLabels,
+		Labels:    KA.Labels(),
 	},
 	Rules: []rbacv1.PolicyRule{
 		{
@@ -31,51 +29,47 @@ var DnsRole = &rbacv1.Role{
 var DnsRoleBinding = &rbacv1.RoleBinding{
 	TypeMeta: kubeutil.TypeRoleBindingV1,
 	ObjectMeta: metav1.ObjectMeta{
-		Name:      dnsRoleName,
+		Name:      KA.Name + "-dns",
 		Namespace: kubeutil.NSKubeSystem,
-		Labels:    commonLabels,
+		Labels:    KA.Labels(),
 	},
-	Subjects: kubeutil.RoleSubject(AppName, Namespace),
+	Subjects: kubeutil.RoleSubject(KA.Name, KA.Namespace),
 	RoleRef:  kubeutil.RoleRef(DnsRole.Name),
 }
 
 var Role = &rbacv1.Role{
-	TypeMeta: kubeutil.TypeRoleV1,
-	ObjectMeta: metav1.ObjectMeta{
-		Name:      AppName,
-		Namespace: Namespace,
-		Labels:    commonLabels,
-	},
+	TypeMeta:   kubeutil.TypeRoleV1,
+	ObjectMeta: KA.ObjectMeta(),
 	Rules: []rbacv1.PolicyRule{
 		{
-			Verbs:     []string{"get", "watch"},
 			APIGroups: []string{"coordination.k8s.io"},
 			Resources: []string{"leases"},
+			Verbs:     []string{"get", "watch"},
 		},
 		{
-			Verbs:     []string{"get", "list", "watch"},
 			APIGroups: []string{""},
 			Resources: []string{"configmaps", "namespaces", "secrets"},
+			Verbs:     []string{"get", "list", "watch"},
 		},
 		{
-			Verbs:         []string{"update"},
 			APIGroups:     []string{""},
 			Resources:     []string{"secrets"},
+			Verbs:         []string{"update"},
 			ResourceNames: []string{CertSecret.Name},
 		},
 		{
-			Verbs:     []string{"update", "patch", "delete"},
 			APIGroups: []string{""},
 			Resources: []string{"configmaps"},
+			Verbs:     []string{"update", "patch", "delete"},
 			ResourceNames: []string{
-				ConfigName,
+				KA.ConfigName,
 				LoggingConfig.Name,
 			},
 		},
 		{
-			Verbs:     []string{"patch", "update"},
 			APIGroups: []string{"coordination.k8s.io"},
 			Resources: []string{"leases"},
+			Verbs:     []string{"patch", "update"},
 			ResourceNames: []string{
 				"karpenter-leader-election",
 				"webhook.configmapwebhook.00-of-01",
@@ -85,14 +79,14 @@ var Role = &rbacv1.Role{
 			},
 		},
 		{
-			Verbs:     []string{"create"},
 			APIGroups: []string{"coordination.k8s.io"},
 			Resources: []string{"leases"},
+			Verbs:     []string{"create"},
 		},
 		{
-			Verbs:     []string{"create"},
 			APIGroups: []string{""},
 			Resources: []string{"configmaps"},
+			Verbs:     []string{"create"},
 		},
 	},
 }

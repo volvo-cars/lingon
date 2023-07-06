@@ -76,7 +76,7 @@ func newIAMRole(
 	queue *aws.SqsQueue,
 ) IAMRole {
 	assumeRolePolicy := aws.NewDataIamPolicyDocument(
-		"karpenter_assume_role", aws.DataIamPolicyDocumentArgs{
+		KA.Name+"_assume_role", aws.DataIamPolicyDocumentArgs{
 			Statement: []dataiampolicydocument.Statement{
 				{
 					Actions: terra.Set(S("sts:AssumeRoleWithWebIdentity")),
@@ -93,8 +93,8 @@ func newIAMRole(
 							Values: terra.ListString(
 								fmt.Sprintf(
 									"system:serviceaccount:%s:%s",
-									Namespace,
-									AppName,
+									KA.Namespace,
+									KA.Name,
 								),
 							),
 						},
@@ -109,7 +109,7 @@ func newIAMRole(
 		},
 	)
 	policy := aws.NewDataIamPolicyDocument(
-		"karpenter", aws.DataIamPolicyDocumentArgs{
+		KA.Name, aws.DataIamPolicyDocumentArgs{
 			Statement: []dataiampolicydocument.Statement{
 				{
 					Actions: terra.SetString(
@@ -149,9 +149,7 @@ func newIAMRole(
 					},
 				},
 				{
-					Actions: terra.SetString(
-						"eks:DescribeCluster",
-					),
+					Actions:   terra.SetString("eks:DescribeCluster"),
 					Effect:    S("Allow"),
 					Resources: terra.SetString(opts.ClusterARN),
 				},
@@ -159,9 +157,7 @@ func newIAMRole(
 				// The Karpenter IRSA role has to have permission to pass on the
 				// InstanceProfile IAM Role
 				{
-					Actions: terra.SetString(
-						"iam:PassRole",
-					),
+					Actions:   terra.SetString("iam:PassRole"),
 					Effect:    S("Allow"),
 					Resources: terra.Set(ipRole.Attributes().Arn()),
 				},
@@ -181,14 +177,14 @@ func newIAMRole(
 		},
 	)
 	role := aws.NewIamRole(
-		AppName, aws.IamRoleArgs{
+		KA.Name, aws.IamRoleArgs{
 			Name:             S(opts.Name + "-controller"),
 			Description:      S("IAM Role for Karpenter Controller (pod) to assume"),
 			AssumeRolePolicy: assumeRolePolicy.Attributes().Json(),
 
 			InlinePolicy: []iamrole.InlinePolicy{
 				{
-					Name:   S(AppName),
+					Name:   S(KA.Name),
 					Policy: policy.Attributes().Json(),
 				},
 			},
@@ -203,7 +199,7 @@ func newIAMRole(
 
 func newNodeTerminationQueue(opts InfraOpts) NodeTerminationQueue {
 	queue := aws.NewSqsQueue(
-		AppName, aws.SqsQueueArgs{
+		KA.Name, aws.SqsQueueArgs{
 			Name:                    S(opts.Name),
 			MessageRetentionSeconds: terra.Number(300),
 		},
@@ -229,7 +225,7 @@ func newNodeTerminationQueue(opts InfraOpts) NodeTerminationQueue {
 		},
 	)
 	queuePolicy := aws.NewSqsQueuePolicy(
-		AppName, aws.SqsQueuePolicyArgs{
+		KA.Name, aws.SqsQueuePolicyArgs{
 			QueueUrl: queue.Attributes().Url(),
 			Policy:   policyDoc.Attributes().Json(),
 		},

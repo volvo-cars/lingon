@@ -11,7 +11,7 @@ import (
 
 var CanUpdateWebhooks = &rbacv1.ClusterRole{
 	TypeMeta:   kubeutil.TypeClusterRoleV1,
-	ObjectMeta: metav1.ObjectMeta{Name: AppName, Labels: commonLabels},
+	ObjectMeta: KA.ObjectMetaNoNS(),
 	Rules: []rbacv1.PolicyRule{
 		{
 			Verbs: []string{
@@ -46,8 +46,7 @@ var CanUpdateWebhooks = &rbacv1.ClusterRole{
 var CoreCr = &rbacv1.ClusterRole{
 	TypeMeta: kubeutil.TypeClusterRoleV1,
 	ObjectMeta: metav1.ObjectMeta{
-		Name:   AppName + "-core",
-		Labels: commonLabels,
+		Name: KA.Name + "-core", Labels: KA.Labels(),
 	},
 	Rules: []rbacv1.PolicyRule{
 		{
@@ -147,7 +146,8 @@ var AdminCr = &rbacv1.ClusterRole{
 	TypeMeta: kubeutil.TypeClusterRoleV1,
 	ObjectMeta: metav1.ObjectMeta{
 		Name: "karpenter-admin",
-		Labels: appendCommonLabels(
+		Labels: kubeutil.MergeLabels(
+			KA.Labels(),
 			map[string]string{
 				// Add these permissions to the "admin" default roles
 				kubeutil.LabelRbacAggregateToAdmin: "true",

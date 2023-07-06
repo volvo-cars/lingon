@@ -25,8 +25,9 @@ type ProvisionersOpts struct {
 }
 
 func NewProvisioners(opts ProvisionersOpts) *Provisioners {
+	// Scale down nodes after X seconds without workloads (excluding daemons).
 	var ttlSecondsAfterEmpty int64 = 30
-	// Kill each node after one hour, testing this feature a bit
+	// Kill each node after X seconds, testing this feature a bit.
 	var ttlSecondsUntilExpired int64 = 3600
 
 	nodeTmpl := v1alpha1.AWSNodeTemplate{
@@ -34,9 +35,7 @@ func NewProvisioners(opts ProvisionersOpts) *Provisioners {
 			Kind:       "AWSNodeTemplate",
 			APIVersion: "karpenter.k8s.aws/v1alpha1",
 		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "default",
-		},
+		ObjectMeta: metav1.ObjectMeta{Name: KA.ProfileName},
 		Spec: v1alpha1.AWSNodeTemplateSpec{
 			AWS: v1alpha1.AWS{
 				SubnetSelector: map[string]string{
@@ -57,21 +56,11 @@ func NewProvisioners(opts ProvisionersOpts) *Provisioners {
 			Kind:       "Provisioner",
 			APIVersion: "karpenter.sh/v1alpha5",
 		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "default",
-		},
+		ObjectMeta: metav1.ObjectMeta{Name: KA.ProfileName},
 		Spec: v1alpha5.ProvisionerSpec{
-			ProviderRef: &v1alpha5.MachineTemplateRef{
-				Name: nodeTmpl.Name,
-			},
-			// Taints: []corev1.Taint{
-			// 	// {Key: , Value: , Effect: , TimeAdded: },
-			// },
-			// Labels: map[string]string{
-			//
-			// },
+			ProviderRef: &v1alpha5.MachineTemplateRef{Name: nodeTmpl.Name},
 			Requirements: []corev1.NodeSelectorRequirement{
-				// see https://karpenter.sh/v0.27.3/concepts/provisioners/
+				// see https://karpenter.sh/v0.29.0/concepts/provisioners/
 				{
 					Key:      "karpenter.k8s.aws/instance-category",
 					Operator: corev1.NodeSelectorOpIn,

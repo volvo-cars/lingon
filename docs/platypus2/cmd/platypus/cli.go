@@ -378,7 +378,7 @@ func run(p runParams) error {
 		kapProvisioners,
 		"karpenter-provisioners",
 		kctlOpts,
-		serverSide,
+		// serverSide,
 		"apply", "-f", "-",
 	); err != nil {
 		return err
@@ -487,7 +487,7 @@ func run(p runParams) error {
 	}
 
 	StepSep("end")
-
+	//
 	// This needs to come last,
 	// in case the state is in sync but destroy flag was passed
 	if p.Destroy {

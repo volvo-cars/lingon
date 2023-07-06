@@ -10,22 +10,18 @@ import (
 )
 
 var CertSecret = &corev1.Secret{
-	TypeMeta: kubeutil.TypeSecretV1,
-	ObjectMeta: metav1.ObjectMeta{
-		Name:      AppName + "-cert",
-		Namespace: Namespace,
-		Labels:    commonLabels,
-	},
-	Data: map[string][]byte{}, // Injected by karpenter-webhook
+	TypeMeta:   kubeutil.TypeSecretV1,
+	ObjectMeta: KA.ObjectMetaNameSuffix("cert"),
+	Data:       map[string][]byte{}, // Injected by karpenter-webhook
 }
 
 func GlobalSettings(opts Opts) *corev1.ConfigMap {
 	return &corev1.ConfigMap{
 		TypeMeta: kubeutil.TypeConfigMapV1,
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      ConfigName,
-			Namespace: Namespace,
-			Labels:    commonLabels,
+			Name:      KA.ConfigName,
+			Namespace: KA.Namespace,
+			Labels:    KA.Labels(),
 		},
 		Data: map[string]string{
 			"aws.clusterEndpoint":            opts.ClusterEndpoint,
@@ -47,8 +43,8 @@ var LoggingConfig = &corev1.ConfigMap{
 	TypeMeta: kubeutil.TypeConfigMapV1,
 	ObjectMeta: metav1.ObjectMeta{
 		Name:      "config-logging",
-		Namespace: Namespace,
-		Labels:    commonLabels,
+		Namespace: KA.Namespace,
+		Labels:    KA.Labels(),
 	},
 	Data: map[string]string{
 		"loglevel.webhook":  "error",

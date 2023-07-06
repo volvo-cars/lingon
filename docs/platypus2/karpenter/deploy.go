@@ -15,27 +15,72 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+var Svc = &corev1.Service{
+	TypeMeta:   ku.TypeServiceV1,
+	ObjectMeta: KA.ObjectMeta(),
+	Spec: corev1.ServiceSpec{
+		Type:     corev1.ServiceTypeClusterIP,
+		Selector: KA.MatchLabels(),
+		Ports: []corev1.ServicePort{
+			KA.Metrics.Service,
+			KA.Webhook.Service,
+		},
+	},
+}
+
 const containerName = "controller"
 
 var Deploy = &appsv1.Deployment{
-	TypeMeta: ku.TypeDeploymentV1,
-	ObjectMeta: metav1.ObjectMeta{
-		Name:      AppName,
-		Namespace: Namespace,
-		Labels:    commonLabels,
-	},
+	TypeMeta:   ku.TypeDeploymentV1,
+	ObjectMeta: KA.ObjectMeta(),
 	Spec: appsv1.DeploymentSpec{
 		Replicas: P(int32(2)),
-		Selector: &metav1.LabelSelector{MatchLabels: matchLabels},
+		Selector: &metav1.LabelSelector{MatchLabels: KA.MatchLabels()},
 		Template: corev1.PodTemplateSpec{
-			ObjectMeta: metav1.ObjectMeta{Labels: matchLabels},
+			ObjectMeta: metav1.ObjectMeta{Labels: KA.MatchLabels()},
 			Spec: corev1.PodSpec{
 				Containers: []corev1.Container{
 					{
-						Name:            containerName,
-						Image:           ImgController,
-						Ports:           ContainerPorts,
-						Env:             Environment,
+						Name:  containerName,
+						Image: KA.Img.URL(),
+						Ports: []corev1.ContainerPort{
+							KA.Probe.Container,
+							KA.Metrics.Container,
+							KA.Webhook.Container,
+						},
+						Env: []corev1.EnvVar{
+							{
+								Name:  "KUBERNETES_MIN_VERSION",
+								Value: KA.KubeMinVer,
+							},
+							{Name: "KARPENTER_SERVICE", Value: Svc.Name},
+							{
+								Name:  "WEBHOOK_PORT",
+								Value: d32(KA.Webhook.Container.ContainerPort),
+							},
+							{
+								Name:  "METRICS_PORT",
+								Value: d32(KA.Metrics.Container.ContainerPort),
+							},
+							{
+								Name:  "HEALTH_PROBE_PORT",
+								Value: d32(KA.Probe.Container.ContainerPort),
+							},
+							ku.EnvVarDownAPI(
+								"SYSTEM_NAMESPACE",
+								"metadata.namespace",
+							),
+							{
+								Name: "MEMORY_LIMIT",
+								ValueFrom: &corev1.EnvVarSource{
+									ResourceFieldRef: &corev1.ResourceFieldSelector{
+										ContainerName: containerName,
+										Resource:      "limits.memory",
+										Divisor:       resource.MustParse("0"),
+									},
+								},
+							},
+						},
 						Resources:       ku.Resources("1", "1Gi", "1", "1Gi"),
 						LivenessProbe:   probe("/healthz", 30),
 						ReadinessProbe:  probe("/readyz", 0),
@@ -44,7 +89,7 @@ var Deploy = &appsv1.Deployment{
 				},
 				DNSPolicy:          corev1.DNSDefault,
 				NodeSelector:       map[string]string{ku.LabelOSStable: "linux"},
-				ServiceAccountName: "karpenter",
+				ServiceAccountName: "TO_BE_SET_IN_NEW",
 				SecurityContext:    &corev1.PodSecurityContext{FSGroup: P(int64(1000))},
 				Affinity:           SetNodeAffinity,
 				Tolerations: []corev1.Toleration{
@@ -59,13 +104,16 @@ var Deploy = &appsv1.Deployment{
 						MaxSkew:           1,
 						TopologyKey:       ku.LabelTopologyZone,
 						WhenUnsatisfiable: corev1.UnsatisfiableConstraintAction("ScheduleAnyway"),
-						LabelSelector:     &metav1.LabelSelector{MatchLabels: matchLabels},
+						LabelSelector:     &metav1.LabelSelector{MatchLabels: KA.MatchLabels()},
 					},
 				},
 			},
 		},
-		Strategy:             appsv1.DeploymentStrategy{RollingUpdate: &appsv1.RollingUpdateDeployment{MaxUnavailable: &intstr.IntOrString{IntVal: 1}}},
-		RevisionHistoryLimit: P(int32(10)),
+		Strategy: appsv1.DeploymentStrategy{
+			RollingUpdate: &appsv1.RollingUpdateDeployment{
+				MaxUnavailable: P(intstr.FromInt(1)),
+			},
+		},
 	},
 }
 
@@ -74,48 +122,14 @@ var Pdb = &policyv1.PodDisruptionBudget{
 		Kind:       "PodDisruptionBudget",
 		APIVersion: "policy/v1",
 	},
-	ObjectMeta: metav1.ObjectMeta{Name: AppName, Namespace: Namespace},
+	ObjectMeta: KA.ObjectMeta(),
 	Spec: policyv1.PodDisruptionBudgetSpec{
-		Selector:       &metav1.LabelSelector{MatchLabels: matchLabels},
+		Selector:       &metav1.LabelSelector{MatchLabels: KA.MatchLabels()},
 		MaxUnavailable: P(intstr.FromInt(1)),
 	},
 }
 
-var ContainerPorts = []corev1.ContainerPort{
-	{
-		Name:          PortNameMetrics,
-		ContainerPort: PortMetrics,
-	},
-	{
-		Name:          PortNameProbe,
-		ContainerPort: PortProbe,
-	},
-	{
-		Name:          PortNameWebhook,
-		ContainerPort: PortWebhookCtnr,
-	},
-}
-
-var kS = func(p int) string { return fmt.Sprintf("%d", p) }
-
-var Environment = []corev1.EnvVar{
-	{Name: "KUBERNETES_MIN_VERSION", Value: "1.19.0-0"},
-	{Name: "KARPENTER_SERVICE", Value: Svc.Name},
-	{Name: "WEBHOOK_PORT", Value: kS(PortWebhookCtnr)},
-	{Name: "METRICS_PORT", Value: kS(PortMetrics)},
-	{Name: "HEALTH_PROBE_PORT", Value: kS(PortProbe)},
-	ku.EnvVarDownAPI("SYSTEM_NAMESPACE", "metadata.namespace"),
-	{
-		Name: "MEMORY_LIMIT",
-		ValueFrom: &corev1.EnvVarSource{
-			ResourceFieldRef: &corev1.ResourceFieldSelector{
-				ContainerName: containerName,
-				Resource:      "limits.memory",
-				Divisor:       resource.MustParse("0"),
-			},
-		},
-	},
-}
+var d32 = func(p int32) string { return fmt.Sprintf("%d", p) }
 
 var SetNodeAffinity = &corev1.Affinity{
 	NodeAffinity: &corev1.NodeAffinity{
@@ -135,10 +149,8 @@ var SetNodeAffinity = &corev1.Affinity{
 	PodAntiAffinity: &corev1.PodAntiAffinity{
 		RequiredDuringSchedulingIgnoredDuringExecution: []corev1.PodAffinityTerm{
 			{
-				LabelSelector: &metav1.LabelSelector{
-					MatchLabels: matchLabels,
-				},
-				TopologyKey: ku.LabelHostname,
+				LabelSelector: &metav1.LabelSelector{MatchLabels: KA.MatchLabels()},
+				TopologyKey:   ku.LabelHostname,
 			},
 		},
 	},
@@ -149,7 +161,7 @@ func probe(path string, initDelaySec int) *corev1.Probe {
 		ProbeHandler: corev1.ProbeHandler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Path: path,
-				Port: intstr.FromString(PortNameProbe),
+				Port: intstr.FromString(KA.Probe.Container.Name),
 			},
 		},
 		TimeoutSeconds:      int32(30),

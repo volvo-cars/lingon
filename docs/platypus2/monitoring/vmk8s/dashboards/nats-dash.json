@@ -143,10 +143,10 @@
             "type": "victoriametrics-datasource",
             "uid": "${datasource}"
           },
-          "expr": "gnatsd_varz_cpu",
+          "expr": "nats_varz_cpu",
           "intervalFactor": 2,
           "legendFormat": "{{server_id}}",
-          "metric": "gnatsd_varz_cpu",
+          "metric": "nats_varz_cpu",
           "refId": "A",
           "step": 4
         }
@@ -243,10 +243,10 @@
             "type": "victoriametrics-datasource",
             "uid": "${datasource}"
           },
-          "expr": "gnatsd_varz_mem",
+          "expr": "nats_varz_mem",
           "intervalFactor": 2,
           "legendFormat": "{{server_id}}",
-          "metric": "gnatsd_varz_mem",
+          "metric": "nats_varz_mem",
           "refId": "A",
           "step": 4
         }
@@ -367,10 +367,10 @@
             "type": "victoriametrics-datasource",
             "uid": "${datasource}"
           },
-          "expr": "gnatsd_varz_in_bytes",
+          "expr": "nats_varz_in_bytes",
           "intervalFactor": 2,
           "legendFormat": "{{server_id}}",
-          "metric": "gnatsd_varz_in_bytes",
+          "metric": "nats_varz_in_bytes",
           "refId": "A",
           "step": 10
         }
@@ -465,10 +465,10 @@
             "type": "victoriametrics-datasource",
             "uid": "${datasource}"
           },
-          "expr": "gnatsd_varz_in_msgs",
+          "expr": "nats_varz_in_msgs",
           "intervalFactor": 2,
           "legendFormat": "{{server_id}}",
-          "metric": "gnatsd_varz_in_msgs",
+          "metric": "nats_varz_in_msgs",
           "refId": "A",
           "step": 10
         }
@@ -563,10 +563,10 @@
             "type": "victoriametrics-datasource",
             "uid": "${datasource}"
           },
-          "expr": "gnatsd_varz_out_bytes",
+          "expr": "nats_varz_out_bytes",
           "intervalFactor": 2,
           "legendFormat": "{{server_id}}",
-          "metric": "gnatsd_varz_out_bytes",
+          "metric": "nats_varz_out_bytes",
           "refId": "A",
           "step": 10
         }
@@ -661,10 +661,10 @@
             "type": "victoriametrics-datasource",
             "uid": "${datasource}"
           },
-          "expr": "gnatsd_varz_out_msgs",
+          "expr": "nats_varz_out_msgs",
           "intervalFactor": 2,
           "legendFormat": "{{server_id}}",
-          "metric": "gnatsd_varz_out_msgs",
+          "metric": "nats_varz_out_msgs",
           "refId": "A",
           "step": 10
         }
@@ -788,10 +788,10 @@
             "type": "victoriametrics-datasource",
             "uid": "${datasource}"
           },
-          "expr": "gnatsd_varz_connections",
+          "expr": "nats_varz_connections",
           "intervalFactor": 1,
           "legendFormat": "{{server_id}}",
-          "metric": "gnatsd_varz_connections",
+          "metric": "nats_varz_connections",
           "refId": "A",
           "step": 2
         }
@@ -889,11 +889,11 @@
             "type": "victoriametrics-datasource",
             "uid": "${datasource}"
           },
-          "expr": "gnatsd_varz_subscriptions",
+          "expr": "nats_varz_subscriptions",
           "hide": false,
           "intervalFactor": 2,
           "legendFormat": "{{server_id}}",
-          "metric": "gnatsd_varz_subscriptions",
+          "metric": "nats_varz_subscriptions",
           "refId": "A",
           "step": 4
         }
@@ -991,10 +991,10 @@
             "type": "victoriametrics-datasource",
             "uid": "${datasource}"
           },
-          "expr": "gnatsd_varz_slow_consumers",
+          "expr": "nats_varz_slow_consumers",
           "intervalFactor": 1,
           "legendFormat": "{{server_id}}",
-          "metric": "gnatsd_varz_slow_consumers",
+          "metric": "nats_varz_slow_consumers",
           "refId": "A",
           "step": 2
         }

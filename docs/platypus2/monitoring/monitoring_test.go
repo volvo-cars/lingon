@@ -11,9 +11,9 @@ import (
 	tu "github.com/volvo-cars/lingon/pkg/testutil"
 	"github.com/volvo-cars/lingoneks/monitoring/metricsserver"
 	"github.com/volvo-cars/lingoneks/monitoring/promcrd"
+	"github.com/volvo-cars/lingoneks/monitoring/vmcrd"
 	"github.com/volvo-cars/lingoneks/monitoring/vmk8s"
 	"github.com/volvo-cars/lingoneks/monitoring/vmop"
-	"github.com/volvo-cars/lingoneks/monitoring/vmop/vmcrd"
 )
 
 func TestMonitoringExport(t *testing.T) {

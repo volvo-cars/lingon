@@ -86,7 +86,7 @@
             "type": "victoriametrics-datasource",
             "uid": "${datasource}"
           },
-          "expr": "sum(gnatsd_varz_jetstream_stats_storage{server_id=~\"$server\"})/sum(gnatsd_varz_jetstream_config_max_storage{server_id=~\"$server\"})",
+          "expr": "sum(nats_varz_jetstream_stats_storage{server_id=~\"$server\"})/sum(nats_varz_jetstream_config_max_storage{server_id=~\"$server\"})",
           "interval": "",
           "legendFormat": "",
           "refId": "A"
@@ -155,7 +155,7 @@
             "type": "victoriametrics-datasource",
             "uid": "${datasource}"
           },
-          "expr": "sum(gnatsd_varz_jetstream_stats_storage{server_id=~\"$server\"})",
+          "expr": "sum(nats_varz_jetstream_stats_storage{server_id=~\"$server\"})",
           "interval": "",
           "legendFormat": "",
           "refId": "A"
@@ -222,7 +222,7 @@
             "type": "victoriametrics-datasource",
             "uid": "${datasource}"
           },
-          "expr": "sum(gnatsd_varz_jetstream_stats_memory{server_id=~\"$server\"})/sum(gnatsd_varz_jetstream_config_max_memory{server_id=~\"$server\"})",
+          "expr": "sum(nats_varz_jetstream_stats_memory{server_id=~\"$server\"})/sum(nats_varz_jetstream_config_max_memory{server_id=~\"$server\"})",
           "interval": "",
           "legendFormat": "",
           "refId": "A"
@@ -291,7 +291,7 @@
             "type": "victoriametrics-datasource",
             "uid": "${datasource}"
           },
-          "expr": "sum(gnatsd_varz_jetstream_stats_memory{server_id=~\"$server\"})",
+          "expr": "sum(nats_varz_jetstream_stats_memory{server_id=~\"$server\"})",
           "interval": "",
           "legendFormat": "",
           "refId": "A"
@@ -354,7 +354,7 @@
             "type": "victoriametrics-datasource",
             "uid": "${datasource}"
           },
-          "expr": "sum(gnatsd_varz_connections{server_id=~\"$server\"})",
+          "expr": "sum(nats_varz_connections{server_id=~\"$server\"})",
           "interval": "",
           "legendFormat": "",
           "refId": "A"
@@ -413,7 +413,7 @@
             "type": "victoriametrics-datasource",
             "uid": "${datasource}"
           },
-          "expr": "sum(gnatsd_varz_jetstream_config_max_storage{server_id=~\"$server\"})",
+          "expr": "sum(nats_varz_jetstream_config_max_storage{server_id=~\"$server\"})",
           "interval": "",
           "legendFormat": "",
           "refId": "A"
@@ -472,7 +472,7 @@
             "type": "victoriametrics-datasource",
             "uid": "${datasource}"
           },
-          "expr": "sum(gnatsd_varz_jetstream_config_max_memory{server_id=~\"$server\"})",
+          "expr": "sum(nats_varz_jetstream_config_max_memory{server_id=~\"$server\"})",
           "interval": "",
           "legendFormat": "",
           "refId": "A"

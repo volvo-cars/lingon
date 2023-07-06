@@ -174,7 +174,7 @@ function manifests() {
   #
   helm template karpenter oci://public.ecr.aws/karpenter/karpenter --namespace=karpenter \
     --create-namespace \
-    --version "v0.27.5" \
+    --version "v0.29.0" \
     --set serviceAccount.annotations."eks\.amazonaws\.com/role-arn"=REPLACE_ME_KARPENTER_IAM_ROLE_ARN \
     --set settings.aws.clusterName=REPLACE_ME_CLUSTER_NAME \
     --set settings.aws.defaultInstanceProfile=KarpenterNodeInstanceProfile-REPLACE_ME_CLUSTER_NAME \
