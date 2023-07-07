@@ -26,8 +26,8 @@ command -v git > /dev/null
 command -v wget > /dev/null
 
 ROOT_DIR=$(git rev-parse --show-toplevel)
-VALUES_DIR="$ROOT_DIR"/docs/platypus2/scripts
-TEMPD="$VALUES_DIR"/out
+VALUES_DIR="$ROOT_DIR"/docs/platypus2/scripts/values
+TEMPD="$ROOT_DIR"/docs/platypus2/scripts/out
 KYGO="$TEMPD"/kygo
 
 DEBUG=1
@@ -65,6 +65,7 @@ function install_repo() {
   helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
   helm repo add vector https://helm.vector.dev
   helm repo add vm https://victoriametrics.github.io/helm-charts/
+  helm repo add sigstore https://sigstore.github.io/helm-charts
 
 
   helm repo update
@@ -153,6 +154,13 @@ function manifests() {
   # VECTOR
   helm template vector vector/vector --namespace=monitoring --values "$VALUES_DIR"/vector.values.yaml | \
     $KYGO -out "monitoring/vector" -app vector -pkg vector
+
+
+  # SIGSTORE
+  # see example video: https://youtu.be/hzIcrMBYx9M
+  helm template sigstore sigstore/policy-controller --namespace=sigstore --values "$VALUES_DIR"/sigstore-pc.values.yaml | \
+    $KYGO -out "sigstore/policy" -app policy-controller -pkg policy
+
 
   #
   # NATS
