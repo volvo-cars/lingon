@@ -20,7 +20,7 @@ var WebhookMutatingKarpenterAws = &ar.MutatingWebhookConfiguration{
 	TypeMeta: kubeutil.TypeMutatingWebhookConfigurationV1,
 	ObjectMeta: metav1.ObjectMeta{
 		Name:   "defaulting.webhook.karpenter.k8s.aws",
-		Labels: commonLabels,
+		Labels: KA.Labels(),
 	},
 	Webhooks: []ar.MutatingWebhook{
 		{
@@ -30,8 +30,9 @@ var WebhookMutatingKarpenterAws = &ar.MutatingWebhookConfiguration{
 			AdmissionReviewVersions: []string{"v1"},
 			ClientConfig: ar.WebhookClientConfig{
 				Service: &ar.ServiceReference{
-					Namespace: Svc.Namespace,
 					Name:      Svc.Name,
+					Namespace: Svc.Namespace,
+					Port:      P(KA.Webhook.Service.Port),
 				},
 			},
 			Rules: []ar.RuleWithOperations{
@@ -69,7 +70,7 @@ var WebhookValidationKarpenterConfig = &ar.ValidatingWebhookConfiguration{
 	TypeMeta: kubeutil.TypeValidatingWebhookConfigurationV1,
 	ObjectMeta: metav1.ObjectMeta{
 		Name:   "validation.webhook.config.karpenter.sh",
-		Labels: commonLabels,
+		Labels: KA.Labels(),
 	},
 	Webhooks: []ar.ValidatingWebhook{
 		{
@@ -81,6 +82,7 @@ var WebhookValidationKarpenterConfig = &ar.ValidatingWebhookConfiguration{
 				Service: &ar.ServiceReference{
 					Namespace: Svc.Namespace,
 					Name:      Svc.Name,
+					Port:      P(KA.Webhook.Service.Port),
 				},
 			},
 			ObjectSelector: &metav1.LabelSelector{
@@ -95,7 +97,7 @@ var WebhookValidationKarpenter = &ar.ValidatingWebhookConfiguration{
 	TypeMeta: kubeutil.TypeValidatingWebhookConfigurationV1,
 	ObjectMeta: metav1.ObjectMeta{
 		Name:   "validation.webhook.karpenter.sh",
-		Labels: commonLabels,
+		Labels: KA.Labels(),
 	},
 	Webhooks: []ar.ValidatingWebhook{
 		{
@@ -107,6 +109,7 @@ var WebhookValidationKarpenter = &ar.ValidatingWebhookConfiguration{
 				Service: &ar.ServiceReference{
 					Namespace: Svc.Namespace,
 					Name:      Svc.Name,
+					Port:      P(KA.Webhook.Service.Port),
 				},
 			},
 			Rules: []ar.RuleWithOperations{
@@ -130,7 +133,7 @@ var WebhookValidationKarpenterAWS = &ar.ValidatingWebhookConfiguration{
 	TypeMeta: kubeutil.TypeValidatingWebhookConfigurationV1,
 	ObjectMeta: metav1.ObjectMeta{
 		Name:   "validation.webhook.karpenter.k8s.aws",
-		Labels: commonLabels,
+		Labels: KA.Labels(),
 	},
 	Webhooks: []ar.ValidatingWebhook{
 		{
@@ -142,6 +145,7 @@ var WebhookValidationKarpenterAWS = &ar.ValidatingWebhookConfiguration{
 				Service: &ar.ServiceReference{
 					Namespace: Svc.Namespace,
 					Name:      Svc.Name,
+					Port:      P(KA.Webhook.Service.Port),
 				},
 			},
 

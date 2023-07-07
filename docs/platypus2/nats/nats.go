@@ -35,8 +35,10 @@ var (
 func Core() Meta {
 	n := "nats"
 	ns := n
-	sideCarV := "0.10.1"
-	ver := "2.9.16"
+	promExporterV := "0.12.0"
+	// reloaderV := "0.11.0"
+	reloaderV := "latest"
+	ver := "2.9.19"
 
 	m := meta.Metadata{
 		Name:      n,
@@ -94,12 +96,12 @@ func Core() Meta {
 
 		// SIDE CAR
 		ConfigReloader: meta.ContainerImg{
-			Image: "nats-server-config-reloader",
-			Tag:   sideCarV,
+			Image: "natsio/nats-server-config-reloader",
+			Tag:   reloaderV,
 		},
 		PromExporter: meta.ContainerImg{
 			Image: "natsio/prometheus-nats-exporter",
-			Tag:   sideCarV,
+			Tag:   promExporterV,
 		},
 	}
 	// ConfigMap and Mount
@@ -260,6 +262,9 @@ var SVC = &corev1.Service{
 		Ports: []corev1.ServicePort{
 			N.Client.Service,
 			N.Cluster.Service,
+			N.Metrics.Service,
+			N.Monitor.Service,
+			N.Leaf.Service,
 		},
 		PublishNotReadyAddresses: true,
 		Selector:                 N.MatchLabels(),
@@ -390,9 +395,9 @@ var STS = &appsv1.StatefulSet{
 						ImagePullPolicy: corev1.PullIfNotPresent,
 						Args: []string{
 							// see https://github.com/nats-io/prometheus-nats-exporter/blob/main/main.go#L87
-							// "-connz",               // connection metrics
+							// "-connz", // connection metrics
 							"-connz_detailed",         // advanced connection metrics
-							"-jsz",                    // jetstream metrics
+							"-jsz=all",                // jetstream metrics
 							"-routez",                 // route metrics
 							"-subz",                   // subscription metrics
 							"-varz",                   // general metrics

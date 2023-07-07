@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -26,56 +27,112 @@ const (
 	dotdcRepo = "/dotdc/grafana-dashboards-kubernetes/master"
 )
 
+type DashSource struct {
+	Name   string
+	URL    string
+	Source string
+}
+
+func (d *DashSource) Validate() error {
+	if _, err := url.Parse(d.URL); err != nil {
+		return fmt.Errorf("url %s - %s: %w", d.Name, d.URL, err)
+	}
+
+	if d.Name == "" {
+		return fmt.Errorf("dashboard %s: name undefined", d.URL)
+	}
+	n := d.Name
+	n = strings.ReplaceAll(n, " ", "-")
+	n = strings.ReplaceAll(n, "/", "_")
+
+	switch d.Source {
+	case PrometheusDataSourceName:
+	case VictoriaMetricsDataSourceName:
+	default:
+		return fmt.Errorf("datasource %v: %s", d.Name, d.Source)
+	}
+	return nil
+}
+
 var srcDash = []DashSource{
 	// VICTORIA METRICS DASHBOARDS URLS
+	// {
+	// 	Name: "backupmanager.json",
+	// 	URL:  ghuc + vmRepo + "/dashboards/backupmanager.json",
+	// },
+	// {
+	// 	Name: "victoriametrics.json",
+	// 	URL:  ghuc + vmRepo + "/dashboards/victoriametrics.json",
+	// },
+	// {
+	// 	Name: "vmagent.json",
+	// 	URL:  ghuc + vmRepo + "/dashboards/vmagent.json",
+	// },
+	// {
+	// 	Name: "victoriametrics-cluster.json",
+	// 	URL:  ghuc + vmRepo + "/dashboards/victoriametrics-cluster.json",
+	// },
+	// {
+	// 	Name: "vmalert.json",
+	// 	URL:  ghuc + vmRepo + "/dashboards/vmalert.json",
+	// },
+	// {
+	// 	Name: "vm-operator.json",
+	// 	URL:  ghuc + vmRepo + "/dashboards/operator.json",
+	// },
+	// // KUBERNETES DASHBOARDS URLS
+	// {
+	// 	Name: "k8s-system-api-server.json",
+	// 	URL:  ghuc + dotdcRepo + "/dashboards/k8s-system-api-server.json",
+	// },
+	// {
+	// 	Name: "k8s-system-coredns.json",
+	// 	URL:  ghuc + dotdcRepo + "/dashboards/k8s-system-coredns.json",
+	// },
+	// {
+	// 	Name: "k8s-views-global.json",
+	// 	URL:  ghuc + dotdcRepo + "/dashboards/k8s-views-global.json",
+	// },
+	// {
+	// 	Name: "k8s-views-namespaces.json",
+	// 	URL:  ghuc + dotdcRepo + "/dashboards/k8s-views-namespaces.json",
+	// },
+	// {
+	// 	Name: "k8s-views-nodes.json",
+	// 	URL:  ghuc + dotdcRepo + "/dashboards/k8s-views-nodes.json",
+	// },
+	// {
+	// 	Name: "k8s-views-pods.json",
+	// 	URL:  ghuc + dotdcRepo + "/dashboards/k8s-views-pods.json",
+	// },
+	// {
+	// 	Name: "node-exporter-full.json",
+	// 	URL:  "https://grafana.com/api/dashboards/1860/revisions/22/download",
+	// },
+	// Karpenter dashboards
+	// {
+	// 	Name:   "karpenter-performance-dashboard.json",
+	// 	URL:    "https://raw.githubusercontent.com/aws/karpenter/main/website/content/en/v0.28/getting-started/getting-started-with-karpenter/karpenter-performance-dashboard.json",
+	// },
+	// {
+	// 	Name:   "karpenter-controllers.json",
+	// 	URL:    "https://raw.githubusercontent.com/aws/karpenter/main/website/content/en/v0.28/getting-started/getting-started-with-karpenter/karpenter-controllers.json",
+	// },
+	// {
+	// 	Name:   "karpenter-controllers-allocation.json",
+	// 	URL:    "https://raw.githubusercontent.com/aws/karpenter/main/website/content/en/v0.28/getting-started/getting-started-with-karpenter/karpenter-controllers-allocation.json",
+	// },
+	// {
+	// 	Name:   "karpenter-capacity-dashboard.json",
+	// 	URL:    "https://raw.githubusercontent.com/aws/karpenter/main/website/content/en/v0.28/getting-started/getting-started-with-karpenter/karpenter-capacity-dashboard.json",
+	// },
 	{
-		Name: "backupmanager.json",
-		URL:  ghuc + vmRepo + "/dashboards/backupmanager.json",
+		Name: "nats-dash.json",
+		URL:  "https://github.com/nats-io/prometheus-nats-exporter/raw/main/walkthrough/grafana-nats-dash.json",
 	},
 	{
-		Name: "victoriametrics.json",
-		URL:  ghuc + vmRepo + "/dashboards/victoriametrics.json",
-	},
-	{
-		Name: "vmagent.json",
-		URL:  ghuc + vmRepo + "/dashboards/vmagent.json",
-	},
-	{
-		Name: "victoriametrics-cluster.json",
-		URL:  ghuc + vmRepo + "/dashboards/victoriametrics-cluster.json",
-	},
-	{
-		Name: "vmalert.json",
-		URL:  ghuc + vmRepo + "/dashboards/vmalert.json",
-	},
-	{
-		Name: "vm-operator.json",
-		URL:  ghuc + vmRepo + "/dashboards/operator.json",
-	},
-	// KUBERNETES DASHBOARDS URLS
-	{
-		Name: "k8s-system-api-server.json",
-		URL:  ghuc + dotdcRepo + "/dashboards/k8s-system-api-server.json",
-	},
-	{
-		Name: "k8s-system-coredns.json",
-		URL:  ghuc + dotdcRepo + "/dashboards/k8s-system-coredns.json",
-	},
-	{
-		Name: "k8s-views-global.json",
-		URL:  ghuc + dotdcRepo + "/dashboards/k8s-views-global.json",
-	},
-	{
-		Name: "k8s-views-namespaces.json",
-		URL:  ghuc + dotdcRepo + "/dashboards/k8s-views-namespaces.json",
-	},
-	{
-		Name: "k8s-views-nodes.json",
-		URL:  ghuc + dotdcRepo + "/dashboards/k8s-views-nodes.json",
-	},
-	{
-		Name: "k8s-views-pods.json",
-		URL:  ghuc + dotdcRepo + "/dashboards/k8s-views-pods.json",
+		Name: "nats-jetstream-dash.json",
+		URL:  "https://github.com/nats-io/prometheus-nats-exporter/raw/main/walkthrough/grafana-jetstream-dash.json",
 	},
 }
 

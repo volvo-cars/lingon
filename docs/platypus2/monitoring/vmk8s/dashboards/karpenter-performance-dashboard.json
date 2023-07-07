@@ -1,0 +1,601 @@
+{
+    "annotations": {
+        "list": [
+            {
+                "builtIn": 1,
+                "datasource": "-- Grafana --",
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "target": {
+                    "limit": 100,
+                    "matchAny": false,
+                    "tags": [],
+                    "type": "dashboard"
+                },
+                "type": "dashboard"
+            }
+        ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "links": [],
+    "liveNow": true,
+    "panels": [
+        {
+            "datasource": {
+                "type": "victoriametrics-datasource",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "drawStyle": "line",
+                        "fillOpacity": 0,
+                        "gradientMode": "none",
+                        "hideFrom": {
+                            "legend": false,
+                            "tooltip": false,
+                            "viz": false
+                        },
+                        "lineInterpolation": "linear",
+                        "lineWidth": 1,
+                        "pointSize": 5,
+                        "scaleDistribution": {
+                            "type": "linear"
+                        },
+                        "showPoints": "never",
+                        "spanNulls": false,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                            "mode": "off"
+                        }
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    },
+                    "unit": "s"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 9,
+                "w": 24,
+                "x": 0,
+                "y": 0
+            },
+            "id": 4,
+            "options": {
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "mode": "single",
+                    "sort": "none"
+                }
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "victoriametrics-datasource",
+                        "uid": "${datasource}"
+                    },
+                    "editorMode": "code",
+                    "expr": "karpenter_nodes_termination_time_seconds{quantile=\"0\"}",
+                    "legendFormat": "Min",
+                    "range": true,
+                    "refId": "A"
+                },
+                {
+                    "datasource": {
+                        "type": "victoriametrics-datasource",
+                        "uid": "${datasource}"
+                    },
+                    "editorMode": "code",
+                    "expr": "karpenter_nodes_termination_time_seconds{quantile=\"0.5\"}",
+                    "hide": false,
+                    "legendFormat": "P50",
+                    "range": true,
+                    "refId": "B"
+                },
+                {
+                    "datasource": {
+                        "type": "victoriametrics-datasource",
+                        "uid": "${datasource}"
+                    },
+                    "editorMode": "code",
+                    "expr": "karpenter_nodes_termination_time_seconds{quantile=\"0.9\"}",
+                    "hide": false,
+                    "legendFormat": "P90",
+                    "range": true,
+                    "refId": "C"
+                },
+                {
+                    "datasource": {
+                        "type": "victoriametrics-datasource",
+                        "uid": "${datasource}"
+                    },
+                    "editorMode": "code",
+                    "expr": "karpenter_nodes_termination_time_seconds{quantile=\"0.99\"}",
+                    "hide": false,
+                    "legendFormat": "P99",
+                    "range": true,
+                    "refId": "D"
+                },
+                {
+                    "datasource": {
+                        "type": "victoriametrics-datasource",
+                        "uid": "${datasource}"
+                    },
+                    "editorMode": "code",
+                    "expr": "karpenter_nodes_termination_time_seconds{quantile=\"1\"}",
+                    "hide": false,
+                    "legendFormat": "Max",
+                    "range": true,
+                    "refId": "E"
+                }
+            ],
+            "title": "Node Termination Latency",
+            "type": "timeseries"
+        },
+        {
+            "datasource": {
+                "type": "victoriametrics-datasource",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "drawStyle": "line",
+                        "fillOpacity": 10,
+                        "gradientMode": "none",
+                        "hideFrom": {
+                            "legend": false,
+                            "tooltip": false,
+                            "viz": false
+                        },
+                        "lineInterpolation": "linear",
+                        "lineWidth": 1,
+                        "pointSize": 5,
+                        "scaleDistribution": {
+                            "type": "linear"
+                        },
+                        "showPoints": "never",
+                        "spanNulls": false,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                            "mode": "off"
+                        }
+                    },
+                    "mappings": [],
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    },
+                    "unit": "s"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 24,
+                "x": 0,
+                "y": 9
+            },
+            "id": 2,
+            "options": {
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "mode": "single",
+                    "sort": "none"
+                }
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "victoriametrics-datasource",
+                        "uid": "${datasource}"
+                    },
+                    "editorMode": "code",
+                    "expr": "karpenter_pods_startup_time_seconds{quantile=\"0\"}",
+                    "format": "time_series",
+                    "legendFormat": "Min",
+                    "range": true,
+                    "refId": "Minimum"
+                },
+                {
+                    "datasource": {
+                        "type": "victoriametrics-datasource",
+                        "uid": "${datasource}"
+                    },
+                    "editorMode": "code",
+                    "expr": "karpenter_pods_startup_time_seconds{quantile=\"0.5\"}",
+                    "hide": false,
+                    "legendFormat": "P50",
+                    "range": true,
+                    "refId": "Median"
+                },
+                {
+                    "datasource": {
+                        "type": "victoriametrics-datasource",
+                        "uid": "${datasource}"
+                    },
+                    "editorMode": "code",
+                    "expr": "karpenter_pods_startup_time_seconds{quantile=\"0.9\"}",
+                    "hide": false,
+                    "legendFormat": "P90",
+                    "range": true,
+                    "refId": "P90"
+                },
+                {
+                    "datasource": {
+                        "type": "victoriametrics-datasource",
+                        "uid": "${datasource}"
+                    },
+                    "editorMode": "code",
+                    "expr": "karpenter_pods_startup_time_seconds{quantile=\"0.99\"}",
+                    "hide": false,
+                    "legendFormat": "P99",
+                    "range": true,
+                    "refId": "P99"
+                },
+                {
+                    "datasource": {
+                        "type": "victoriametrics-datasource",
+                        "uid": "${datasource}"
+                    },
+                    "editorMode": "code",
+                    "expr": "karpenter_pods_startup_time_seconds{quantile=\"1\"}",
+                    "hide": false,
+                    "legendFormat": "Max",
+                    "range": true,
+                    "refId": "Maximum"
+                }
+            ],
+            "title": "Pod Startup Latency",
+            "type": "timeseries"
+        },
+        {
+            "datasource": {
+                "type": "victoriametrics-datasource",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "drawStyle": "line",
+                        "fillOpacity": 10,
+                        "gradientMode": "none",
+                        "hideFrom": {
+                            "legend": false,
+                            "tooltip": false,
+                            "viz": false
+                        },
+                        "lineInterpolation": "linear",
+                        "lineWidth": 1,
+                        "pointSize": 5,
+                        "scaleDistribution": {
+                            "type": "linear"
+                        },
+                        "showPoints": "never",
+                        "spanNulls": false,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                            "mode": "off"
+                        }
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    },
+                    "unit": "s"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 13,
+                "x": 0,
+                "y": 17
+            },
+            "id": 6,
+            "options": {
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "mode": "single",
+                    "sort": "none"
+                }
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "victoriametrics-datasource",
+                        "uid": "${datasource}"
+                    },
+                    "editorMode": "code",
+                    "expr": "histogram_quantile(0, rate(controller_runtime_reconcile_time_seconds_bucket{controller=\"$controller\"}[10m]))",
+                    "hide": false,
+                    "legendFormat": "Min",
+                    "range": true,
+                    "refId": "Minimum"
+                },
+                {
+                    "datasource": {
+                        "type": "victoriametrics-datasource",
+                        "uid": "${datasource}"
+                    },
+                    "editorMode": "code",
+                    "expr": "histogram_quantile(0.5, rate(controller_runtime_reconcile_time_seconds_bucket{controller=\"$controller\"}[10m]))",
+                    "legendFormat": "P50",
+                    "range": true,
+                    "refId": "Median"
+                },
+                {
+                    "datasource": {
+                        "type": "victoriametrics-datasource",
+                        "uid": "${datasource}"
+                    },
+                    "editorMode": "code",
+                    "expr": "histogram_quantile(0.9, rate(controller_runtime_reconcile_time_seconds_bucket{controller=\"$controller\"}[10m]))",
+                    "hide": false,
+                    "legendFormat": "P90",
+                    "range": true,
+                    "refId": "P90"
+                },
+                {
+                    "datasource": {
+                        "type": "victoriametrics-datasource",
+                        "uid": "${datasource}"
+                    },
+                    "editorMode": "code",
+                    "expr": "histogram_quantile(0.99, rate(controller_runtime_reconcile_time_seconds_bucket{controller=\"$controller\"}[10m]))",
+                    "hide": false,
+                    "legendFormat": "P99",
+                    "range": true,
+                    "refId": "P99"
+                },
+                {
+                    "datasource": {
+                        "type": "victoriametrics-datasource",
+                        "uid": "${datasource}"
+                    },
+                    "editorMode": "code",
+                    "expr": "histogram_quantile(1, rate(controller_runtime_reconcile_time_seconds_bucket{controller=\"$controller\"}[10m]))",
+                    "hide": false,
+                    "legendFormat": "Max",
+                    "range": true,
+                    "refId": "Maximum"
+                }
+            ],
+            "title": "Controller Reconciliation Latency [$controller]",
+            "type": "timeseries"
+        },
+        {
+            "datasource": {
+                "type": "victoriametrics-datasource",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    },
+                    "unit": "reqps"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 11,
+                "x": 13,
+                "y": 17
+            },
+            "id": 8,
+            "options": {
+                "displayMode": "gradient",
+                "minVizHeight": 10,
+                "minVizWidth": 0,
+                "orientation": "horizontal",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "showUnfilled": true,
+                "valueMode": "color"
+            },
+            "pluginVersion": "9.5.3",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "victoriametrics-datasource",
+                        "uid": "${datasource}"
+                    },
+                    "editorMode": "code",
+                    "expr": "sum(rate(controller_runtime_reconcile_total[10m])) by (controller)",
+                    "legendFormat": "{{controller}}",
+                    "range": true,
+                    "refId": "A"
+                }
+            ],
+            "title": "Controller Reconciliation Rate",
+            "type": "bargauge"
+        }
+    ],
+    "refresh": "5s",
+    "schemaVersion": 38,
+    "style": "dark",
+    "tags": ["aws","karpenter"],
+    "templating": {
+        "list": [
+            {
+                "current": {
+                    "selected": true,
+                    "text": "VictoriaMetrics",
+                    "value": "VictoriaMetrics"
+                },
+                "hide": 0,
+                "includeAll": false,
+                "label": "VictoriaMetrics",
+                "multi": false,
+                "name": "ds",
+                "options": [],
+                "query": "victoriametrics-datasource",
+                "queryValue": "",
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "type": "datasource"
+            },
+            {
+                "current": {
+                    "selected": false,
+                    "text": "vmagent",
+                    "value": "vmagent"
+                },
+                "datasource": {
+                    "type": "victoriametrics-datasource",
+                    "uid": "${datasource}"
+                },
+                "definition": "label_values(controller_runtime_reconcile_time_seconds_count, controller)",
+                "hide": 0,
+                "includeAll": false,
+                "multi": false,
+                "name": "controller",
+                "options": [],
+                "query": {
+                    "query": "label_values(controller_runtime_reconcile_time_seconds_count, controller)",
+                    "refId": "StandardVariableQuery"
+                },
+                "refresh": 2,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 0,
+                "type": "query"
+            },
+            {
+                "current": {
+                    "selected": false,
+                    "text": "Prometheus",
+                    "value": "Prometheus"
+                },
+                "hide": 2,
+                "includeAll": false,
+                "label": "Data Source",
+                "multi": false,
+                "name": "datasource",
+                "options": [],
+                "query": "prometheus",
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "type": "datasource"
+            }
+        ]
+    },
+    "time": {
+        "from": "now-6h",
+        "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "",
+    "title": "Karpenter Performance",
+    "uid": "_bdgC2g4z",
+    "version": 1,
+    "weekStart": ""
+}

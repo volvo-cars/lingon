@@ -44,11 +44,8 @@ func newInstanceProfile() InstanceProfile {
 
 	iamRole := aws.NewIamRole(
 		"eks_node", aws.IamRoleArgs{
-			Name: S("platypus-karpenter-node"),
-			Description: S(
-				"IAM Role for Karpenter's InstanceProfile to use when" +
-					" launching nodes",
-			),
+			Name:             S("platypus-karpenter-node"),
+			Description:      S("IAM Role for Karpenter's InstanceProfile to use when launching nodes"),
 			AssumeRolePolicy: arPolicy.Attributes().Json(),
 		},
 	)
@@ -72,7 +69,7 @@ func newInstanceProfile() InstanceProfile {
 	}
 
 	instanceProfile := aws.NewIamInstanceProfile(
-		AppName, aws.IamInstanceProfileArgs{
+		KA.Name, aws.IamInstanceProfileArgs{
 			Name: S("platypus-karpenter-instance-profile"),
 			Role: iamRole.Attributes().Name(),
 		},

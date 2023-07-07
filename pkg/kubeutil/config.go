@@ -53,10 +53,26 @@ func (m ConfigAndMount) VolumeAndMount() VolumeAndMount {
 	return VolumeAndMount{
 		VolumeSource: corev1.VolumeSource{
 			ConfigMap: &corev1.ConfigMapVolumeSource{
-				LocalObjectReference: corev1.LocalObjectReference{Name: m.ObjectMeta.Name},
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: m.ObjectMeta.Name,
+				},
 			},
 		},
 		VolumeMount: m.VolumeMount,
+	}
+}
+
+func (m ConfigAndMount) EnvConfigMapRef(name, key string) corev1.EnvVar {
+	return corev1.EnvVar{
+		Name: name,
+		ValueFrom: &corev1.EnvVarSource{
+			ConfigMapKeyRef: &corev1.ConfigMapKeySelector{
+				Key: key,
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: m.ObjectMeta.Name,
+				},
+			},
+		},
 	}
 }
 

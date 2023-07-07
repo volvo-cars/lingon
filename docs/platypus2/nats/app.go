@@ -14,6 +14,7 @@ import (
 	promoperatorv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/volvo-cars/lingon/pkg/kube"
 	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
+	"github.com/volvo-cars/lingoneks/monitoring"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	policyv1 "k8s.io/api/policy/v1"
@@ -57,18 +58,17 @@ func New() *Nats {
 
 		BoxDeploy: BoxDeploy,
 		ServiceMonitor: &promoperatorv1.ServiceMonitor{
-			ObjectMeta: N.ObjectMeta(),
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      N.Name,
+				Namespace: monitoring.Namespace,
+				Labels:    N.Labels(),
+			},
 			Spec: promoperatorv1.ServiceMonitorSpec{
 				Endpoints: []promoperatorv1.Endpoint{
-					{
-						Path: ku.PathMetrics,
-						Port: N.Metrics.Service.Name,
-					},
+					{Path: ku.PathMetrics, Port: N.Metrics.Service.Name},
 				},
 				NamespaceSelector: promoperatorv1.NamespaceSelector{Any: true},
-				Selector: metav1.LabelSelector{
-					MatchLabels: N.MatchLabels(),
-				},
+				Selector:          metav1.LabelSelector{MatchLabels: N.MatchLabels()},
 			},
 			TypeMeta: metav1.TypeMeta{
 				APIVersion: "monitoring.coreos.com/v1",
@@ -85,7 +85,6 @@ func New() *Nats {
 			TypeMeta: ku.TypePodDisruptionBudgetV1,
 		},
 		TestRequestReplyPO: TestRequestReplyPO,
-		// DashboardCM:        DashboardNatsCM,
 	}
 }
 

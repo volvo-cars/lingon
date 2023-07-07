@@ -4,14 +4,17 @@
 package karpenter
 
 import (
+	promoperatorv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/volvo-cars/lingon/pkg/kube"
 	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
+	"github.com/volvo-cars/lingoneks/meta"
 	ar "k8s.io/api/admissionregistration/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	policyv1 "k8s.io/api/policy/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 var _ kube.Exporter = (*Karpenter)(nil)
@@ -25,46 +28,81 @@ var _ kube.Exporter = (*Karpenter)(nil)
 // 		kubectl logs -f -n karpenter -l app.kubernetes.io/name=karpenter -c controller
 //
 
-const (
-	AppName         = "karpenter"
-	Namespace       = "karpenter"
-	Version         = "0.27.5"
-	ImgCtrlBase     = "public.ecr.aws/karpenter/controller"
-	ImgSha          = "f9023101d05d0c0c6a5d67f19b8ecf754bf97cb4e94b41d9d80a75ee5be5150c"
-	ImgController   = ImgCtrlBase + ":v" + Version + "@sha256:" + ImgSha
-	ConfigName      = AppName + "-global-settings"
-	PortNameMetrics = "http-metrics"
-	PortMetrics     = 8080
+var KA = Core()
 
-	PortNameProbe = "http"
-	PortProbe     = 8081
+func Core() Meta {
+	AppName := "karpenter"
+	version := "0.29.0"
+	metricsPort := 8000
+	metricsPortName := "http-metrics"
+	webhookPort := 8443
+	webhookPortName := "https-webhook"
 
-	PortNameWebhook = "https-webhook"
-	PortWebhookSvc  = 443
-	PortWebhookCtnr = 8443
-)
+	m := meta.Metadata{
+		Name:      AppName,
+		Namespace: AppName,
+		Instance:  AppName,
+		Component: AppName,
+		PartOf:    AppName,
+		Version:   version,
+		ManagedBy: "lingon",
+		Img: meta.ContainerImg{
+			Registry: "public.ecr.aws/karpenter",
+			Image:    "controller",
+			Sha:      "3009f10487d9338f77c325adee3c208513cd06c7f191653327ef3a44006bf9c8",
+			Tag:      "v" + version,
+		},
+	}
+	return Meta{
+		Metadata: m,
+		Probe: meta.NetPort{
+			Container: corev1.ContainerPort{
+				Name:          "http",
+				ContainerPort: 8081,
+				Protocol:      corev1.ProtocolTCP,
+			},
+		},
+		Metrics: meta.NetPort{
+			Container: corev1.ContainerPort{
+				Name:          metricsPortName,
+				ContainerPort: int32(metricsPort),
+				Protocol:      corev1.ProtocolTCP,
+			},
+			Service: corev1.ServicePort{
+				Name:     metricsPortName,
+				Port:     int32(metricsPort),
+				Protocol: corev1.ProtocolTCP,
+			},
+		},
+		Webhook: meta.NetPort{
+			Container: corev1.ContainerPort{
+				Name:          webhookPortName,
+				ContainerPort: int32(webhookPort),
+				Protocol:      corev1.ProtocolTCP,
+			},
+			Service: corev1.ServicePort{
+				Name:       webhookPortName,
+				Port:       int32(webhookPort),
+				TargetPort: intstr.FromString(webhookPortName),
+				Protocol:   corev1.ProtocolTCP,
+			},
+		},
 
-var commonLabels = map[string]string{
-	ku.AppLabelInstance:  AppName,
-	ku.AppLabelManagedBy: "lingon",
-	ku.AppLabelName:      AppName,
-	ku.AppLabelVersion:   Version,
+		ConfigName:  m.Name + "-global-settings",
+		KubeMinVer:  "1.19.0-0",
+		ProfileName: "default",
+	}
 }
 
-var matchLabels = map[string]string{
-	ku.AppLabelInstance: AppName,
-	ku.AppLabelName:     AppName,
-}
+type Meta struct {
+	meta.Metadata
+	Probe   meta.NetPort
+	Metrics meta.NetPort
+	Webhook meta.NetPort
 
-func appendCommonLabels(items map[string]string) map[string]string {
-	m := map[string]string{}
-	for n, v := range commonLabels {
-		m[n] = v
-	}
-	for n, v := range items {
-		m[n] = v
-	}
-	return m
+	ConfigName  string
+	KubeMinVer  string
+	ProfileName string
 }
 
 type Karpenter struct {
@@ -78,9 +116,10 @@ type Karpenter struct {
 	LoggingConfig *corev1.ConfigMap
 
 	// Application
-	Deploy *appsv1.Deployment
-	Svc    *corev1.Service
-	Pdb    *policyv1.PodDisruptionBudget
+	Deploy     *appsv1.Deployment
+	Svc        *corev1.Service
+	Pdb        *policyv1.PodDisruptionBudget
+	SvcMonitor *promoperatorv1.ServiceMonitor
 
 	// IAM
 	SA *corev1.ServiceAccount
@@ -116,57 +155,56 @@ type Opts struct {
 }
 
 func New(opts Opts) *Karpenter {
-	sacc := &corev1.ServiceAccount{
-		TypeMeta: ku.TypeServiceAccountV1,
-		ObjectMeta: ku.ObjectMeta(
-			AppName,
-			Namespace,
-			commonLabels,
-			map[string]string{"eks.amazonaws.com/role-arn": opts.IAMRoleArn},
-		),
-	}
-
+	SA := ku.ServiceAccount(
+		KA.Name, KA.Namespace, KA.Labels(),
+		map[string]string{"eks.amazonaws.com/role-arn": opts.IAMRoleArn},
+	)
 	return &Karpenter{
-		Ns: &corev1.Namespace{
-			TypeMeta: ku.TypeNamespaceV1,
-			ObjectMeta: metav1.ObjectMeta{
-				Name:   Namespace,
-				Labels: commonLabels,
-			},
-			Spec: corev1.NamespaceSpec{},
-		},
+		Ns: ku.Namespace(KA.Namespace, KA.Labels(), nil),
+
 		CertSecret:    CertSecret,
 		Settings:      GlobalSettings(opts),
 		LoggingConfig: LoggingConfig,
 
-		Deploy: ku.SetDeploySA(Deploy, sacc.Name),
+		Deploy: ku.SetDeploySA(Deploy, SA.Name),
 		Svc:    Svc,
 		Pdb:    Pdb,
+		SvcMonitor: &promoperatorv1.ServiceMonitor{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: "monitoring.coreos.com/v1",
+				Kind:       "ServiceMonitor",
+			},
+			ObjectMeta: KA.ObjectMeta(),
+			// ObjectMeta: metav1.ObjectMeta{
+			// 	Name:      KA.Name,
+			// 	Namespace: monitoring.Namespace,
+			// 	Labels:    KA.Labels(),
+			// },
+			Spec: promoperatorv1.ServiceMonitorSpec{
+				JobLabel: ku.AppLabelName,
+				Endpoints: []promoperatorv1.Endpoint{
+					{Path: ku.PathMetrics, Port: KA.Metrics.Service.Name},
+				},
+				Selector:          metav1.LabelSelector{MatchLabels: KA.MatchLabels()},
+				NamespaceSelector: promoperatorv1.NamespaceSelector{Any: true},
+			},
+		},
 
-		SA:      sacc,
+		SA:      SA,
 		DNSRole: DnsRole,
 		DNSRb:   DnsRoleBinding,
 		Role:    Role,
 		Rb: ku.BindRole(
-			"karpenter-rb",
-			sacc,
-			Role,
-			commonLabels,
+			"karpenter-rb", SA, Role, KA.Labels(),
 		),
 
 		CR: CanUpdateWebhooks,
 		CRB: ku.BindClusterRole(
-			"karpenter-crb-hook",
-			sacc,
-			CanUpdateWebhooks,
-			commonLabels,
+			"karpenter-crb-hook", SA, CanUpdateWebhooks, KA.Labels(),
 		),
 		CoreCR: CoreCr,
 		CoreCRB: ku.BindClusterRole(
-			"karpenter-crb-core",
-			sacc,
-			CoreCr,
-			commonLabels,
+			"karpenter-crb-core", SA, CoreCr, KA.Labels(),
 		),
 		AdminCR: AdminCr,
 
