@@ -21,7 +21,7 @@ const (
 	AppLabelInstance = "app.kubernetes.io/instance"
 	// AppLabelVersion defines the current version of the application i.e. 5.7.21
 	AppLabelVersion = "app.kubernetes.io/version"
-	// AppLabelComponent defines the component withing the architecture i.e. database
+	// AppLabelComponent defines the component within the architecture i.e. database
 	AppLabelComponent = "app.kubernetes.io/component"
 	// AppLabelPartOf defines the name of a higher level application this one is part of i.e. WordPress
 	AppLabelPartOf = "app.kubernetes.io/part-of"
