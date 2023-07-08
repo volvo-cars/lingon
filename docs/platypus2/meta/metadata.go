@@ -93,8 +93,26 @@ func SetAnnotations(
 	return o
 }
 
-func PatchLabels(o metav1.ObjectMeta, key, value string) metav1.ObjectMeta {
-	o.Labels = ku.MergeLabels(o.Labels, map[string]string{key: value})
+func PatchLabelsMap(
+	o metav1.ObjectMeta,
+	m map[string]string,
+) metav1.ObjectMeta {
+	o.Labels = ku.MergeLabels(o.Labels, m)
+	return o
+}
+
+func PatchLabelsKV(o metav1.ObjectMeta, ss ...string) metav1.ObjectMeta {
+	if len(ss)%2 != 0 {
+		panic("patch labels: must be even number for kv pairs")
+	}
+	l := make(map[string]string, len(o.Labels)+len(ss)/2+1)
+	for i := 0; i < len(ss); i += 2 {
+		if i+1 >= len(ss) {
+			panic("odd number of strings")
+		}
+		l[ss[i]] = ss[i+1]
+	}
+	o.Labels = l
 	return o
 }
 

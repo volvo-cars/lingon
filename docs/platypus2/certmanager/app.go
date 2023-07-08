@@ -12,12 +12,106 @@ import (
 	"os/exec"
 
 	"github.com/volvo-cars/lingon/pkg/kube"
-	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
-	appsv1 "k8s.io/api/apps/v1"
-	batchv1 "k8s.io/api/batch/v1"
+	"github.com/volvo-cars/lingoneks/meta"
 	corev1 "k8s.io/api/core/v1"
-	rbacv1 "k8s.io/api/rbac/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
+
+var CM = Core()
+
+func Core() Meta {
+	ver := "1.12.2"
+	tag := "v" + ver
+	name := "cert-manager"
+	ns := name
+	ctrlPort := 9402
+
+	m := meta.Metadata{
+		Name:      name,
+		Namespace: name,
+		Instance:  name,
+		Component: "controller",
+		PartOf:    name,
+		Version:   ver,
+		ManagedBy: "lingon",
+		Img: meta.ContainerImg{
+			Registry: "quay.io", Image: "jetstack/cert-manager-controller",
+			Tag: tag,
+		},
+	}
+
+	cainjName := name + "-cainjector"
+	cai := meta.Metadata{
+		Name:      cainjName,
+		Namespace: ns, Instance: cainjName, Component: "cainjector",
+		PartOf: name, Version: ver, ManagedBy: "lingon",
+		Img: meta.ContainerImg{
+			Registry: "quay.io", Image: "jetstack/cert-manager-cainjector",
+			Tag: tag,
+		},
+	}
+
+	whName := name + "-webhook"
+	wh := meta.Metadata{
+		Name:      whName,
+		Namespace: ns, Instance: whName, Component: "webhook",
+		PartOf: name, Version: ver, ManagedBy: "lingon",
+		Img: meta.ContainerImg{
+			Registry: "quay.io", Image: "jetstack/cert-manager-webhook",
+			Tag: tag,
+		},
+	}
+
+	me := Meta{
+		ACMEImg: meta.ContainerImg{
+			Registry: "quay.io", Image: "jetstack/cert-manager-acmesolver",
+			Tag: tag,
+		},
+
+		Controller:   m,
+		ControllerSA: m.ServiceAccount(),
+		ControllerPort: meta.NetPort{
+			Container: corev1.ContainerPort{
+				Name: "http-metrics", ContainerPort: int32(ctrlPort),
+			},
+			Service: corev1.ServicePort{
+				Name: "tcp-prometheus-servicemonitor", Port: int32(ctrlPort),
+				TargetPort: intstr.FromInt(ctrlPort),
+			},
+		},
+
+		CAInj:   cai,
+		CAInjSA: cai.ServiceAccount(),
+
+		Webhook:   wh,
+		WebhookSA: wh.ServiceAccount(),
+		WebhookPort: meta.NetPort{
+			Container: corev1.ContainerPort{
+				Name: "https", ContainerPort: int32(10250),
+			},
+			Service: corev1.ServicePort{
+				Name: "https", Port: int32(443),
+				TargetPort: intstr.FromString("https"),
+			},
+		},
+	}
+
+	return me
+}
+
+type Meta struct {
+	ACMEImg        meta.ContainerImg
+	Controller     meta.Metadata
+	ControllerPort meta.NetPort
+	ControllerSA   *corev1.ServiceAccount
+
+	CAInj   meta.Metadata
+	CAInjSA *corev1.ServiceAccount
+
+	Webhook     meta.Metadata
+	WebhookPort meta.NetPort
+	WebhookSA   *corev1.ServiceAccount
+}
 
 // validate the struct implements the interface
 var _ kube.Exporter = (*CertManager)(nil)
@@ -25,98 +119,61 @@ var _ kube.Exporter = (*CertManager)(nil)
 // CertManager contains kubernetes manifests
 type CertManager struct {
 	kube.App
-
-	CainjectorCR                            *rbacv1.ClusterRole
-	CainjectorCRB                           *rbacv1.ClusterRoleBinding
-	CainjectorDeploy                        *appsv1.Deployment
-	CainjectorLeaderelectionRB              *rbacv1.RoleBinding
-	CainjectorLeaderelectionRole            *rbacv1.Role
-	CainjectorSA                            *corev1.ServiceAccount
-	ControllerApproveIoCR                   *rbacv1.ClusterRole
-	ControllerApproveIoCRB                  *rbacv1.ClusterRoleBinding
-	ControllerCertificatesCR                *rbacv1.ClusterRole
-	ControllerCertificatesCRB               *rbacv1.ClusterRoleBinding
-	ControllerCertificatesigningrequestsCR  *rbacv1.ClusterRole
-	ControllerCertificatesigningrequestsCRB *rbacv1.ClusterRoleBinding
-	ControllerChallengesCR                  *rbacv1.ClusterRole
-	ControllerChallengesCRB                 *rbacv1.ClusterRoleBinding
-	ControllerClusterissuersCR              *rbacv1.ClusterRole
-	ControllerClusterissuersCRB             *rbacv1.ClusterRoleBinding
-	ControllerIngressShimCR                 *rbacv1.ClusterRole
-	ControllerIngressShimCRB                *rbacv1.ClusterRoleBinding
-	ControllerIssuersCR                     *rbacv1.ClusterRole
-	ControllerIssuersCRB                    *rbacv1.ClusterRoleBinding
-	ControllerOrdersCR                      *rbacv1.ClusterRole
-	ControllerOrdersCRB                     *rbacv1.ClusterRoleBinding
-	Deploy                                  *appsv1.Deployment
-	EditCR                                  *rbacv1.ClusterRole
-	LeaderelectionRB                        *rbacv1.RoleBinding
-	LeaderelectionRole                      *rbacv1.Role
-	SA                                      *corev1.ServiceAccount
-	SVC                                     *corev1.Service
-	StartupapicheckCreateCertRB             *rbacv1.RoleBinding
-	StartupapicheckCreateCertRole           *rbacv1.Role
-	StartupapicheckJOBS                     *batchv1.Job
-	StartupapicheckSA                       *corev1.ServiceAccount
-	ViewCR                                  *rbacv1.ClusterRole
-	WebhookCM                               *corev1.ConfigMap
-	WebhookDeploy                           *appsv1.Deployment
-	WebhookDynamicServingRB                 *rbacv1.RoleBinding
-	WebhookDynamicServingRole               *rbacv1.Role
-	WebhookMutatingwebhookconfigurations    *admissionregistrationv1.MutatingWebhookConfiguration
-	WebhookSA                               *corev1.ServiceAccount
-	WebhookSVC                              *corev1.Service
-	WebhookSubjectaccessreviewsCR           *rbacv1.ClusterRole
-	WebhookSubjectaccessreviewsCRB          *rbacv1.ClusterRoleBinding
-	WebhookValidatingwebhookconfigurations  *admissionregistrationv1.ValidatingWebhookConfiguration
+	CaInjector
+	Webhook
+	Controller
 }
 
 // New creates a new CertManager
 func New() *CertManager {
 	return &CertManager{
-		CainjectorCR:                            CainjectorCR,
-		CainjectorCRB:                           CainjectorCRB,
-		CainjectorDeploy:                        CainjectorDeploy,
-		CainjectorLeaderelectionRB:              CainjectorLeaderelectionRB,
-		CainjectorLeaderelectionRole:            CainjectorLeaderelectionRole,
-		CainjectorSA:                            CainjectorSA,
-		ControllerApproveIoCR:                   ControllerApproveIoCR,
-		ControllerApproveIoCRB:                  ControllerApproveIoCRB,
-		ControllerCertificatesCR:                ControllerCertificatesCR,
-		ControllerCertificatesCRB:               ControllerCertificatesCRB,
-		ControllerCertificatesigningrequestsCR:  ControllerCertificatesigningrequestsCR,
-		ControllerCertificatesigningrequestsCRB: ControllerCertificatesigningrequestsCRB,
-		ControllerChallengesCR:                  ControllerChallengesCR,
-		ControllerChallengesCRB:                 ControllerChallengesCRB,
-		ControllerClusterissuersCR:              ControllerClusterissuersCR,
-		ControllerClusterissuersCRB:             ControllerClusterissuersCRB,
-		ControllerIngressShimCR:                 ControllerIngressShimCR,
-		ControllerIngressShimCRB:                ControllerIngressShimCRB,
-		ControllerIssuersCR:                     ControllerIssuersCR,
-		ControllerIssuersCRB:                    ControllerIssuersCRB,
-		ControllerOrdersCR:                      ControllerOrdersCR,
-		ControllerOrdersCRB:                     ControllerOrdersCRB,
-		Deploy:                                  Deploy,
-		EditCR:                                  EditCR,
-		LeaderelectionRB:                        LeaderelectionRB,
-		LeaderelectionRole:                      LeaderelectionRole,
-		SA:                                      SA,
-		SVC:                                     SVC,
-		StartupapicheckCreateCertRB:             StartupapicheckCreateCertRB,
-		StartupapicheckCreateCertRole:           StartupapicheckCreateCertRole,
-		StartupapicheckJOBS:                     StartupapicheckJOBS,
-		StartupapicheckSA:                       StartupapicheckSA,
-		ViewCR:                                  ViewCR,
-		WebhookCM:                               WebhookCM,
-		WebhookDeploy:                           WebhookDeploy,
-		WebhookDynamicServingRB:                 WebhookDynamicServingRB,
-		WebhookDynamicServingRole:               WebhookDynamicServingRole,
-		WebhookMutatingwebhookconfigurations:    WebhookMutatingwebhookconfigurations,
-		WebhookSA:                               WebhookSA,
-		WebhookSVC:                              WebhookSVC,
-		WebhookSubjectaccessreviewsCR:           WebhookSubjectaccessreviewsCR,
-		WebhookSubjectaccessreviewsCRB:          WebhookSubjectaccessreviewsCRB,
-		WebhookValidatingwebhookconfigurations:  WebhookValidatingwebhookconfigurations,
+		CaInjector: CaInjector{
+			CaInjectorCR:                 CainjectorCR,
+			CaInjectorCRB:                CaInjectorCRB,
+			CaInjectorDeploy:             CaInjectorDeploy,
+			CaInjectorLeaderelectionRB:   CaInjectorLeaderElectionRB,
+			CaInjectorLeaderelectionRole: CaInjectorLeaderElectionRole,
+			CaInjectorSA:                 CM.CAInjSA,
+		},
+		Controller: Controller{
+			ControllerApproveIoCR:                   ControllerApproveIoCR,
+			ControllerApproveIoCRB:                  ControllerApproveIoCRB,
+			ControllerCertificatesCR:                ControllerCertificatesCR,
+			ControllerCertificatesCRB:               ControllerCertificatesCRB,
+			ControllerCertificateSigningRequestsCR:  ControllerCertificateSigningRequestsCR,
+			ControllerCertificateSigningRequestsCRB: ControllerCertificateSigningRequestsCRB,
+			ControllerChallengesCR:                  ControllerChallengesCR,
+			ControllerChallengesCRB:                 ControllerChallengesCRB,
+			ControllerClusterIssuersCR:              ControllerClusterIssuersCR,
+			ControllerClusterIssuersCRB:             ControllerClusterIssuersCRB,
+			ControllerIngressShimCR:                 ControllerIngressShimCR,
+			ControllerIngressShimCRB:                ControllerIngressShimCRB,
+			ControllerIssuersCR:                     ControllerIssuersCR,
+			ControllerIssuersCRB:                    ControllerIssuersCRB,
+			ControllerOrdersCR:                      ControllerOrdersCR,
+			ControllerOrdersCRB:                     ControllerOrdersCRB,
+			ControllerDeploy:                        ControllerDeploy,
+			ViewCR:                                  ViewCR,
+			EditCR:                                  EditCR,
+			LeaderElectionRB:                        LeaderElectionRB,
+			LeaderElectionRole:                      LeaderElectionRole,
+			PDB:                                     PDB,
+			SA:                                      CM.ControllerSA,
+			SVC:                                     ControllerSVC,
+			ServiceMonitor:                          ServiceMonitor,
+		},
+		Webhook: Webhook{
+			WebhookCM:                      WebhookCM,
+			WebhookDeploy:                  WebhookDeploy,
+			WebhookDynamicServingRB:        WebhookDynamicServingRB,
+			WebhookDynamicServingRole:      WebhookDynamicServingRole,
+			WebhookMutatingWC:              WebhookMutatingWC,
+			WebhookSA:                      CM.WebhookSA,
+			WebhookSVC:                     WebhookSVC,
+			WebhookSubjectAccessReviewsCR:  WebhookSubjectAccessReviewsCR,
+			WebhookSubjectAccessReviewsCRB: WebhookSubjectAccessReviewsCRB,
+			WebhookValidatingWC:            WebhookValidatingWC,
+		},
 	}
 }
 

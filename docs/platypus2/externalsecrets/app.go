@@ -6,14 +6,17 @@
 package externalsecrets
 
 import (
+	"context"
+	"errors"
+	"os"
+	"os/exec"
+
 	"github.com/volvo-cars/lingon/pkg/kube"
 	"github.com/volvo-cars/lingon/pkg/kubeutil"
-	"github.com/volvo-cars/lingoneks/externalsecrets/crd"
 	arv1 "k8s.io/api/admissionregistration/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 )
 
 const (
@@ -35,7 +38,6 @@ var _ kube.Exporter = (*ExternalSecrets)(nil)
 
 type ExternalSecrets struct {
 	kube.App
-	CRD
 
 	NS *corev1.Namespace
 
@@ -66,19 +68,6 @@ type ExternalSecrets struct {
 	LeaderElectionRB   *rbacv1.RoleBinding
 }
 
-type CRD struct {
-	CrdACRAccessTokensGenerators        *apiextv1.CustomResourceDefinition
-	CrdClusterExternalSecrets           *apiextv1.CustomResourceDefinition
-	CrdClusterSecretStores              *apiextv1.CustomResourceDefinition
-	CrdECRAuthorizationTokensGenerators *apiextv1.CustomResourceDefinition
-	CrdExternalSecrets                  *apiextv1.CustomResourceDefinition
-	CrdFakesGenerators                  *apiextv1.CustomResourceDefinition
-	CrdGCRAccessTokensGenerators        *apiextv1.CustomResourceDefinition
-	CrdPasswordsGenerators              *apiextv1.CustomResourceDefinition
-	CrdPushSecrets                      *apiextv1.CustomResourceDefinition
-	CrdSecretStores                     *apiextv1.CustomResourceDefinition
-}
-
 func New() *ExternalSecrets {
 	sa := kubeutil.ServiceAccount(
 		AppName,
@@ -101,19 +90,6 @@ func New() *ExternalSecrets {
 
 	return &ExternalSecrets{
 		NS: kubeutil.Namespace(Namespace, ESLabels, nil),
-
-		CRD: CRD{
-			CrdACRAccessTokensGenerators:        crd.AcraccesstokensGeneratorsCrd,
-			CrdClusterExternalSecrets:           crd.ClusterexternalsecretsCrd,
-			CrdClusterSecretStores:              crd.ClustersecretstoresCrd,
-			CrdECRAuthorizationTokensGenerators: crd.EcrauthorizationtokensGeneratorsCrd,
-			CrdExternalSecrets:                  crd.ExternalsecretsCrd,
-			CrdFakesGenerators:                  crd.FakesGeneratorsCrd,
-			CrdGCRAccessTokensGenerators:        crd.GcraccesstokensGeneratorsCrd,
-			CrdPasswordsGenerators:              crd.PasswordsGeneratorsCrd,
-			CrdPushSecrets:                      crd.PushsecretsCrd,
-			CrdSecretStores:                     crd.SecretstoresCrd,
-		},
 
 		// CONTROLLER
 		ControllerCR: ControllerCr,
@@ -174,6 +150,50 @@ func New() *ExternalSecrets {
 		),
 		LeaderElectionRole: LeaderElectionRole,
 	}
+}
+
+// Apply applies the kubernetes objects to the cluster
+func (a *ExternalSecrets) Apply(ctx context.Context) error {
+	return Apply(ctx, a)
+}
+
+// Export exports the kubernetes objects to YAML files in the given directory
+func (a *ExternalSecrets) Export(dir string) error {
+	return kube.Export(a, kube.WithExportOutputDirectory(dir))
+}
+
+// Apply applies the kubernetes objects contained in Exporter to the cluster
+func Apply(ctx context.Context, km kube.Exporter) error {
+	cmd := exec.CommandContext(ctx, "kubectl", "apply", "-f", "-")
+	cmd.Env = os.Environ()        // inherit environment in case we need to use kubectl from a container
+	stdin, err := cmd.StdinPipe() // pipe to pass data to kubectl
+	if err != nil {
+		return err
+	}
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	go func() {
+		defer func() {
+			err = errors.Join(err, stdin.Close())
+		}()
+		if errEW := kube.Export(
+			km,
+			kube.WithExportWriter(stdin),
+			kube.WithExportAsSingleFile("stdin"),
+		); errEW != nil {
+			err = errors.Join(err, errEW)
+		}
+	}()
+
+	if errS := cmd.Start(); errS != nil {
+		return errors.Join(err, errS)
+	}
+
+	// waits for the command to exit and waits for any copying
+	// to stdin or copying from stdout or stderr to complete
+	return errors.Join(err, cmd.Wait())
 }
 
 func P[T any](t T) *T {

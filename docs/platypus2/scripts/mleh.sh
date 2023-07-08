@@ -94,7 +94,8 @@ function manifests() {
   #
 
   helm template cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace \
-    --version "1.12" --set global.leaderElection.namespace=cert-manager | \
+    --version "1.12" \
+    --values="$VALUES_DIR"/cert-manager.values.yaml | \
     $KYGO -out "certmanager" -app cert-manager -pkg certmanager
 
   #
