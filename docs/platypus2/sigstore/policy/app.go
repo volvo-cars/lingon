@@ -12,13 +12,86 @@ import (
 	"os/exec"
 
 	"github.com/volvo-cars/lingon/pkg/kube"
+	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
+	"github.com/volvo-cars/lingoneks/meta"
 	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
+
+var W = Core()
+
+func Core() Meta {
+	name := "sigstore-controller"
+	ns := "sigstore"
+	ver := "0.8.0"
+
+	m := meta.Metadata{
+		Name:      name,
+		Namespace: ns,
+		Instance:  "sigstore-controller-policy",
+		Component: "webhook",
+		PartOf:    "sigstore",
+		Version:   ver,
+		ManagedBy: "lingon",
+		Img: meta.ContainerImg{
+			Registry: "ghcr.io",
+			Image:    "sigstore/policy-controller/policy-controller",
+			Sha:      "e91bcd954394b414d3b80adfc2cefdae84dd7985fb938a895471eb34aac57744",
+			// Tag:      "",
+		},
+	}
+	return Meta{
+		Metadata: m,
+		HomeDir: ku.VolumeAndMount{
+			VolumeMount: corev1.VolumeMount{
+				MountPath: "/home/nonroot",
+				Name:      "writable-home-dir",
+			},
+			VolumeSource: corev1.VolumeSource{},
+		},
+		SA: m.ServiceAccount(),
+		MainPort: meta.NetPort{
+			Container: corev1.ContainerPort{
+				Name: "https", ContainerPort: 8443,
+				Protocol: corev1.ProtocolTCP,
+			},
+			Service: corev1.ServicePort{
+				Name:       "https",
+				Port:       443,
+				TargetPort: intstr.FromString("https"),
+			},
+		},
+		Metrics: meta.NetPort{
+			Container: corev1.ContainerPort{
+				Name: "metrics", ContainerPort: 9090,
+				Protocol: corev1.ProtocolTCP,
+			},
+			Service: corev1.ServicePort{
+				Name: "metrics", Port: 9090, Protocol: corev1.ProtocolTCP,
+			},
+		},
+	}
+}
+
+type Meta struct {
+	meta.Metadata
+	SA       *corev1.ServiceAccount
+	HomeDir  ku.VolumeAndMount
+	MainPort meta.NetPort
+	Metrics  meta.NetPort
+}
+
+var WebhookCertsSecrets = &corev1.Secret{
+	TypeMeta:   ku.TypeSecretV1,
+	ObjectMeta: W.ObjectMeta(),
+	Data:       nil,
+}
+
+const cp = "control-plane"
 
 // validate the struct implements the interface
 var _ kube.Exporter = (*PolicyController)(nil)
@@ -27,57 +100,56 @@ var _ kube.Exporter = (*PolicyController)(nil)
 type PolicyController struct {
 	kube.App
 
-	ClusterimagepoliciesPolicySigstoreDevCRD                               *apiextensionsv1.CustomResourceDefinition
-	ConfigCM                                                               *corev1.ConfigMap
-	ConfigImagePoliciesCM                                                  *corev1.ConfigMap
-	ConfigSigstoreKeysCM                                                   *corev1.ConfigMap
-	DefaultingClusterimagepolicySigstoreDevMutatingwebhookconfigurations   *admissionregistrationv1.MutatingWebhookConfiguration
-	LeasesCleanupJOBS                                                      *batchv1.Job
-	PolicySigstoreDevMutatingwebhookconfigurations                         *admissionregistrationv1.MutatingWebhookConfiguration
-	PolicySigstoreDevValidatingwebhookconfigurations                       *admissionregistrationv1.ValidatingWebhookConfiguration
-	SigstoreCleanupRB                                                      *rbacv1.RoleBinding
-	SigstoreCleanupRole                                                    *rbacv1.Role
-	SigstoreWebhookCR                                                      *rbacv1.ClusterRole
-	SigstoreWebhookCRB                                                     *rbacv1.ClusterRoleBinding
-	SigstoreWebhookCleanupSA                                               *corev1.ServiceAccount
-	SigstoreWebhookDeploy                                                  *appsv1.Deployment
-	SigstoreWebhookLoggingCM                                               *corev1.ConfigMap
-	SigstoreWebhookMetricsSVC                                              *corev1.Service
-	SigstoreWebhookRB                                                      *rbacv1.RoleBinding
-	SigstoreWebhookRole                                                    *rbacv1.Role
-	SigstoreWebhookSA                                                      *corev1.ServiceAccount
-	TrustrootsPolicySigstoreDevCRD                                         *apiextensionsv1.CustomResourceDefinition
-	ValidatingClusterimagepolicySigstoreDevValidatingwebhookconfigurations *admissionregistrationv1.ValidatingWebhookConfiguration
-	WebhookCertsSecrets                                                    *corev1.Secret
-	WebhookSVC                                                             *corev1.Service
+	ConfigCM                 *corev1.ConfigMap
+	ConfigImagePoliciesCM    *corev1.ConfigMap
+	ConfigSigstoreKeysCM     *corev1.ConfigMap
+	LeasesCleanupJOBS        *batchv1.Job
+	SigstoreCleanupRB        *rbacv1.RoleBinding
+	SigstoreCleanupRole      *rbacv1.Role
+	CR                       *rbacv1.ClusterRole
+	CRB                      *rbacv1.ClusterRoleBinding
+	SigstoreWebhookCleanupSA *corev1.ServiceAccount
+	Deploy                   *appsv1.Deployment
+	ConfigLoggingCM          *corev1.ConfigMap
+	MetricsSVC               *corev1.Service
+	RB                       *rbacv1.RoleBinding
+	Role                     *rbacv1.Role
+	SA                       *corev1.ServiceAccount
+	WebhookCertsSecrets      *corev1.Secret
+	SVC                      *corev1.Service
+
+	DefaultingClusterImagePolicySigstoreDevMutatingWC   *admissionregistrationv1.MutatingWebhookConfiguration
+	MutatingPolicySigstoreDevMWC                        *admissionregistrationv1.MutatingWebhookConfiguration
+	ValidatingPolicySigstoreDevVWC                      *admissionregistrationv1.ValidatingWebhookConfiguration
+	ValidatingClusterImagePolicySigstoreDevValidatingWC *admissionregistrationv1.ValidatingWebhookConfiguration
 }
 
 // New creates a new PolicyController
 func New() *PolicyController {
 	return &PolicyController{
-		ClusterimagepoliciesPolicySigstoreDevCRD: ClusterimagepoliciesPolicySigstoreDevCRD,
-		ConfigCM:                                 ConfigCM,
-		ConfigImagePoliciesCM:                    ConfigImagePoliciesCM,
-		ConfigSigstoreKeysCM:                     ConfigSigstoreKeysCM,
-		DefaultingClusterimagepolicySigstoreDevMutatingwebhookconfigurations: DefaultingClusterimagepolicySigstoreDevMutatingwebhookconfigurations,
-		LeasesCleanupJOBS: LeasesCleanupJOBS,
-		PolicySigstoreDevMutatingwebhookconfigurations:   PolicySigstoreDevMutatingwebhookconfigurations,
-		PolicySigstoreDevValidatingwebhookconfigurations: PolicySigstoreDevValidatingwebhookconfigurations,
-		SigstoreCleanupRB:              SigstoreCleanupRB,
-		SigstoreCleanupRole:            SigstoreCleanupRole,
-		SigstoreWebhookCR:              SigstoreWebhookCR,
-		SigstoreWebhookCRB:             SigstoreWebhookCRB,
-		SigstoreWebhookCleanupSA:       SigstoreWebhookCleanupSA,
-		SigstoreWebhookDeploy:          SigstoreWebhookDeploy,
-		SigstoreWebhookLoggingCM:       SigstoreWebhookLoggingCM,
-		SigstoreWebhookMetricsSVC:      SigstoreWebhookMetricsSVC,
-		SigstoreWebhookRB:              SigstoreWebhookRB,
-		SigstoreWebhookRole:            SigstoreWebhookRole,
-		SigstoreWebhookSA:              SigstoreWebhookSA,
-		TrustrootsPolicySigstoreDevCRD: TrustrootsPolicySigstoreDevCRD,
-		ValidatingClusterimagepolicySigstoreDevValidatingwebhookconfigurations: ValidatingClusterimagepolicySigstoreDevValidatingwebhookconfigurations,
-		WebhookCertsSecrets: WebhookCertsSecrets,
-		WebhookSVC:          WebhookSVC,
+		ConfigCM:              ConfigCM,
+		ConfigImagePoliciesCM: ConfigImagePoliciesCM,
+		ConfigSigstoreKeysCM:  ConfigSigstoreKeysCM,
+		CR:                    CR,
+		CRB:                   CRB,
+		Deploy:                Deploy,
+		ConfigLoggingCM:       ConfigLoggingCM,
+		MetricsSVC:            MetricsSVC,
+		RB:                    RB,
+		Role:                  Role,
+		SA:                    W.SA,
+		WebhookCertsSecrets:   WebhookCertsSecrets,
+		SVC:                   SVC,
+
+		MutatingPolicySigstoreDevMWC:                        MutatingPolicySigstoreDevMWC,
+		ValidatingPolicySigstoreDevVWC:                      ValidatingPolicySigstoreDevVWC,
+		ValidatingClusterImagePolicySigstoreDevValidatingWC: ValidatingClusterImagePolicyVWC,
+		DefaultingClusterImagePolicySigstoreDevMutatingWC:   DefaultingClusterImagePolicyMWC,
+
+		// SigstoreWebhookCleanupSA: SigstoreWebhookCleanupSA,
+		// LeasesCleanupJOBS:        LeasesCleanupJOBS,
+		// SigstoreCleanupRB:        SigstoreCleanupRB,
+		// SigstoreCleanupRole:      SigstoreCleanupRole,
 	}
 }
 

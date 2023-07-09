@@ -6,50 +6,43 @@
 package policy
 
 import (
+	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
 	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var DefaultingClusterimagepolicySigstoreDevMutatingwebhookconfigurations = &admissionregistrationv1.MutatingWebhookConfiguration{
+var DefaultingClusterImagePolicyMWC = &admissionregistrationv1.MutatingWebhookConfiguration{
+	TypeMeta:   ku.TypeMutatingWebhookConfigurationV1,
 	ObjectMeta: metav1.ObjectMeta{Name: "defaulting.clusterimagepolicy.sigstore.dev"},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "admissionregistration.k8s.io/v1",
-		Kind:       "MutatingWebhookConfiguration",
-	},
 	Webhooks: []admissionregistrationv1.MutatingWebhook{
 		{
 			AdmissionReviewVersions: []string{"v1"},
 			ClientConfig: admissionregistrationv1.WebhookClientConfig{
 				Service: &admissionregistrationv1.ServiceReference{
-					Name:      "webhook",
-					Namespace: "sigstore",
+					Name: SVC.Name, Namespace: SVC.Namespace,
 				},
 			},
-			FailurePolicy: P(admissionregistrationv1.FailurePolicyType("Fail")),
-			MatchPolicy:   P(admissionregistrationv1.MatchPolicyType("Equivalent")),
+			FailurePolicy: P(admissionregistrationv1.Fail),
+			MatchPolicy:   P(admissionregistrationv1.Equivalent),
 			Name:          "defaulting.clusterimagepolicy.sigstore.dev",
-			SideEffects:   P(admissionregistrationv1.SideEffectClass("None")),
+			SideEffects:   P(admissionregistrationv1.SideEffectClassNone),
 		},
 	},
 }
 
-var PolicySigstoreDevMutatingwebhookconfigurations = &admissionregistrationv1.MutatingWebhookConfiguration{
-	ObjectMeta: metav1.ObjectMeta{Name: "policy.sigstore.dev"},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "admissionregistration.k8s.io/v1",
-		Kind:       "MutatingWebhookConfiguration",
-	},
+var MutatingPolicySigstoreDevMWC = &admissionregistrationv1.MutatingWebhookConfiguration{
+	TypeMeta:   ku.TypeMutatingWebhookConfigurationV1,
+	ObjectMeta: metav1.ObjectMeta{Name: PolicySigstoreDev},
 	Webhooks: []admissionregistrationv1.MutatingWebhook{
 		{
 			AdmissionReviewVersions: []string{"v1"},
 			ClientConfig: admissionregistrationv1.WebhookClientConfig{
 				Service: &admissionregistrationv1.ServiceReference{
-					Name:      "webhook",
-					Namespace: "sigstore",
+					Name: SVC.Name, Namespace: SVC.Namespace,
 				},
 			},
-			FailurePolicy: P(admissionregistrationv1.FailurePolicyType("Fail")),
-			Name:          "policy.sigstore.dev",
+			FailurePolicy: P(admissionregistrationv1.Fail),
+			Name:          PolicySigstoreDev,
 			NamespaceSelector: &metav1.LabelSelector{
 				MatchExpressions: []metav1.LabelSelectorRequirement{
 					{
@@ -59,8 +52,8 @@ var PolicySigstoreDevMutatingwebhookconfigurations = &admissionregistrationv1.Mu
 					},
 				},
 			},
-			ReinvocationPolicy: P(admissionregistrationv1.ReinvocationPolicyType("IfNeeded")),
-			SideEffects:        P(admissionregistrationv1.SideEffectClass("None")),
+			ReinvocationPolicy: P(admissionregistrationv1.IfNeededReinvocationPolicy),
+			SideEffects:        P(admissionregistrationv1.SideEffectClassNone),
 		},
 	},
 }

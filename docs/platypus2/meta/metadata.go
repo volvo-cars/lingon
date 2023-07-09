@@ -43,9 +43,27 @@ func (b Metadata) Labels() map[string]string {
 	}
 }
 
+func (b Metadata) LabelsNameSuffix(suffix string) map[string]string {
+	return map[string]string{
+		"app":                b.Name + "-" + suffix,
+		ku.AppLabelName:      b.Name,
+		ku.AppLabelInstance:  b.Instance,
+		ku.AppLabelComponent: b.Component,
+		ku.AppLabelPartOf:    b.PartOf,
+		ku.AppLabelVersion:   b.Version,
+		ku.AppLabelManagedBy: b.ManagedBy,
+	}
+}
+
 func (b Metadata) MatchLabels() map[string]string {
 	return map[string]string{
 		ku.AppLabelName:     b.Name,
+		ku.AppLabelInstance: b.Instance,
+	}
+}
+func (b Metadata) MatchLabelsSuffix(suffix string) map[string]string {
+	return map[string]string{
+		ku.AppLabelName:     b.Name + "-" + suffix,
 		ku.AppLabelInstance: b.Instance,
 	}
 }

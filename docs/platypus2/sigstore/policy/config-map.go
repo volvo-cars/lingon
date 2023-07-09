@@ -6,11 +6,13 @@
 package policy
 
 import (
+	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var ConfigCM = &corev1.ConfigMap{
+	TypeMeta:   ku.TypeConfigMapV1,
+	ObjectMeta: W.ObjectMetaNameSuffix("config"),
 	Data: map[string]string{
 		"_example": `
 ################################
@@ -23,17 +25,11 @@ var ConfigCM = &corev1.ConfigMap{
 
 `,
 	},
-	ObjectMeta: metav1.ObjectMeta{
-		Name:      "config-policy-controller",
-		Namespace: "sigstore",
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "ConfigMap",
-	},
 }
 
 var ConfigImagePoliciesCM = &corev1.ConfigMap{
+	TypeMeta:   ku.TypeConfigMapV1,
+	ObjectMeta: W.ObjectMetaNameSuffix("image-policies"),
 	Data: map[string]string{
 		"_example": `
 #######################################
@@ -46,17 +42,11 @@ var ConfigImagePoliciesCM = &corev1.ConfigMap{
 
 `,
 	},
-	ObjectMeta: metav1.ObjectMeta{
-		Name:      "config-image-policies",
-		Namespace: "sigstore",
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "ConfigMap",
-	},
 }
 
 var ConfigSigstoreKeysCM = &corev1.ConfigMap{
+	TypeMeta:   ku.TypeConfigMapV1,
+	ObjectMeta: W.ObjectMetaNameSuffix("keys"),
 	Data: map[string]string{
 		"_example": `
 ##################################
@@ -70,17 +60,11 @@ var ConfigSigstoreKeysCM = &corev1.ConfigMap{
 
 `,
 	},
-	ObjectMeta: metav1.ObjectMeta{
-		Name:      "config-sigstore-keys",
-		Namespace: "sigstore",
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "ConfigMap",
-	},
 }
 
-var SigstoreWebhookLoggingCM = &corev1.ConfigMap{
+var ConfigLoggingCM = &corev1.ConfigMap{
+	TypeMeta:   ku.TypeConfigMapV1,
+	ObjectMeta: W.ObjectMetaNameSuffix("logging"),
 	Data: map[string]string{
 		/*
 		   Log level overrides
@@ -110,21 +94,5 @@ var SigstoreWebhookLoggingCM = &corev1.ConfigMap{
   }
 }
 `,
-	},
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "sigstore",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "policy-controller",
-			"app.kubernetes.io/version":    "0.8.0",
-			"control-plane":                "sigstore-policy-controller-webhook",
-			"helm.sh/chart":                "policy-controller-0.6.0",
-		},
-		Name:      "sigstore-policy-controller-webhook-logging",
-		Namespace: "sigstore",
-	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "ConfigMap",
 	},
 }
