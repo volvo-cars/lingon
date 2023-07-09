@@ -126,14 +126,14 @@ var srcDash = []DashSource{
 	// 	Name:   "karpenter-capacity-dashboard.json",
 	// 	URL:    "https://raw.githubusercontent.com/aws/karpenter/main/website/content/en/v0.28/getting-started/getting-started-with-karpenter/karpenter-capacity-dashboard.json",
 	// },
-	{
-		Name: "nats-dash.json",
-		URL:  "https://github.com/nats-io/prometheus-nats-exporter/raw/main/walkthrough/grafana-nats-dash.json",
-	},
-	{
-		Name: "nats-jetstream-dash.json",
-		URL:  "https://github.com/nats-io/prometheus-nats-exporter/raw/main/walkthrough/grafana-jetstream-dash.json",
-	},
+	// {
+	// 	Name: "nats-dash.json",
+	// 	URL:  "https://github.com/nats-io/prometheus-nats-exporter/raw/main/walkthrough/grafana-nats-dash.json",
+	// },
+	// {
+	// 	Name: "nats-jetstream-dash.json",
+	// 	URL:  "https://github.com/nats-io/prometheus-nats-exporter/raw/main/walkthrough/grafana-jetstream-dash.json",
+	// },
 }
 
 func TestDashboardsDownload(t *testing.T) {
