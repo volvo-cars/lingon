@@ -6,22 +6,20 @@
 package policy
 
 import (
+	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
 	rbacv1 "k8s.io/api/rbac/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var SigstoreWebhookCR = &rbacv1.ClusterRole{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "sigstore",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "policy-controller",
-			"app.kubernetes.io/version":    "0.8.0",
-			"control-plane":                "sigstore-policy-controller-webhook",
-			"helm.sh/chart":                "policy-controller-0.6.0",
-		},
-		Name: "sigstore-policy-controller-webhook",
-	},
+var CRB = ku.BindClusterRole(
+	CR.Name,
+	W.SA,
+	CR,
+	W.Labels(),
+)
+
+var CR = &rbacv1.ClusterRole{
+	TypeMeta:   ku.TypeClusterRoleV1,
+	ObjectMeta: W.ObjectMetaNoNS(),
 	Rules: []rbacv1.PolicyRule{
 		{
 			APIGroups: []string{""},
@@ -37,9 +35,12 @@ var SigstoreWebhookCR = &rbacv1.ClusterRole{
 		}, {
 			APIGroups: []string{"admissionregistration.k8s.io"},
 			ResourceNames: []string{
-				"policy.sigstore.dev",
-				"defaulting.clusterimagepolicy.sigstore.dev",
-				"validating.clusterimagepolicy.sigstore.dev",
+				// "policy.sigstore.dev",
+				ValidatingPolicySigstoreDevVWC.Name,
+				// "defaulting.clusterimagepolicy.sigstore.dev",
+				DefaultingClusterImagePolicyMWC.Name,
+				// "validating.clusterimagepolicy.sigstore.dev",
+				ValidatingClusterImagePolicyVWC.Name,
 			},
 			Resources: []string{
 				"validatingwebhookconfigurations",
@@ -48,12 +49,12 @@ var SigstoreWebhookCR = &rbacv1.ClusterRole{
 			Verbs: []string{"get", "update", "delete"},
 		}, {
 			APIGroups:     []string{""},
-			ResourceNames: []string{"sigstore"},
+			ResourceNames: []string{W.Namespace},
 			Resources:     []string{"namespaces"},
 			Verbs:         []string{"get", "list"},
 		}, {
 			APIGroups:     []string{""},
-			ResourceNames: []string{"sigstore"},
+			ResourceNames: []string{W.Namespace},
 			Resources:     []string{"namespaces/finalizers"},
 			Verbs:         []string{"update"},
 		}, {
@@ -82,8 +83,63 @@ var SigstoreWebhookCR = &rbacv1.ClusterRole{
 			Verbs:     []string{"get", "list", "update", "watch", "patch"},
 		},
 	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "rbac.authorization.k8s.io/v1",
-		Kind:       "ClusterRole",
+}
+var RB = ku.BindRole(
+	Role.Name,
+	W.SA,
+	Role,
+	W.Labels(),
+)
+
+var Role = &rbacv1.Role{
+	TypeMeta:   ku.TypeRoleV1,
+	ObjectMeta: W.ObjectMeta(),
+	Rules: []rbacv1.PolicyRule{
+		{
+			APIGroups: []string{""},
+			Resources: []string{"configmaps", "secrets"},
+			Verbs:     []string{"get", "list", "update", "watch"},
+		}, {
+			APIGroups: []string{"coordination.k8s.io"},
+			Resources: []string{"leases"},
+			Verbs: []string{
+				"get",
+				"list",
+				"create",
+				"update",
+				"delete",
+				"patch",
+				"watch",
+			},
+		}, {
+			APIGroups:     []string{""},
+			ResourceNames: []string{ConfigImagePoliciesCM.Name},
+			Resources:     []string{"configmaps"},
+			Verbs: []string{
+				"get",
+				"list",
+				"create",
+				"update",
+				"patch",
+				"watch",
+			},
+		}, {
+			APIGroups: []string{""},
+			// ResourceNames: []string{"config-sigstore-keys"},
+			ResourceNames: []string{ConfigSigstoreKeysCM.Name},
+			Resources:     []string{"configmaps"},
+			Verbs: []string{
+				"get",
+				"list",
+				"create",
+				"update",
+				"patch",
+				"watch",
+			},
+		}, {
+			APIGroups: []string{"policy.sigstore.dev"},
+			Resources: []string{"trustroots"},
+			Verbs:     []string{"get", "list"},
+		},
 	},
 }

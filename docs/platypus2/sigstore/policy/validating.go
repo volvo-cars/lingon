@@ -6,27 +6,26 @@
 package policy
 
 import (
+	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
 	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var PolicySigstoreDevValidatingwebhookconfigurations = &admissionregistrationv1.ValidatingWebhookConfiguration{
-	ObjectMeta: metav1.ObjectMeta{Name: "policy.sigstore.dev"},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "admissionregistration.k8s.io/v1",
-		Kind:       "ValidatingWebhookConfiguration",
-	},
+const PolicySigstoreDev = "policy.sigstore.dev"
+
+var ValidatingPolicySigstoreDevVWC = &admissionregistrationv1.ValidatingWebhookConfiguration{
+	TypeMeta:   ku.TypeValidatingWebhookConfigurationV1,
+	ObjectMeta: metav1.ObjectMeta{Name: PolicySigstoreDev},
 	Webhooks: []admissionregistrationv1.ValidatingWebhook{
 		{
 			AdmissionReviewVersions: []string{"v1"},
 			ClientConfig: admissionregistrationv1.WebhookClientConfig{
 				Service: &admissionregistrationv1.ServiceReference{
-					Name:      "webhook",
-					Namespace: "sigstore",
+					Name: SVC.Name, Namespace: SVC.Namespace,
 				},
 			},
-			FailurePolicy: P(admissionregistrationv1.FailurePolicyType("Fail")),
-			Name:          "policy.sigstore.dev",
+			FailurePolicy: P(admissionregistrationv1.Fail),
+			Name:          PolicySigstoreDev,
 			NamespaceSelector: &metav1.LabelSelector{
 				MatchExpressions: []metav1.LabelSelectorRequirement{
 					{
@@ -36,30 +35,26 @@ var PolicySigstoreDevValidatingwebhookconfigurations = &admissionregistrationv1.
 					},
 				},
 			},
-			SideEffects: P(admissionregistrationv1.SideEffectClass("None")),
+			SideEffects: P(admissionregistrationv1.SideEffectClassNone),
 		},
 	},
 }
 
-var ValidatingClusterimagepolicySigstoreDevValidatingwebhookconfigurations = &admissionregistrationv1.ValidatingWebhookConfiguration{
+var ValidatingClusterImagePolicyVWC = &admissionregistrationv1.ValidatingWebhookConfiguration{
+	TypeMeta:   ku.TypeValidatingWebhookConfigurationV1,
 	ObjectMeta: metav1.ObjectMeta{Name: "validating.clusterimagepolicy.sigstore.dev"},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "admissionregistration.k8s.io/v1",
-		Kind:       "ValidatingWebhookConfiguration",
-	},
 	Webhooks: []admissionregistrationv1.ValidatingWebhook{
 		{
 			AdmissionReviewVersions: []string{"v1"},
 			ClientConfig: admissionregistrationv1.WebhookClientConfig{
 				Service: &admissionregistrationv1.ServiceReference{
-					Name:      "webhook",
-					Namespace: "sigstore",
+					Name: SVC.Name, Namespace: SVC.Namespace,
 				},
 			},
-			FailurePolicy: P(admissionregistrationv1.FailurePolicyType("Fail")),
-			MatchPolicy:   P(admissionregistrationv1.MatchPolicyType("Equivalent")),
+			FailurePolicy: P(admissionregistrationv1.Fail),
+			MatchPolicy:   P(admissionregistrationv1.Equivalent),
 			Name:          "validating.clusterimagepolicy.sigstore.dev",
-			SideEffects:   P(admissionregistrationv1.SideEffectClass("None")),
+			SideEffects:   P(admissionregistrationv1.SideEffectClassNone),
 		},
 	},
 }

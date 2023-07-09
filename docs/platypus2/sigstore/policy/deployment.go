@@ -6,168 +6,144 @@
 package policy
 
 import (
+	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-var SigstoreWebhookDeploy = &appsv1.Deployment{
-	ObjectMeta: metav1.ObjectMeta{
-		Labels: map[string]string{
-			"app.kubernetes.io/instance":   "sigstore",
-			"app.kubernetes.io/managed-by": "Helm",
-			"app.kubernetes.io/name":       "policy-controller",
-			"app.kubernetes.io/version":    "0.8.0",
-			"control-plane":                "sigstore-policy-controller-webhook",
-			"helm.sh/chart":                "policy-controller-0.6.0",
-		},
-		Name:      "sigstore-policy-controller-webhook",
-		Namespace: "sigstore",
+var MetricsSVC = &corev1.Service{
+	TypeMeta:   ku.TypeServiceV1,
+	ObjectMeta: W.ObjectMetaNameSuffix("metrics"),
+	Spec: corev1.ServiceSpec{
+		Ports:    []corev1.ServicePort{W.Metrics.Service},
+		Selector: W.MatchLabels(),
+		Type:     corev1.ServiceTypeClusterIP,
 	},
+}
+
+var SVC = &corev1.Service{
+	TypeMeta:   ku.TypeServiceV1,
+	ObjectMeta: W.ObjectMeta(),
+	Spec: corev1.ServiceSpec{
+		Ports:    []corev1.ServicePort{W.MainPort.Service},
+		Selector: W.MatchLabels(),
+		Type:     corev1.ServiceTypeClusterIP,
+	},
+}
+
+var affinity = &corev1.Affinity{
+	PodAntiAffinity: &corev1.PodAntiAffinity{
+		PreferredDuringSchedulingIgnoredDuringExecution: []corev1.WeightedPodAffinityTerm{
+			{
+				PodAffinityTerm: corev1.PodAffinityTerm{
+					LabelSelector: &metav1.LabelSelector{
+						MatchLabels: W.MatchLabels(),
+					},
+					TopologyKey: ku.LabelHostname,
+				},
+				Weight: int32(100),
+			},
+		},
+	},
+}
+
+var Deploy = &appsv1.Deployment{
+	TypeMeta:   ku.TypeDeploymentV1,
+	ObjectMeta: W.ObjectMeta(),
 	Spec: appsv1.DeploymentSpec{
 		Replicas: P(int32(1)),
-		Selector: &metav1.LabelSelector{
-			MatchLabels: map[string]string{
-				"app.kubernetes.io/instance": "sigstore",
-				"app.kubernetes.io/name":     "policy-controller",
-				"control-plane":              "sigstore-policy-controller-webhook",
-			},
-		},
+		Selector: &metav1.LabelSelector{MatchLabels: W.MatchLabels()},
 		Template: corev1.PodTemplateSpec{
-			ObjectMeta: metav1.ObjectMeta{
-				Labels: map[string]string{
-					"app.kubernetes.io/instance": "sigstore",
-					"app.kubernetes.io/name":     "policy-controller",
-					"control-plane":              "sigstore-policy-controller-webhook",
-				},
-			},
+			ObjectMeta: metav1.ObjectMeta{Labels: W.Labels()},
 			Spec: corev1.PodSpec{
-				Affinity: &corev1.Affinity{
-					PodAntiAffinity: &corev1.PodAntiAffinity{
-						PreferredDuringSchedulingIgnoredDuringExecution: []corev1.WeightedPodAffinityTerm{
-							{
-								PodAffinityTerm: corev1.PodAffinityTerm{
-									LabelSelector: &metav1.LabelSelector{MatchLabels: map[string]string{"control-plane": "sigstore-policy-controller-webhook"}},
-									TopologyKey:   "kubernetes.io/hostname",
-								},
-								Weight: int32(100),
-							},
-						},
-					},
-				},
+				Affinity:           affinity,
+				ServiceAccountName: W.SA.Name,
 				Containers: []corev1.Container{
 					{
+						Name:            W.Name,
+						Image:           W.Metadata.Img.URL(),
+						ImagePullPolicy: corev1.PullIfNotPresent,
 						Env: []corev1.EnvVar{
+							ku.EnvVarDownAPI(
+								"SYSTEM_NAMESPACE",
+								"metadata.namespace",
+							),
 							{
-								Name:      "SYSTEM_NAMESPACE",
-								ValueFrom: &corev1.EnvVarSource{FieldRef: &corev1.ObjectFieldSelector{FieldPath: "metadata.namespace"}},
-							}, {
 								Name:  "CONFIG_LOGGING_NAME",
-								Value: "sigstore-policy-controller-webhook-logging",
-							}, {
+								Value: ConfigLoggingCM.Name,
+							},
+							{
 								Name:  "CONFIG_OBSERVABILITY_NAME",
 								Value: "sigstore-policy-controller-webhook-observability",
-							}, {
+							},
+							{
 								Name:  "METRICS_DOMAIN",
 								Value: "sigstore.dev/policy",
-							}, {
-								Name:  "WEBHOOK_NAME",
-								Value: "webhook",
-							}, {
-								Name:  "HOME",
-								Value: "/home/nonroot",
 							},
-						},
-						Image:           "ghcr.io/sigstore/policy-controller/policy-controller@sha256:e91bcd954394b414d3b80adfc2cefdae84dd7985fb938a895471eb34aac57744",
-						ImagePullPolicy: corev1.PullPolicy("IfNotPresent"),
-						LivenessProbe: &corev1.Probe{
-							FailureThreshold:    int32(6),
-							InitialDelaySeconds: int32(30),
-							PeriodSeconds:       int32(1),
-							ProbeHandler: corev1.ProbeHandler{
-								HTTPGet: &corev1.HTTPGetAction{
-									HTTPHeaders: []corev1.HTTPHeader{
-										{
-											Name:  "k-kubelet-probe",
-											Value: "webhook",
-										},
-									},
-									Path:   "/healthz",
-									Port:   intstr.IntOrString{IntVal: int32(8443)},
-									Scheme: corev1.URIScheme("HTTPS"),
-								},
-							},
-						},
-						Name: "policy-controller-webhook",
-						Ports: []corev1.ContainerPort{
 							{
-								ContainerPort: int32(8443),
-								Name:          "https",
-								Protocol:      corev1.Protocol("TCP"),
-							}, {
-								ContainerPort: int32(9090),
-								Name:          "metrics",
-								Protocol:      corev1.Protocol("TCP"),
+								Name:  "HOME",
+								Value: W.HomeDir.VolumeMount.MountPath,
+							},
+							{
+								Name: "WEBHOOK_NAME", Value: SVC.Name,
 							},
 						},
-						ReadinessProbe: &corev1.Probe{
-							FailureThreshold:    int32(6),
-							InitialDelaySeconds: int32(20),
-							PeriodSeconds:       int32(1),
-							ProbeHandler: corev1.ProbeHandler{
-								HTTPGet: &corev1.HTTPGetAction{
-									HTTPHeaders: []corev1.HTTPHeader{
-										{
-											Name:  "k-kubelet-probe",
-											Value: "webhook",
-										},
-									},
-									Path:   "/readyz",
-									Port:   intstr.IntOrString{IntVal: int32(8443)},
-									Scheme: corev1.URIScheme("HTTPS"),
-								},
-							},
+						LivenessProbe: probe(
+							"/healthz",
+							int(W.MainPort.Container.ContainerPort),
+						),
+						ReadinessProbe: probe(
+							"/readyz",
+							int(W.MainPort.Container.ContainerPort),
+						),
+						Ports: []corev1.ContainerPort{
+							W.MainPort.Container,
+							W.Metrics.Container,
 						},
-						Resources: corev1.ResourceRequirements{
-							Limits: map[corev1.ResourceName]resource.Quantity{
-								corev1.ResourceName("cpu"):    resource.MustParse("200m"),
-								corev1.ResourceName("memory"): resource.MustParse("512Mi"),
-							},
-							Requests: map[corev1.ResourceName]resource.Quantity{
-								corev1.ResourceName("cpu"):    resource.MustParse("100m"),
-								corev1.ResourceName("memory"): resource.MustParse("128Mi"),
-							},
-						},
+						Resources: ku.Resources(
+							"100m",
+							"128Mi",
+							"200m",
+							"512Mi",
+						),
 						SecurityContext: &corev1.SecurityContext{
 							Capabilities:           &corev1.Capabilities{Drop: []corev1.Capability{corev1.Capability("ALL")}},
 							ReadOnlyRootFilesystem: P(true),
 							RunAsUser:              P(int64(1000)),
 						},
 						VolumeMounts: []corev1.VolumeMount{
-							{
-								MountPath: "/home/nonroot",
-								Name:      "writable-home-dir",
-							},
+							W.HomeDir.VolumeMount,
 						},
 					},
 				},
-				NodeSelector:                  map[string]string{},
-				ServiceAccountName:            "sigstore-policy-controller-webhook",
 				TerminationGracePeriodSeconds: P(int64(300)),
-				Tolerations:                   []corev1.Toleration{},
 				Volumes: []corev1.Volume{
-					{
-						Name:         "writable-home-dir",
-						VolumeSource: corev1.VolumeSource{},
-					},
+					W.HomeDir.Volume(),
 				},
 			},
 		},
 	},
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "apps/v1",
-		Kind:       "Deployment",
-	},
+}
+
+func probe(path string, port int) *corev1.Probe {
+	return &corev1.Probe{
+		FailureThreshold:    int32(6),
+		InitialDelaySeconds: int32(20),
+		PeriodSeconds:       int32(1),
+		ProbeHandler: corev1.ProbeHandler{
+			HTTPGet: &corev1.HTTPGetAction{
+				HTTPHeaders: []corev1.HTTPHeader{
+					{
+						Name:  "k-kubelet-probe",
+						Value: "webhook",
+					},
+				},
+				Path:   path,
+				Port:   intstr.FromInt(port),
+				Scheme: corev1.URISchemeHTTPS,
+			},
+		},
+	}
 }
