@@ -16,7 +16,7 @@ require (
 	github.com/tidwall/sjson v1.2.5
 	github.com/veggiemonk/strcase v0.0.0-20230627213939-a882c834bcab
 	github.com/zclconf/go-cty v1.13.2
-	github.com/zegl/kube-score v1.16.1
+	github.com/zegl/kube-score v1.17.0
 	golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df
 	golang.org/x/tools v0.10.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -51,7 +51,7 @@ require (
 	golang.org/x/crypto v0.10.0 // indirect
 	golang.org/x/mod v0.11.0 // indirect
 	golang.org/x/net v0.11.0 // indirect
-	golang.org/x/sys v0.9.0 // indirect
+	golang.org/x/sys v0.10.0 // indirect
 	golang.org/x/text v0.10.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
