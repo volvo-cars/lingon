@@ -1,14 +1,14 @@
 // Copyright (c) 2023 Volvo Car Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-package testutil_test
+package score_test
 
 import (
 	"bytes"
 	"fmt"
 	"os"
 
-	"github.com/volvo-cars/lingon/pkg/testutil"
+	"github.com/volvo-cars/lingon/docs/kubernetes/score"
 )
 
 func ExampleScore() {
@@ -16,12 +16,12 @@ func ExampleScore() {
 	if err != nil {
 		panic(err)
 	}
-	card, err := testutil.Score(f)
+	card, err := score.Score(f)
 	if err != nil {
 		panic(err)
 	}
 	var buf bytes.Buffer
-	err = testutil.RenderScoreCard2(card, &buf, false)
+	err = score.RenderScoreCard2(card, &buf, false)
 	if err != nil {
 		panic(err)
 	}

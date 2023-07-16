@@ -8,6 +8,8 @@ require (
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/aws/karpenter v0.28.1
 	github.com/aws/karpenter-core v0.28.1
+	github.com/eidolon/wordwrap v0.0.0-20161011182207-e0f54129b8bb
+	github.com/fatih/color v1.15.0
 	github.com/go-playground/validator/v10 v10.14.1
 	github.com/golingon/terraproviders/aws/4.60.0 v0.0.0-20230703111924-4b2c49f97f7c
 	github.com/golingon/terraproviders/tls/4.0.4 v0.0.0-20230703111924-4b2c49f97f7c
@@ -20,6 +22,7 @@ require (
 	github.com/rogpeppe/go-internal v1.11.0
 	github.com/stretchr/testify v1.8.2
 	github.com/volvo-cars/lingon v0.0.0-20230703105113-1bcac3444c58
+	github.com/zegl/kube-score v1.16.1
 	golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df
 	istio.io/api v1.19.0-alpha.1
 	istio.io/client-go v1.18.0
@@ -41,8 +44,6 @@ require (
 	github.com/docker/distribution v2.8.2+incompatible // indirect
 	github.com/docker/docker v24.0.2+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.7.0 // indirect
-	github.com/eidolon/wordwrap v0.0.0-20161011182207-e0f54129b8bb // indirect
-	github.com/fatih/color v1.15.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
@@ -75,15 +76,14 @@ require (
 	github.com/vbatts/tar-split v0.11.3 // indirect
 	github.com/veggiemonk/strcase v0.0.0-20230627213939-a882c834bcab // indirect
 	github.com/zclconf/go-cty v1.13.2 // indirect
-	github.com/zegl/kube-score v1.16.1 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.10.0 // indirect
-	golang.org/x/mod v0.11.0 // indirect
-	golang.org/x/net v0.11.0 // indirect
+	golang.org/x/crypto v0.11.0 // indirect
+	golang.org/x/mod v0.12.0 // indirect
+	golang.org/x/net v0.12.0 // indirect
 	golang.org/x/sync v0.3.0 // indirect
-	golang.org/x/sys v0.9.0 // indirect
-	golang.org/x/text v0.10.0 // indirect
-	golang.org/x/tools v0.10.0 // indirect
+	golang.org/x/sys v0.10.0 // indirect
+	golang.org/x/text v0.11.0 // indirect
+	golang.org/x/tools v0.11.0 // indirect
 	google.golang.org/genproto v0.0.0-20230629202037-9506855d4529 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20230629202037-9506855d4529 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect

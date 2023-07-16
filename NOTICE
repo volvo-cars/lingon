@@ -7,8 +7,6 @@ Components:
 github.com/agext/levenshtein v1.2.3 : Apache-2.0
 github.com/apparentlymart/go-textseg/v13/textseg v13.0.0 : MIT
 github.com/dave/jennifer/jen v1.6.1 : MIT
-github.com/eidolon/wordwrap v0.0.0-20161011182207-e0f54129b8bb : MIT
-github.com/fatih/color v1.15.0 : MIT
 github.com/gabriel-vasile/mimetype v1.4.2 : MIT
 github.com/go-logr/logr v1.2.4 : Apache-2.0
 github.com/go-playground/locales v0.14.1 : MIT
@@ -24,8 +22,6 @@ github.com/hashicorp/terraform-json v0.17.1 : MPL-2.0
 github.com/imdario/mergo v0.3.16 : BSD-3-Clause
 github.com/json-iterator/go v1.1.12 : MIT
 github.com/leodido/go-urn v1.2.4 : MIT
-github.com/mattn/go-colorable v0.1.13 : MIT
-github.com/mattn/go-isatty v0.0.19 : MIT
 github.com/mitchellh/go-wordwrap v1.0.1 : MIT
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd : Apache-2.0
 github.com/modern-go/reflect2 v1.0.2 : Apache-2.0
@@ -35,14 +31,12 @@ github.com/tidwall/pretty v1.2.1 : MIT
 github.com/tidwall/sjson v1.2.5 : MIT
 github.com/veggiemonk/strcase v0.0.0-20230627213939-a882c834bcab : MIT
 github.com/zclconf/go-cty/cty v1.13.2 : MIT
-github.com/zegl/kube-score v1.16.1 : MIT
-golang.org/x/crypto/sha3 v0.10.0 : BSD-3-Clause
+golang.org/x/crypto/sha3 v0.11.0 : BSD-3-Clause
 golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df : BSD-3-Clause
-golang.org/x/mod v0.11.0 : BSD-3-Clause
-golang.org/x/net v0.11.0 : BSD-3-Clause
-golang.org/x/sys/unix v0.9.0 : BSD-3-Clause
-golang.org/x/text v0.10.0 : BSD-3-Clause
-golang.org/x/tools v0.10.0 : BSD-3-Clause
+golang.org/x/mod v0.12.0 : BSD-3-Clause
+golang.org/x/net v0.12.0 : BSD-3-Clause
+golang.org/x/text v0.11.0 : BSD-3-Clause
+golang.org/x/tools v0.11.0 : BSD-3-Clause
 gopkg.in/inf.v0 v0.9.1 : BSD-3-Clause
 gopkg.in/yaml.v2 v2.4.0 : Apache-2.0
 gopkg.in/yaml.v3 v3.0.1 : MIT
@@ -71,10 +65,6 @@ github.com/agext/levenshtein v1.2.3
 github.com/apparentlymart/go-textseg/v13/textseg v13.0.0
 
 github.com/dave/jennifer/jen v1.6.1
-
-github.com/eidolon/wordwrap v0.0.0-20161011182207-e0f54129b8bb
-
-github.com/fatih/color v1.15.0
 
 github.com/gabriel-vasile/mimetype v1.4.2
 
@@ -106,10 +96,6 @@ github.com/json-iterator/go v1.1.12
 
 github.com/leodido/go-urn v1.2.4
 
-github.com/mattn/go-colorable v0.1.13
-
-github.com/mattn/go-isatty v0.0.19
-
 github.com/mitchellh/go-wordwrap v1.0.1
 
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd
@@ -128,21 +114,17 @@ github.com/veggiemonk/strcase v0.0.0-20230627213939-a882c834bcab
 
 github.com/zclconf/go-cty/cty v1.13.2
 
-github.com/zegl/kube-score v1.16.1
-
-golang.org/x/crypto/sha3 v0.10.0
+golang.org/x/crypto/sha3 v0.11.0
 
 golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df
 
-golang.org/x/mod v0.11.0
+golang.org/x/mod v0.12.0
 
-golang.org/x/net v0.11.0
+golang.org/x/net v0.12.0
 
-golang.org/x/sys/unix v0.9.0
+golang.org/x/text v0.11.0
 
-golang.org/x/text v0.10.0
-
-golang.org/x/tools v0.10.0
+golang.org/x/tools v0.11.0
 
 gopkg.in/inf.v0 v0.9.1
 
@@ -537,61 +519,6 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
-
----
-
-MIT
-(github.com/eidolon/wordwrap v0.0.0-20161011182207-e0f54129b8bb)
-
-The MIT License (MIT)
-
-Copyright (c) 2016 Eidolon
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-
----
-
-MIT
-(github.com/fatih/color v1.15.0)
-
-The MIT License (MIT)
-
-Copyright (c) 2013 Fatih Arslan
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-the Software, and to permit persons to whom the Software is furnished to do so,
-subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
 ---
@@ -2780,50 +2707,6 @@ SOFTWARE.
 ---
 
 MIT
-(github.com/mattn/go-colorable v0.1.13)
-
-The MIT License (MIT)
-
-Copyright (c) 2016 Yasuhiro Matsumoto
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-
----
-
-MIT
-(github.com/mattn/go-isatty v0.0.19)
-
-Copyright (c) Yasuhiro MATSUMOTO <mattn.jp@gmail.com>
-
-MIT License (Expat)
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-
----
-
-MIT
 (github.com/mitchellh/go-wordwrap v1.0.1)
 
 The MIT License (MIT)
@@ -3432,36 +3315,8 @@ SOFTWARE.
 
 ---
 
-MIT
-(github.com/zegl/kube-score v1.16.1)
-
-MIT License
-
-Copyright (c) 2018 Gustav Westling
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-
----
-
 BSD-3-Clause
-(golang.org/x/crypto/sha3 v0.10.0)
+(golang.org/x/crypto/sha3 v0.11.0)
 
 Copyright (c) 2009 The Go Authors. All rights reserved.
 
@@ -3529,7 +3384,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---
 
 BSD-3-Clause
-(golang.org/x/mod v0.11.0)
+(golang.org/x/mod v0.12.0)
 
 Copyright (c) 2009 The Go Authors. All rights reserved.
 
@@ -3563,7 +3418,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---
 
 BSD-3-Clause
-(golang.org/x/net v0.11.0)
+(golang.org/x/net v0.12.0)
 
 Copyright (c) 2009 The Go Authors. All rights reserved.
 
@@ -3597,7 +3452,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---
 
 BSD-3-Clause
-(golang.org/x/sys/unix v0.9.0)
+(golang.org/x/text v0.11.0)
 
 Copyright (c) 2009 The Go Authors. All rights reserved.
 
@@ -3631,41 +3486,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---
 
 BSD-3-Clause
-(golang.org/x/text v0.10.0)
-
-Copyright (c) 2009 The Go Authors. All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-
-   * Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
-   * Redistributions in binary form must reproduce the above
-copyright notice, this list of conditions and the following disclaimer
-in the documentation and/or other materials provided with the
-distribution.
-   * Neither the name of Google Inc. nor the names of its
-contributors may be used to endorse or promote products derived from
-this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
----
-
-BSD-3-Clause
-(golang.org/x/tools v0.10.0)
+(golang.org/x/tools v0.11.0)
 
 Copyright (c) 2009 The Go Authors. All rights reserved.
 
