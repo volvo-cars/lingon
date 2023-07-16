@@ -84,6 +84,7 @@ var CR = &rbacv1.ClusterRole{
 		},
 	},
 }
+
 var RB = ku.BindRole(
 	Role.Name,
 	W.SA,

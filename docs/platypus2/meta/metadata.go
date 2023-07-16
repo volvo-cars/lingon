@@ -61,6 +61,7 @@ func (b Metadata) MatchLabels() map[string]string {
 		ku.AppLabelInstance: b.Instance,
 	}
 }
+
 func (b Metadata) MatchLabelsSuffix(suffix string) map[string]string {
 	return map[string]string{
 		ku.AppLabelName:     b.Name + "-" + suffix,

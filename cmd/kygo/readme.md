@@ -8,7 +8,7 @@ Why Go? Smarter people have a better way to explain it than us: <https://github.
 
 ## Usage
 
-```sh
+```sh mdox-exec="kygo -h"
 Usage of kygo:
   -app string
     	specify the app name. This will be used as the package name if none is specified. (default "myapp")
