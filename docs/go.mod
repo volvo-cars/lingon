@@ -23,7 +23,7 @@ require (
 	github.com/stretchr/testify v1.8.2
 	github.com/volvo-cars/lingon v0.0.0-20230703105113-1bcac3444c58
 	github.com/zegl/kube-score v1.16.1
-	golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df
+	golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1
 	istio.io/api v1.19.0-alpha.1
 	istio.io/client-go v1.18.0
 	k8s.io/api v0.27.3
@@ -91,10 +91,10 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/klog/v2 v2.100.1 // indirect
-	k8s.io/utils v0.0.0-20230505201702-9f6742963106 // indirect
+	k8s.io/utils v0.0.0-20230711102312-30195339c3c7 // indirect
 	knative.dev/pkg v0.0.0-20230628105954-6eb4b40a9a30 // indirect
 	mvdan.cc/gofumpt v0.5.0 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
-	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
+	sigs.k8s.io/structured-merge-diff/v4 v4.3.0 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )

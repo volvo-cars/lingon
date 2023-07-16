@@ -32,7 +32,7 @@ github.com/tidwall/sjson v1.2.5 : MIT
 github.com/veggiemonk/strcase v0.0.0-20230627213939-a882c834bcab : MIT
 github.com/zclconf/go-cty/cty v1.13.2 : MIT
 golang.org/x/crypto/sha3 v0.11.0 : BSD-3-Clause
-golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df : BSD-3-Clause
+golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1 : BSD-3-Clause
 golang.org/x/mod v0.12.0 : BSD-3-Clause
 golang.org/x/net v0.12.0 : BSD-3-Clause
 golang.org/x/text v0.11.0 : BSD-3-Clause
@@ -46,11 +46,11 @@ k8s.io/apimachinery/pkg v0.27.3 : Apache-2.0
 k8s.io/apimachinery/third_party/forked/golang/reflect v0.27.3 : BSD-3-Clause
 k8s.io/client-go/kubernetes/scheme v0.27.3 : Apache-2.0
 k8s.io/klog/v2 v2.100.1 : Apache-2.0
-k8s.io/utils v0.0.0-20230505201702-9f6742963106 : Apache-2.0
-k8s.io/utils/internal/third_party/forked/golang/net v0.0.0-20230505201702-9f6742963106 : BSD-3-Clause
+k8s.io/utils v0.0.0-20230711102312-30195339c3c7 : Apache-2.0
+k8s.io/utils/internal/third_party/forked/golang/net v0.0.0-20230711102312-30195339c3c7 : BSD-3-Clause
 mvdan.cc/gofumpt v0.5.0 : BSD-3-Clause
 sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd : Apache-2.0
-sigs.k8s.io/structured-merge-diff/v4/value v4.2.3 : Apache-2.0
+sigs.k8s.io/structured-merge-diff/v4/value v4.3.0 : Apache-2.0
 sigs.k8s.io/yaml v1.3.0 : MIT
 
 Copyright Text:
@@ -116,7 +116,7 @@ github.com/zclconf/go-cty/cty v1.13.2
 
 golang.org/x/crypto/sha3 v0.11.0
 
-golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df
+golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1
 
 golang.org/x/mod v0.12.0
 
@@ -170,15 +170,15 @@ k8s.io/client-go/kubernetes/scheme v0.27.3
 
 k8s.io/klog/v2 v2.100.1
 
-k8s.io/utils v0.0.0-20230505201702-9f6742963106
+k8s.io/utils v0.0.0-20230711102312-30195339c3c7
 
-k8s.io/utils/internal/third_party/forked/golang/net v0.0.0-20230505201702-9f6742963106
+k8s.io/utils/internal/third_party/forked/golang/net v0.0.0-20230711102312-30195339c3c7
 
 mvdan.cc/gofumpt v0.5.0
 
 sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd
 
-sigs.k8s.io/structured-merge-diff/v4/value v4.2.3
+sigs.k8s.io/structured-merge-diff/v4/value v4.3.0
 
 sigs.k8s.io/yaml v1.3.0
 
@@ -3350,7 +3350,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---
 
 BSD-3-Clause
-(golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df)
+(golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1)
 
 Copyright (c) 2009 The Go Authors. All rights reserved.
 
@@ -4888,7 +4888,7 @@ third-party archives.
 ---
 
 Apache-2.0
-(k8s.io/utils v0.0.0-20230505201702-9f6742963106)
+(k8s.io/utils v0.0.0-20230711102312-30195339c3c7)
 
 
                                  Apache License
@@ -5097,7 +5097,7 @@ Apache-2.0
 ---
 
 BSD-3-Clause
-(k8s.io/utils/internal/third_party/forked/golang/net v0.0.0-20230505201702-9f6742963106)
+(k8s.io/utils/internal/third_party/forked/golang/net v0.0.0-20230711102312-30195339c3c7)
 
 Copyright (c) 2012 The Go Authors. All rights reserved.
 
@@ -5410,7 +5410,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---
 
 Apache-2.0
-(sigs.k8s.io/structured-merge-diff/v4/value v4.2.3)
+(sigs.k8s.io/structured-merge-diff/v4/value v4.3.0)
 
                                  Apache License
                            Version 2.0, January 2004
