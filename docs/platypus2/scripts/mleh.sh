@@ -67,7 +67,6 @@ function install_repo() {
   helm repo add vm https://victoriametrics.github.io/helm-charts/
   helm repo add sigstore https://sigstore.github.io/helm-charts
 
-
   helm repo update
 }
 
@@ -177,6 +176,17 @@ function manifests() {
 
   wget https://github.com/nats-io/nack/releases/latest/download/crds.yml -O - | \
     $KYGO -out "nats/jetstream" -app jetstream -pkg jetstream -group=false -clean-name=false
+
+
+  #
+  # DragonflyDB (redis / memcache)
+  #
+  helm template dragonflydb oci://ghcr.io/dragonflydb/dragonfly/helm/dragonfly --create-namespace \
+    --namespace=dragonflydb \
+    --version "v1.6.1" \
+    --values "$VALUES_DIR"/dragonflydb.values.yaml | \
+    $KYGO -out "dragonflydb" -app dragonflydb -pkg dragonflydb
+
 
   #
   # Karpenter
