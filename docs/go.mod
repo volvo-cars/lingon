@@ -26,10 +26,10 @@ require (
 	golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1
 	istio.io/api v1.19.0-alpha.1
 	istio.io/client-go v1.18.0
-	k8s.io/api v0.27.3
+	k8s.io/api v0.27.4
 	k8s.io/apiextensions-apiserver v0.27.3
-	k8s.io/apimachinery v0.27.3
-	k8s.io/client-go v0.27.3
+	k8s.io/apimachinery v0.27.4
+	k8s.io/client-go v0.27.4
 	sigs.k8s.io/secrets-store-csi-driver v1.3.4
 )
 
