@@ -63,7 +63,7 @@ var LeasesCleanupJOBS = &batchv1.Job{
 							"-c",
 							"kubectl delete leases --all --ignore-not-found -n sigstore",
 						},
-						Image:           "cgr.dev/chainguard/kubectl:1.26.0",
+						Image:           "cgr.dev/chainguard/kubectl:latest",
 						ImagePullPolicy: corev1.PullPolicy("IfNotPresent"),
 						Name:            "kubectl",
 					},
