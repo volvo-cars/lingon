@@ -1,6 +1,3 @@
-# Copyright (c) 2023 Volvo Car Corporation
-# SPDX-License-Identifier: Apache-2.0
-
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -30,6 +27,58 @@ rules:
   - nope.volvocars.com
   resources:
   - accounts/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - nope.volvocars.com
+  resources:
+  - consumers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - nope.volvocars.com
+  resources:
+  - consumers/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - nope.volvocars.com
+  resources:
+  - consumers/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - nope.volvocars.com
+  resources:
+  - streams
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - nope.volvocars.com
+  resources:
+  - streams/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - nope.volvocars.com
+  resources:
+  - streams/status
   verbs:
   - get
   - patch

@@ -73,9 +73,7 @@ cd hack/natsserver
 go run main.go
 
 # In a terminal where you want to run the operator
-export NATS_MAIN_URL="nats://0.0.0.0:4222"
-export OPERATOR_SEED=$(pwd)/hack/natsserver/operator.nk
-export NATS_CREDS=$(pwd)/hack/natsserver/sys_user.creds
+source $(pwd)/hack/natsserver/out/.env
 
 # Install CRDs and run the operator
 make install run

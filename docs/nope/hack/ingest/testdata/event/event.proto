@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package event;
+
+// option go_package = "github.com/volvo-cars/nope/hack/proto";
+
+message Event {
+  Message msg = 2;
+}
+
+message Message {
+  string id = 1;
+  string author_id = 2;
+  string title = 3;
+  string content = 4;
+}

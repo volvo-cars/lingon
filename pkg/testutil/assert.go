@@ -18,6 +18,14 @@ func AssertEqual[C comparable](t *testing.T, expected, actual C) {
 	}
 }
 
+// AssertNotEqual checks if the expected and actual are not equal. Errors if not.
+func AssertNotEqual[C comparable](t *testing.T, expected, actual C) {
+	t.Helper()
+	if diff := Diff(actual, expected); diff == "" {
+		t.Fatal(Callers(), diff)
+	}
+}
+
 // AssertEqualSlice checks if the expected and actual slices are equal. Errors if not.
 func AssertEqualSlice[C comparable](t *testing.T, expected, actual []C) {
 	t.Helper()

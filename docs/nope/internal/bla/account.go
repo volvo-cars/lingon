@@ -15,7 +15,7 @@ import (
 
 // AccountRequest defines the options available for creating a NATS account.
 type AccountRequest struct {
-	// Name of the account
+	// Name of the account.
 	Name string
 }
 
@@ -49,13 +49,13 @@ func SyncAccount(
 	account *Account,
 	req AccountRequest,
 ) (*Account, error) {
-	// If account is nil, we need to create a new account
+	// If account is nil, we need to create a new account.
 	if account == nil {
 		account, err := newAccount(operatorNKey, req)
 		if err != nil {
 			return nil, fmt.Errorf("creating account: %w", err)
 		}
-		// Request the new account (send it to the server)
+		// Request the new account (send it to the server).
 		if _, err := nc.Request(
 			"$SYS.REQ.CLAIMS.UPDATE",
 			[]byte(account.JWT),
@@ -75,12 +75,12 @@ func SyncAccount(
 	if err != nil {
 		return nil, fmt.Errorf("getting account public key: %w", err)
 	}
-	// Validate that the account ID and NKey match
+	// Validate that the account ID and NKey match.
 	if account.ID != accountPublicKey {
 		return nil, errors.New("account ID does not match public key from account NKey")
 	}
 
-	// Create an account JWT based on the request
+	// Create an account JWT based on the request.
 	accountJWT, err := generateAccountJWT(operatorNKey, accountPublicKey, req)
 	if err != nil {
 		return nil, fmt.Errorf("creating account JWT: %w", err)

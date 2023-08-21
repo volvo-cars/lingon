@@ -1,0 +1,122 @@
+-- main.go --
+package main
+
+import (
+	"errors"
+	"flag"
+	"fmt"
+	"os"
+	"time"
+
+	"streamer/schema"
+
+	"github.com/nats-io/nats.go"
+	"golang.org/x/exp/slog"
+	"google.golang.org/protobuf/proto"
+)
+
+func main() {
+	var subject string
+	flag.StringVar(&subject, "subject", "", "subject to publish to")
+	flag.Parse()
+
+	var cErr error
+	if subject == "" {
+		cErr = errors.Join(cErr, errors.New("subject argument is required"))
+	}
+	natsURL, ok := os.LookupEnv("NATS_URL")
+	if !ok {
+		cErr = errors.Join(cErr, errors.New("NATS_URL not set"))
+	}
+	natsCreds, ok := os.LookupEnv("NATS_CREDS")
+	if !ok {
+		cErr = errors.Join(cErr, errors.New("NATS_CREDS not set"))
+	}
+	if cErr != nil {
+		slog.Error("required environment variables not set", "error", cErr)
+		os.Exit(1)
+	}
+	nc, err := nats.Connect(natsURL, nats.UserCredentials(natsCreds))
+	if err != nil {
+		slog.Error("connecting to NATS", "error", err)
+		os.Exit(1)
+	}
+	defer nc.Close()
+
+	js, err := nc.JetStream()
+	if err != nil {
+		slog.Error("getting JetStream context", "error", err)
+		os.Exit(1)
+	}
+
+	event := schema.Event{
+		Msg: &schema.Message{
+			AuthorId: "dummystreamer",
+			Title:    "Dummy streamer",
+			Content:  "Dummy streamer content",
+		},
+	}
+	ticker := time.NewTicker(2 * time.Second)
+	eventID := 0
+	for _ = range ticker.C {
+		for i := 0; i < 50; i++ {
+			slog.Info("publishing event", "event", eventID)
+			event.Msg.Id = fmt.Sprintf("event-%d", eventID)
+			msg, err := proto.Marshal(&event)
+			if err != nil {
+				slog.Error("marshalling event", "error", err)
+			}
+			if _, err := js.PublishAsync(subject, msg); err != nil {
+				slog.Error("publishing event", "error", err)
+			}
+			eventID++
+		}
+	}
+}
+-- go.mod --
+module streamer
+
+go 1.20
+
+require (
+	github.com/nats-io/nats.go v1.27.1
+	golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df
+	google.golang.org/protobuf v1.31.0
+)
+
+require (
+	github.com/klauspost/compress v1.16.5 // indirect
+	github.com/nats-io/nats-server/v2 v2.9.19 // indirect
+	github.com/nats-io/nkeys v0.4.4 // indirect
+	github.com/nats-io/nuid v1.0.1 // indirect
+	golang.org/x/crypto v0.9.0 // indirect
+	golang.org/x/sys v0.8.0 // indirect
+)
+-- go.sum --
+github.com/golang/protobuf v1.5.0 h1:LUVKkCeviFUMKqHa4tXIIij/lbhnMbP7Fn5wKdKkRh4=
+github.com/golang/protobuf v1.5.0/go.mod h1:FsONVRAS9T7sI+LIUmWTfcYkHO4aIWwzhcaSAoJOfIk=
+github.com/google/go-cmp v0.5.5/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
+github.com/google/go-cmp v0.5.8 h1:e6P7q2lk1O+qJJb4BtCQXlK8vWEO8V1ZeuEdJNOqZyg=
+github.com/klauspost/compress v1.16.5 h1:IFV2oUNUzZaz+XyusxpLzpzS8Pt5rh0Z16For/djlyI=
+github.com/klauspost/compress v1.16.5/go.mod h1:ntbaceVETuRiXiv4DpjP66DpAtAGkEQskQzEyD//IeE=
+github.com/minio/highwayhash v1.0.2 h1:Aak5U0nElisjDCfPSG79Tgzkn2gl66NxOMspRrKnA/g=
+github.com/nats-io/jwt/v2 v2.4.1 h1:Y35W1dgbbz2SQUYDPCaclXcuqleVmpbRa7646Jf2EX4=
+github.com/nats-io/nats-server/v2 v2.9.19 h1:OF9jSKZGo425C/FcVVIvNgpd36CUe7aVTTXEZRJk6kA=
+github.com/nats-io/nats-server/v2 v2.9.19/go.mod h1:aTb/xtLCGKhfTFLxP591CMWfkdgBmcUUSkiSOe5A3gw=
+github.com/nats-io/nats.go v1.27.1 h1:OuYnal9aKVSnOzLQIzf7554OXMCG7KbaTkCSBHRcSoo=
+github.com/nats-io/nats.go v1.27.1/go.mod h1:XpbWUlOElGwTYbMR7imivs7jJj9GtK7ypv321Wp6pjc=
+github.com/nats-io/nkeys v0.4.4 h1:xvBJ8d69TznjcQl9t6//Q5xXuVhyYiSos6RPtvQNTwA=
+github.com/nats-io/nkeys v0.4.4/go.mod h1:XUkxdLPTufzlihbamfzQ7mw/VGx6ObUs+0bN5sNvt64=
+github.com/nats-io/nuid v1.0.1 h1:5iA8DT8V7q8WK2EScv2padNa/rTESc1KdnPw4TC2paw=
+github.com/nats-io/nuid v1.0.1/go.mod h1:19wcPz3Ph3q0Jbyiqsd0kePYG7A95tJPxeL+1OSON2c=
+golang.org/x/crypto v0.9.0 h1:LF6fAI+IutBocDJ2OT0Q1g8plpYljMZ4+lty+dsqw3g=
+golang.org/x/crypto v0.9.0/go.mod h1:yrmDGqONDYtNj3tH8X9dzUun2m2lzPa9ngI6/RUPGR0=
+golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df h1:UA2aFVmmsIlefxMk29Dp2juaUSth8Pyn3Tq5Y5mJGME=
+golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df/go.mod h1:FXUEEKJgO7OQYeo8N01OfiKP8RXMtf6e8aTskBGqWdc=
+golang.org/x/sys v0.8.0 h1:EBmGv8NaZBZTWvrbjNoL6HVt+IVy3QDQpJs7VRIw3tU=
+golang.org/x/sys v0.8.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+golang.org/x/time v0.3.0 h1:rg5rLMjNzMS1RkNLzCG38eapWhnYLFYXDXj2gOlr8j4=
+golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
+google.golang.org/protobuf v1.26.0-rc.1/go.mod h1:jlhhOSvTdKEhbULTjvd4ARK9grFBp09yW+WbY/TyQbw=
+google.golang.org/protobuf v1.31.0 h1:g0LDEJHgrBl9N9r17Ru3sqWhkIx2NB67okBHPwC7hs8=
+google.golang.org/protobuf v1.31.0/go.mod h1:HV8QOd/L58Z+nl8r43ehVNZIU/HEI6OcFqwMG9pJV4I=

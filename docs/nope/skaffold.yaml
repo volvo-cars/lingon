@@ -1,0 +1,38 @@
+apiVersion: skaffold/v4beta6
+kind: Config
+metadata:
+  name: hack
+build:
+  artifacts:
+  - image: platypus.io/nope
+    context: .
+    ko:
+      dir: cmd
+      dependencies:
+        ignore:
+          - hack
+  - image: platypus.io/natsserver
+    context: hack/natsserver
+    ko: {}
+  - image: ko.local/schema-service-builder-base
+    context: hack/ingest
+    custom:
+      buildCommand: docker build -t ko.local/schema-service-builder-base:local .
+      dependencies:
+        paths:
+          - Dockerfile
+  - image: platypus.io/schema-service-builder
+    requires:
+    - image: ko.local/schema-service-builder-base
+    ko:
+      fromImage: ko.local/schema-service-builder-base:local
+      dir: hack/ingest/cmd
+manifests:
+  rawYaml:
+    - config/manager/out/*.yaml
+    - config/rbac/*.yaml
+    - hack/natsserver/out/k8s/*.yaml
+    - hack/natsserver/out/nats/kube_secret.yaml
+    - hack/ingest/out/kube/*.yaml
+deploy:
+  kubectl: {}
