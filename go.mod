@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/dave/jennifer v1.6.1
-	github.com/go-playground/validator/v10 v10.14.1
+	github.com/go-playground/validator/v10 v10.15.1
 	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/hcl/v2 v2.17.0
 	github.com/hashicorp/terraform-exec v0.18.1
