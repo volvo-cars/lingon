@@ -10,13 +10,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/volvo-cars/lingoneks/meta"
-	"k8s.io/apimachinery/pkg/api/resource"
-	"k8s.io/apimachinery/pkg/util/intstr"
-
 	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
+	"github.com/volvo-cars/lingoneks/meta"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -300,13 +298,13 @@ var STS = &appsv1.StatefulSet{
 	},
 	Spec: appsv1.StatefulSetSpec{
 		PodManagementPolicy: appsv1.OrderedReadyPodManagement,
-		UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
-			Type: appsv1.RollingUpdateStatefulSetStrategyType,
-			RollingUpdate: &appsv1.RollingUpdateStatefulSetStrategy{
-				Partition:      nil,
-				MaxUnavailable: P(intstr.FromInt(1)),
-			},
-		},
+		// UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
+		// 	Type: appsv1.RollingUpdateStatefulSetStrategyType,
+		// 	RollingUpdate: &appsv1.RollingUpdateStatefulSetStrategy{
+		// 		Partition:      nil,
+		// 		MaxUnavailable: P(intstr.FromInt(1)),
+		// 	},
+		// },
 		Replicas:    P(int32(N.replicas)),
 		Selector:    &metav1.LabelSelector{MatchLabels: N.MatchLabels()},
 		ServiceName: SVC.Name,
