@@ -53,7 +53,22 @@ func Core() Meta {
 		}
 	}
 
-	c := ku.ConfigAndMount{
+	V := Meta{
+		Metadata: m,
+		Storage: ku.VolumeAndMount{
+			VolumeMount: corev1.VolumeMount{
+				MountPath: "/vector-data-dir",
+				Name:      "data",
+			},
+			VolumeSource: corev1.VolumeSource{},
+		},
+		SA:      ku.ServiceAccount(m.Name, m.Namespace, m.Labels(), nil),
+		Fluent:  p("fluent", 24224),
+		Vector:  p("vector", 6000),
+		PromExp: p("prom-exporter", 9090),
+	}
+
+	V.Config = ku.ConfigAndMount{
 		ObjectMeta: V.ObjectMeta(),
 		VolumeMount: corev1.VolumeMount{
 			Name:      "config",
@@ -92,21 +107,7 @@ sinks:
 		},
 	}
 
-	return Meta{
-		Metadata: m,
-		Config:   c,
-		Storage: ku.VolumeAndMount{
-			VolumeMount: corev1.VolumeMount{
-				MountPath: "/vector-data-dir",
-				Name:      "data",
-			},
-			VolumeSource: corev1.VolumeSource{},
-		},
-		SA:      ku.ServiceAccount(m.Name, m.Namespace, m.Labels(), nil),
-		Fluent:  p("fluent", 24224),
-		Vector:  p("vector", 6000),
-		PromExp: p("prom-exporter", 9090),
-	}
+	return V
 }
 
 type Meta struct {
