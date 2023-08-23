@@ -297,7 +297,7 @@ var STS = &appsv1.StatefulSet{
 		Namespace: N.Namespace,
 	},
 	Spec: appsv1.StatefulSetSpec{
-		PodManagementPolicy: appsv1.OrderedReadyPodManagement,
+		PodManagementPolicy: appsv1.ParallelPodManagement,
 		// UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
 		// 	Type: appsv1.RollingUpdateStatefulSetStrategyType,
 		// 	RollingUpdate: &appsv1.RollingUpdateStatefulSetStrategy{
