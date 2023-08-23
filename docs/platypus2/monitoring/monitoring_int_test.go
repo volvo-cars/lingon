@@ -180,7 +180,5 @@ func kubectl(
 	c.Stderr = os.Stderr
 
 	err := c.Run()
-	// o, err := c.CombinedOutput()
-	// t.Log("kubectl output:", string(o))
 	return err
 }

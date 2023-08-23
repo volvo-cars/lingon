@@ -8,12 +8,11 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
-
-	"golang.org/x/exp/slog"
 )
 
 const (

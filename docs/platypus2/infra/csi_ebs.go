@@ -4,9 +4,9 @@
 package infra
 
 import (
-	aws "github.com/golingon/terraproviders/aws/5.6.2"
-	"github.com/golingon/terraproviders/aws/5.6.2/dataiampolicydocument"
-	"github.com/golingon/terraproviders/aws/5.6.2/iamrole"
+	aws "github.com/golingon/terraproviders/aws/5.13.1"
+	"github.com/golingon/terraproviders/aws/5.13.1/dataiampolicydocument"
+	"github.com/golingon/terraproviders/aws/5.13.1/iamrole"
 	"github.com/volvo-cars/lingon/pkg/terra"
 )
 
@@ -33,8 +33,9 @@ func NewCSIEBS(opts CSIOpts) *CSI {
 	return &CSI{
 		CSIDriver: aws.NewEksAddon(
 			opts.ClusterName+"-csiebs", aws.EksAddonArgs{
-				AddonName:                S("aws-ebs-csi-driver"),
-				AddonVersion:             S("v1.19.0-eksbuild.1"),
+				AddonName: S("aws-ebs-csi-driver"),
+				// AddonVersion:             S("v1.19.0-eksbuild.1"),
+				AddonVersion:             S("v1.21.0-eksbuild.1"),
 				ClusterName:              S(opts.ClusterName),
 				ServiceAccountRoleArn:    ir.Role.Attributes().Arn(),
 				ResolveConflictsOnCreate: S("OVERWRITE"),

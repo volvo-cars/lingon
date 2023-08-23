@@ -39,7 +39,7 @@ func ValidateName(bucketName string) error {
 	if strings.HasPrefix(bucketName, "xn--") {
 		errs = append(
 			errs,
-			fmt.Errorf("bucket name cannot start with the prefix xn--"),
+			fmt.Errorf("bucket name cannot start with the xn-- prefix"),
 		)
 	}
 	// Bucket names must not end with the suffix -s3alias. This suffix is reserved for access point alias names.

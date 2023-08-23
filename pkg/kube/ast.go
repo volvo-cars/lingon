@@ -5,13 +5,13 @@ package kube
 
 import (
 	"fmt"
+	"log/slog"
 	"reflect"
 	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/dave/jennifer/jen"
-	"golang.org/x/exp/slog"
 	"gopkg.in/yaml.v3"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"

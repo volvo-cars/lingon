@@ -7,10 +7,10 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 
 	"github.com/volvo-cars/lingon/pkg/terra"
-	"golang.org/x/exp/slog"
 )
 
 // StackConfig defines a reusable stack configuration containing things like

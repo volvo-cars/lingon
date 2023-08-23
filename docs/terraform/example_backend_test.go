@@ -8,9 +8,9 @@ package terraform_test
 import (
 	"bytes"
 	"fmt"
+	"log/slog"
 
 	"github.com/volvo-cars/lingon/pkg/terra"
-	"golang.org/x/exp/slog"
 )
 
 var _ terra.Backend = (*BackendLocal)(nil)

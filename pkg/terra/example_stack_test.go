@@ -6,10 +6,10 @@ package terra_test
 import (
 	"bytes"
 	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/volvo-cars/lingon/pkg/terra"
-	"golang.org/x/exp/slog"
 )
 
 // EmptyStack shows how to create a Terraform stack.

@@ -58,6 +58,9 @@ func NewProvisioners(opts ProvisionersOpts) *Provisioners {
 		},
 		ObjectMeta: metav1.ObjectMeta{Name: KA.ProfileName},
 		Spec: v1alpha5.ProvisionerSpec{
+			Consolidation: &v1alpha5.Consolidation{
+				Enabled: P(true),
+			},
 			ProviderRef: &v1alpha5.MachineTemplateRef{Name: nodeTmpl.Name},
 			Requirements: []corev1.NodeSelectorRequirement{
 				// see https://karpenter.sh/v0.29.0/concepts/provisioners/

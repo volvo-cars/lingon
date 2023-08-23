@@ -6,13 +6,13 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log/slog"
 	"os"
 	"runtime/debug"
 	"strings"
 
 	"github.com/volvo-cars/lingon/pkg/kube"
 	"github.com/volvo-cars/lingon/pkg/kubeutil"
-	"golang.org/x/exp/slog"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiextensionsbeta "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"

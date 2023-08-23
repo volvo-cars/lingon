@@ -7,14 +7,14 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"log/slog"
 	"os"
 
-	aws "github.com/golingon/terraproviders/aws/5.6.2"
-	"github.com/golingon/terraproviders/aws/5.6.2/provider"
+	aws "github.com/golingon/terraproviders/aws/5.13.1"
+	"github.com/golingon/terraproviders/aws/5.13.1/provider"
 	"github.com/volvo-cars/lingon/pkg/terra"
 	"github.com/volvo-cars/lingoneks/infra"
 	"github.com/volvo-cars/lingoneks/terraclient"
-	"golang.org/x/exp/slog"
 )
 
 const (

@@ -12,6 +12,7 @@ import (
 
 	"github.com/volvo-cars/lingoneks/meta"
 	"k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/apimachinery/pkg/util/intstr"
 
 	ku "github.com/volvo-cars/lingon/pkg/kubeutil"
 	appsv1 "k8s.io/api/apps/v1"
@@ -278,7 +279,7 @@ var PAA = &corev1.Affinity{
 				LabelSelector: &metav1.LabelSelector{
 					MatchExpressions: []metav1.LabelSelectorRequirement{
 						{
-							Key:      "app",
+							Key:      ku.AppLabelName,
 							Operator: metav1.LabelSelectorOpIn,
 							Values:   []string{N.Name},
 						},
@@ -298,10 +299,17 @@ var STS = &appsv1.StatefulSet{
 		Namespace: N.Namespace,
 	},
 	Spec: appsv1.StatefulSetSpec{
-		PodManagementPolicy: appsv1.ParallelPodManagement,
-		Replicas:            P(int32(N.replicas)),
-		Selector:            &metav1.LabelSelector{MatchLabels: N.MatchLabels()},
-		ServiceName:         SVC.Name,
+		PodManagementPolicy: appsv1.OrderedReadyPodManagement,
+		UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
+			Type: appsv1.RollingUpdateStatefulSetStrategyType,
+			RollingUpdate: &appsv1.RollingUpdateStatefulSetStrategy{
+				Partition:      nil,
+				MaxUnavailable: P(intstr.FromInt(1)),
+			},
+		},
+		Replicas:    P(int32(N.replicas)),
+		Selector:    &metav1.LabelSelector{MatchLabels: N.MatchLabels()},
+		ServiceName: SVC.Name,
 		VolumeClaimTemplates: []corev1.PersistentVolumeClaim{
 			{
 				ObjectMeta: metav1.ObjectMeta{Name: N.PvcName},

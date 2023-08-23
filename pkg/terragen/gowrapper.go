@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,7 +15,6 @@ import (
 	"github.com/volvo-cars/lingon/pkg/internal/terrajen"
 
 	tfjson "github.com/hashicorp/terraform-json"
-	"golang.org/x/exp/slog"
 )
 
 var (

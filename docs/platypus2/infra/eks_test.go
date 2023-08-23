@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	aws "github.com/golingon/terraproviders/aws/5.6.2"
+	aws "github.com/golingon/terraproviders/aws/5.13.1"
 	"github.com/hashicorp/terraform-exec/tfexec"
 	"github.com/volvo-cars/lingon/pkg/terra"
 	tu "github.com/volvo-cars/lingon/pkg/testutil"

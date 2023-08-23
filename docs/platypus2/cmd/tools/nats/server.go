@@ -6,10 +6,10 @@ package main
 import (
 	"context"
 	"errors"
+	"log/slog"
 
 	"github.com/nats-io/nats.go"
 	"github.com/volvo-cars/lingoneks/cmd/tools/nats/natspb"
-	"golang.org/x/exp/slog"
 	"google.golang.org/protobuf/proto"
 )
 

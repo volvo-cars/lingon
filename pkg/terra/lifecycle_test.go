@@ -6,8 +6,7 @@ package terra
 import (
 	"bytes"
 	"fmt"
-
-	"golang.org/x/exp/slog"
+	"log/slog"
 
 	"github.com/volvo-cars/lingon/pkg/internal/hcl"
 )

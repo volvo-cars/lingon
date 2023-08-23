@@ -32,7 +32,7 @@ var KA = Core()
 
 func Core() Meta {
 	AppName := "karpenter"
-	version := "0.29.0"
+	version := "0.29.2"
 	metricsPort := 8000
 	metricsPortName := "http-metrics"
 	webhookPort := 8443
@@ -49,8 +49,9 @@ func Core() Meta {
 		Img: meta.ContainerImg{
 			Registry: "public.ecr.aws/karpenter",
 			Image:    "controller",
-			Sha:      "3009f10487d9338f77c325adee3c208513cd06c7f191653327ef3a44006bf9c8",
-			Tag:      "v" + version,
+			Sha:      "bac5ea470c09df21eb3742cf9448e9b806138ed5b6321d4e04697bbdf122eac6",
+			// Sha:      "3009f10487d9338f77c325adee3c208513cd06c7f191653327ef3a44006bf9c8",
+			Tag: "v" + version,
 		},
 	}
 	return Meta{

@@ -5,10 +5,9 @@ package main
 
 import (
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
-
-	"golang.org/x/exp/slog"
 )
 
 // makeLogger returns a logger that writes to w [io.Writer]. If w is nil, os.Stderr is used.

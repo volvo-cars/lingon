@@ -9,11 +9,11 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"log/slog"
 	"os"
 	"os/exec"
 
 	"github.com/volvo-cars/lingon/pkg/kube"
-	"golang.org/x/exp/slog"
 )
 
 func Kubectl(
@@ -183,7 +183,8 @@ func (k *Client) Diff(ctx context.Context, km kube.Exporter) error {
 
 	go func() {
 		defer stdin.Close()
-		if err := kube.Export(km,
+		if err := kube.Export(
+			km,
 			kube.WithExportWriter(stdin),
 			kube.WithExportAsSingleFile("stdin"),
 		); err != nil {

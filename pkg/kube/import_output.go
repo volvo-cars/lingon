@@ -6,14 +6,15 @@ package kube
 import (
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"sort"
 
 	"github.com/dave/jennifer/jen"
 	"github.com/veggiemonk/strcase"
-	"golang.org/x/exp/slog"
 	"golang.org/x/tools/txtar"
+
 	"mvdan.cc/gofumpt/format"
 )
 

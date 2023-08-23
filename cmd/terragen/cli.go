@@ -30,12 +30,12 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"runtime/debug"
 
 	"github.com/volvo-cars/lingon/pkg/terragen"
-	"golang.org/x/exp/slog"
 )
 
 func main() {

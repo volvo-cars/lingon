@@ -6,12 +6,12 @@ package terraform
 import (
 	"bytes"
 	"fmt"
+	"log/slog"
 
 	tfjson "github.com/hashicorp/terraform-json"
 
 	aws "github.com/golingon/terraproviders/aws/4.60.0"
 	"github.com/volvo-cars/lingon/pkg/terra"
-	"golang.org/x/exp/slog"
 )
 
 func Example_awsProvider() {

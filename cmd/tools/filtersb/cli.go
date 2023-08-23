@@ -8,12 +8,12 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/volvo-cars/lingon/pkg/terragen"
-	"golang.org/x/exp/slog"
 )
 
 func main() {

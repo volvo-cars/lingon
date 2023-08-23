@@ -8,6 +8,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"os/exec"
 
@@ -19,8 +20,6 @@ import (
 	"github.com/volvo-cars/lingon/docs/platypus/pkg/terraclient"
 
 	"github.com/volvo-cars/lingon/pkg/terra"
-
-	"golang.org/x/exp/slog"
 )
 
 var (

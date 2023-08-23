@@ -5,8 +5,7 @@ package terra
 
 import (
 	"fmt"
-
-	"golang.org/x/exp/slog"
+	"log/slog"
 )
 
 func ExampleNumber() {

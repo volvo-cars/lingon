@@ -4,9 +4,9 @@
 package infra
 
 import (
-	aws "github.com/golingon/terraproviders/aws/5.6.2"
-	"github.com/golingon/terraproviders/aws/5.6.2/s3bucketserversideencryptionconfiguration"
-	"github.com/golingon/terraproviders/aws/5.6.2/s3bucketversioning"
+	aws "github.com/golingon/terraproviders/aws/5.13.1"
+	"github.com/golingon/terraproviders/aws/5.13.1/s3bucketserversideencryptionconfiguration"
+	"github.com/golingon/terraproviders/aws/5.13.1/s3bucketversioning"
 	"github.com/volvo-cars/lingon/pkg/terra"
 )
 

@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/imdario/mergo"
+	"dario.cat/mergo"
 )
 
 // Merge merges multiple kubeconfig files into one.

@@ -11,13 +11,12 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
-
-	"golang.org/x/exp/slog"
 )
 
 //go:embed badge.svg.tpl

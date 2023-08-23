@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -16,7 +17,6 @@ import (
 	"github.com/dave/jennifer/jen"
 	"github.com/volvo-cars/lingon/pkg/internal/api"
 	"github.com/volvo-cars/lingon/pkg/kubeutil"
-	"golang.org/x/exp/slog"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )

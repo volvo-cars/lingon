@@ -6,11 +6,11 @@ package terrajen_test
 import (
 	"bytes"
 	"fmt"
+	"log/slog"
 
 	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/volvo-cars/lingon/pkg/internal/terrajen"
 	"github.com/zclconf/go-cty/cty"
-	"golang.org/x/exp/slog"
 )
 
 var exampleProviderSchemas = tfjson.ProviderSchemas{

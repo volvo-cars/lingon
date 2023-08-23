@@ -5,12 +5,12 @@ package main
 
 import (
 	"fmt"
+	"log/slog"
 	"os/exec"
 	"sort"
 	"strings"
 
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/exp/slog"
 )
 
 const (

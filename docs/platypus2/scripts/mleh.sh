@@ -108,7 +108,7 @@ function manifests() {
     --set controller.serviceAccount.name=efs-csi-controller-sa | \
     $KYGO -out "csi/efs" -app efs -pkg efs
 
-  kustomize build "https://github.com/kubernetes-sigs/aws-ebs-csi-driver//deploy/kubernetes/overlays/stable/ecr-public/?ref=v1.19.0" | \
+  kustomize build "https://github.com/kubernetes-sigs/aws-ebs-csi-driver//deploy/kubernetes/overlays/stable/ecr-public/?ref=v1.21.0" | \
     $KYGO -out "csi/ebs" -app ebs -pkg ebs
 
 
@@ -137,7 +137,7 @@ function manifests() {
     $KYGO -out "monitoring/vmsingle" -app victoria-metrics -pkg vmsingle
 
   # VICTORIA METRICS CRDs
-  wget https://raw.githubusercontent.com/VictoriaMetrics/helm-charts/master/charts/victoria-metrics-k8s-stack/crds/crd.yaml -O - | \
+  wget https://raw.githubusercontent.com/VictoriaMetrics/helm-charts/master/charts/victoria-metrics-k8s-stack/charts/crds/crds/crd.yaml -O - | \
     $KYGO -out "monitoring/vmcrd" -app victoriametrics -pkg vmcrd -group=false -clean-name=false
 
   # VICTORIA METRICS K8S STACK
@@ -183,7 +183,7 @@ function manifests() {
   #
   helm template karpenter oci://public.ecr.aws/karpenter/karpenter --namespace=karpenter \
     --create-namespace \
-    --version "v0.29.0" \
+    --version "v0.29.2" \
     --set serviceAccount.annotations."eks\.amazonaws\.com/role-arn"=REPLACE_ME_KARPENTER_IAM_ROLE_ARN \
     --set settings.aws.clusterName=REPLACE_ME_CLUSTER_NAME \
     --set settings.aws.defaultInstanceProfile=KarpenterNodeInstanceProfile-REPLACE_ME_CLUSTER_NAME \

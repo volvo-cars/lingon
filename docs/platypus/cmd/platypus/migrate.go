@@ -6,13 +6,13 @@ package main
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	aws "github.com/golingon/terraproviders/aws/4.60.0"
 	"github.com/volvo-cars/lingon/docs/platypus/pkg/platform/grafana"
 	"github.com/volvo-cars/lingon/docs/platypus/pkg/terraclient"
 
 	"github.com/volvo-cars/lingon/pkg/terra"
-	"golang.org/x/exp/slog"
 )
 
 func migrateGrafana(

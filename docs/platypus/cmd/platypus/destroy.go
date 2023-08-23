@@ -6,9 +6,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/volvo-cars/lingon/docs/platypus/pkg/terraclient"
-	"golang.org/x/exp/slog"
 )
 
 func finishAndDestroy(

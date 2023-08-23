@@ -1,31 +1,30 @@
 module github.com/volvo-cars/lingon/docs
 
-go 1.20
+go 1.21
 
 replace github.com/volvo-cars/lingon => ../
 
 require (
 	github.com/Masterminds/semver/v3 v3.2.1
-	github.com/aws/karpenter v0.28.1
-	github.com/aws/karpenter-core v0.28.1
+	github.com/aws/karpenter v0.29.2
+	github.com/aws/karpenter-core v0.29.2
 	github.com/eidolon/wordwrap v0.0.0-20161011182207-e0f54129b8bb
 	github.com/fatih/color v1.15.0
 	github.com/go-playground/validator/v10 v10.15.1
-	github.com/golingon/terraproviders/aws/4.60.0 v0.0.0-20230703111924-4b2c49f97f7c
-	github.com/golingon/terraproviders/tls/4.0.4 v0.0.0-20230703111924-4b2c49f97f7c
-	github.com/google/go-containerregistry v0.15.2
+	github.com/golingon/terraproviders/aws/4.60.0 v0.0.0-20230821062044-8717820dd713
+	github.com/golingon/terraproviders/tls/4.0.4 v0.0.0-20230821062044-8717820dd713
+	github.com/google/go-containerregistry v0.16.1
 	github.com/hashicorp/hcl/v2 v2.17.0
 	github.com/hashicorp/terraform-exec v0.18.1
 	github.com/hashicorp/terraform-json v0.17.1
-	github.com/hexops/valast v1.4.3
+	github.com/hexops/valast v1.4.4
 	github.com/invopop/yaml v0.2.0
 	github.com/rogpeppe/go-internal v1.11.0
-	github.com/stretchr/testify v1.8.2
-	github.com/volvo-cars/lingon v0.0.0-20230703105113-1bcac3444c58
-	github.com/zegl/kube-score v1.16.1
-	golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1
-	istio.io/api v1.19.0-alpha.1
-	istio.io/client-go v1.18.0
+	github.com/stretchr/testify v1.8.4
+	github.com/volvo-cars/lingon v0.0.0-20230821085204-81fbacc93e96
+	github.com/zegl/kube-score v1.17.0
+	istio.io/api v1.19.0-beta.1
+	istio.io/client-go v1.18.1
 	k8s.io/api v0.28.0
 	k8s.io/apiextensions-apiserver v0.28.0
 	k8s.io/apimachinery v0.28.0
@@ -36,14 +35,14 @@ require (
 require (
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
-	github.com/aws/aws-sdk-go v1.44.294 // indirect
+	github.com/aws/aws-sdk-go v1.44.329 // indirect
 	github.com/containerd/stargz-snapshotter/estargz v0.14.3 // indirect
 	github.com/dave/jennifer v1.7.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/docker/cli v24.0.2+incompatible // indirect
+	github.com/docker/cli v24.0.5+incompatible // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
-	github.com/docker/docker v24.0.2+incompatible // indirect
-	github.com/docker/docker-credential-helpers v0.7.0 // indirect
+	github.com/docker/docker v24.0.5+incompatible // indirect
+	github.com/docker/docker-credential-helpers v0.8.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
@@ -55,7 +54,7 @@ require (
 	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.16.6 // indirect
+	github.com/klauspost/compress v1.16.7 // indirect
 	github.com/leodido/go-urn v1.2.4 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
@@ -73,26 +72,27 @@ require (
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/tidwall/sjson v1.2.5 // indirect
-	github.com/vbatts/tar-split v0.11.3 // indirect
+	github.com/vbatts/tar-split v0.11.5 // indirect
 	github.com/veggiemonk/strcase v0.0.0-20230627213939-a882c834bcab // indirect
 	github.com/zclconf/go-cty v1.13.2 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.12.0 // indirect
+	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63 // indirect
 	golang.org/x/mod v0.12.0 // indirect
 	golang.org/x/net v0.14.0 // indirect
 	golang.org/x/sync v0.3.0 // indirect
 	golang.org/x/sys v0.11.0 // indirect
 	golang.org/x/text v0.12.0 // indirect
-	golang.org/x/tools v0.12.0 // indirect
-	google.golang.org/genproto v0.0.0-20230629202037-9506855d4529 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20230629202037-9506855d4529 // indirect
+	golang.org/x/tools v0.12.1-0.20230815132531-74c255bcf846 // indirect
+	google.golang.org/genproto v0.0.0-20230822172742-b8732ec3820d // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20230822172742-b8732ec3820d // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/klog/v2 v2.100.1 // indirect
-	k8s.io/utils v0.0.0-20230711102312-30195339c3c7 // indirect
-	knative.dev/pkg v0.0.0-20230628105954-6eb4b40a9a30 // indirect
+	k8s.io/utils v0.0.0-20230726121419-3b25d923346b // indirect
+	knative.dev/pkg v0.0.0-20230821102121-81e4ee140363 // indirect
 	mvdan.cc/gofumpt v0.5.0 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.3.0 // indirect

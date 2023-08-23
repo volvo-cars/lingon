@@ -1,15 +1,15 @@
 module github.com/volvo-cars/lingon
 
-go 1.20
+go 1.21
 
 require (
+	dario.cat/mergo v1.0.0
 	github.com/dave/jennifer v1.7.0
 	github.com/go-playground/validator/v10 v10.15.1
 	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/hcl/v2 v2.17.0
 	github.com/hashicorp/terraform-exec v0.18.1
 	github.com/hashicorp/terraform-json v0.17.1
-	github.com/imdario/mergo v0.3.16
 	github.com/tidwall/gjson v1.16.0
 	github.com/tidwall/sjson v1.2.5
 	github.com/veggiemonk/strcase v0.0.0-20230627213939-a882c834bcab
@@ -35,6 +35,7 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect
+	github.com/imdario/mergo v0.3.16 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/leodido/go-urn v1.2.4 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect

@@ -9,6 +9,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"os/exec"
 
@@ -25,7 +26,6 @@ import (
 	"github.com/volvo-cars/lingoneks/monitoring/vmop"
 	"github.com/volvo-cars/lingoneks/nats"
 	"github.com/volvo-cars/lingoneks/terraclient"
-	"golang.org/x/exp/slog"
 )
 
 var S = terra.String
