@@ -165,7 +165,7 @@ pid_file: "` + n.pidPath + `"
 ###############
 ` + ConfigMonitoring(
 		n.Monitor.Container.ContainerPort,
-		[]string{ResourceMemory},
+		[]string{"cloud:aws", "region:eu-north1", ResourceMemory},
 	) + `
 ###################################
 #                                 #
@@ -176,7 +176,7 @@ pid_file: "` + n.pidPath + `"
 		ResourceJSMem,
 		n.storageDir,
 		ResourceStorage,
-		"natsuniquetag",
+		"srv",
 	) + `
 
 ###################################
@@ -221,13 +221,14 @@ server_tags: [
 `
 }
 
+// ConfigJetStream returns a string containing the jetstream config.
+// For more info: https://docs.nats.io/nats-concepts/jetstream/streams
 func ConfigJetStream(maxMem, storeDir, maxFile, uniqTag string) string {
 	return `
 jetstream {
-  max_mem:` + maxMem + `
   store_dir: "` + storeDir + `"
-  max_file:` + maxFile + `
-  unique_tag: "` + uniqTag + `"
+  max_mem_store:` + maxMem + `
+  max_file_store:` + maxFile + `
 }
 `
 }
@@ -342,6 +343,7 @@ var STS = &appsv1.StatefulSet{
 						ImagePullPolicy: corev1.PullIfNotPresent,
 
 						Env: []corev1.EnvVar{
+							N.Config.HashEnv("CONFIG_HASH"),
 							ku.EnvVarDownAPI("POD_NAME", "metadata.name"),
 							ku.EnvVarDownAPI(
 								"POD_NAMESPACE",
