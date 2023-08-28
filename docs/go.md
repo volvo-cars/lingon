@@ -1,6 +1,10 @@
 
 # Go (Golang)  <!-- omit in toc -->
 
+Smarter people have a better way to explain it than us: <https://github.com/bwplotka/mimic/blob/main/README.md#but-why-go>
+
+We took a lot from it.
+
 ## Why Go
 
 * Because most outages are caused by a configuration error and a configuration language is the most important tool in the hands of a platform engineer.
