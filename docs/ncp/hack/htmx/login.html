@@ -1,0 +1,21 @@
+{{define "title"}}Login{{end}}
+
+{{define "main"}}
+
+<h1>Login</h1>
+
+<form hx-post="/login">
+    <label class="label">
+        <span class="label-text">Username:</span>
+    </label>
+    <input type="text" placeholder="username" id="username" name="username"
+        class="input input-bordered w-full max-w-xs" />
+    <label class="label">
+        <span class="label-text">Username:</span>
+    </label>
+    <input type="text" placeholder="username" id="username" name="username" class="input input-bordered w-full max-w-xs"
+        hx-post="/validate" hx-trigger="change" />
+    <button type="submit" class="btn">Submit</button>
+</form>
+
+{{end}}

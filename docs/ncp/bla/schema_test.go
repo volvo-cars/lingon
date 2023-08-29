@@ -40,13 +40,13 @@ func TestSchema(t *testing.T) {
 	}
 	defer actor.Close()
 
-	accountReply, err := bla.CreateAccount(actorUserConn, bla.CreateAccountMsg{
+	accountReply, err := bla.SendCreateAccountMsg(actorUserConn, bla.CreateAccountMsg{
 		Name: "test",
 	})
 	if err != nil {
 		t.Fatal("creating account: ", err)
 	}
-	userReply, err := bla.CreateUserForAccount(actorUserConn, bla.CreateUserMsg{
+	userReply, err := bla.SendCreateUserForAccountMsg(actorUserConn, bla.CreateUserMsg{
 		Name: "test",
 	}, accountReply.ID)
 	if err != nil {

@@ -1,0 +1,15 @@
+<div class="navbar bg-primary">
+    <div class="flex-1">
+        <a href="/" class="btn btn-ghost normal-case text-xl text-primary-content">NCP</a>
+    </div>
+    {{ if .UserInfo }}
+
+    <div class="flex-none">
+        <button class="btn btn-primary-content" hx-get="/logout">Logout</button>
+    </div>
+    {{ else }}
+    <div class="flex-none">
+        <button class="btn btn-primary-content" hx-get="/login">Login</button>
+    </div>
+    {{ end }}
+</div>

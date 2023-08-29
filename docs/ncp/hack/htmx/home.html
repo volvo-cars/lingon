@@ -1,0 +1,19 @@
+{{define "title"}}Home{{end}}
+
+{{define "main"}}
+
+<h1>Accounts</h1>
+
+<p>It's good to be home {{ .UserInfo.Name }}</p>
+
+<ul role="list" class="divide-y divide-gray-100">
+    {{ range .Accounts }}
+    <li class="py-4">
+        <a href="/accounts/{{ .ID }}">{{ .ID }}</a>
+    </li>
+    {{ end }}
+</ul>
+
+<a role="button" href="/accounts/new" class="btn">New Account</a>
+
+{{end}}

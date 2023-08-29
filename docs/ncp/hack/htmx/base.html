@@ -1,0 +1,26 @@
+{{define "base"}}
+<!doctype html>
+<html lang='en' data-theme="lofi">
+
+<head>
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{template "title" .}} - Snippetbox</title>
+    <script src="https://unpkg.com/htmx.org@1.9.5"></script>
+    <!-- DaisyUI and TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.6.2/dist/full.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+    <header>
+        <!-- Invoke the navigation template -->
+        {{template "nav" .}}
+    </header>
+    <main class="prose prose-a:no-underline mx-auto max-w-7xl px-8 py-8">
+        {{template "main" .}}
+    </main>
+</body>
+
+</html>
+{{end}}

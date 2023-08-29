@@ -1,0 +1,14 @@
+{{define "title"}}New Account{{end}}
+
+{{define "main"}}
+<h1>New Account</h1>
+
+<form hx-post="/accounts">
+    <label class="label">
+        <span class="label-text">Name</span>
+    </label>
+    <input type="text" placeholder="e.g. team-123" id="account-name" name="account-name"
+        class="input input-bordered w-full max-w-xs" />
+    <button type="submit" class="btn">Submit</button>
+</form>
+{{end}}

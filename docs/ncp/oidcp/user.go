@@ -5,12 +5,6 @@ import (
 	"golang.org/x/text/language"
 )
 
-type UserStore interface {
-	GetUserByID(string) *storage.User
-	GetUserByUsername(string) *storage.User
-	ExampleClientID() string
-}
-
 type userStore struct {
 	users map[string]*storage.User
 }
@@ -41,7 +35,7 @@ func WithAdminUser() UserStoreOption {
 	}
 }
 
-func NewUserStore(opts ...UserStoreOption) UserStore {
+func NewUserStore(opts ...UserStoreOption) storage.UserStore {
 	us := userStore{
 		users: map[string]*storage.User{},
 	}
