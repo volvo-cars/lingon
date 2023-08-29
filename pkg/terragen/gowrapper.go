@@ -72,7 +72,6 @@ func GenerateGoCode(
 				args.ProviderSource,
 			)]
 		}
-		// If still not ok, indicate an error
 		if !ok {
 			return fmt.Errorf(
 				"provider source: %s: %w",

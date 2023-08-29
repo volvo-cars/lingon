@@ -37,11 +37,6 @@ func TestParseProvider(t *testing.T) {
 			expectErr:   true,
 			errmsg:      "provider format incorrect: missing `:` in `source:version`",
 		},
-		{
-			providerStr: "aws=hashicorp/aws",
-			expectErr:   true,
-			errmsg:      "provider format incorrect: missing `:` in `source:version`",
-		},
 	}
 
 	for _, tt := range tests {

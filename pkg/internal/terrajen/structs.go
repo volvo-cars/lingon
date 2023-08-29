@@ -73,8 +73,7 @@ func argsStruct(s *Schema) *jen.Statement {
 func attributesStruct(s *Schema) *jen.Statement {
 	var stmt jen.Statement
 
-	// Attribute struct will have a field called "ref" containing a
-	// terra.Reference
+	// Attribute struct will have a field called "ref" containing a [terra.Reference]
 	structFieldRefName := "ref"
 	structFieldRef := jen.Id(s.Receiver).Dot(structFieldRefName).Clone
 

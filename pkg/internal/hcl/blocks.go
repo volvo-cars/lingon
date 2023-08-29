@@ -17,10 +17,7 @@ func encodeBackend(body *hclwrite.Body, args EncodeArgs) error {
 	}
 	be := args.Backend
 	// Encode backend block
-	backendBlock := body.AppendNewBlock(
-		"backend",
-		[]string{be.Type},
-	)
+	backendBlock := body.AppendNewBlock("backend", []string{be.Type})
 	rv := reflect.ValueOf(be.Configuration)
 	if err := encodeStruct(
 		rv,
@@ -40,10 +37,7 @@ func encodeRequiredProviders(body *hclwrite.Body, args EncodeArgs) {
 	if len(args.Providers) == 0 {
 		return
 	}
-	reqProvBody := body.AppendNewBlock(
-		"required_providers",
-		nil,
-	).Body()
+	reqProvBody := body.AppendNewBlock("required_providers", nil).Body()
 	for _, prov := range args.Providers {
 		reqProvBody.SetAttributeValue(
 			prov.LocalName, cty.MapVal(

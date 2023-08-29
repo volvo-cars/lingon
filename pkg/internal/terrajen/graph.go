@@ -433,9 +433,7 @@ func returnTypeFromNestingPath(
 // node represents, e.g.
 //
 //	terra.ReferenceList[emrcluster.StepRef]
-func jenNodeReturnValue(
-	n *node, childQual *jen.Statement,
-) *jen.Statement {
+func jenNodeReturnValue(n *node, childQual *jen.Statement) *jen.Statement {
 	// If the child is not nested in any lists/sets/maps then simply return
 	// a reference to the single child qualifier
 	if len(n.nestingPath) == 0 {
