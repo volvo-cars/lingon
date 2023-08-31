@@ -30,15 +30,19 @@ func TestAccount(t *testing.T) {
 	}
 	defer actor.Close()
 
-	reply, err := SendCreateAccountMsg(actorUserConn, CreateAccountMsg{
+	reply, err := SendAccountCreateMsg(actorUserConn, AccountCreateMsg{
 		Name: "test",
 	})
 	if err != nil {
 		t.Fatal("creating account: ", err)
 	}
-	userReply, err := SendCreateUserForAccountMsg(actorUserConn, CreateUserMsg{
-		Name: "test",
-	}, reply.ID)
+	userReply, err := SendUserCreateForAccountMsg(
+		actorUserConn,
+		reply.ID,
+		UserCreateMsg{
+			Name: "test",
+		},
+	)
 	if err != nil {
 		t.Fatal("creating user: ", err)
 	}

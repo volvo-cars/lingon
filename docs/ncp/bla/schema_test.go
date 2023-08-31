@@ -40,15 +40,19 @@ func TestSchema(t *testing.T) {
 	}
 	defer actor.Close()
 
-	accountReply, err := bla.SendCreateAccountMsg(actorUserConn, bla.CreateAccountMsg{
+	accountReply, err := bla.SendAccountCreateMsg(actorUserConn, bla.AccountCreateMsg{
 		Name: "test",
 	})
 	if err != nil {
 		t.Fatal("creating account: ", err)
 	}
-	userReply, err := bla.SendCreateUserForAccountMsg(actorUserConn, bla.CreateUserMsg{
-		Name: "test",
-	}, accountReply.ID)
+	userReply, err := bla.SendUserCreateForAccountMsg(
+		actorUserConn,
+		accountReply.ID,
+		bla.UserCreateMsg{
+			Name: "test",
+		},
+	)
 	if err != nil {
 		t.Fatal("creating user: ", err)
 	}
@@ -65,7 +69,7 @@ func TestSchema(t *testing.T) {
 		t.Fatal("connecting with user JWT: ", err)
 	}
 
-	reply, err := bla.PublishSchema(nc, bla.PublishSchemaMsg{
+	reply, err := bla.SendSchemaPublishMsg(nc, bla.SchemaPublishMsg{
 		Name:    "test",
 		Version: "1.0.0",
 		Schema:  bla.EventTxtar,

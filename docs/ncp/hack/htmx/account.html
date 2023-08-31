@@ -1,0 +1,75 @@
+{{define "title"}}Account {{ .Account.Name }}{{end}}
+
+{{define "main"}}
+
+<div class="drawer drawer-open">
+    <input id="account-drawer" type="checkbox" class="drawer-toggle" />
+    <div class="drawer-content p-8">
+        <div class="prose">
+            <h2>Schemas</h2>
+        </div>
+
+        <div class="my-8 overflow-x-auto">
+            <table class="table">
+                <!-- head -->
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Version</th>
+                        <th>Status</th>
+                        <th>Published</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{ range .Schemas }}
+                    <tr>
+                        <td>{{ .Spec.Name }}</td>
+                        <td>{{ .Spec.Version }}</td>
+                        <td>
+                            <div class="flex items-center gap-x-2">
+                                <div class="flex-none rounded-full p-1 text-success bg-success/10">
+                                    <div class="h-1.5 w-1.5 rounded-full bg-current"></div>
+                                </div>
+                                <div class="">Completed</div>
+                            </div>
+                        </td>
+                        <td>1d ago</td>
+                        <th>
+                            <a role="button" href="/accounts/{{ $.Account.ID}}/schemas/{{ .Key }}"
+                                class="btn btn-ghost btn-xs">details</button>
+                        </th>
+                    </tr>
+
+                    {{ end }}
+                </tbody>
+            </table>
+        </div>
+
+
+        <div class="prose pt-8">
+
+            <h2>Users</h2>
+            <form hx-post="/accounts/{{ .Account.ID }}/users" hx-target="#user-creds">
+                <label class="label">
+                    <span class="label-text">Name</span>
+                </label>
+                <input type="text" placeholder="e.g. bob" id="user-name" name="user-name"
+                    class="input input-bordered w-full max-w-xs" />
+                <button type="submit" class="btn">Submit</button>
+                <div id="user-creds" class="whitespace-pre-wrap"></div>
+                <!-- <textarea id="user-creds" class="textarea textarea-bordered hidden"></textarea> -->
+            </form>
+        </div>
+
+    </div>
+    <div class="drawer-side">
+        <label for="account-drawer" class="drawer-overlay"></label>
+        <ul class="menu p-4 w-80 min-h-full bg-base-200 text-base-content">
+            <li><a href="/accounts/{{ .Account.ID }}">Dashboard</a></li>
+            <!-- <li><a href="/accounts/{{ .Account.ID }}/schemas">Schemas</a></li> -->
+        </ul>
+
+    </div>
+</div>
+
+{{end}}

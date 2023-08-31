@@ -2,20 +2,21 @@
 
 {{define "main"}}
 
-<h1>Login</h1>
+<div class="prose prose-a:no-underline mx-auto max-w-7xl px-8 py-8">
+    <h1>Login</h1>
 
-<form hx-post="/login">
-    <label class="label">
-        <span class="label-text">Username:</span>
-    </label>
-    <input type="text" placeholder="username" id="username" name="username"
-        class="input input-bordered w-full max-w-xs" />
-    <label class="label">
-        <span class="label-text">Username:</span>
-    </label>
-    <input type="text" placeholder="username" id="username" name="username" class="input input-bordered w-full max-w-xs"
-        hx-post="/validate" hx-trigger="change" />
-    <button type="submit" class="btn">Submit</button>
-</form>
-
+    <form hx-post="/login">
+        <label class="label">
+            <span class="label-text">Username:</span>
+        </label>
+        <input type="text" placeholder="username" id="username" name="username"
+            class="input input-bordered w-full max-w-xs" />
+        <label class="label">
+            <span class="label-text">Password:</span>
+        </label>
+        <input type="text" placeholder="username" id="username" name="username"
+            class="input input-bordered w-full max-w-xs" hx-post="/validate" hx-trigger="change" />
+        <button type="submit" class="btn">Submit</button>
+    </form>
+</div>
 {{end}}

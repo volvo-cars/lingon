@@ -2,6 +2,7 @@ package bla
 
 import (
 	"fmt"
+	"log/slog"
 	"net"
 	"os"
 	"path/filepath"
@@ -79,8 +80,33 @@ func (t TestServer) ActorUserConn() (*nats.Conn, error) {
 func (t TestServer) PublishActorAccount() error {
 	nc, err := t.SysUserConn()
 	if err != nil {
-		return fmt.Errorf("connecting to nats: %w", err)
+		return fmt.Errorf("connecting to system_account nats: %w", err)
 	}
+	defer nc.Close()
+	// Check if the account already exists
+	lookupMessage, err := nc.Request(
+		fmt.Sprintf("$SYS.REQ.ACCOUNT.%s.CLAIMS.LOOKUP", t.Auth.ActorAccountPublicKey),
+		nil,
+		time.Second,
+	)
+	if err != nil {
+		return fmt.Errorf(
+			"looking up account with ID %s: %w",
+			t.Auth.ActorAccountPublicKey,
+			err,
+		)
+		// If no responders it means the account does not exist yet... ???
+		// if !errors.Is(err, nats.ErrNoResponders) {
+		// }
+	}
+	// If the account exists, do not re-create it because it contains imports from the accounts that.
+	//
+	// Please find a more elegant way of doing this.
+	if string(lookupMessage.Data) != "" {
+		slog.Info("found existing actor account", "account_id", t.Auth.ActorAccountPublicKey)
+		return nil
+	}
+	slog.Info("creating actor account", "account_id", t.Auth.ActorAccountPublicKey)
 	if _, err := nc.Request(
 		"$SYS.REQ.CLAIMS.UPDATE",
 		[]byte(t.Auth.ActorAccountJWT),
@@ -261,6 +287,31 @@ type ServerJWTAuth struct {
 	ActorUserJWT       string        `json:"actor_user_jwt"`
 }
 
+func (s *ServerJWTAuth) LoadKeyPairs() error {
+	var err error
+	s.OperatorKeyPair, err = nkeys.FromSeed(s.OperatorNKey)
+	if err != nil {
+		return fmt.Errorf("getting operator key pair from seed: %w", err)
+	}
+	s.SysAccountKeyPair, err = nkeys.FromSeed(s.SysAccountNKey)
+	if err != nil {
+		return fmt.Errorf("getting system account key pair from seed: %w", err)
+	}
+	s.SysUserKeyPair, err = nkeys.FromSeed(s.SysUserNKey)
+	if err != nil {
+		return fmt.Errorf("getting system user key pair from seed: %w", err)
+	}
+	s.ActorAccountKeyPair, err = nkeys.FromSeed(s.ActorAccountNKey)
+	if err != nil {
+		return fmt.Errorf("getting actor account key pair from seed: %w", err)
+	}
+	s.ActorUserKeyPair, err = nkeys.FromSeed(s.ActorUserNKey)
+	if err != nil {
+		return fmt.Errorf("getting actor user key pair from seed: %w", err)
+	}
+	return nil
+}
+
 func BootstrapServerJWTAuth() (ServerJWTAuth, error) {
 	host := "0.0.0.0"
 	port := 4222
@@ -309,10 +360,11 @@ func BootstrapServerJWTAuth() (ServerJWTAuth, error) {
 	// Create system account JWT
 	sac := jwt.NewAccountClaims(sapk)
 	sac.Name = "SYS"
-	// Add stream exports according to what the `nsc` tool generates
+	// Export some services to import in actor account
 	sac.Exports.Add(&jwt.Export{
-		Name:                 "account-monitoring-streams",
-		Subject:              "$SYS.ACCOUNT.*.>",
+		Name: "account-monitoring-streams",
+		// 	Subject:              "$SYS.ACCOUNT.*.>",
+		Subject:              "$SYS.ACCOUNT.>",
 		Type:                 jwt.Stream,
 		AccountTokenPosition: 3,
 		Info: jwt.Info{
@@ -321,8 +373,9 @@ func BootstrapServerJWTAuth() (ServerJWTAuth, error) {
 		},
 	})
 	sac.Exports.Add(&jwt.Export{
-		Name:                 "account-monitoring-services",
-		Subject:              "$SYS.REQ.ACCOUNT.*.*",
+		Name: "account-monitoring-services",
+		// 	Subject:              "$SYS.REQ.ACCOUNT.*.*",
+		Subject:              "$SYS.REQ.ACCOUNT.>",
 		Type:                 jwt.Service,
 		AccountTokenPosition: 4,
 		Info: jwt.Info{
@@ -389,9 +442,42 @@ func BootstrapServerJWTAuth() (ServerJWTAuth, error) {
 	aac.Exports.Add(&jwt.Export{
 		Type: jwt.Service,
 		Name: "actor",
+		Info: jwt.Info{
+			Description: "Export actors for other account to import",
+		},
 		// Subject: actor.<actor>.<action>.<account>
 		Subject: jwt.Subject("actor.*.*.*"),
 	})
+	// aac.Exports.Add(&jwt.Export{
+	// 	Type: jwt.Service,
+	// 	Name: "ingest",
+	// 	Info: jwt.Info{
+	// 		Description: "Export ingesters for other account to import",
+	// 	},
+	// 	// Subject: ingest.<account>.<schema>.<version>.
+	// 	Subject: jwt.Subject("ingest.*.*.*"),
+	// })
+	// Add stream exports according to what the `nsc` tool generates
+	// aac.Exports.Add(&jwt.Export{
+	// 	Name:                 "account-monitoring-streams",
+	// 	Subject:              "$SYS.ACCOUNT.*.>",
+	// 	Type:                 jwt.Stream,
+	// 	AccountTokenPosition: 3,
+	// 	Info: jwt.Info{
+	// 		Description: "Account specific monitoring stream",
+	// 		InfoURL:     "https://docs.nats.io/nats-server/configuration/sys_accounts",
+	// 	},
+	// })
+	// aac.Exports.Add(&jwt.Export{
+	// 	Name:                 "account-monitoring-services",
+	// 	Subject:              "$SYS.REQ.ACCOUNT.*.*",
+	// 	Type:                 jwt.Service,
+	// 	AccountTokenPosition: 4,
+	// 	Info: jwt.Info{
+	// 		Description: "Request account specific monitoring services for: SUBSZ, CONNZ, LEAFZ, JSZ and INFO",
+	// 		InfoURL:     "https://docs.nats.io/nats-server/configuration/sys_accounts",
+	// 	},
+	// })
 	aac.Validate(&vr)
 	aajwt, err := aac.Encode(okp)
 	if err != nil {

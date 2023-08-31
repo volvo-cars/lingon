@@ -3,6 +3,7 @@ package bla
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"strings"
@@ -25,7 +26,8 @@ type AccountActor struct {
 	// ActorAccountPubKey is the public key of the actor account.
 	ActorAccountPubKey string
 
-	Bucket nats.KeyValue
+	accountsBucket nats.KeyValue
+	usersBucket    nats.KeyValue
 
 	subs []*nats.Subscription
 }
@@ -57,19 +59,34 @@ func (ac *AccountActor) requestAccount(claims *jwt.AccountClaims) (string, error
 	return accountJWT, nil
 }
 
-type CreateAccountMsg struct {
-	Name string `json:"name"`
+type AccountListMsg struct {
 }
 
-type CreateAccountReply struct {
+type AccountListReply struct {
+	Accounts []Account `json:"accounts"`
+}
+
+type AccountGetMsg struct {
 	ID string `json:"id"`
 }
 
-type CreateUserMsg struct {
+type AccountGetReply struct {
+	Account Account `json:"account"`
+}
+
+type AccountCreateMsg struct {
 	Name string `json:"name"`
 }
 
-type CreateUserReply struct {
+type AccountCreateReply struct {
+	ID string `json:"id"`
+}
+
+type UserCreateMsg struct {
+	Name string `json:"name"`
+}
+
+type UserCreateReply struct {
 	User
 }
 
@@ -85,8 +102,81 @@ func RegisterAccountActor(ctx context.Context, actor *AccountActor) error {
 	if err != nil {
 		return fmt.Errorf("create key value: %w", err)
 	}
-	actor.Bucket = accountsBucket
+	actor.accountsBucket = accountsBucket
+	usersBucket, err := js.CreateKeyValue(&nats.KeyValueConfig{
+		Bucket: "users",
+	})
+	if err != nil {
+		return fmt.Errorf("create key value: %w", err)
+	}
+	actor.usersBucket = usersBucket
 
+	{
+		action := "account_list"
+		sub, err := actor.ActorAccountConn.QueueSubscribe(
+			fmt.Sprintf("actor.%s.%s", name, action),
+			name,
+			func(msg *nats.Msg) {
+				reply, err := actor.accountList(ctx, msg)
+				if err != nil {
+					slog.Error("action", "action", action, "error", err)
+					// reply = &CreateAccountReply{
+					// 	Error: err.Error(),
+					// }
+					// TODO: handle errors
+					if err := msg.Respond(nil); err != nil {
+						slog.Error("respond", "error", err)
+					}
+				}
+				bReply, err := json.Marshal(reply)
+				if err != nil {
+					slog.Error("marshal", "error", err)
+					return
+				}
+				if err := msg.Respond(bReply); err != nil {
+					slog.Error("respond", "error", err)
+					return
+				}
+			},
+		)
+		if err != nil {
+			return fmt.Errorf("subscribing: %w", err)
+		}
+		actor.subs = append(actor.subs, sub)
+	}
+	{
+		action := "account_get"
+		sub, err := actor.ActorAccountConn.QueueSubscribe(
+			fmt.Sprintf("actor.%s.%s", name, action),
+			name,
+			func(msg *nats.Msg) {
+				reply, err := actor.accountGet(ctx, msg)
+				if err != nil {
+					slog.Error("action", "action", action, "error", err)
+					// reply = &CreateAccountReply{
+					// 	Error: err.Error(),
+					// }
+					// TODO: handle errors
+					if err := msg.Respond(nil); err != nil {
+						slog.Error("respond", "error", err)
+					}
+				}
+				bReply, err := json.Marshal(reply)
+				if err != nil {
+					slog.Error("marshal", "error", err)
+					return
+				}
+				if err := msg.Respond(bReply); err != nil {
+					slog.Error("respond", "error", err)
+					return
+				}
+			},
+		)
+		if err != nil {
+			return fmt.Errorf("subscribing: %w", err)
+		}
+		actor.subs = append(actor.subs, sub)
+	}
 	{
 		action := "account_create"
 		sub, err := actor.ActorAccountConn.QueueSubscribe(
@@ -154,11 +244,71 @@ func RegisterAccountActor(ctx context.Context, actor *AccountActor) error {
 	return nil
 }
 
+func (aa *AccountActor) accountList(
+	ctx context.Context,
+	msg *nats.Msg,
+) (*AccountListReply, error) {
+	// TODO: unmarshal AccountListMsg, when needed
+	keys, err := aa.accountsBucket.Keys()
+	if err != nil {
+		if errors.Is(err, nats.ErrNoKeysFound) {
+			return &AccountListReply{
+				Accounts: []Account{},
+			}, nil
+		}
+		return nil, fmt.Errorf("get keys: %w", err)
+	}
+
+	accounts := make([]Account, len(keys))
+	for i, key := range keys {
+		kve, err := aa.accountsBucket.Get(key)
+		if err != nil {
+			return nil, fmt.Errorf("get account: %w", err)
+		}
+		var account Account
+		if err := json.Unmarshal(kve.Value(), &account); err != nil {
+			return nil, fmt.Errorf("unmarshal account: %w", err)
+		}
+		accounts[i] = account
+	}
+	return &AccountListReply{
+		Accounts: accounts,
+	}, nil
+}
+
+func (aa *AccountActor) accountGet(
+	ctx context.Context,
+	msg *nats.Msg,
+) (*AccountGetReply, error) {
+	// TODO: unmarshal AccountListMsg, when needed
+	var data AccountGetMsg
+	if err := json.Unmarshal(msg.Data, &data); err != nil {
+		return nil, fmt.Errorf("unmarshal: %w", err)
+	}
+	kve, err := aa.accountsBucket.Get(data.ID)
+	if err != nil {
+		if errors.Is(err, nats.ErrKeyNotFound) {
+			return &AccountGetReply{
+				Account: Account{},
+			}, nil
+		}
+		return nil, fmt.Errorf("get key: %w", err)
+	}
+
+	var account Account
+	if err := json.Unmarshal(kve.Value(), &account); err != nil {
+		return nil, fmt.Errorf("unmarshal account: %w", err)
+	}
+	return &AccountGetReply{
+		Account: account,
+	}, nil
+}
+
 func (aa *AccountActor) accountCreate(
 	ctx context.Context,
 	msg *nats.Msg,
-) (*CreateAccountReply, error) {
-	var data CreateAccountMsg
+) (*AccountCreateReply, error) {
+	var data AccountCreateMsg
 	if err := json.Unmarshal(msg.Data, &data); err != nil {
 		return nil, fmt.Errorf("unmarshal: %w", err)
 	}
@@ -194,10 +344,30 @@ func (aa *AccountActor) accountCreate(
 		// LocalSubject is the subject local to this account.
 		LocalSubject: jwt.RenamingSubject("actor.*.*"),
 	})
+	// Export the Jetstream API for this account, which we will import into
+	// the actor account, making this account's Jetstream API available to
+	// connections from the actor account.
+	claims.Exports.Add(&jwt.Export{
+		Type:    jwt.Service,
+		Name:    "js-api",
+		Subject: jwt.Subject("$JS.API.>"),
+	})
+	// claims.Imports.Add(&jwt.Import{
+	// 	Type: jwt.Service,
+	// 	Name: "ingest",
+	// 	// Account is the public key of the account which exported the service.
+	// 	Account: aa.ActorAccountPubKey,
+	// 	// Subject is the exported account's subject.
+	// 	// Subject: ingest.<account-id>.<schema-name>.<schema-version>
+	// 	Subject: jwt.Subject(fmt.Sprintf("ingest.%s.*.*", pubKey)),
+	// 	// LocalSubject is the subject local to this account.
+	// 	// Subject: ingest.<schema-name>.<schema-version>
+	// 	LocalSubject: jwt.RenamingSubject("ingest.*.*"),
+	// })
 	if err := validateClaims(claims); err != nil {
 		return nil, fmt.Errorf("validate claims: %w", err)
 	}
-	jwt, err := aa.requestAccount(claims)
+	accJWT, err := aa.requestAccount(claims)
 	if err != nil {
 		return nil, fmt.Errorf("request account: %w", err)
 	}
@@ -206,7 +376,7 @@ func (aa *AccountActor) accountCreate(
 		ID:   pubKey,
 		Name: data.Name,
 		NKey: seed,
-		JWT:  jwt,
+		JWT:  accJWT,
 	}
 	accB, err := json.Marshal(acc)
 	if err != nil {
@@ -215,18 +385,39 @@ func (aa *AccountActor) accountCreate(
 
 	// Use the account ID as the key.
 	// TODO: can we have two accounts with the same name?
-	rev, err := aa.Bucket.Put(acc.ID, accB)
+	rev, err := aa.accountsBucket.Put(acc.ID, accB)
 	if err != nil {
 		return nil, fmt.Errorf("put account: %w", err)
 	}
 	slog.Info("put account", "key", acc.ID, "rev", rev)
 
-	return &CreateAccountReply{
+	// TODO: update the actor account JWT
+	aac, err := claimsForAccount(aa.SysAccountConn, aa.ActorAccountPubKey)
+	if err != nil {
+		return nil, fmt.Errorf("getting actor account claims: %w", err)
+	}
+	aac.Imports.Add(&jwt.Import{
+		Type:         jwt.Service,
+		Name:         "js-api",
+		Account:      pubKey,
+		Subject:      jwt.Subject("$JS.API.>"),
+		LocalSubject: jwt.RenamingSubject(fmt.Sprintf("$JS.API.%s.>", pubKey)),
+	})
+	if err := validateClaims(aac); err != nil {
+		return nil, fmt.Errorf("validate updated actor account claims: %w", err)
+	}
+	actorJWT, err := aa.requestAccount(aac)
+	if err != nil {
+		return nil, fmt.Errorf("request updated actor account: %w", err)
+	}
+	slog.Info("UPDATED ACTOR ACCOUNT", "jwt", actorJWT)
+
+	return &AccountCreateReply{
 		ID: pubKey,
 	}, nil
 }
 
-func (aa *AccountActor) userCreate(ctx context.Context, msg *nats.Msg) (*CreateUserReply, error) {
+func (aa *AccountActor) userCreate(ctx context.Context, msg *nats.Msg) (*UserCreateReply, error) {
 	// Get account public key from subject
 	subjects := strings.Split(msg.Subject, ".")
 	if len(subjects) != 4 {
@@ -235,7 +426,7 @@ func (aa *AccountActor) userCreate(ctx context.Context, msg *nats.Msg) (*CreateU
 	accountPubKey := subjects[3]
 	slog.Info("create user", "subject", msg.Subject, "pubkey", accountPubKey)
 	// Get account key pair
-	kve, err := aa.Bucket.Get(accountPubKey)
+	kve, err := aa.accountsBucket.Get(accountPubKey)
 	if err != nil {
 		return nil, fmt.Errorf("get account: %w", err)
 	}
@@ -249,7 +440,7 @@ func (aa *AccountActor) userCreate(ctx context.Context, msg *nats.Msg) (*CreateU
 	}
 
 	// msg.Subject
-	var data CreateUserMsg
+	var data UserCreateMsg
 	if err := json.Unmarshal(msg.Data, &data); err != nil {
 		return nil, fmt.Errorf("unmarshal: %w", err)
 	}
@@ -281,12 +472,51 @@ func (aa *AccountActor) userCreate(ctx context.Context, msg *nats.Msg) (*CreateU
 		NKey: seed,
 		JWT:  jwt,
 	}
-	return &CreateUserReply{
+	userB, err := json.Marshal(user)
+	if err != nil {
+		return nil, fmt.Errorf("marshal: %w", err)
+	}
+	if _, err := aa.usersBucket.Put(user.ID, userB); err != nil {
+		return nil, fmt.Errorf("put user: %w", err)
+	}
+	return &UserCreateReply{
 		User: user,
 	}, nil
 }
 
-func SendCreateAccountMsg(nc *nats.Conn, msg CreateAccountMsg) (*CreateAccountReply, error) {
+func SendAccountListMsg(nc *nats.Conn, msg AccountListMsg) (*AccountListReply, error) {
+	msgB, err := json.Marshal(msg)
+	if err != nil {
+		return nil, fmt.Errorf("marshal: %w", err)
+	}
+	replyB, err := nc.Request("actor.account.account_list", msgB, time.Second)
+	if err != nil {
+		return nil, fmt.Errorf("request: %w", err)
+	}
+	var reply AccountListReply
+	if err := json.Unmarshal(replyB.Data, &reply); err != nil {
+		return nil, fmt.Errorf("unmarshal: %w", err)
+	}
+	return &reply, nil
+}
+
+func SendAccountGetMsg(nc *nats.Conn, msg AccountGetMsg) (*AccountGetReply, error) {
+	msgB, err := json.Marshal(msg)
+	if err != nil {
+		return nil, fmt.Errorf("marshal: %w", err)
+	}
+	replyB, err := nc.Request("actor.account.account_get", msgB, time.Second)
+	if err != nil {
+		return nil, fmt.Errorf("request: %w", err)
+	}
+	var reply AccountGetReply
+	if err := json.Unmarshal(replyB.Data, &reply); err != nil {
+		return nil, fmt.Errorf("unmarshal: %w", err)
+	}
+	return &reply, nil
+}
+
+func SendAccountCreateMsg(nc *nats.Conn, msg AccountCreateMsg) (*AccountCreateReply, error) {
 	msgB, err := json.Marshal(msg)
 	if err != nil {
 		return nil, fmt.Errorf("marshal: %w", err)
@@ -295,14 +525,14 @@ func SendCreateAccountMsg(nc *nats.Conn, msg CreateAccountMsg) (*CreateAccountRe
 	if err != nil {
 		return nil, fmt.Errorf("request: %w", err)
 	}
-	var reply CreateAccountReply
+	var reply AccountCreateReply
 	if err := json.Unmarshal(replyB.Data, &reply); err != nil {
 		return nil, fmt.Errorf("unmarshal: %w", err)
 	}
 	return &reply, nil
 }
 
-func SendCreateUserMsg(nc *nats.Conn, msg CreateUserMsg) (*CreateUserReply, error) {
+func SendUserCreateMsg(nc *nats.Conn, msg UserCreateMsg) (*UserCreateReply, error) {
 	userMsgB, err := json.Marshal(msg)
 	if err != nil {
 		return nil, fmt.Errorf("marshal: %w", err)
@@ -315,23 +545,23 @@ func SendCreateUserMsg(nc *nats.Conn, msg CreateUserMsg) (*CreateUserReply, erro
 	if err != nil {
 		return nil, fmt.Errorf("publishing user create: %w", err)
 	}
-	var reply CreateUserReply
+	var reply UserCreateReply
 	if err := json.Unmarshal(userB.Data, &reply); err != nil {
 		return nil, fmt.Errorf("unmarshal: %w", err)
 	}
 	return &reply, nil
 }
 
-// SendCreateUserForAccountMsg creates a user for a target account.
+// SendUserCreateForAccountMsg creates a user for a target account.
 // In this case, the nats connection has to be for the actor account.
 //
 // This is the scenario when the target account may not have any users yet,
 // and we want to create an initial user for that account.
-func SendCreateUserForAccountMsg(
+func SendUserCreateForAccountMsg(
 	nc *nats.Conn,
-	msg CreateUserMsg,
 	targetAccountID string,
-) (*CreateUserReply, error) {
+	msg UserCreateMsg,
+) (*UserCreateReply, error) {
 	userMsgB, err := json.Marshal(msg)
 	if err != nil {
 		return nil, fmt.Errorf("marshal: %w", err)
@@ -344,7 +574,7 @@ func SendCreateUserForAccountMsg(
 	if err != nil {
 		return nil, fmt.Errorf("publishing user create: %w", err)
 	}
-	var reply CreateUserReply
+	var reply UserCreateReply
 	if err := json.Unmarshal(userB.Data, &reply); err != nil {
 		return nil, fmt.Errorf("unmarshal: %w", err)
 	}

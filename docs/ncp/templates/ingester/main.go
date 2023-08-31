@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"os"
+	"time"
 
 	"ingester/schema"
 
@@ -39,16 +40,19 @@ func main() {
 		natsURL = nats.DefaultURL
 		// cErr = errors.Join(cErr, errors.New("NATS_URL not set"))
 	}
-	// natsCreds, ok := os.LookupEnv("NATS_CREDS")
-	// if !ok {
-	// 	cErr = errors.Join(cErr, errors.New("NATS_CREDS not set"))
-	// }
+	natsJWT, ok := os.LookupEnv("NATS_JWT")
+	if !ok {
+		cErr = errors.Join(cErr, errors.New("NATS_JWT not set"))
+	}
+	natsNKey, ok := os.LookupEnv("NATS_NKEY")
+	if !ok {
+		cErr = errors.Join(cErr, errors.New("NATS_NKEY not set"))
+	}
 	if cErr != nil {
 		slog.Error("required environment variables not set", "error", cErr)
 		os.Exit(1)
 	}
-	// nc, err := nats.Connect(natsURL, nats.UserCredentials(natsCreds))
-	nc, err := nats.Connect(natsURL)
+	nc, err := nats.Connect(natsURL, nats.UserJWTAndSeed(natsJWT, natsNKey))
 	if err != nil {
 		slog.Error("connecting to NATS", "error", err)
 		os.Exit(1)
@@ -63,18 +67,20 @@ func main() {
 		os.Exit(1)
 	}
 
-	cons, err := js.CreateOrUpdateConsumer(ctx, stream, jetstream.ConsumerConfig{
-		Name:          consumer,
-		Durable:       consumer,
-		DeliverPolicy: jetstream.DeliverAllPolicy,
-		AckPolicy:     jetstream.AckExplicitPolicy,
-	})
+	cons, err := js.Consumer(ctx, stream, consumer)
 	if err != nil {
 		slog.Error("getting consumer", "error", err)
 		os.Exit(1)
 	}
 
-	iter, _ := cons.Messages()
+	slog.Info("listening for messages", "stream", stream, "consumer", consumer)
+
+	count := 0
+	iter, err := cons.Messages()
+	if err != nil {
+		slog.Error("getting message context", "error", err)
+		os.Exit(1)
+	}
 	defer iter.Stop()
 	for {
 		msg, err := iter.Next()
@@ -82,12 +88,31 @@ func main() {
 			slog.Error("getting next message", "error", err)
 			os.Exit(1)
 		}
+		count++
+		slog.Info("SLEEPING 25 SECONDS")
+		time.Sleep(25 * time.Second)
 		var event schema.Event
 		if err := proto.Unmarshal(msg.Data(), &event); err != nil {
-			slog.Info("terminating message unmarshalling protobuf message failed", "msg_subject", msg.Subject)
+			slog.Info(
+				"terminating message unmarshalling protobuf message failed",
+				"msg_subject",
+				msg.Subject,
+			)
 			if err := msg.Term(); err != nil {
 				slog.Error("terminating message", "error", err)
 			}
+			continue
+		}
+		// IMPORTANT: This terminates every 5th message intentionally!!
+		if count%5 == 0 {
+			slog.Info("NACK message by 5th message", "count", count)
+			if err := msg.NakWithDelay(time.Minute * 5); err != nil {
+				slog.Error("nacking message", "error", err)
+			}
+			// slog.Info("Term message by 5th message", "count", count)
+			// if err := msg.Term(); err != nil {
+			// 	slog.Error("terminating message", "error", err)
+			// }
 			continue
 		}
 		slog.Info("acknowledging message", "event", event.String())
