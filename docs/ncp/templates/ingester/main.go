@@ -76,21 +76,20 @@ func main() {
 	slog.Info("listening for messages", "stream", stream, "consumer", consumer)
 
 	count := 0
-	iter, err := cons.Messages()
-	if err != nil {
-		slog.Error("getting message context", "error", err)
-		os.Exit(1)
-	}
-	defer iter.Stop()
 	for {
-		msg, err := iter.Next()
+		msg, err := cons.Next()
 		if err != nil {
+			// Ignore timeout
+			if errors.Is(err, nats.ErrTimeout) {
+				slog.Info("timeout getting next message")
+				continue
+			}
 			slog.Error("getting next message", "error", err)
 			os.Exit(1)
 		}
 		count++
-		slog.Info("SLEEPING 25 SECONDS")
-		time.Sleep(25 * time.Second)
+		slog.Info("SLEEPING 10 SECONDS")
+		time.Sleep(10 * time.Second)
 		var event schema.Event
 		if err := proto.Unmarshal(msg.Data(), &event); err != nil {
 			slog.Info(

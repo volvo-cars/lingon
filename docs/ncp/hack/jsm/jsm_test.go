@@ -50,12 +50,19 @@ func TestJSM(t *testing.T) {
 	// si.State.Consumers
 	fmt.Println("STREAMS: ", streams)
 	fmt.Printf("CONSUMERS FOR STREAM \"%s\": %+v\n", stream.Name(), consumers)
-	fmt.Println("SUBJECTS: ", si.Config.Subjects)
-	fmt.Printf("%+v\n", si.State)
+	// fmt.Println("SUBJECTS: ", si.Config.Subjects)
+	{
+		b, err := json.MarshalIndent(si, "", "  ")
+		if err != nil {
+			t.Fatal("marshaling consumer state: ", err)
+		}
+		fmt.Println(string(b))
+	}
+	fmt.Println("")
+	fmt.Println("ACTIVE CONSUMERS: ", si.State.Consumers)
 	fmt.Println("")
 	fmt.Println("")
-	fmt.Println("")
-	cons, err := stream.LoadConsumer("1_0_0")
+	cons, err := stream.LoadConsumer("1_0_4")
 	if err != nil {
 		t.Fatal("loading consumer: ", err)
 	}
@@ -63,11 +70,13 @@ func TestJSM(t *testing.T) {
 	if err != nil {
 		t.Fatal("getting consumer latest state: ", err)
 	}
-	b, err := json.MarshalIndent(ci, "", "  ")
-	if err != nil {
-		t.Fatal("marshaling consumer state: ", err)
+	{
+		b, err := json.MarshalIndent(ci, "", "  ")
+		if err != nil {
+			t.Fatal("marshaling consumer state: ", err)
+		}
+		fmt.Println(string(b))
 	}
-	fmt.Println(string(b))
 	// fmt.Printf("CONSUMER: %+v\n", ci.Delivered)
 	// fmt.Printf("CONSUMER: %+v\n", ci)
 	// msg, _ := stream.ReadMessage(1)
