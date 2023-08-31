@@ -1,6 +1,7 @@
 package jsm
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 
@@ -32,24 +33,29 @@ func TestJSM(t *testing.T) {
 	if err != nil {
 		t.Fatal("getting stream names: ", err)
 	}
-	fmt.Println("STREAMS: ", streams)
 
 	// stream, err := mgr.LoadStream("event:1_0_7")
 	stream, err := mgr.LoadStream("event")
 	if err != nil {
 		t.Fatal("loading stream: ", err)
 	}
+	consumers, err := stream.ConsumerNames()
+	if err != nil {
+		t.Fatal("getting consumer names: ", err)
+	}
 	si, err := stream.LatestInformation()
 	if err != nil {
 		t.Fatal("getting stream latest information: ", err)
 	}
 	// si.State.Consumers
+	fmt.Println("STREAMS: ", streams)
+	fmt.Printf("CONSUMERS FOR STREAM \"%s\": %+v\n", stream.Name(), consumers)
 	fmt.Println("SUBJECTS: ", si.Config.Subjects)
 	fmt.Printf("%+v\n", si.State)
 	fmt.Println("")
 	fmt.Println("")
 	fmt.Println("")
-	cons, err := stream.LoadConsumer("1_0_4")
+	cons, err := stream.LoadConsumer("1_0_0")
 	if err != nil {
 		t.Fatal("loading consumer: ", err)
 	}
@@ -57,8 +63,13 @@ func TestJSM(t *testing.T) {
 	if err != nil {
 		t.Fatal("getting consumer latest state: ", err)
 	}
+	b, err := json.MarshalIndent(ci, "", "  ")
+	if err != nil {
+		t.Fatal("marshaling consumer state: ", err)
+	}
+	fmt.Println(string(b))
 	// fmt.Printf("CONSUMER: %+v\n", ci.Delivered)
-	fmt.Printf("CONSUMER: %+v\n", ci)
+	// fmt.Printf("CONSUMER: %+v\n", ci)
 	// msg, _ := stream.ReadMessage(1)
 	// // msg.
 	// // si.State.Lost
@@ -68,12 +79,12 @@ func TestJSM(t *testing.T) {
 	// IMPORTANT: how to get last message for a subject and check that a message
 	// actually exists
 	//
-	msg, err := stream.ReadLastMessageForSubject(fmt.Sprintf("ingest.%s.%s", "event", "1_0_"))
-	if err != nil {
-		if !jsm.IsNatsError(err, uint16(nats.JSErrCodeMessageNotFound)) {
-			t.Fatal("reading last message: ", err)
-		}
-		t.Log("MESSAGE NOT FOUND")
-	}
-	fmt.Println(msg)
+	// msg, err := stream.ReadLastMessageForSubject(fmt.Sprintf("ingest.%s.%s", "event", "1_0_0"))
+	// if err != nil {
+	// 	if !jsm.IsNatsError(err, uint16(nats.JSErrCodeMessageNotFound)) {
+	// 		t.Fatal("reading last message: ", err)
+	// 	}
+	// 	t.Log("MESSAGE NOT FOUND")
+	// }
+	// fmt.Println(msg)
 }

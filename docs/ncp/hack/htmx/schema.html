@@ -73,6 +73,12 @@
                 {{ end }}
             </ul>
         </div>
+        <div>
+            <h1 class="text-xl py-8">Schema</h1>
+            <div>
+                <pre><code>{{- printf "%s" .Schema.Spec.Schema }}</code></pre>
+            </div>
+        </div>
 
     </div>
     <div class="drawer-side">
@@ -81,7 +87,6 @@
             <li><a href="/accounts/{{ .Account.ID }}">Dashboard</a></li>
             <!-- <li><a href="/accounts/{{ .Account.ID }}/schemas">Schemas</a></li> -->
         </ul>
-
     </div>
 </div>
 
