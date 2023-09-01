@@ -1,7 +1,9 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/volvo-cars/lingon.svg)](https://pkg.go.dev/github.com/volvo-cars/lingon)
 [![GoReportCard example](https://goreportcard.com/badge/github.com/volvo-cars/lingon)](https://goreportcard.com/report/github.com/volvo-cars/lingon)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/volvo-cars/lingon)](go.mod)
 ![Go Test Coverage](.github/coverage.svg)
+
 
 # Lingon 🍒 - Libraries for building platforms with Go  <!-- omit in toc -->
 
