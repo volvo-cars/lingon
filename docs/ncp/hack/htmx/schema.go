@@ -58,5 +58,5 @@ func (s *Server) serveSchema(w http.ResponseWriter, r *http.Request) {
 		Schema:       schemaReply.Schema,
 		ConsumerInfo: consumerInfo,
 	}
-	s.renderHTML(w, schemaHTML, data)
+	s.renderPage(w, schemaHTML, data)
 }

@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"strings"
 	"time"
 
 	"github.com/nats-io/jwt/v2"
@@ -40,7 +39,9 @@ func (ac *AccountActor) Close() {
 	ac.ActorAccountConn.Close()
 }
 
-func (ac *AccountActor) requestAccount(claims *jwt.AccountClaims) (string, error) {
+func (ac *AccountActor) requestAccount(
+	claims *jwt.AccountClaims,
+) (string, error) {
 	kp, err := nkeys.FromSeed(ac.OperatorNKey)
 	if err != nil {
 		return "", fmt.Errorf("getting operator key pair from nkey: %w", err)
@@ -114,7 +115,7 @@ func RegisterAccountActor(ctx context.Context, actor *AccountActor) error {
 	{
 		action := "account_list"
 		sub, err := actor.ActorAccountConn.QueueSubscribe(
-			fmt.Sprintf("actor.%s.%s", name, action),
+			fmt.Sprintf(ActionSubjectSubscribe, name, action),
 			name,
 			func(msg *nats.Msg) {
 				reply, err := actor.accountList(ctx, msg)
@@ -147,7 +148,7 @@ func RegisterAccountActor(ctx context.Context, actor *AccountActor) error {
 	{
 		action := "account_get"
 		sub, err := actor.ActorAccountConn.QueueSubscribe(
-			fmt.Sprintf("actor.%s.%s", name, action),
+			fmt.Sprintf(ActionSubjectSubscribe, name, action),
 			name,
 			func(msg *nats.Msg) {
 				reply, err := actor.accountGet(ctx, msg)
@@ -180,7 +181,7 @@ func RegisterAccountActor(ctx context.Context, actor *AccountActor) error {
 	{
 		action := "account_create"
 		sub, err := actor.ActorAccountConn.QueueSubscribe(
-			fmt.Sprintf("actor.%s.%s", name, action),
+			fmt.Sprintf(ActionSubjectSubscribe, name, action),
 			name,
 			func(msg *nats.Msg) {
 				reply, err := actor.accountCreate(ctx, msg)
@@ -213,7 +214,7 @@ func RegisterAccountActor(ctx context.Context, actor *AccountActor) error {
 	{
 		action := "user_create"
 		sub, err := actor.ActorAccountConn.QueueSubscribe(
-			fmt.Sprintf("actor.%s.%s.*", name, action),
+			fmt.Sprintf(ActionSubjectSubscribeForAccount, name, action),
 			name,
 			func(msg *nats.Msg) {
 				reply, err := actor.userCreate(ctx, msg)
@@ -340,9 +341,9 @@ func (aa *AccountActor) accountCreate(
 		// Account is the public key of the account which exported the service.
 		Account: aa.ActorAccountPubKey,
 		// Subject is the exported account's subject.
-		Subject: jwt.Subject("actor.*.*." + pubKey),
+		Subject: jwt.Subject(fmt.Sprintf(ActionImportSubject, pubKey)),
 		// LocalSubject is the subject local to this account.
-		LocalSubject: jwt.RenamingSubject("actor.*.*"),
+		LocalSubject: jwt.RenamingSubject(ActionImportLocalSubject),
 	})
 	// Export the Jetstream API for this account, which we will import into
 	// the actor account, making this account's Jetstream API available to
@@ -417,13 +418,14 @@ func (aa *AccountActor) accountCreate(
 	}, nil
 }
 
-func (aa *AccountActor) userCreate(ctx context.Context, msg *nats.Msg) (*UserCreateReply, error) {
-	// Get account public key from subject
-	subjects := strings.Split(msg.Subject, ".")
-	if len(subjects) != 4 {
-		return nil, fmt.Errorf("invalid subject: %s", msg.Subject)
+func (aa *AccountActor) userCreate(
+	ctx context.Context,
+	msg *nats.Msg,
+) (*UserCreateReply, error) {
+	accountPubKey, err := AccountFromSubject(msg.Subject)
+	if err != nil {
+		return nil, fmt.Errorf("getting account from subject: %w", err)
 	}
-	accountPubKey := subjects[3]
 	slog.Info("create user", "subject", msg.Subject, "pubkey", accountPubKey)
 	// Get account key pair
 	kve, err := aa.accountsBucket.Get(accountPubKey)
@@ -484,12 +486,19 @@ func (aa *AccountActor) userCreate(ctx context.Context, msg *nats.Msg) (*UserCre
 	}, nil
 }
 
-func SendAccountListMsg(nc *nats.Conn, msg AccountListMsg) (*AccountListReply, error) {
+func SendAccountListMsg(
+	nc *nats.Conn,
+	msg AccountListMsg,
+) (*AccountListReply, error) {
 	msgB, err := json.Marshal(msg)
 	if err != nil {
 		return nil, fmt.Errorf("marshal: %w", err)
 	}
-	replyB, err := nc.Request("actor.account.account_list", msgB, time.Second)
+	replyB, err := nc.Request(
+		fmt.Sprintf(ActionSubjectSend, "account", "account_list"),
+		msgB,
+		time.Second,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("request: %w", err)
 	}
@@ -500,12 +509,19 @@ func SendAccountListMsg(nc *nats.Conn, msg AccountListMsg) (*AccountListReply, e
 	return &reply, nil
 }
 
-func SendAccountGetMsg(nc *nats.Conn, msg AccountGetMsg) (*AccountGetReply, error) {
+func SendAccountGetMsg(
+	nc *nats.Conn,
+	msg AccountGetMsg,
+) (*AccountGetReply, error) {
 	msgB, err := json.Marshal(msg)
 	if err != nil {
 		return nil, fmt.Errorf("marshal: %w", err)
 	}
-	replyB, err := nc.Request("actor.account.account_get", msgB, time.Second)
+	replyB, err := nc.Request(
+		fmt.Sprintf(ActionSubjectSend, "account", "account_get"),
+		msgB,
+		time.Second,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("request: %w", err)
 	}
@@ -516,12 +532,19 @@ func SendAccountGetMsg(nc *nats.Conn, msg AccountGetMsg) (*AccountGetReply, erro
 	return &reply, nil
 }
 
-func SendAccountCreateMsg(nc *nats.Conn, msg AccountCreateMsg) (*AccountCreateReply, error) {
+func SendAccountCreateMsg(
+	nc *nats.Conn,
+	msg AccountCreateMsg,
+) (*AccountCreateReply, error) {
 	msgB, err := json.Marshal(msg)
 	if err != nil {
 		return nil, fmt.Errorf("marshal: %w", err)
 	}
-	replyB, err := nc.Request("actor.account.account_create", msgB, time.Second)
+	replyB, err := nc.Request(
+		fmt.Sprintf(ActionSubjectSend, "account", "account_create"),
+		msgB,
+		time.Second,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("request: %w", err)
 	}
@@ -532,13 +555,16 @@ func SendAccountCreateMsg(nc *nats.Conn, msg AccountCreateMsg) (*AccountCreateRe
 	return &reply, nil
 }
 
-func SendUserCreateMsg(nc *nats.Conn, msg UserCreateMsg) (*UserCreateReply, error) {
+func SendUserCreateMsg(
+	nc *nats.Conn,
+	msg UserCreateMsg,
+) (*UserCreateReply, error) {
 	userMsgB, err := json.Marshal(msg)
 	if err != nil {
 		return nil, fmt.Errorf("marshal: %w", err)
 	}
 	userB, err := nc.Request(
-		"actor.account.user_create",
+		fmt.Sprintf(ActionSubjectSend, "account", "user_create"),
 		userMsgB,
 		time.Second*5,
 	)
@@ -567,7 +593,12 @@ func SendUserCreateForAccountMsg(
 		return nil, fmt.Errorf("marshal: %w", err)
 	}
 	userB, err := nc.Request(
-		"actor.account.user_create."+targetAccountID,
+		fmt.Sprintf(
+			ActionSubjectSendForAccount,
+			"account",
+			"user_create",
+			targetAccountID,
+		),
 		userMsgB,
 		time.Second*5,
 	)

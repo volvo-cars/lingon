@@ -445,8 +445,7 @@ func BootstrapServerJWTAuth() (ServerJWTAuth, error) {
 		Info: jwt.Info{
 			Description: "Export actors for other account to import",
 		},
-		// Subject: actor.<actor>.<action>.<account>
-		Subject: jwt.Subject("actor.*.*.*"),
+		Subject: jwt.Subject(ActionExportSubject),
 	})
 	// aac.Exports.Add(&jwt.Export{
 	// 	Type: jwt.Service,

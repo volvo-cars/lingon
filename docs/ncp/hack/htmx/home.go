@@ -30,7 +30,7 @@ func (s *Server) serveHome(w http.ResponseWriter, r *http.Request) {
 		UserInfo: userInfo,
 		Accounts: reply.Accounts,
 	}
-	s.renderHTML(w, homeHTML, data)
+	s.renderPage(w, homeHTML, data)
 }
 
 func (s *Server) postAccounts(w http.ResponseWriter, r *http.Request) {

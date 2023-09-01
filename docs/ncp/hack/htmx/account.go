@@ -12,6 +12,11 @@ import (
 //go:embed account.html
 var accountHTML string
 
+type ActorPage struct {
+	Name string
+	Link string
+}
+
 func (s *Server) serveAccount(w http.ResponseWriter, r *http.Request) {
 	userInfo, ok := r.Context().Value(AuthContext).(UserInfo)
 	if !ok {
@@ -26,26 +31,22 @@ func (s *Server) serveAccount(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	schemaListReply, err := bla.SendSchemaListForAccountMsg(
-		s.nc,
-		accountID,
-		bla.SchemaListMsg{},
-	)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
 	type Data struct {
 		UserInfo UserInfo
 		Account  bla.Account
-		Schemas  []bla.Schema
+		Actors   []ActorPage
 	}
 	data := Data{
 		UserInfo: userInfo,
 		Account:  reply.Account,
-		Schemas:  schemaListReply.Schemas,
+		Actors: []ActorPage{
+			{
+				Name: "Schemas",
+				Link: "schema",
+			},
+		},
 	}
-	s.renderHTML(w, accountHTML, data)
+	s.renderPage(w, accountHTML, data)
 }
 
 func (s *Server) postAccountUsers(w http.ResponseWriter, r *http.Request) {

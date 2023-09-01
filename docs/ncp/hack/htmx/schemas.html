@@ -1,0 +1,39 @@
+<div class="prose">
+    <h2>Schemas</h2>
+</div>
+
+<div class="my-8 overflow-x-auto">
+    <table class="table">
+        <!-- head -->
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Version</th>
+                <th>Status</th>
+                <th>Published</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{ range .Schemas }}
+            <tr>
+                <td>{{ .Spec.Name }}</td>
+                <td>{{ .Spec.Version }}</td>
+                <td>
+                    <div class="flex items-center gap-x-2">
+                        <div class="flex-none rounded-full p-1 text-success bg-success/10">
+                            <div class="h-1.5 w-1.5 rounded-full bg-current"></div>
+                        </div>
+                        <div class="">Completed</div>
+                    </div>
+                </td>
+                <td>1d ago</td>
+                <th>
+                    <a role="button" href="/accounts/{{ $.Account.ID}}/schema/{{ .Key }}"
+                        class="btn btn-ghost btn-xs">details</button>
+                </th>
+            </tr>
+
+            {{ end }}
+        </tbody>
+    </table>
+</div>

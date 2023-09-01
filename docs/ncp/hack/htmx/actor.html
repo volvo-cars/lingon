@@ -6,20 +6,15 @@
     <input id="account-drawer" type="checkbox" class="drawer-toggle" />
     <div class="drawer-content p-8">
 
-        <p>Dashboard</p>
-        <!-- <div class="prose pt-8">
-
-            <h2>Users</h2>
-            <form hx-post="/accounts/{{ .Account.ID }}/users" hx-target="#user-creds">
-                <label class="label">
-                    <span class="label-text">Name</span>
-                </label>
-                <input type="text" placeholder="e.g. bob" id="user-name" name="user-name"
-                    class="input input-bordered w-full max-w-xs" />
-                <button type="submit" class="btn">Submit</button>
-                <div id="user-creds" class="whitespace-pre-wrap"></div>
-            </form>
-        </div> -->
+        {{ if .Path }}
+        <div hx-get="/actor/{{ .Account.ID }}/{{ .Actor }}/{{ .Path }}" hx-trigger="load">
+            <span class="loading loading-infinity loading-lg"></span>
+        </div>
+        {{ else }}
+        <div hx-get="/actor/{{ .Account.ID }}/{{ .Actor }}" hx-trigger="load">
+            <span class="loading loading-infinity loading-lg"></span>
+        </div>
+        {{ end }}
 
     </div>
     <div class="drawer-side">

@@ -9,5 +9,5 @@ import (
 var accountsNewHTML string
 
 func (s *Server) serveAccountsNew(w http.ResponseWriter, r *http.Request) {
-	s.renderHTML(w, accountsNewHTML, nil)
+	s.renderPage(w, accountsNewHTML, nil)
 }

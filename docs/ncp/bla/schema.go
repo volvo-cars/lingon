@@ -70,7 +70,7 @@ func RegisterSchemaActor(ctx context.Context, actor *SchemaActor) error {
 	{
 		action := "publish"
 		sub, err := actor.Conn.QueueSubscribe(
-			fmt.Sprintf("actor.%s.%s.*", name, action),
+			fmt.Sprintf(ActionSubjectSubscribeForAccount, name, action),
 			name,
 			func(msg *nats.Msg) {
 				reply, err := actor.publishSchema(ctx, msg)
@@ -99,7 +99,7 @@ func RegisterSchemaActor(ctx context.Context, actor *SchemaActor) error {
 	{
 		action := "list"
 		sub, err := actor.Conn.QueueSubscribe(
-			fmt.Sprintf("actor.%s.%s.*", name, action),
+			fmt.Sprintf(ActionSubjectSubscribeForAccount, name, action),
 			name,
 			func(msg *nats.Msg) {
 				reply, err := actor.schemaList(ctx, msg)
@@ -128,7 +128,7 @@ func RegisterSchemaActor(ctx context.Context, actor *SchemaActor) error {
 	{
 		action := "get"
 		sub, err := actor.Conn.QueueSubscribe(
-			fmt.Sprintf("actor.%s.%s.*", name, action),
+			fmt.Sprintf(ActionSubjectSubscribeForAccount, name, action),
 			name,
 			func(msg *nats.Msg) {
 				reply, err := actor.schemaGet(ctx, msg)
@@ -221,11 +221,10 @@ func (sa *SchemaActor) publishSchema(
 	msg *nats.Msg,
 ) (*SchemaPublishReply, error) {
 	// Get account public key from subject
-	subjects := strings.Split(msg.Subject, ".")
-	if len(subjects) != 4 {
-		return nil, fmt.Errorf("invalid subject: %s", msg.Subject)
+	accountPubKey, err := AccountFromSubject(msg.Subject)
+	if err != nil {
+		return nil, fmt.Errorf("account from subject: %w", err)
 	}
-	accountPubKey := subjects[3]
 	var data SchemaPublishMsg
 	if err := json.Unmarshal(msg.Data, &data); err != nil {
 		return nil, fmt.Errorf("unmarshal: %w", err)
@@ -560,7 +559,11 @@ func SendSchemaListForAccountMsg(
 	if err != nil {
 		return nil, fmt.Errorf("marshal: %w", err)
 	}
-	replyMsg, err := nc.Request("actor.schema.list."+accountID, bData, time.Second*10)
+	replyMsg, err := nc.Request(
+		fmt.Sprintf(ActionSubjectSendForAccount, "schema", "list", accountID),
+		bData,
+		time.Second*10,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("request schema list: %w", err)
 	}
@@ -576,7 +579,11 @@ func SendSchemaListMsg(nc *nats.Conn, msg SchemaListMsg) (*SchemaListReply, erro
 	if err != nil {
 		return nil, fmt.Errorf("marshal: %w", err)
 	}
-	replyMsg, err := nc.Request("actor.schema.list", bData, time.Second*10)
+	replyMsg, err := nc.Request(
+		fmt.Sprintf(ActionSubjectSend, "schema", "list"),
+		bData,
+		time.Second*10,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("request: %w", err)
 	}
@@ -596,7 +603,11 @@ func SendSchemaGetForAccountMsg(
 	if err != nil {
 		return nil, fmt.Errorf("marshal: %w", err)
 	}
-	replyMsg, err := nc.Request("actor.schema.get."+accountID, bData, time.Second*10)
+	replyMsg, err := nc.Request(
+		fmt.Sprintf(ActionSubjectSendForAccount, "schema", "get", accountID),
+		bData,
+		time.Second*10,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("request: %w", err)
 	}
@@ -611,7 +622,11 @@ func SendSchemaGetMsg(nc *nats.Conn, msg SchemaGetMsg) (*SchemaGetReply, error) 
 	if err != nil {
 		return nil, fmt.Errorf("marshal: %w", err)
 	}
-	replyMsg, err := nc.Request("actor.schema.get", bData, time.Second*10)
+	replyMsg, err := nc.Request(
+		fmt.Sprintf(ActionSubjectSend, "schema", "get"),
+		bData,
+		time.Second*10,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("request: %w", err)
 	}
@@ -627,7 +642,11 @@ func SendSchemaPublishMsg(nc *nats.Conn, msg SchemaPublishMsg) (*SchemaPublishRe
 	if err != nil {
 		return nil, fmt.Errorf("marshal: %w", err)
 	}
-	replyMsg, err := nc.Request("actor.schema.publish", bData, time.Second*10)
+	replyMsg, err := nc.Request(
+		fmt.Sprintf(ActionSubjectSend, "schema", "publish"),
+		bData,
+		time.Second*10,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("request: %w", err)
 	}

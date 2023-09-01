@@ -3,11 +3,15 @@ package htmx
 import (
 	"bytes"
 	"fmt"
+	"log/slog"
+	"ncp/bla"
 	"net/http"
+	"strings"
 	"text/template"
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/nats-io/jsm.go/api"
 	"github.com/nats-io/nats.go"
 )
 
@@ -15,6 +19,12 @@ import (
 type ContextKey string
 
 var AuthContext ContextKey = "AUTH_CONTEXT"
+
+var TemplateFuncMap = template.FuncMap{
+	"durationSince": func(t time.Time) string {
+		return time.Since(t).Truncate(time.Second).String()
+	},
+}
 
 type UserInfo struct {
 	Sub     string   `json:"sub"`
@@ -27,16 +37,31 @@ type UserInfo struct {
 
 type Server struct {
 	nc   *nats.Conn
-	tmpl *template.Template
+	page *template.Template
 }
 
-func (s *Server) renderHTML(w http.ResponseWriter, template string, data any) {
-	if _, err := s.tmpl.Parse(template); err != nil {
+func (s *Server) renderPage(w http.ResponseWriter, template string, data any) {
+	if _, err := s.page.Parse(template); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	buf := bytes.Buffer{}
-	if err := s.tmpl.ExecuteTemplate(&buf, "base", data); err != nil {
+	if err := s.page.ExecuteTemplate(&buf, "base", data); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Write(buf.Bytes())
+}
+
+func (s *Server) renderTemplate(w http.ResponseWriter, tmpl string, data any) {
+	t, err := template.New("tmpl").Parse(tmpl)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	buf := bytes.Buffer{}
+	if err := t.Execute(&buf, data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -45,11 +70,7 @@ func (s *Server) renderHTML(w http.ResponseWriter, template string, data any) {
 }
 
 func Setup(nc *nats.Conn, r *chi.Mux) error {
-	tmpl := template.New("html").Funcs(template.FuncMap{
-		"durationSince": func(t time.Time) string {
-			return time.Since(t).Truncate(time.Second).String()
-		},
-	})
+	tmpl := template.New("html").Funcs(TemplateFuncMap)
 	if _, err := tmpl.New("base").Parse(baseHTML); err != nil {
 		return fmt.Errorf("parse base: %w", err)
 	}
@@ -59,15 +80,155 @@ func Setup(nc *nats.Conn, r *chi.Mux) error {
 
 	s := Server{
 		nc:   nc,
-		tmpl: tmpl,
+		page: tmpl,
 	}
 
 	r.Get("/", s.serveHome)
 	r.Get("/accounts/new", s.serveAccountsNew)
 	r.Get("/accounts/{accountID}", s.serveAccount)
 	r.Post("/accounts/{accountID}/users", s.postAccountUsers)
-	r.Get("/accounts/{accountID}/schemas/{schemaID}", s.serveSchema)
+	// r.Get("/accounts/{accountID}/schemas/{schemaID}", s.serveSchema)
 	r.Post("/accounts", s.postAccounts)
+
+	r.Get("/accounts/{accountID}/{actor}", s.serveActor)
+	r.Get("/accounts/{accountID}/{actor}/*", s.serveActor)
+
+	// Actor endpoints
+	r.Get("/actor/{accountID}/{actor}", func(w http.ResponseWriter, r *http.Request) {
+		accountID := chi.URLParam(r, "accountID")
+		actor := chi.URLParam(r, "actor")
+
+		w.Write([]byte(fmt.Sprintf("%s/%s", accountID, actor)))
+		s.serveSchemas(w, r)
+	})
+	r.Get("/actor/{accountID}/{actor}/*", func(w http.ResponseWriter, r *http.Request) {
+		type Data struct {
+			// UserInfo of the user making the request.
+			UserInfo UserInfo
+			// Account for which the request is made.
+			Account bla.Account
+
+			// RequestURI is the actor-scoped request-target.
+			RequestURI string
+		}
+
+		type Reply struct {
+			Body  []byte
+			Error string
+		}
+
+		get := func(data Data) Reply {
+			// HOW TO GET SCHEMA ID!!
+			ss := strings.Split(data.RequestURI, "/")
+			schemaID := ss[len(ss)-1]
+			schemaReply, err := bla.SendSchemaGetForAccountMsg(
+				s.nc,
+				data.Account.ID,
+				bla.SchemaGetMsg{
+					Key: schemaID,
+				},
+			)
+			if err != nil {
+				// http.Error(w, err.Error(), http.StatusInternalServerError)
+				return Reply{
+					Error: err.Error(),
+				}
+			}
+			schema := schemaReply.Schema
+			consumerInfo, err := bla.ConsumerState(
+				s.nc,
+				data.Account.ID,
+				schema.Spec.Name,
+				strings.ReplaceAll(schema.Spec.Version, ".", "_"),
+			)
+			if err != nil {
+				return Reply{
+					Error: err.Error(),
+				}
+			}
+			type Data struct {
+				UserInfo     UserInfo
+				Account      bla.Account
+				Schema       bla.Schema
+				ConsumerInfo *api.ConsumerInfo
+			}
+			d := Data{
+				UserInfo:     data.UserInfo,
+				Account:      data.Account,
+				Schema:       schemaReply.Schema,
+				ConsumerInfo: consumerInfo,
+			}
+			t, err := template.New("tmpl").Funcs(TemplateFuncMap).Parse(schemaHTML)
+			if err != nil {
+				return Reply{
+					Error: err.Error(),
+				}
+			}
+			buf := bytes.Buffer{}
+			if err := t.Execute(&buf, d); err != nil {
+				return Reply{
+					Error: err.Error(),
+				}
+			}
+			// w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			// w.Write(buf.Bytes())
+			// s.renderPage(w, schemaHTML, d)
+			return Reply{
+				// Body: []byte(fmt.Sprintf("%##v", d)),
+				Body: buf.Bytes(),
+			}
+		}
+
+		// DO SOME STUFF
+		userInfo, ok := r.Context().Value(AuthContext).(UserInfo)
+		if !ok {
+			http.Error(w, "no auth context", http.StatusUnauthorized)
+			return
+		}
+		accountID := chi.URLParam(r, "accountID")
+		// schemaID := chi.URLParam(r, "schemaID")
+		accReply, err := bla.SendAccountGetMsg(s.nc, bla.AccountGetMsg{
+			ID: accountID,
+		})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		actor := chi.URLParam(r, "actor")
+		requestURI := fmt.Sprintf("/%s/%s", actor, chi.URLParam(r, "*"))
+
+		fmt.Println("Request URL: ", r.RequestURI)
+		data := Data{
+			Account:    accReply.Account,
+			UserInfo:   userInfo,
+			RequestURI: requestURI,
+		}
+		slog.Info("calling get")
+		reply := get(data)
+
+		if reply.Error != "" {
+			slog.Error("get actor", "error", reply.Error)
+			http.Error(w, reply.Error, http.StatusInternalServerError)
+			return
+		}
+		w.Write(reply.Body)
+		// url, err := url.Parse("/" + chi.URLParam(r, "*"))
+		// if err != nil {
+		// 	w.Write([]byte(err.Error()))
+		// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+		// 	return
+		// }
+		// fmt.Println(url.Path)
+		// fmt.Printf("%##v\n", url)
+		// // chi.URLParam()
+		// w.Write([]byte(fmt.Sprintf("%##v", url)))
+		// w.Write([]byte("whatever"))
+		// s.serveSchema(w, r)
+	})
+	// r.Get("/actor/schema/{accountID}/*", func(w http.ResponseWriter, r *http.Request) {
+	// 	w.Write([]byte("LOLOLOL"))
+	// })
+
 	// 	func(w http.ResponseWriter, r *http.Request) {
 	// 		if _, err := tmpl.Parse(accountsNewHTML); err != nil {
 	// 			http.Error(w, err.Error(), http.StatusInternalServerError)
