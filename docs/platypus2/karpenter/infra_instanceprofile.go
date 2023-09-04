@@ -21,7 +21,7 @@ type InstanceProfile struct {
 	PolicyAttachments []*aws.IamRolePolicyAttachment `validate:"required,dive,required"`
 }
 
-func newInstanceProfile() InstanceProfile {
+func newInstanceProfile(clusterName string) InstanceProfile {
 	arPolicy := aws.NewDataIamPolicyDocument(
 		"eks_node", aws.DataIamPolicyDocumentArgs{
 			Statement: []dataiampolicydocument.Statement{
@@ -44,7 +44,7 @@ func newInstanceProfile() InstanceProfile {
 
 	iamRole := aws.NewIamRole(
 		"eks_node", aws.IamRoleArgs{
-			Name:             S("platypus-karpenter-node"),
+			Name:             S(clusterName + "-karpenter-node"),
 			Description:      S("IAM Role for Karpenter's InstanceProfile to use when launching nodes"),
 			AssumeRolePolicy: arPolicy.Attributes().Json(),
 		},
@@ -70,7 +70,7 @@ func newInstanceProfile() InstanceProfile {
 
 	instanceProfile := aws.NewIamInstanceProfile(
 		KA.Name, aws.IamInstanceProfileArgs{
-			Name: S("platypus-karpenter-instance-profile"),
+			Name: S(clusterName + "-karpenter-instance-profile"),
 			Role: iamRole.Attributes().Name(),
 		},
 	)

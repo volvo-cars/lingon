@@ -48,7 +48,7 @@ type NodeTerminationQueue struct {
 }
 
 func NewInfra(opts InfraOpts) Infra {
-	ip := newInstanceProfile()
+	ip := newInstanceProfile(opts.ClusterName)
 	return Infra{
 		FargateProfile:  newFargateProfile(opts),
 		InstanceProfile: ip,

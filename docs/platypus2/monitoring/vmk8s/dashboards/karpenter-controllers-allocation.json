@@ -3,7 +3,10 @@
     "list": [
       {
         "builtIn": 1,
-        "datasource": "-- Grafana --",
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
@@ -279,7 +282,7 @@
         "includeAll": false,
         "label": "VictoriaMetrics",
         "multi": false,
-        "name": "ds",
+        "name": "datasource",
         "options": [],
         "query": "victoriametrics-datasource",
         "queryValue": "",

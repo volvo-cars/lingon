@@ -33,7 +33,7 @@ var S = terra.String
 const (
 	manifestPath   = ".lingon/k8s"
 	kubeconfigPath = "kubeconfig"
-	name           = "platypus-2"
+	name           = "platypus-3"
 	kubeVersion    = "1.26"
 	region         = "eu-north-1"
 	stateBucket    = "platypusbootstrap-lingon"

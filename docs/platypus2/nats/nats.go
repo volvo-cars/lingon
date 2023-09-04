@@ -35,7 +35,6 @@ func Core() Meta {
 	n := "nats"
 	ns := n
 	promExporterV := "0.12.0"
-	// reloaderV := "0.11.0"
 	reloaderV := "latest"
 	ver := "2.9.19"
 
@@ -299,16 +298,9 @@ var STS = &appsv1.StatefulSet{
 	},
 	Spec: appsv1.StatefulSetSpec{
 		PodManagementPolicy: appsv1.ParallelPodManagement,
-		// UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
-		// 	Type: appsv1.RollingUpdateStatefulSetStrategyType,
-		// 	RollingUpdate: &appsv1.RollingUpdateStatefulSetStrategy{
-		// 		Partition:      nil,
-		// 		MaxUnavailable: P(intstr.FromInt(1)),
-		// 	},
-		// },
-		Replicas:    P(int32(N.replicas)),
-		Selector:    &metav1.LabelSelector{MatchLabels: N.MatchLabels()},
-		ServiceName: SVC.Name,
+		Replicas:            P(int32(N.replicas)),
+		Selector:            &metav1.LabelSelector{MatchLabels: N.MatchLabels()},
+		ServiceName:         SVC.Name,
 		VolumeClaimTemplates: []corev1.PersistentVolumeClaim{
 			{
 				ObjectMeta: metav1.ObjectMeta{Name: N.PvcName},
