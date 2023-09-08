@@ -2,10 +2,12 @@ module ncp
 
 go 1.21
 
+replace github.com/volvo-cars/lingon => ../../
+
 require (
 	github.com/coreos/go-oidc/v3 v3.6.0
 	github.com/davecgh/go-spew v1.1.1
-	github.com/docker/docker v24.0.2+incompatible
+	github.com/docker/docker v24.0.5+incompatible
 	github.com/go-chi/chi/v5 v5.0.10
 	github.com/google/go-containerregistry v0.15.2
 	github.com/google/ko v0.14.1
@@ -15,6 +17,7 @@ require (
 	github.com/nats-io/nats-server/v2 v2.9.21
 	github.com/nats-io/nats.go v1.28.0
 	github.com/nats-io/nkeys v0.4.4
+	github.com/volvo-cars/lingon v0.0.0-00010101000000-000000000000
 	github.com/zitadel/oidc/v2 v2.8.3
 	golang.org/x/oauth2 v0.11.0
 	golang.org/x/text v0.12.0
@@ -48,6 +51,7 @@ require (
 	github.com/go-openapi/validate v0.22.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/safetext v0.0.0-20220905092116-b49f7bc46da2 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/gorilla/schema v1.2.0 // indirect
@@ -81,6 +85,7 @@ require (
 	github.com/vbatts/tar-split v0.11.3 // indirect
 	go.mongodb.org/mongo-driver v1.11.3 // indirect
 	golang.org/x/crypto v0.12.0 // indirect
+	golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1 // indirect
 	golang.org/x/mod v0.12.0 // indirect
 	golang.org/x/net v0.14.0 // indirect
 	golang.org/x/sync v0.3.0 // indirect

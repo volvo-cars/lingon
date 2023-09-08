@@ -2,12 +2,29 @@ package bla_test
 
 import (
 	"context"
+	"fmt"
 	"ncp/bla"
 	"testing"
 
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nkeys"
 )
+
+func TestDocker(t *testing.T) {
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		t.Fatal("creating docker client: ", err)
+	}
+	defer cli.Close()
+
+	conts, err := cli.ContainerList(context.Background(), types.ContainerListOptions{})
+	if err != nil {
+		t.Fatal("listing containers: ", err)
+	}
+	fmt.Println(conts)
+}
 
 func TestSchema(t *testing.T) {
 	ctx := context.TODO()

@@ -92,7 +92,6 @@ type UserCreateReply struct {
 }
 
 func RegisterAccountActor(ctx context.Context, actor *AccountActor) error {
-	name := "account"
 	js, err := actor.ActorAccountConn.JetStream()
 	if err != nil {
 		return fmt.Errorf("jetstream: %w", err)
@@ -113,32 +112,10 @@ func RegisterAccountActor(ctx context.Context, actor *AccountActor) error {
 	actor.usersBucket = usersBucket
 
 	{
-		action := "account_list"
-		sub, err := actor.ActorAccountConn.QueueSubscribe(
-			fmt.Sprintf(ActionSubjectSubscribe, name, action),
-			name,
-			func(msg *nats.Msg) {
-				reply, err := actor.accountList(ctx, msg)
-				if err != nil {
-					slog.Error("action", "action", action, "error", err)
-					// reply = &CreateAccountReply{
-					// 	Error: err.Error(),
-					// }
-					// TODO: handle errors
-					if err := msg.Respond(nil); err != nil {
-						slog.Error("respond", "error", err)
-					}
-				}
-				bReply, err := json.Marshal(reply)
-				if err != nil {
-					slog.Error("marshal", "error", err)
-					return
-				}
-				if err := msg.Respond(bReply); err != nil {
-					slog.Error("respond", "error", err)
-					return
-				}
-			},
+		sub, err := SubscribeToSubject[AccountListMsg, AccountListReply](
+			actor.ActorAccountConn,
+			fmt.Sprintf(ActionSubjectSubscribe, "account", "account_list"),
+			actor.accountList,
 		)
 		if err != nil {
 			return fmt.Errorf("subscribing: %w", err)
@@ -146,32 +123,10 @@ func RegisterAccountActor(ctx context.Context, actor *AccountActor) error {
 		actor.subs = append(actor.subs, sub)
 	}
 	{
-		action := "account_get"
-		sub, err := actor.ActorAccountConn.QueueSubscribe(
-			fmt.Sprintf(ActionSubjectSubscribe, name, action),
-			name,
-			func(msg *nats.Msg) {
-				reply, err := actor.accountGet(ctx, msg)
-				if err != nil {
-					slog.Error("action", "action", action, "error", err)
-					// reply = &CreateAccountReply{
-					// 	Error: err.Error(),
-					// }
-					// TODO: handle errors
-					if err := msg.Respond(nil); err != nil {
-						slog.Error("respond", "error", err)
-					}
-				}
-				bReply, err := json.Marshal(reply)
-				if err != nil {
-					slog.Error("marshal", "error", err)
-					return
-				}
-				if err := msg.Respond(bReply); err != nil {
-					slog.Error("respond", "error", err)
-					return
-				}
-			},
+		sub, err := SubscribeToSubject[AccountGetMsg, AccountGetReply](
+			actor.ActorAccountConn,
+			fmt.Sprintf(ActionSubjectSubscribe, "account", "account_get"),
+			actor.accountGet,
 		)
 		if err != nil {
 			return fmt.Errorf("subscribing: %w", err)
@@ -179,32 +134,10 @@ func RegisterAccountActor(ctx context.Context, actor *AccountActor) error {
 		actor.subs = append(actor.subs, sub)
 	}
 	{
-		action := "account_create"
-		sub, err := actor.ActorAccountConn.QueueSubscribe(
-			fmt.Sprintf(ActionSubjectSubscribe, name, action),
-			name,
-			func(msg *nats.Msg) {
-				reply, err := actor.accountCreate(ctx, msg)
-				if err != nil {
-					slog.Error("action", "error", err)
-					// reply = &CreateAccountReply{
-					// 	Error: err.Error(),
-					// }
-					// TODO: handle errors
-					if err := msg.Respond(nil); err != nil {
-						slog.Error("respond", "error", err)
-					}
-				}
-				bReply, err := json.Marshal(reply)
-				if err != nil {
-					slog.Error("marshal", "error", err)
-					return
-				}
-				if err := msg.Respond(bReply); err != nil {
-					slog.Error("respond", "error", err)
-					return
-				}
-			},
+		sub, err := SubscribeToSubject[AccountCreateMsg, AccountCreateReply](
+			actor.ActorAccountConn,
+			fmt.Sprintf(ActionSubjectSubscribe, "account", "account_create"),
+			actor.accountCreate,
 		)
 		if err != nil {
 			return fmt.Errorf("subscribing: %w", err)
@@ -212,42 +145,21 @@ func RegisterAccountActor(ctx context.Context, actor *AccountActor) error {
 		actor.subs = append(actor.subs, sub)
 	}
 	{
-		action := "user_create"
-		sub, err := actor.ActorAccountConn.QueueSubscribe(
-			fmt.Sprintf(ActionSubjectSubscribeForAccount, name, action),
-			name,
-			func(msg *nats.Msg) {
-				reply, err := actor.userCreate(ctx, msg)
-				if err != nil {
-					slog.Error("action", "error", err)
-					// TODO: handle errors
-					if err := msg.Respond(nil); err != nil {
-						slog.Error("respond", "error", err)
-					}
-				}
-				bReply, err := json.Marshal(reply)
-				if err != nil {
-					slog.Error("marshal", "error", err)
-					return
-				}
-				if err := msg.Respond(bReply); err != nil {
-					slog.Error("respond", "error", err)
-					return
-				}
-			},
+		sub, err := SubscribeToSubjectWithAccount[UserCreateMsg, UserCreateReply](
+			actor.ActorAccountConn,
+			fmt.Sprintf(ActionSubjectSubscribe, "account", "user_create"),
+			actor.userCreate,
 		)
 		if err != nil {
 			return fmt.Errorf("subscribing: %w", err)
 		}
 		actor.subs = append(actor.subs, sub)
 	}
-
 	return nil
 }
 
 func (aa *AccountActor) accountList(
-	ctx context.Context,
-	msg *nats.Msg,
+	msg *AccountListMsg,
 ) (*AccountListReply, error) {
 	// TODO: unmarshal AccountListMsg, when needed
 	keys, err := aa.accountsBucket.Keys()
@@ -278,15 +190,9 @@ func (aa *AccountActor) accountList(
 }
 
 func (aa *AccountActor) accountGet(
-	ctx context.Context,
-	msg *nats.Msg,
+	msg *AccountGetMsg,
 ) (*AccountGetReply, error) {
-	// TODO: unmarshal AccountListMsg, when needed
-	var data AccountGetMsg
-	if err := json.Unmarshal(msg.Data, &data); err != nil {
-		return nil, fmt.Errorf("unmarshal: %w", err)
-	}
-	kve, err := aa.accountsBucket.Get(data.ID)
+	kve, err := aa.accountsBucket.Get(msg.ID)
 	if err != nil {
 		if errors.Is(err, nats.ErrKeyNotFound) {
 			return &AccountGetReply{
@@ -306,13 +212,8 @@ func (aa *AccountActor) accountGet(
 }
 
 func (aa *AccountActor) accountCreate(
-	ctx context.Context,
-	msg *nats.Msg,
+	msg *AccountCreateMsg,
 ) (*AccountCreateReply, error) {
-	var data AccountCreateMsg
-	if err := json.Unmarshal(msg.Data, &data); err != nil {
-		return nil, fmt.Errorf("unmarshal: %w", err)
-	}
 	keyPair, err := nkeys.CreateAccount()
 	if err != nil {
 		return nil, fmt.Errorf("create account: %w", err)
@@ -327,7 +228,7 @@ func (aa *AccountActor) accountCreate(
 	}
 
 	claims := jwt.NewAccountClaims(pubKey)
-	claims.Name = data.Name
+	claims.Name = msg.Name
 	claims.Limits.JetStreamLimits.Consumer = -1
 	claims.Limits.JetStreamLimits.DiskMaxStreamBytes = -1
 	claims.Limits.JetStreamLimits.DiskStorage = -1
@@ -375,7 +276,7 @@ func (aa *AccountActor) accountCreate(
 
 	acc := Account{
 		ID:   pubKey,
-		Name: data.Name,
+		Name: msg.Name,
 		NKey: seed,
 		JWT:  accJWT,
 	}
@@ -419,16 +320,12 @@ func (aa *AccountActor) accountCreate(
 }
 
 func (aa *AccountActor) userCreate(
-	ctx context.Context,
-	msg *nats.Msg,
+	accountID string,
+	msg *UserCreateMsg,
 ) (*UserCreateReply, error) {
-	accountPubKey, err := AccountFromSubject(msg.Subject)
-	if err != nil {
-		return nil, fmt.Errorf("getting account from subject: %w", err)
-	}
-	slog.Info("create user", "subject", msg.Subject, "pubkey", accountPubKey)
+	// slog.Info("create user", "subject", msg.Subject, "pubkey", accountPubKey)
 	// Get account key pair
-	kve, err := aa.accountsBucket.Get(accountPubKey)
+	kve, err := aa.accountsBucket.Get(accountID)
 	if err != nil {
 		return nil, fmt.Errorf("get account: %w", err)
 	}
@@ -441,11 +338,6 @@ func (aa *AccountActor) userCreate(
 		return nil, fmt.Errorf("get account key pair: %w", err)
 	}
 
-	// msg.Subject
-	var data UserCreateMsg
-	if err := json.Unmarshal(msg.Data, &data); err != nil {
-		return nil, fmt.Errorf("unmarshal: %w", err)
-	}
 	keyPair, err := nkeys.CreateUser()
 	if err != nil {
 		return nil, fmt.Errorf("create user: %w", err)
@@ -455,8 +347,8 @@ func (aa *AccountActor) userCreate(
 		return nil, fmt.Errorf("get public key: %w", err)
 	}
 	claims := jwt.NewUserClaims(pubKey)
-	claims.Name = data.Name
-	claims.IssuerAccount = accountPubKey
+	claims.Name = msg.Name
+	claims.IssuerAccount = accountID
 	if err := validateClaims(claims); err != nil {
 		return nil, fmt.Errorf("validate claims: %w", err)
 	}
@@ -470,7 +362,7 @@ func (aa *AccountActor) userCreate(
 	}
 	user := User{
 		ID:   pubKey,
-		Name: data.Name,
+		Name: msg.Name,
 		NKey: seed,
 		JWT:  jwt,
 	}
@@ -490,92 +382,44 @@ func SendAccountListMsg(
 	nc *nats.Conn,
 	msg AccountListMsg,
 ) (*AccountListReply, error) {
-	msgB, err := json.Marshal(msg)
-	if err != nil {
-		return nil, fmt.Errorf("marshal: %w", err)
-	}
-	replyB, err := nc.Request(
+	return RequestSubject[AccountListMsg, AccountListReply](
+		nc,
+		msg,
 		fmt.Sprintf(ActionSubjectSend, "account", "account_list"),
-		msgB,
-		time.Second,
 	)
-	if err != nil {
-		return nil, fmt.Errorf("request: %w", err)
-	}
-	var reply AccountListReply
-	if err := json.Unmarshal(replyB.Data, &reply); err != nil {
-		return nil, fmt.Errorf("unmarshal: %w", err)
-	}
-	return &reply, nil
 }
 
 func SendAccountGetMsg(
 	nc *nats.Conn,
 	msg AccountGetMsg,
 ) (*AccountGetReply, error) {
-	msgB, err := json.Marshal(msg)
-	if err != nil {
-		return nil, fmt.Errorf("marshal: %w", err)
-	}
-	replyB, err := nc.Request(
+	return RequestSubject[AccountGetMsg, AccountGetReply](
+		nc,
+		msg,
 		fmt.Sprintf(ActionSubjectSend, "account", "account_get"),
-		msgB,
-		time.Second,
 	)
-	if err != nil {
-		return nil, fmt.Errorf("request: %w", err)
-	}
-	var reply AccountGetReply
-	if err := json.Unmarshal(replyB.Data, &reply); err != nil {
-		return nil, fmt.Errorf("unmarshal: %w", err)
-	}
-	return &reply, nil
 }
 
 func SendAccountCreateMsg(
 	nc *nats.Conn,
 	msg AccountCreateMsg,
 ) (*AccountCreateReply, error) {
-	msgB, err := json.Marshal(msg)
-	if err != nil {
-		return nil, fmt.Errorf("marshal: %w", err)
-	}
-	replyB, err := nc.Request(
+	return RequestSubject[AccountCreateMsg, AccountCreateReply](
+		nc,
+		msg,
 		fmt.Sprintf(ActionSubjectSend, "account", "account_create"),
-		msgB,
-		time.Second,
 	)
-	if err != nil {
-		return nil, fmt.Errorf("request: %w", err)
-	}
-	var reply AccountCreateReply
-	if err := json.Unmarshal(replyB.Data, &reply); err != nil {
-		return nil, fmt.Errorf("unmarshal: %w", err)
-	}
-	return &reply, nil
 }
 
 func SendUserCreateMsg(
 	nc *nats.Conn,
 	msg UserCreateMsg,
 ) (*UserCreateReply, error) {
-	userMsgB, err := json.Marshal(msg)
-	if err != nil {
-		return nil, fmt.Errorf("marshal: %w", err)
-	}
-	userB, err := nc.Request(
+	return RequestSubject[UserCreateMsg, UserCreateReply](
+		nc,
+		msg,
 		fmt.Sprintf(ActionSubjectSend, "account", "user_create"),
-		userMsgB,
-		time.Second*5,
 	)
-	if err != nil {
-		return nil, fmt.Errorf("publishing user create: %w", err)
-	}
-	var reply UserCreateReply
-	if err := json.Unmarshal(userB.Data, &reply); err != nil {
-		return nil, fmt.Errorf("unmarshal: %w", err)
-	}
-	return &reply, nil
 }
 
 // SendUserCreateForAccountMsg creates a user for a target account.
@@ -588,28 +432,11 @@ func SendUserCreateForAccountMsg(
 	targetAccountID string,
 	msg UserCreateMsg,
 ) (*UserCreateReply, error) {
-	userMsgB, err := json.Marshal(msg)
-	if err != nil {
-		return nil, fmt.Errorf("marshal: %w", err)
-	}
-	userB, err := nc.Request(
-		fmt.Sprintf(
-			ActionSubjectSendForAccount,
-			"account",
-			"user_create",
-			targetAccountID,
-		),
-		userMsgB,
-		time.Second*5,
+	return RequestSubject[UserCreateMsg, UserCreateReply](
+		nc,
+		msg,
+		fmt.Sprintf(ActionSubjectSendForAccount, "account", "user_create", targetAccountID),
 	)
-	if err != nil {
-		return nil, fmt.Errorf("publishing user create: %w", err)
-	}
-	var reply UserCreateReply
-	if err := json.Unmarshal(userB.Data, &reply); err != nil {
-		return nil, fmt.Errorf("unmarshal: %w", err)
-	}
-	return &reply, nil
 }
 
 // Account represents a NATS account.

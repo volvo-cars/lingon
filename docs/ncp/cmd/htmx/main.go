@@ -91,7 +91,7 @@ func main() {
 	r.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
-			ctx = context.WithValue(ctx, htmx.AuthContext, htmx.UserInfo{
+			ctx = context.WithValue(ctx, htmx.AuthContext, bla.UserInfo{
 				Sub:    "123",
 				Iss:    "http://localhost:9998/",
 				Name:   "John Doe",

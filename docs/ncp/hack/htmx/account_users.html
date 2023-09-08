@@ -1,0 +1,13 @@
+{{ define "account_main" }}
+<h1>Users</h1>
+
+<form hx-post="/accounts/{{ .Account.ID }}/users" hx-target="#user-creds">
+    <label class="label">
+        <span class="label-text">Name</span>
+    </label>
+    <input type="text" placeholder="e.g. bob" id="user-name" name="user-name"
+        class="input input-bordered w-full max-w-xs" />
+    <button type="submit" class="btn">Submit</button>
+    <div id="user-creds" class="whitespace-pre-wrap"></div>
+</form>
+{{ end }}

@@ -11,7 +11,7 @@ import (
 var homeHTML string
 
 func (s *Server) serveHome(w http.ResponseWriter, r *http.Request) {
-	userInfo, ok := r.Context().Value(AuthContext).(UserInfo)
+	userInfo, ok := r.Context().Value(AuthContext).(bla.UserInfo)
 	if !ok {
 		http.Error(w, "no auth context", http.StatusUnauthorized)
 		return
@@ -23,14 +23,14 @@ func (s *Server) serveHome(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type Data struct {
-		UserInfo UserInfo
+		UserInfo bla.UserInfo
 		Accounts []bla.Account
 	}
 	data := Data{
 		UserInfo: userInfo,
 		Accounts: reply.Accounts,
 	}
-	s.renderPage(w, homeHTML, data)
+	renderPage(w, baseTmpl, homeHTML, data)
 }
 
 func (s *Server) postAccounts(w http.ResponseWriter, r *http.Request) {

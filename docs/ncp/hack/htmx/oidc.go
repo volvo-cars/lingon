@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"ncp/bla"
 	"net/http"
 	"time"
 
@@ -103,7 +104,7 @@ func (or *oidcHandler) authMiddleware(next http.Handler) http.Handler {
 			http.Error(w, "invalid session: "+err.Error(), http.StatusUnauthorized)
 			return
 		}
-		var userInfo UserInfo
+		var userInfo bla.UserInfo
 		if err := json.Unmarshal(kve.Value(), &userInfo); err != nil {
 			http.Error(w, "unmarshalling claims: "+err.Error(), http.StatusUnauthorized)
 			return
@@ -184,7 +185,7 @@ func (or *oidcHandler) authCallback(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var claims UserInfo
+	var claims bla.UserInfo
 	if err := idToken.Claims(&claims); err != nil {
 		http.Error(w, "unmarshalling claims: "+err.Error(), http.StatusUnauthorized)
 		return

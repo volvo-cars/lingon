@@ -3,18 +3,19 @@ package bla
 import (
 	"context"
 	"crypto/md5"
+	_ "embed"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
 	"ncp/templates"
+	"net/http"
 	"os"
 	"os/exec"
 	"path"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -24,13 +25,22 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/google/ko/pkg/build"
 	"github.com/google/ko/pkg/publish"
+	"github.com/nats-io/jsm.go/api"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 )
 
+//go:embed schema.tmpl.html
+var schemaHTML string
+
+//go:embed schemas.tmpl.html
+var schemasHTML string
+
 type SchemaActor struct {
 	// Conn is a NATS connection to the actor account.
 	Conn *nats.Conn
+
+	ctx context.Context
 
 	js     jetstream.JetStream
 	bucket nats.KeyValue
@@ -45,6 +55,7 @@ func (sc *SchemaActor) Close() {
 }
 
 func RegisterSchemaActor(ctx context.Context, actor *SchemaActor) error {
+	actor.ctx = context.Background()
 	js, err := jetstream.New(actor.Conn)
 	if err != nil {
 		return fmt.Errorf("jetstream instance: %w", err)
@@ -66,106 +77,137 @@ func RegisterSchemaActor(ctx context.Context, actor *SchemaActor) error {
 	}
 	actor.bucket = bucket
 
-	name := "schema"
 	{
-		action := "publish"
-		sub, err := actor.Conn.QueueSubscribe(
-			fmt.Sprintf(ActionSubjectSubscribeForAccount, name, action),
-			name,
-			func(msg *nats.Msg) {
-				reply, err := actor.publishSchema(ctx, msg)
-				if err != nil {
-					slog.Error("action", "actor", name, "action", action, "error", err)
-					reply = &SchemaPublishReply{
-						Error: err.Error(),
-					}
-				}
-				bReply, err := json.Marshal(reply)
-				if err != nil {
-					slog.Error("marshal", "error", err)
-					return
-				}
-				if err := msg.Respond(bReply); err != nil {
-					slog.Error("respond", "error", err)
-				}
-			},
+		r := NewRouter()
+		r.Get("/", actor.renderSchemas)
+		r.Get("/{schemaID}", actor.renderSchema)
+		sub, err := SubscribeToSubject[Request, Reply](
+			actor.Conn,
+			fmt.Sprintf(ActorSubjectHTTPRender, "schema"),
+			r.Serve,
 		)
 		if err != nil {
-			return fmt.Errorf("subscribe: %w", err)
+			return fmt.Errorf("subscribing: %w", err)
 		}
-		slog.Info("subscribed action", "actor", name, "action", action, "subject", sub.Subject)
 		actor.subs = append(actor.subs, sub)
 	}
 	{
-		action := "list"
-		sub, err := actor.Conn.QueueSubscribe(
-			fmt.Sprintf(ActionSubjectSubscribeForAccount, name, action),
-			name,
-			func(msg *nats.Msg) {
-				reply, err := actor.schemaList(ctx, msg)
-				if err != nil {
-					slog.Error("action", "actor", name, "action", action, "error", err)
-					reply = &SchemaListReply{
-						Schemas: []Schema{},
-					}
-				}
-				bReply, err := json.Marshal(reply)
-				if err != nil {
-					slog.Error("marshal", "error", err)
-					return
-				}
-				if err := msg.Respond(bReply); err != nil {
-					slog.Error("respond", "error", err)
-				}
-			},
+		sub, err := SubscribeToSubjectWithAccount[SchemaPublishMsg, SchemaPublishReply](
+			actor.Conn,
+			fmt.Sprintf(ActionSubjectSubscribeForAccount, "schema", "publish"),
+			actor.publishSchema,
 		)
 		if err != nil {
-			return fmt.Errorf("subscribe: %w", err)
+			return fmt.Errorf("subscribing: %w", err)
 		}
-		slog.Info("subscribed action", "actor", name, "action", action, "subject", sub.Subject)
 		actor.subs = append(actor.subs, sub)
 	}
 	{
-		action := "get"
-		sub, err := actor.Conn.QueueSubscribe(
-			fmt.Sprintf(ActionSubjectSubscribeForAccount, name, action),
-			name,
-			func(msg *nats.Msg) {
-				reply, err := actor.schemaGet(ctx, msg)
-				if err != nil {
-					slog.Error("action", "actor", name, "action", action, "error", err)
-					reply = &SchemaGetReply{
-						Schema: Schema{},
-					}
-				}
-				bReply, err := json.Marshal(reply)
-				if err != nil {
-					slog.Error("marshal", "error", err)
-					return
-				}
-				if err := msg.Respond(bReply); err != nil {
-					slog.Error("respond", "error", err)
-				}
-			},
+		sub, err := SubscribeToSubjectWithAccount[SchemaListMsg, SchemaListReply](
+			actor.Conn,
+			fmt.Sprintf(ActionSubjectSubscribeForAccount, "schema", "list"),
+			actor.schemaList,
 		)
 		if err != nil {
-			return fmt.Errorf("subscribe: %w", err)
+			return fmt.Errorf("subscribing: %w", err)
 		}
-		slog.Info("subscribed action", "actor", name, "action", action, "subject", sub.Subject)
+		actor.subs = append(actor.subs, sub)
+	}
+	{
+		sub, err := SubscribeToSubjectWithAccount[SchemaGetMsg, SchemaGetReply](
+			actor.Conn,
+			fmt.Sprintf(ActionSubjectSubscribeForAccount, "schema", "get"),
+			actor.schemaGet,
+		)
+		if err != nil {
+			return fmt.Errorf("subscribing: %w", err)
+		}
 		actor.subs = append(actor.subs, sub)
 	}
 
 	return nil
 }
 
-func (sa *SchemaActor) schemaList(
-	ctx context.Context,
-	msg *nats.Msg,
-) (*SchemaListReply, error) {
-	var data SchemaListMsg
-	if err := json.Unmarshal(msg.Data, &data); err != nil {
-		return nil, fmt.Errorf("unmarshal: %w", err)
+func (sa *SchemaActor) renderSchemas(req *Request) (*Reply, error) {
+	schemaListReply, err := SendSchemaListForAccountMsg(
+		sa.Conn,
+		req.Account.ID,
+		SchemaListMsg{},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("getting schema list: %w", err)
 	}
+	type Data struct {
+		UserInfo UserInfo
+		Account  Account
+		Schemas  []Schema
+	}
+	data := Data{
+		UserInfo: req.UserInfo,
+		Account:  req.Account,
+		Schemas:  schemaListReply.Schemas,
+	}
+
+	body, err := renderTemplate(schemasHTML, data)
+	if err != nil {
+		return nil, fmt.Errorf("rendering template: %w", err)
+	}
+	return &Reply{
+		Body: body,
+	}, nil
+}
+
+func (sa *SchemaActor) renderSchema(req *Request) (*Reply, error) {
+	schemaID, ok := req.Params["schemaID"]
+	if !ok {
+		return nil, fmt.Errorf("no schemaID")
+	}
+	schemaReply, err := SendSchemaGetForAccountMsg(
+		sa.Conn,
+		req.Account.ID,
+		SchemaGetMsg{
+			Key: schemaID,
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("getting schema: %w", err)
+	}
+	schema := schemaReply.Schema
+	consumerInfo, err := ConsumerState(
+		sa.Conn,
+		req.Account.ID,
+		schema.Spec.Name,
+		strings.ReplaceAll(schema.Spec.Version, ".", "_"),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("getting consumer state: %w", err)
+	}
+	type Data struct {
+		UserInfo     UserInfo
+		Account      Account
+		Schema       Schema
+		ConsumerInfo *api.ConsumerInfo
+	}
+	d := Data{
+		UserInfo:     req.UserInfo,
+		Account:      req.Account,
+		Schema:       schemaReply.Schema,
+		ConsumerInfo: consumerInfo,
+	}
+	body, err := renderTemplate(schemaHTML, d)
+	if err != nil {
+		return nil, fmt.Errorf("rendering template: %w", err)
+	}
+	return &Reply{
+		Body: body,
+	}, nil
+}
+
+func (sa *SchemaActor) schemaList(
+	accountID string,
+	msg *SchemaListMsg,
+) (*SchemaListReply, error) {
+	// TODO: use accountID to separate schemas out...
 	keys, err := sa.bucket.Keys()
 	if err != nil {
 		if errors.Is(err, nats.ErrNoKeysFound) {
@@ -193,14 +235,10 @@ func (sa *SchemaActor) schemaList(
 }
 
 func (sa *SchemaActor) schemaGet(
-	ctx context.Context,
-	msg *nats.Msg,
+	accountID string,
+	msg *SchemaGetMsg,
 ) (*SchemaGetReply, error) {
-	var data SchemaGetMsg
-	if err := json.Unmarshal(msg.Data, &data); err != nil {
-		return nil, fmt.Errorf("unmarshal: %w", err)
-	}
-	kve, err := sa.bucket.Get(data.Key)
+	kve, err := sa.bucket.Get(msg.Key)
 	if err != nil {
 		if !errors.Is(err, nats.ErrKeyNotFound) {
 			return nil, fmt.Errorf("get: %w", err)
@@ -217,30 +255,30 @@ func (sa *SchemaActor) schemaGet(
 }
 
 func (sa *SchemaActor) publishSchema(
-	ctx context.Context,
-	msg *nats.Msg,
+	accountPubKey string,
+	msg *SchemaPublishMsg,
 ) (*SchemaPublishReply, error) {
-	// Get account public key from subject
-	accountPubKey, err := AccountFromSubject(msg.Subject)
-	if err != nil {
-		return nil, fmt.Errorf("account from subject: %w", err)
+	if msg.Name == "" {
+		return nil, FromError(&Error{
+			Status:  http.StatusBadRequest,
+			Message: "Schema name is empty",
+		})
 	}
-	var data SchemaPublishMsg
-	if err := json.Unmarshal(msg.Data, &data); err != nil {
-		return nil, fmt.Errorf("unmarshal: %w", err)
+	if msg.Version == "" {
+		return nil, FromError(&Error{
+			Status:  http.StatusBadRequest,
+			Message: "Schema version is empty",
+		})
 	}
-	if data.Name == "" {
-		return nil, fmt.Errorf("name is empty")
-	}
-	if data.Version == "" {
-		return nil, fmt.Errorf("version is empty")
-	}
-	if len(data.Schema) == 0 {
-		return nil, fmt.Errorf("schema is empty")
+	if len(msg.Schema) == 0 {
+		return nil, FromError(&Error{
+			Status:  http.StatusBadRequest,
+			Message: "Schema body is empty",
+		})
 	}
 
 	schema := Schema{
-		Spec:   data,
+		Spec:   *msg,
 		Events: []Event{},
 	}
 	schema.Events = append(schema.Events, Event{
@@ -249,18 +287,22 @@ func (sa *SchemaActor) publishSchema(
 	})
 
 	// Stream is named by the event and contains all the events for all versions of that schema.
-	streamName := data.Name
+	streamName := msg.Name
 	// A durable consumer is created for each version of the schema, and that consumer can be used
 	// for monitoring and metrics.
-	consumerName := strings.ReplaceAll(data.Version, ".", "_")
+	consumerName := strings.ReplaceAll(msg.Version, ".", "_")
 	schemaSubject := fmt.Sprintf("ingest.%s.%s", streamName, consumerName)
 
 	// Create stream for the ingestion service in the target account.
 	// First we need to create some credentials for the target account, and use those
 	// to establish a nats connection.
-	userReply, err := SendUserCreateForAccountMsg(sa.Conn, accountPubKey, UserCreateMsg{
-		Name: "ingest",
-	})
+	userReply, err := SendUserCreateForAccountMsg(
+		sa.Conn,
+		accountPubKey,
+		UserCreateMsg{
+			Name: "ingest",
+		},
+	)
 	if err != nil {
 		return nil, fmt.Errorf("create user: %w", err)
 	}
@@ -287,12 +329,12 @@ func (sa *SchemaActor) publishSchema(
 			fmt.Sprintf("ingest.%s.*", streamName),
 		},
 	}
-	if _, err := js.CreateStream(ctx, streamCfg); err != nil {
+	if _, err := js.CreateStream(sa.ctx, streamCfg); err != nil {
 		if !errors.Is(err, jetstream.ErrStreamNameAlreadyInUse) {
 			return nil, fmt.Errorf("create stream: %w", err)
 		}
 		// Update stream if it already exists
-		if _, err = js.UpdateStream(ctx, streamCfg); err != nil {
+		if _, err = js.UpdateStream(sa.ctx, streamCfg); err != nil {
 			return nil, fmt.Errorf("update stream: %w", err)
 		}
 		slog.Info("updated stream", "name", streamName)
@@ -300,7 +342,7 @@ func (sa *SchemaActor) publishSchema(
 		slog.Info("created stream", "name", streamName)
 	}
 	// Create the consumer for the schema version.
-	if _, err := js.CreateOrUpdateConsumer(ctx, streamName, jetstream.ConsumerConfig{
+	if _, err := js.CreateOrUpdateConsumer(sa.ctx, streamName, jetstream.ConsumerConfig{
 		Name:    consumerName,
 		Durable: consumerName,
 		Description: fmt.Sprintf(
@@ -313,10 +355,16 @@ func (sa *SchemaActor) publishSchema(
 	}); err != nil {
 		return nil, fmt.Errorf("create consumer: %w", err)
 	}
-	slog.Info("created or updated consumer", "consumer", consumerName, "stream", streamName)
+	slog.Info(
+		"created or updated consumer",
+		"consumer",
+		consumerName,
+		"stream",
+		streamName,
+	)
 
 	// Build the schema into a container
-	ref, err := buildSchema(ctx, data)
+	ref, err := buildSchema(sa.ctx, msg)
 	if err != nil {
 		return nil, fmt.Errorf("build schema: %w", err)
 	}
@@ -335,7 +383,7 @@ func (sa *SchemaActor) publishSchema(
 
 	// Run the container
 	containerID, err := runSchema(
-		ctx,
+		sa.ctx,
 		ref,
 		streamName,
 		consumerName,
@@ -359,11 +407,14 @@ func (sa *SchemaActor) publishSchema(
 	}
 
 	return &SchemaPublishReply{
-		Name: data.Name,
+		Name: msg.Name,
 	}, nil
 }
 
-func buildSchema(ctx context.Context, schema SchemaPublishMsg) (string, error) {
+func buildSchema(
+	ctx context.Context,
+	schema *SchemaPublishMsg,
+) (string, error) {
 	dir, err := os.MkdirTemp("", schema.Name)
 	if err != nil {
 		return "", fmt.Errorf("mkdir: %w", err)
@@ -399,7 +450,11 @@ func koBuild(ctx context.Context, dir string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("parse reference: %w", err)
 	}
-	desc, err := remote.Get(ref, remote.WithContext(ctx), remote.WithPlatform(*plat))
+	desc, err := remote.Get(
+		ref,
+		remote.WithContext(ctx),
+		remote.WithPlatform(*plat),
+	)
 	if err != nil {
 		return "", fmt.Errorf("get remote container image descriptor: %w", err)
 	}
@@ -474,7 +529,10 @@ func runSchema(
 	jwt string,
 	nkey string,
 ) (string, error) {
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	cli, err := client.NewClientWithOpts(
+		client.FromEnv,
+		client.WithAPIVersionNegotiation(),
+	)
 	if err != nil {
 		return "", fmt.Errorf("new docker client: %w", err)
 	}
@@ -506,7 +564,10 @@ func runSchema(
 func packageWithMD5(base, importpath string) string {
 	hasher := md5.New() // nolint: gosec // No strong cryptography needed.
 	hasher.Write([]byte(importpath))
-	return path.Join(base, path.Base(importpath)+"-"+hex.EncodeToString(hasher.Sum(nil)))
+	return path.Join(
+		base,
+		path.Base(importpath)+"-"+hex.EncodeToString(hasher.Sum(nil)),
+	)
 }
 
 // func goRun(dir string, stream string, consumer string) error {
@@ -555,43 +616,22 @@ func SendSchemaListForAccountMsg(
 	accountID string,
 	msg SchemaListMsg,
 ) (*SchemaListReply, error) {
-	bData, err := json.Marshal(msg)
-	if err != nil {
-		return nil, fmt.Errorf("marshal: %w", err)
-	}
-	replyMsg, err := nc.Request(
+	return RequestSubject[SchemaListMsg, SchemaListReply](
+		nc,
+		msg,
 		fmt.Sprintf(ActionSubjectSendForAccount, "schema", "list", accountID),
-		bData,
-		time.Second*10,
 	)
-	if err != nil {
-		return nil, fmt.Errorf("request schema list: %w", err)
-	}
-	var reply SchemaListReply
-	if err := json.Unmarshal(replyMsg.Data, &reply); err != nil {
-		return nil, fmt.Errorf("unmarshal: %w", err)
-	}
-	return &reply, nil
 }
 
-func SendSchemaListMsg(nc *nats.Conn, msg SchemaListMsg) (*SchemaListReply, error) {
-	bData, err := json.Marshal(msg)
-	if err != nil {
-		return nil, fmt.Errorf("marshal: %w", err)
-	}
-	replyMsg, err := nc.Request(
+func SendSchemaListMsg(
+	nc *nats.Conn,
+	msg SchemaListMsg,
+) (*SchemaListReply, error) {
+	return RequestSubject[SchemaListMsg, SchemaListReply](
+		nc,
+		msg,
 		fmt.Sprintf(ActionSubjectSend, "schema", "list"),
-		bData,
-		time.Second*10,
 	)
-	if err != nil {
-		return nil, fmt.Errorf("request: %w", err)
-	}
-	var reply SchemaListReply
-	if err := json.Unmarshal(replyMsg.Data, &reply); err != nil {
-		return nil, fmt.Errorf("unmarshal: %w", err)
-	}
-	return &reply, nil
 }
 
 func SendSchemaGetForAccountMsg(
@@ -599,62 +639,33 @@ func SendSchemaGetForAccountMsg(
 	accountID string,
 	msg SchemaGetMsg,
 ) (*SchemaGetReply, error) {
-	bData, err := json.Marshal(msg)
-	if err != nil {
-		return nil, fmt.Errorf("marshal: %w", err)
-	}
-	replyMsg, err := nc.Request(
+	return RequestSubject[SchemaGetMsg, SchemaGetReply](
+		nc,
+		msg,
 		fmt.Sprintf(ActionSubjectSendForAccount, "schema", "get", accountID),
-		bData,
-		time.Second*10,
 	)
-	if err != nil {
-		return nil, fmt.Errorf("request: %w", err)
-	}
-	var reply SchemaGetReply
-	if err := json.Unmarshal(replyMsg.Data, &reply); err != nil {
-		return nil, fmt.Errorf("unmarshal: %w", err)
-	}
-	return &reply, nil
-}
-func SendSchemaGetMsg(nc *nats.Conn, msg SchemaGetMsg) (*SchemaGetReply, error) {
-	bData, err := json.Marshal(msg)
-	if err != nil {
-		return nil, fmt.Errorf("marshal: %w", err)
-	}
-	replyMsg, err := nc.Request(
-		fmt.Sprintf(ActionSubjectSend, "schema", "get"),
-		bData,
-		time.Second*10,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("request: %w", err)
-	}
-	var reply SchemaGetReply
-	if err := json.Unmarshal(replyMsg.Data, &reply); err != nil {
-		return nil, fmt.Errorf("unmarshal: %w", err)
-	}
-	return &reply, nil
 }
 
-func SendSchemaPublishMsg(nc *nats.Conn, msg SchemaPublishMsg) (*SchemaPublishReply, error) {
-	bData, err := json.Marshal(msg)
-	if err != nil {
-		return nil, fmt.Errorf("marshal: %w", err)
-	}
-	replyMsg, err := nc.Request(
-		fmt.Sprintf(ActionSubjectSend, "schema", "publish"),
-		bData,
-		time.Second*10,
+func SendSchemaGetMsg(
+	nc *nats.Conn,
+	msg SchemaGetMsg,
+) (*SchemaGetReply, error) {
+	return RequestSubject[SchemaGetMsg, SchemaGetReply](
+		nc,
+		msg,
+		fmt.Sprintf(ActionSubjectSend, "schema", "get"),
 	)
-	if err != nil {
-		return nil, fmt.Errorf("request: %w", err)
-	}
-	var reply SchemaPublishReply
-	if err := json.Unmarshal(replyMsg.Data, &reply); err != nil {
-		return nil, fmt.Errorf("unmarshal: %w", err)
-	}
-	return &reply, nil
+}
+
+func SendSchemaPublishMsg(
+	nc *nats.Conn,
+	msg SchemaPublishMsg,
+) (*SchemaPublishReply, error) {
+	return RequestSubject[SchemaPublishMsg, SchemaPublishReply](
+		nc,
+		msg,
+		fmt.Sprintf(ActionSubjectSend, "schema", "publish"),
+	)
 }
 
 type Schema struct {
